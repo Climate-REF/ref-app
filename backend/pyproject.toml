@@ -1,0 +1,41 @@
+[project]
+name = "ref-backend"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]<1.0.0,>=0.114.2",
+    "python-multipart<1.0.0,>=0.0.7",
+    "tenacity<9.0.0,>=8.2.3",
+    "pydantic>2.0",
+    "psycopg[binary]<4.0.0,>=3.1.13",
+    "pydantic-settings<3.0.0,>=2.2.1",
+    "sentry-sdk[fastapi]<2.0.0,>=1.40.6",
+    "ipython>=8.33.0",
+    #    "cmip-ref[metrics,postgres]>=0.2.0",
+    "ilamb3",
+    "pcmdi-metrics",
+    "cmip-ref[metrics,postgres]==0.2.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest<8.0.0,>=7.4.3",
+    "mypy<2.0.0,>=1.8.0",
+    "ruff<1.0.0,>=0.2.2",
+    "pre-commit<4.0.0,>=3.6.2",
+    "coverage<8.0.0,>=7.4.3",
+]
+
+[tool.uv.sources]
+ilamb3 = { git = "https://github.com/rubisco-sfa/ilamb3", rev = "57dbb4db3cd7d0fcec4a720f60ac5ddd12c80109" }
+pcmdi-metrics = { git = "https://github.com/PCMDI/pcmdi_metrics", rev = "335a382e07330c7a93b89c8a426c5e7d4e628179" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+strict = true
+exclude = ["venv", ".venv", "alembic"]
+
