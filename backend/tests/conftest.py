@@ -1,17 +1,17 @@
 from collections.abc import Generator
 
 import pytest
-from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
-from ref_backend.core.db import engine
+from cmip_ref.database import Database
+from ref_backend.core.db import create_database_connection
 from ref_backend.main import app
 
 
 @pytest.fixture(scope="session", autouse=True)
-def db() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        yield session
+def db() -> Generator[Database, None, None]:
+    _db = create_database_connection()
+    yield _db
 
 
 @pytest.fixture(scope="module")

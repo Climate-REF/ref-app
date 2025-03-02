@@ -27,3 +27,9 @@ dev-backend: # Start the backend
 	@echo "Starting backend"
 	@cd backend && uv run fastapi dev "src/ref_backend/main.py" --reload
 
+
+.PHONY: test
+test: ## Run pytest
+	uv run \
+	pytest src tests
+#	-r a -v --doctest-modules --cov=src --cov-report=term

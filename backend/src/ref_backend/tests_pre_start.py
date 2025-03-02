@@ -1,10 +1,9 @@
 import logging
 
-from sqlalchemy import Engine
-from sqlmodel import Session, select
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-from ref_backend.core.db import engine
+from cmip_ref.database import Database
+from ref_backend.core.db import create_database_connection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,11 +18,10 @@ wait_seconds = 1
     before=before_log(logger, logging.INFO),
     after=after_log(logger, logging.WARN),
 )
-def init(db_engine: Engine) -> None:
+def init(db_engine: Database) -> None:
     try:
         # Try to create session to check if DB is awake
-        with Session(db_engine) as session:
-            session.exec(select(1))
+        db_engine.session.select(1)
     except Exception as e:
         logger.error(e)
         raise e
@@ -31,7 +29,8 @@ def init(db_engine: Engine) -> None:
 
 def main() -> None:
     logger.info("Initializing service")
-    init(engine)
+
+    init(create_database_connection())
     logger.info("Service finished initializing")
 
 

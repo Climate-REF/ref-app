@@ -13,5 +13,4 @@ def test_health_check(client: TestClient, db: Session) -> None:
 
     data = r.json()
 
-    assert data["status"] == "ok"
-
+    assert data is True
