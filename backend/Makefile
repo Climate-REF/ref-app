@@ -22,10 +22,9 @@ export PRINT_HELP_PYSCRIPT
 help:  ## print short description of each target
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-.PHONY: dev-backend
-dev-backend: # Start the backend
-	@echo "Starting backend"
-	@cd backend && uv run fastapi dev "src/ref_backend/main.py" --reload
+.PHONY: dev
+dev: # Start the backend
+	uv run fastapi dev "src/ref_backend/main.py" --reload
 
 
 .PHONY: test
