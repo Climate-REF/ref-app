@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from cmip_ref import models
+from cmip_ref.models.dataset import CMIP6Dataset
 
 
 class Metric(BaseModel):
@@ -61,3 +62,47 @@ class MetricExecutionResult(BaseModel):
 class MetricExecutions(BaseModel):
     data: list[MetricExecution]
     count: int
+
+
+class CMIP6DatasetMetadata(BaseModel):
+    variable_id: str
+    source_id: str
+    experiment_id: str
+    variant_label: str
+
+
+class Dataset(BaseModel):
+    id: int
+    slug: str
+    dataset_type: str
+    metadata: CMIP6DatasetMetadata | None
+
+    @staticmethod
+    def build(dataset: models.Dataset) -> "Dataset":
+        if isinstance(dataset, CMIP6Dataset):
+            metadata = CMIP6DatasetMetadata(
+                variable_id=dataset.variable_id,
+                source_id=dataset.source_id,
+                experiment_id=dataset.experiment_id,
+                variant_label=dataset.variant_label,
+            )
+        else:
+            metadata = None
+
+        return Dataset(
+            id=dataset.id,
+            slug=dataset.slug,
+            dataset_type=dataset.dataset_type,
+            metadata=metadata,
+        )
+
+
+class DatasetCollection(BaseModel):
+    data: list[Dataset]
+    count: int
+
+    @staticmethod
+    def build(datasets: list[models.Dataset]) -> "DatasetCollection":
+        return DatasetCollection(
+            data=[Dataset.build(d) for d in datasets], count=len(datasets)
+        )

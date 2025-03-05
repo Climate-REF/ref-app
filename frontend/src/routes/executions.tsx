@@ -1,10 +1,10 @@
 import PageHeader from "@/components/pageHeader.tsx";
 import {useQuery} from "@tanstack/react-query";
 
-import {utilsListExecutionsOptions} from "@/client/@tanstack/react-query.gen"
+import {executionsListExecutionsOptions} from "@/client/@tanstack/react-query.gen"
 
 const Executions = () => {
-  const { data } = useQuery(utilsListExecutionsOptions({query: {limit: 100}}))
+  const { data } = useQuery(executionsListExecutionsOptions({query: {limit: 100}}))
 
     return (
       <>
