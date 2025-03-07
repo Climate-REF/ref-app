@@ -4,6 +4,9 @@ from pydantic import BaseModel
 
 from cmip_ref import models
 from cmip_ref.models.dataset import CMIP6Dataset
+from cmip_ref.models.metric_execution import ResultOutput as ResultOutputModel
+from cmip_ref.models.metric_execution import ResultOutputType
+from ref_backend.core.config import settings
 
 
 class Metric(BaseModel):
@@ -20,11 +23,38 @@ class Metric(BaseModel):
         return Metric(id=metric.id, provider=metric.provider.slug, slug=metric.slug)
 
 
+class ResultOutput(BaseModel):
+    id: int
+    output_type: ResultOutputType
+    filename: str
+    short_name: str
+    long_name: str
+    description: str
+    url: str | None = None
+
+    @property
+    def url(self) -> str:
+        return f"{settings.API_V1_STR}/results/{self.id}"
+
+    @staticmethod
+    def build(output: ResultOutputModel) -> "ResultOutput":
+        return ResultOutput(
+            id=output.id,
+            metric_execution_result_id=output.metric_execution_result_id,
+            output_type=output.output_type,
+            filename=output.filename,
+            short_name=output.short_name,
+            long_name=output.long_name,
+            description=output.description,
+        )
+
+
 class MetricExecution(BaseModel):
     id: int
     key: str
     results: "list[MetricExecutionResult]"
     latest_result: "MetricExecutionResult | None"
+    outputs: "list[ResultOutput]"
     metric: Metric
 
     @staticmethod

@@ -28,3 +28,14 @@ def get_database_session() -> Generator[Session, None, None]:
     database = create_database_connection()
 
     yield database.session
+
+
+def get_config() -> Generator[Config, None, None]:
+    """
+    Get the REF configuration object
+
+    Returns
+    -------
+        The configuration object
+    """
+    yield Config.default()

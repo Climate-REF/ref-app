@@ -1,0 +1,43 @@
+import mimetypes
+
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+
+from cmip_ref.models.metric_execution import ResultOutput
+from ref_backend.api.deps import ConfigDep, SessionDep
+
+router = APIRouter(prefix="/results", tags=["executions"])
+
+
+def file_iterator(file_path: str, chunk_size: int = 1024):
+    with open(file_path, "rb") as file:
+        while chunk := file.read(chunk_size):
+            yield chunk
+
+
+@router.get("/{result_id}")
+async def get_result(
+    session: SessionDep, config: ConfigDep, result_id: int
+) -> StreamingResponse:
+    """
+    List the most recent executions
+    """
+    result = session.query(ResultOutput).get(result_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Result not found")
+
+    file_path = (
+        config.paths.results
+        / result.metric_execution_result.output_fragment
+        / result.filename
+    )
+    mime_type, encoding = mimetypes.guess_file_type(file_path)
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Result file not found")
+
+    return StreamingResponse(
+        file_iterator(file_path),
+        media_type=mime_type,
+        headers={"Content-Disposition": f"attachment; filename={result.filename}"},
+    )
