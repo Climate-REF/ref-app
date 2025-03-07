@@ -284,7 +284,7 @@ wheels = [
 [[package]]
 name = "cmip-ref"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -298,10 +298,6 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "tomlkit" },
     { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/43/bc/4bb094b9b6567a222d4f84e8d02f21fc122cc8d70f00d247b7091010c62b/cmip_ref-0.2.0.tar.gz", hash = "sha256:8183673b59b69c58fa19a92f8e118770c15d9fa08ffd078e760e9784cb35be5c", size = 55107 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/ea/e03297e71f5269261dbb837d605e023ff3c37d780022280377b019133a8d/cmip_ref-0.2.0-py3-none-any.whl", hash = "sha256:a90dde1dccbe7df69e4307ac42447662fd8e71667a1eed348f83e41287e92d86", size = 53346 },
 ]
 
 [package.optional-dependencies]
@@ -318,72 +314,52 @@ postgres = [
 [[package]]
 name = "cmip-ref-core"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-core#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "attrs" },
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/54/6ab1d593355c9e4bc822d15f7e5d7bc4bf46fc854abb4b8ca42c4784fdc1/cmip_ref_core-0.2.0.tar.gz", hash = "sha256:8eea2758f33efcc1638d1a77b7c23a2fa548ca6bdaf8a29bcabbf3aa39fc4c16", size = 25508 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/81/a4731250c87db0f17a0cb3f0958eb389a2094e3c40243a631b31da22c93c/cmip_ref_core-0.2.0-py3-none-any.whl", hash = "sha256:db1b165bfd62a5ae10592ce7aa14b7b6fb8900d62003f16909f77a29f4005cf4", size = 22436 },
-]
 
 [[package]]
 name = "cmip-ref-metrics-esmvaltool"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-esmvaltool#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "pooch" },
     { name = "ruamel-yaml" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/38/8f652bbf681da802992872a07114d5320ad90712deb7f5dca7d168c17aac/cmip_ref_metrics_esmvaltool-0.2.0.tar.gz", hash = "sha256:305e14833945fba5b53fb98a07fea37d320c9371b1f971b9899631d3b500b6de", size = 14403 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/cd/7e1213056d1a4adc40564bb97011770b9243357737124c07212005f22925/cmip_ref_metrics_esmvaltool-0.2.0-py3-none-any.whl", hash = "sha256:ccc777ea2bc9a2e113d2989277990f62c0c87ed3637633aacdff1df974673406", size = 15786 },
-]
 
 [[package]]
 name = "cmip-ref-metrics-example"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-example#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "dask" },
     { name = "netcdf4" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/0b/4c19ca46c01729269ce7abd1bf47f08d1313e2e06344837c36a69db15d5e/cmip_ref_metrics_example-0.2.0.tar.gz", hash = "sha256:86f3a49f3cde7af9a7ae1619e253540e628d3e3582993b56ed35ded45a295faa", size = 8687 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/36/6e47cba9d829faf9f904f7d7f1c0cf0b177fb7279da6adde7d5c1960d4cb/cmip_ref_metrics_example-0.2.0-py3-none-any.whl", hash = "sha256:943a6f14e8547900c189967d16a84e9a1529589c568fb6f1d3e35d82c56928b5", size = 8493 },
-]
 
 [[package]]
 name = "cmip-ref-metrics-ilamb"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-ilamb#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "ilamb3" },
     { name = "types-pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/f0/f85517de36ee831336fb3002c2bf3fbaac592a402bcd69f6789c65dacbaa/cmip_ref_metrics_ilamb-0.2.0.tar.gz", hash = "sha256:e852647887da50c8f8cacc371b3b26ea2c46438ef22815df7306397f7abee667", size = 13394 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/58/ef5e800f93b62d0e6a6ff7e3eb61819f01d2cf2764fef6a52cce3614075c/cmip_ref_metrics_ilamb-0.2.0-py3-none-any.whl", hash = "sha256:9eadb46d2875e2fbb6ae2574a3a9c0ae37288054174a7f76b1df48fa0030f1b7", size = 14880 },
-]
 
 [[package]]
 name = "cmip-ref-metrics-pmp"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-pmp#c7c66c3b10ea69fe58a0d34fb235347a05704016" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "pcmdi-metrics" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/23/75/bd6545358735705870f1f30fc3b961c9d4af5c3e244d29db0d6e77c3d3bf/cmip_ref_metrics_pmp-0.2.0.tar.gz", hash = "sha256:9519a40c4204beea60f71d42cc0c7cb135dbfe4aef726f2008ea0d2f083c16df", size = 8488 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/fe/312165cc0b74f0980b0fa588c32f388143f3d596061ef9fc475e06328eac/cmip_ref_metrics_pmp-0.2.0-py3-none-any.whl", hash = "sha256:ee91165c19bd1a10241f60ea6e015064012003c46feb7f1d9f7e70d818c8511a", size = 8194 },
 ]
 
 [[package]]
@@ -1056,8 +1032,8 @@ wheels = [
 
 [[package]]
 name = "ilamb3"
-version = "2025.2.13.post1.dev7+g57dbb4d"
-source = { git = "https://github.com/rubisco-sfa/ilamb3?rev=57dbb4db3cd7d0fcec4a720f60ac5ddd12c80109#57dbb4db3cd7d0fcec4a720f60ac5ddd12c80109" }
+version = "2025.2.13.post1.dev15+g7c64e37"
+source = { git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472#7c64e37ebda04b6902b39ef30db96f4bcabba472" }
 dependencies = [
     { name = "cartopy" },
     { name = "cf-xarray" },
@@ -1906,7 +1882,7 @@ wheels = [
 [[package]]
 name = "pcmdi-metrics"
 version = "3.8.2"
-source = { git = "https://github.com/PCMDI/pcmdi_metrics?rev=335a382e07330c7a93b89c8a426c5e7d4e628179#335a382e07330c7a93b89c8a426c5e7d4e628179" }
+source = { git = "https://github.com/PCMDI/pcmdi_metrics#335a382e07330c7a93b89c8a426c5e7d4e628179" }
 
 [[package]]
 name = "pexpect"
@@ -2577,9 +2553,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cmip-ref", extras = ["metrics", "postgres"], specifier = "==0.2.0" },
+    { name = "cmip-ref", extras = ["metrics", "postgres"], git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
-    { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=57dbb4db3cd7d0fcec4a720f60ac5ddd12c80109" },
+    { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472" },
     { name = "ipython", specifier = ">=8.33.0" },
     { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=335a382e07330c7a93b89c8a426c5e7d4e628179" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
