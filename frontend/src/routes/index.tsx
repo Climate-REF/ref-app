@@ -1,9 +1,8 @@
 import ExecutionInfo from "@/routes/executionInfo.tsx";
 import Executions from "@/routes/executions";
-import {Route, Routes} from "react-router";
+import { Route, Routes } from "react-router";
 import Dashboard from "./dashboard";
 import AppLayout from "./layouts/AppLayout";
-
 
 export const getRoutes = () => {
   return (
@@ -14,5 +13,5 @@ export const getRoutes = () => {
         <Route path="/executions/:executionId" element={<ExecutionInfo />} />
       </Route>
     </Routes>
-  )
-}
+  );
+};

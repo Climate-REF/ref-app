@@ -1,32 +1,28 @@
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react"
+import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import {useState} from "react";
-
-
+} from "@/components/ui/sidebar";
+import { useState } from "react";
 
 export function VersionSwitcher({
   versions,
   defaultVersion,
 }: {
-  versions: string[]
-  defaultVersion: string
+  versions: string[];
+  defaultVersion: string;
 }) {
-  const [selectedVersion, setSelectedVersion] = useState(defaultVersion)
+  const [selectedVersion, setSelectedVersion] = useState(defaultVersion);
 
   return (
-
-
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
@@ -62,5 +58,5 @@ export function VersionSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
