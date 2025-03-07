@@ -28,5 +28,5 @@ dev-backend: # Start the backend
 	@cd backend && uv run fastapi dev "src/ref_backend/main.py" --reload
 
 .PHONY: generate-client
-generate-client:
+generate-client: # Generate the frontend client SDK
 	bash scripts/generate-client-sdk.sh
