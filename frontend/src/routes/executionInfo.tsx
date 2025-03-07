@@ -1,4 +1,7 @@
+import DatasetTable from "@/components/datasetTable.tsx";
+import { ExecutionLogs } from "@/components/logView.tsx";
 import PageHeader from "@/components/pageHeader";
+import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -8,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 
 import { executionsGetExecutionOptions } from "@/client/@tanstack/react-query.gen";
@@ -19,7 +22,7 @@ const ExecutionInfo = () => {
     return <div>Not found</div>;
   }
 
-  const { data } = useQuery(
+  const { data } = useSuspenseQuery(
     executionsGetExecutionOptions({
       path: { execution_id: Number.parseInt(executionId) },
     }),
@@ -50,7 +53,7 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
-                    {data?.latest_result?.updated_at}
+                    {data.latest_result?.updated_at}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -66,7 +69,7 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
                   <Badge className="mt-1">
-                    {data?.latest_result?.successful ? "Success" : "Failed"}
+                    {data.latest_result?.successful ? "Success" : "Failed"}
                   </Badge>
                 </div>
               </div>
@@ -75,29 +78,35 @@ const ExecutionInfo = () => {
         </div>
 
         <div>
-          <Tabs defaultValue="results" className="space-y-4">
+          <Tabs defaultValue="datasets" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="results">Results</TabsTrigger>
-              <TabsTrigger value="comparison">Comparison</TabsTrigger>
+              <TabsTrigger value="datasets">Datasets</TabsTrigger>
+              <TabsTrigger value="executions">Executions</TabsTrigger>
               <TabsTrigger value="metadata">Metadata</TabsTrigger>
               <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="results" className="space-y-4">
+            <TabsContent value="datasets" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Test</CardTitle>
+                  <CardTitle>Datasets</CardTitle>
+                  <CardDescription>
+                    The datasets that were used in the calculation of this
+                    metric
+                  </CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <DatasetTable
+                    executionId={Number.parseInt(executionId)}
+                    resultId={data?.latest_result?.id}
+                  />
+                </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="comparison" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Test</CardTitle>
-                </CardHeader>
-              </Card>
+            <TabsContent value="executions" className="space-y-4">
+              <ResultListTable results={data?.results} />
             </TabsContent>
 
             <TabsContent value="metadata" className="space-y-4">
@@ -117,11 +126,7 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Test</CardTitle>
-                </CardHeader>
-              </Card>
+              <ExecutionLogs type={data?.key ?? "Unknown"} />
             </TabsContent>
           </Tabs>
         </div>
