@@ -60,13 +60,16 @@ class MetricExecution(BaseModel):
     @staticmethod
     def build(execution: models.MetricExecution):
         latest_result = None
+        outputs = []
         if len(execution.results):
-            latest_result = MetricExecutionResult.build(execution.results[-1])
+            latest_result = execution.results[-1]
+            outputs = [ResultOutput.build(o) for o in latest_result.outputs]
         return MetricExecution(
             id=execution.id,
             key=execution.key,
             results=[MetricExecutionResult.build(r) for r in execution.results],
-            latest_result=latest_result,
+            latest_result=MetricExecutionResult.build(latest_result),
+            outputs=outputs,
             metric=Metric.build(execution.metric),
         )
 

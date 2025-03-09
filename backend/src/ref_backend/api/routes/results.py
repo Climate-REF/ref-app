@@ -6,10 +6,10 @@ from fastapi.responses import StreamingResponse
 from cmip_ref.models.metric_execution import ResultOutput
 from ref_backend.api.deps import ConfigDep, SessionDep
 
-router = APIRouter(prefix="/results", tags=["executions"])
+router = APIRouter(prefix="/results", tags=["results"])
 
 
-def file_iterator(file_path: str, chunk_size: int = 1024):
+def _file_iterator(file_path: str, chunk_size: int = 1024):
     with open(file_path, "rb") as file:
         while chunk := file.read(chunk_size):
             yield chunk
@@ -20,7 +20,7 @@ async def get_result(
     session: SessionDep, config: ConfigDep, result_id: int
 ) -> StreamingResponse:
     """
-    List the most recent executions
+    Fetch a result
     """
     result = session.query(ResultOutput).get(result_id)
     if result is None:
@@ -37,7 +37,7 @@ async def get_result(
         raise HTTPException(status_code=404, detail="Result file not found")
 
     return StreamingResponse(
-        file_iterator(file_path),
+        _file_iterator(file_path),
         media_type=mime_type,
         headers={"Content-Disposition": f"attachment; filename={result.filename}"},
     )
