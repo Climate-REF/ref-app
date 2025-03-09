@@ -10,6 +10,7 @@ import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 
 import { SquareArrowOutUpRight } from "lucide-react";
+import { Link } from "react-router";
 
 const columnHelper = createColumnHelper<MetricExecutionResult>();
 
@@ -26,15 +27,11 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
     accessorFn: (row) => format(new Date(row.updated_at), "yyyy-MM-dd HH:mm"),
   },
   columnHelper.display({
-    id: "esgf_link",
+    id: "open",
     cell: () => (
-      <a
-        href="https://esgf-node.llnl.gov/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <Link to={`/execution/`}>
         <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
-      </a>
+      </Link>
     ),
   }),
 ];

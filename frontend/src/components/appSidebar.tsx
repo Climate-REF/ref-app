@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { VersionSwitcher } from "@/components/versionSwitcher.tsx";
 import type { ComponentProps } from "react";
+import { Link } from "react-router";
 
 interface MetricInfo {
   provider: { slug: string };
@@ -79,7 +80,7 @@ export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
                   <SidebarMenuItem key={item.title}>
                     {/*<SidebarMenuButton asChild isActive={item.isActive}>*/}
                     <SidebarMenuButton asChild>
-                      <a href={item.url}>{item.title}</a>
+                      <Link to={item.url}>{item.title}</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

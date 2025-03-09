@@ -7,6 +7,10 @@ export type Cmip6DatasetMetadata = {
     variant_label: string;
 };
 
+export type CollectionMetricExecution = {
+    data: Array<MetricExecution>;
+};
+
 export type CollectionMetricSummary = {
     data: Array<MetricSummary>;
 };
@@ -136,6 +140,34 @@ export type MetricsGetMetricResponses = {
 };
 
 export type MetricsGetMetricResponse = MetricsGetMetricResponses[keyof MetricsGetMetricResponses];
+
+export type MetricsGetMetricExecutionsData = {
+    body?: never;
+    path: {
+        provider_slug: string;
+        metric_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/metrics/{provider_slug}/{metric_slug}/executions';
+};
+
+export type MetricsGetMetricExecutionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MetricsGetMetricExecutionsError = MetricsGetMetricExecutionsErrors[keyof MetricsGetMetricExecutionsErrors];
+
+export type MetricsGetMetricExecutionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionMetricExecution;
+};
+
+export type MetricsGetMetricExecutionsResponse = MetricsGetMetricExecutionsResponses[keyof MetricsGetMetricExecutionsResponses];
 
 export type ExecutionsListExecutionsData = {
     body?: never;

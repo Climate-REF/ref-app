@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
 
-from cmip_ref.models import Provider
+from cmip_ref import models
 from cmip_ref.models.metric import Metric
 from ref_backend.api.deps import SessionDep
-from ref_backend.models import Collection, MetricSummary
+from ref_backend.models import Collection, MetricExecution, MetricSummary
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
@@ -30,7 +30,7 @@ async def get_metric(
         .join(Metric.provider)
         .filter(
             Metric.slug == metric_slug,
-            Provider.slug == provider_slug,
+            models.Provider.slug == provider_slug,
         )
         .one_or_none()
     )
@@ -38,3 +38,33 @@ async def get_metric(
         raise HTTPException(status_code=404, detail="Metric not found")
 
     return MetricSummary.build(metric)
+
+
+@router.get("/{provider_slug}/{metric_slug}/executions")
+async def get_metric_executions(
+    session: SessionDep, provider_slug: str, metric_slug: str
+) -> Collection[MetricExecution]:
+    """
+    Fetch a result using the slug
+    """
+    metric = (
+        session.query(Metric)
+        .join(Metric.provider)
+        .filter(
+            Metric.slug == metric_slug,
+            models.Provider.slug == provider_slug,
+        )
+        .one_or_none()
+    )
+    if metric is None:
+        raise HTTPException(status_code=404, detail="Metric not found")
+
+    executions = (
+        session.query(models.MetricExecution)
+        .filter(models.MetricExecution.metric_id == metric.id)
+        .all()
+    )
+    if metric is None:
+        raise HTTPException(status_code=404, detail="Metric not found")
+
+    return Collection(data=[MetricExecution.build(e) for e in executions])

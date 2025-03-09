@@ -24,6 +24,21 @@ export const CMIP6DatasetMetadataSchema = {
     title: 'CMIP6DatasetMetadata'
 } as const;
 
+export const Collection_MetricExecution_Schema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MetricExecution'
+            },
+            type: 'array',
+            title: 'Data'
+        }
+    },
+    type: 'object',
+    required: ['data'],
+    title: 'Collection[MetricExecution]'
+} as const;
+
 export const Collection_MetricSummary_Schema = {
     properties: {
         data: {

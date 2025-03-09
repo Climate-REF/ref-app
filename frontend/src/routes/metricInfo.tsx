@@ -1,5 +1,5 @@
+import ExecutionListTable from "@/components/executionListTable.tsx";
 import PageHeader from "@/components/pageHeader";
-import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -73,7 +73,10 @@ const MetricInfo = () => {
             </TabsList>
 
             <TabsContent value="executions" className="space-y-4">
-              <ResultListTable results={[]} />
+              <ExecutionListTable
+                metricSlug={metricSlug}
+                providerSlug={providerSlug}
+              />
             </TabsContent>
 
             <TabsContent value="raw-data" className="space-y-4">
