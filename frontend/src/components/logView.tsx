@@ -143,7 +143,7 @@ export function ExecutionLogs({ type }: ExecutionLogsProps) {
     {
       timestamp: "2023-06-15 14:32:14",
       level: "info",
-      message: "Metric calculation completed successfully",
+      message: "MetricSummary calculation completed successfully",
     },
   ];
 

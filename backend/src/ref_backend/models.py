@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -8,19 +9,73 @@ from cmip_ref.models.metric_execution import ResultOutput as ResultOutputModel
 from cmip_ref.models.metric_execution import ResultOutputType
 from ref_backend.core.config import settings
 
+T = TypeVar("T")
 
-class Metric(BaseModel):
+
+class Collection(BaseModel, Generic[T]):
+    data: list[T]
+
+    @property
+    def count(self) -> int:
+        """
+        Number of data items present
+        """
+        return len(self.data)
+
+
+class ProviderSummary(BaseModel):
     """
-    A unique metric
+    Summary information about a Metric Provider.
+
+    The metric provider is the framework that was used to generate a set of metrics.
+    """
+
+    slug: str
+    name: str
+
+    @staticmethod
+    def build(provider: models.Provider) -> "ProviderSummary":
+        return ProviderSummary(
+            slug=provider.slug,
+            name=provider.name,
+        )
+
+
+class MetricSummary(BaseModel):
+    """
+    A unique provider
     """
 
     id: int
-    provider: str
+    """
+    ID of the provider
+    """
+    provider: ProviderSummary
+    """
+    Summary of the provider that produces this provider
+    """
     slug: str
+    """
+    Unique slug for the provider
+    """
+    name: str
+    """
+    Long name of the provider
+    """
+    metric_executions: list[int]
+    """
+    List of IDs for the provider executions associated with this provider
+    """
 
     @staticmethod
-    def build(metric: models.Metric) -> "Metric":
-        return Metric(id=metric.id, provider=metric.provider.slug, slug=metric.slug)
+    def build(metric: models.Metric) -> "MetricSummary":
+        return MetricSummary(
+            id=metric.id,
+            provider=ProviderSummary.build(metric.provider),
+            slug=metric.slug,
+            name=metric.name,
+            metric_executions=[e.id for e in metric.executions],
+        )
 
 
 class ResultOutput(BaseModel):
@@ -55,7 +110,7 @@ class MetricExecution(BaseModel):
     results: "list[MetricExecutionResult]"
     latest_result: "MetricExecutionResult | None"
     outputs: "list[ResultOutput]"
-    metric: Metric
+    metric: MetricSummary
 
     @staticmethod
     def build(execution: models.MetricExecution):
@@ -70,7 +125,7 @@ class MetricExecution(BaseModel):
             results=[MetricExecutionResult.build(r) for r in execution.results],
             latest_result=MetricExecutionResult.build(latest_result),
             outputs=outputs,
-            metric=Metric.build(execution.metric),
+            metric=MetricSummary.build(execution.metric),
         )
 
 

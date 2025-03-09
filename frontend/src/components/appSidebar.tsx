@@ -1,4 +1,3 @@
-import { VersionSwitcher } from "@/components/versionSwitcher.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -11,19 +10,28 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { VersionSwitcher } from "@/components/versionSwitcher.tsx";
+import type { ComponentProps } from "react";
+
+interface MetricInfo {
+  id: number;
+  name: string;
+}
 
 // This is sample data.
 const data = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  navMain: [
+};
+
+interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
+  metrics: MetricInfo[];
+}
+
+function computeSidebarNav(metrics: MetricInfo[]) {
+  return [
     {
-      title: "Getting Started",
-      url: "#",
+      title: "Overview",
       items: [
-        {
-          title: "Installation",
-          url: "#",
-        },
         {
           title: "Project Structure",
           url: "#",
@@ -31,90 +39,26 @@ const data = {
       ],
     },
     {
-      title: "Metrics",
-      url: "#",
+      title: "Data explorer",
       items: [
         {
-          title: "1",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
+          title: "Data Explorer",
           url: "#",
         },
       ],
     },
     {
-      title: "Executions",
-      url: "#",
-      items: [
-        {
-          title: "Accessibility",
-          url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
+      title: "Metrics",
+      items: metrics.map((metric) => ({
+        title: metric.name,
+        url: `/metrics/${metric.id}`,
+      })),
     },
-  ],
-};
+  ];
+}
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
+  const sidebarNav = computeSidebarNav(metrics);
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -125,14 +69,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         {/* We create a SidebarGroup for each parent. */}
-        {data.navMain.map((item) => (
+        {sidebarNav.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {item.items.map((item) => (
+                {item.items?.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={item.isActive}>
+                    {/*<SidebarMenuButton asChild isActive={item.isActive}>*/}
+                    <SidebarMenuButton asChild>
                       <a href={item.url}>{item.title}</a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
