@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
-
+    REF_CONFIGURATION: str
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":

@@ -27,7 +27,8 @@ export const columns: ColumnDef<MetricExecution>[] = [
     ),
   },
   {
-    accessorKey: "successful",
+    header: "Successful",
+    accessorKey: "latest_result.successful",
     cell: (cell) =>
       cell.getValue() ? (
         <Badge variant={"outline"}>Yes</Badge>

@@ -6,7 +6,7 @@ from cmip_ref.config import Config
 from cmip_ref.database import Database
 
 
-def create_database_connection() -> Database:
+def create_database_connection() -> tuple[Config, Database]:
     """
     Create a new connection to the database
     """
