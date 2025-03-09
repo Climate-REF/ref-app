@@ -31,11 +31,11 @@ export const metricsListMetrics = <ThrowOnError extends boolean = false>(options
 
 /**
  * Get Metric
- * Fetch a result
+ * Fetch a result using the slug
  */
 export const metricsGetMetric = <ThrowOnError extends boolean = false>(options: Options<MetricsGetMetricData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<MetricsGetMetricResponse, MetricsGetMetricError, ThrowOnError>({
-        url: '/api/v1/metrics/{metric_id}',
+        url: '/api/v1/metrics/{provider_slug}/{metric_slug}',
         ...options
     });
 };

@@ -112,10 +112,11 @@ export type MetricsListMetricsResponse = MetricsListMetricsResponses[keyof Metri
 export type MetricsGetMetricData = {
     body?: never;
     path: {
-        metric_id: number;
+        provider_slug: string;
+        metric_slug: string;
     };
     query?: never;
-    url: '/api/v1/metrics/{metric_id}';
+    url: '/api/v1/metrics/{provider_slug}/{metric_slug}';
 };
 
 export type MetricsGetMetricErrors = {

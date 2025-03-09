@@ -30,7 +30,19 @@ const ExecutionInfo = () => {
 
   return (
     <>
-      <PageHeader />
+      <PageHeader
+        breadcrumbs={[
+          {
+            name: "Metrics",
+            url: "/metrics",
+          },
+          {
+            name: data.metric.name,
+            url: `/metrics/${data.metric.provider.slug}/${data.metric.slug}`,
+          },
+        ]}
+        title={data?.key}
+      />
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <Card className="md:col-span-2">

@@ -10,7 +10,7 @@ const Executions = () => {
 
   return (
     <>
-      <PageHeader />
+      <PageHeader title="Metric Executions" />
       <div className="flex flex-1 flex-col gap-4 p-4">
         {data?.data.map((d) => (
           <div>{d.latest_result?.successful}</div>

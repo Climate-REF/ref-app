@@ -14,7 +14,8 @@ import { VersionSwitcher } from "@/components/versionSwitcher.tsx";
 import type { ComponentProps } from "react";
 
 interface MetricInfo {
-  id: number;
+  provider: { slug: string };
+  slug: string;
   name: string;
 }
 
@@ -51,7 +52,7 @@ function computeSidebarNav(metrics: MetricInfo[]) {
       title: "Metrics",
       items: metrics.map((metric) => ({
         title: metric.name,
-        url: `/metrics/${metric.id}`,
+        url: `/metrics/${metric.provider.slug}/${metric.slug}`,
       })),
     },
   ];
