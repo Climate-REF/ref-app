@@ -12,7 +12,10 @@ def create_database_connection() -> Database:
     """
     config = Config.default()
     database = Database.from_config(config, run_migrations=False)
-    return database
+    return config, database
+
+
+ref_config, database = create_database_connection()
 
 
 def get_database_session() -> Generator[Session, None, None]:
@@ -23,14 +26,10 @@ def get_database_session() -> Generator[Session, None, None]:
     -------
         A session for the database
     """
-    # TODO: Figure out how to use dependency injection with fastapi
-    # I get a fastapi.exceptions.FastAPIError if I try pass in an optional Database object here
-    database = create_database_connection()
-
     yield database.session
 
 
-def get_config() -> Generator[Config, None, None]:
+def get_ref_config() -> Generator[Config, None, None]:
     """
     Get the REF configuration object
 
@@ -38,4 +37,4 @@ def get_config() -> Generator[Config, None, None]:
     -------
         The configuration object
     """
-    yield Config.default()
+    yield ref_config

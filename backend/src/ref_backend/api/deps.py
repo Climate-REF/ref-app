@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from cmip_ref.config import Config
-from ref_backend.core.db import get_config, get_database_session
+from ref_backend.core.ref import get_database_session, get_ref_config
 
 SessionDep = Annotated[Session, Depends(get_database_session)]
-ConfigDep = Annotated[Config, Depends(get_config)]
+ConfigDep = Annotated[Config, Depends(get_ref_config)]
