@@ -283,17 +283,6 @@ export const ResultOutputSchema = {
         description: {
             type: 'string',
             title: 'Description'
-        },
-        url: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Url'
         }
     },
     type: 'object',

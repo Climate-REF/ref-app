@@ -85,7 +85,6 @@ class ResultOutput(BaseModel):
     short_name: str
     long_name: str
     description: str
-    url: str | None = None
 
     @property
     def url(self) -> str:

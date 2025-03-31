@@ -81,7 +81,6 @@ export type ResultOutput = {
     short_name: string;
     long_name: string;
     description: string;
-    url?: string | null;
 };
 
 /**

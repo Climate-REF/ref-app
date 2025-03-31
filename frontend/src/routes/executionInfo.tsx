@@ -3,6 +3,7 @@ import { ExecutionLogs } from "@/components/logView.tsx";
 import PageHeader from "@/components/pageHeader";
 import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -47,10 +48,17 @@ const ExecutionInfo = () => {
         <div>
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Execution Summary</CardTitle>
-              <CardDescription>
-                Overview of this metric execution
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Execution Summary</CardTitle>
+                  <CardDescription>
+                    Overview of this metric execution
+                  </CardDescription>
+                </div>
+                <div>
+                  <Button>Download outputs</Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
@@ -68,10 +76,7 @@ const ExecutionInfo = () => {
                     {data.latest_result?.updated_at}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Value</p>
-                  <p className="text-2xl font-bold">91.5%</p>
-                </div>
+
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
                     Execution Time
@@ -83,6 +88,12 @@ const ExecutionInfo = () => {
                   <Badge className="mt-1">
                     {data.latest_result?.successful ? "Success" : "Failed"}
                   </Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Number of outputs
+                  </p>
+                  <p className="font-medium">{data?.outputs.length}</p>
                 </div>
               </div>
             </CardContent>
