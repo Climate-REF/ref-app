@@ -103,7 +103,7 @@ class ResultOutput(BaseModel):
         )
 
 
-class MetricExecution(BaseModel):
+class MetricExecutionGroup(BaseModel):
     id: int
     key: str
     results: "list[MetricExecutionResult]"
@@ -112,13 +112,13 @@ class MetricExecution(BaseModel):
     metric: MetricSummary
 
     @staticmethod
-    def build(execution: models.MetricExecution):
+    def build(execution: models.MetricExecutionGroup):
         latest_result = None
         outputs = []
         if len(execution.results):
             latest_result = execution.results[-1]
             outputs = [ResultOutput.build(o) for o in latest_result.outputs]
-        return MetricExecution(
+        return MetricExecutionGroup(
             id=execution.id,
             key=execution.key,
             results=[MetricExecutionResult.build(r) for r in execution.results],
@@ -147,7 +147,7 @@ class MetricExecutionResult(BaseModel):
 
 
 class MetricExecutions(BaseModel):
-    data: list[MetricExecution]
+    data: list[MetricExecutionGroup]
     count: int
 
 

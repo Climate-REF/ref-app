@@ -4,7 +4,7 @@ from cmip_ref import models
 from ref_backend.api.deps import SessionDep
 from ref_backend.models import (
     DatasetCollection,
-    MetricExecution,
+    MetricExecutionGroup,
     MetricExecutionResult,
     MetricExecutions,
 )
@@ -25,20 +25,22 @@ async def list_executions(session: SessionDep, limit: int = 10) -> MetricExecuti
     )
 
     return MetricExecutions(
-        data=[MetricExecution.build(m) for m in metrics], count=len(metrics)
+        data=[MetricExecutionGroup.build(m) for m in metrics], count=len(metrics)
     )
 
 
 @router.get("/{execution_id}")
-async def get_execution(session: SessionDep, execution_id: int) -> MetricExecution:
+async def get_execution_group(
+    session: SessionDep, execution_id: int
+) -> MetricExecutionGroup:
     """
     Inspect a specific execution
     """
-    metric_execution = session.query(models.MetricExecution).get(execution_id)
+    metric_execution = session.query(models.MetricExecutionGroup).get(execution_id)
     if not metric_execution:
         raise HTTPException(status_code=404, detail="Execution not found")
 
-    return MetricExecution.build(metric_execution)
+    return MetricExecutionGroup.build(metric_execution)
 
 
 async def _get_result(execution_id, result_id, session) -> models.MetricExecutionResult:
