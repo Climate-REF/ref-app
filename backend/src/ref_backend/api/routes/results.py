@@ -5,14 +5,9 @@ from fastapi.responses import StreamingResponse
 
 from cmip_ref.models.metric_execution import ResultOutput
 from ref_backend.api.deps import ConfigDep, SessionDep
+from ref_backend.core.file_handling import file_iterator
 
 router = APIRouter(prefix="/results", tags=["results"])
-
-
-def _file_iterator(file_path: str, chunk_size: int = 1024):
-    with open(file_path, "rb") as file:
-        while chunk := file.read(chunk_size):
-            yield chunk
 
 
 @router.get("/{result_id}")
@@ -37,7 +32,7 @@ async def get_result(
         raise HTTPException(status_code=404, detail="Result file not found")
 
     return StreamingResponse(
-        _file_iterator(file_path),
+        file_iterator(file_path),
         media_type=mime_type,
         headers={"Content-Disposition": f"attachment; filename={result.filename}"},
     )

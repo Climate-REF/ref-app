@@ -93,3 +93,27 @@ async def get_metric_bundle(
     execution = metric.executions
 
     return CMECMetric.load_from_json(metric.r.build(metric))
+
+
+@router.get("/{provider_slug}/{metric_slug}/metric_bundle")
+async def get_metric_values(
+    session: SessionDep, provider_slug: str, metric_slug: str
+) -> CMECMetric:
+    """
+    Fetch a result using the slug
+    """
+    metric = (
+        session.query(Metric)
+        .join(Metric.provider)
+        .filter(
+            Metric.slug == metric_slug,
+            models.Provider.slug == provider_slug,
+        )
+        .one_or_none()
+    )
+    if metric is None:
+        raise HTTPException(status_code=404, detail="Metric not found")
+
+    metric_bundle = CMECMetric.load_from_json()
+
+    return metric_bundle

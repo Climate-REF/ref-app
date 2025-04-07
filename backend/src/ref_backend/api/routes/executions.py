@@ -1,7 +1,12 @@
+import mimetypes
+
 from fastapi import APIRouter, HTTPException
+from starlette.responses import StreamingResponse
 
 from cmip_ref import models
-from ref_backend.api.deps import SessionDep
+from cmip_ref_core.executor import EXECUTION_LOG_FILENAME
+from ref_backend.api.deps import ConfigDep, SessionDep
+from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
     DatasetCollection,
     MetricExecutionGroup,
@@ -72,3 +77,29 @@ async def get_execution_result_datasets(
     metric_result = await _get_result(execution_id, result_id, session)
 
     return DatasetCollection.build(metric_result.datasets)
+
+
+@router.get("/{execution_id}/result/{result_id}/logs")
+async def get_execution_result_logs(
+    session: SessionDep, config: ConfigDep, execution_id: int, result_id: int
+) -> StreamingResponse:
+    """
+    Fetch the logs for an execution result
+    """
+    metric_result = await _get_result(execution_id, result_id, session)
+
+    file_path = (
+        config.paths.results / metric_result.output_fragment / EXECUTION_LOG_FILENAME
+    )
+    mime_type, encoding = mimetypes.guess_file_type(file_path)
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Log file not found")
+
+    return StreamingResponse(
+        file_iterator(file_path),
+        media_type=mime_type,
+        headers={
+            "Content-Disposition": f"attachment; filename=execution_result_{result_id}.log"
+        },
+    )

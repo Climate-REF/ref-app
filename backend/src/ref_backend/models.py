@@ -74,7 +74,7 @@ class MetricSummary(BaseModel):
             provider=ProviderSummary.build(metric.provider),
             slug=metric.slug,
             name=metric.name,
-            metric_executions=[e.id for e in metric.executions],
+            metric_executions=[e.id for e in metric.execution_groups],
         )
 
 
@@ -120,7 +120,7 @@ class MetricExecutionGroup(BaseModel):
             outputs = [ResultOutput.build(o) for o in latest_result.outputs]
         return MetricExecutionGroup(
             id=execution.id,
-            key=execution.key,
+            key=execution.dataset_key,
             results=[MetricExecutionResult.build(r) for r in execution.results],
             latest_result=MetricExecutionResult.build(latest_result),
             outputs=outputs,
