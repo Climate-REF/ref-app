@@ -219,10 +219,20 @@ export const MetricExecutionGroupSchema = {
         },
         metric: {
             '$ref': '#/components/schemas/MetricSummary'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
         }
     },
     type: 'object',
-    required: ['id', 'key', 'results', 'latest_result', 'outputs', 'metric'],
+    required: ['id', 'key', 'results', 'latest_result', 'outputs', 'metric', 'created_at', 'updated_at'],
     title: 'MetricExecutionGroup'
 } as const;
 
@@ -349,10 +359,24 @@ export const ResultOutputSchema = {
         description: {
             type: 'string',
             title: 'Description'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        url: {
+            type: 'string',
+            title: 'Url'
         }
     },
     type: 'object',
-    required: ['id', 'output_type', 'filename', 'short_name', 'long_name', 'description'],
+    required: ['id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
     title: 'ResultOutput'
 } as const;
 

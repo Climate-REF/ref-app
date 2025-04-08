@@ -85,10 +85,9 @@ class ResultOutput(BaseModel):
     short_name: str
     long_name: str
     description: str
-
-    @property
-    def url(self) -> str:
-        return f"{settings.API_V1_STR}/results/{self.id}"
+    created_at: datetime
+    updated_at: datetime
+    url: str
 
     @staticmethod
     def build(output: ResultOutputModel) -> "ResultOutput":
@@ -100,6 +99,9 @@ class ResultOutput(BaseModel):
             short_name=output.short_name,
             long_name=output.long_name,
             description=output.description,
+            created_at=output.created_at,
+            updated_at=output.updated_at,
+            url=f"{settings.BACKEND_HOST}{settings.API_V1_STR}/results/{output.id}",
         )
 
 
@@ -110,6 +112,8 @@ class MetricExecutionGroup(BaseModel):
     latest_result: "MetricExecutionResult | None"
     outputs: "list[ResultOutput]"
     metric: MetricSummary
+    created_at: datetime
+    updated_at: datetime
 
     @staticmethod
     def build(execution: models.MetricExecutionGroup):
@@ -125,6 +129,8 @@ class MetricExecutionGroup(BaseModel):
             latest_result=MetricExecutionResult.build(latest_result),
             outputs=outputs,
             metric=MetricSummary.build(execution.metric),
+            created_at=execution.created_at,
+            updated_at=execution.updated_at,
         )
 
 

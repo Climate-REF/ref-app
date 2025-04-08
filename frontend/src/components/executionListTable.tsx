@@ -1,4 +1,4 @@
-import type { MetricExecution } from "@/client";
+import type { MetricExecutionGroup } from "@/client";
 import { metricsGetMetricExecutionsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/card.tsx";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { format } from "date-fns";
 
 import { SquareArrowOutUpRight } from "lucide-react";
 import { Link } from "react-router";
 
-const columnHelper = createColumnHelper<MetricExecution>();
+const columnHelper = createColumnHelper<MetricExecutionGroup>();
 
-export const columns: ColumnDef<MetricExecution>[] = [
+export const columns: ColumnDef<MetricExecutionGroup>[] = [
   {
     accessorKey: "key",
     header: "Key",
@@ -35,6 +36,10 @@ export const columns: ColumnDef<MetricExecution>[] = [
       ) : (
         <Badge variant={"destructive"}>No</Badge>
       ),
+  },
+  {
+    id: "updated_at",
+    accessorFn: (row) => format(new Date(row.updated_at), "yyyy-MM-dd HH:mm"),
   },
   columnHelper.display({
     id: "link",

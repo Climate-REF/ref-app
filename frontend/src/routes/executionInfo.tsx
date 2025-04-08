@@ -1,5 +1,6 @@
 import DatasetTable from "@/components/datasetTable.tsx";
 import { ExecutionLogContainer } from "@/components/executionLogs/executionLogContainer.tsx";
+import OutputListTable from "@/components/outputListTable.tsx";
 import PageHeader from "@/components/pageHeader";
 import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { useParams, useSearchParams } from "react-router";
 
 import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
@@ -29,6 +31,8 @@ const ExecutionInfo = () => {
       path: { execution_id: Number.parseInt(executionId) },
     }),
   );
+
+  const latestResult = data?.latest_result;
 
   // @ts-ignore
   return (
@@ -71,7 +75,10 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
-                    {data.latest_result?.updated_at}
+                    {format(
+                      new Date(latestResult?.updated_at as string),
+                      "yyyy-MM-dd HH:mm",
+                    )}
                   </p>
                 </div>
 
@@ -84,7 +91,7 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
                   <Badge className="mt-1">
-                    {data.latest_result?.successful ? "Success" : "Failed"}
+                    {latestResult?.successful ? "Success" : "Failed"}
                   </Badge>
                 </div>
                 <div className="space-y-1">
@@ -109,7 +116,7 @@ const ExecutionInfo = () => {
             <TabsList>
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
-              <TabsTrigger value="metadata">Metadata</TabsTrigger>
+              <TabsTrigger value="files">Files</TabsTrigger>
               <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
             </TabsList>
@@ -126,7 +133,7 @@ const ExecutionInfo = () => {
                 <CardContent>
                   <DatasetTable
                     executionId={Number.parseInt(executionId)}
-                    resultId={data?.latest_result?.id}
+                    resultId={latestResult?.id}
                   />
                 </CardContent>
               </Card>
@@ -136,18 +143,38 @@ const ExecutionInfo = () => {
               <ResultListTable results={data?.results} />
             </TabsContent>
 
-            <TabsContent value="metadata" className="space-y-4">
+            <TabsContent value="files" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Test</CardTitle>
+                  <CardTitle>Figures</CardTitle>
+                  <CardDescription>
+                    The datasets that were used in the calculation of this
+                    metric
+                  </CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    {data?.outputs
+                      .filter((output) => output.output_type === "plot")
+                      .map((output) => (
+                        <div
+                          key={output.id}
+                          className="flex flex-col items-center gap-2"
+                        >
+                          <img src={output.url} alt={output.description} />
+                          <small>{output.description}</small>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
               </Card>
+              <OutputListTable results={data?.outputs} />
             </TabsContent>
 
             <TabsContent value="raw-data" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Test</CardTitle>
+                  <CardTitle>Metrics</CardTitle>
                 </CardHeader>
               </Card>
             </TabsContent>
@@ -155,7 +182,7 @@ const ExecutionInfo = () => {
             <TabsContent value="logs" className="space-y-4">
               <ExecutionLogContainer
                 executionId={data?.id}
-                resultId={data?.latest_result?.id as number}
+                resultId={latestResult?.id as number}
               />
             </TabsContent>
           </Tabs>

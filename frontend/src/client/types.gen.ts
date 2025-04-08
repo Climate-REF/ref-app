@@ -78,6 +78,8 @@ export type MetricExecutionGroup = {
     latest_result: MetricExecutionResult | null;
     outputs: Array<ResultOutput>;
     metric: MetricSummary;
+    created_at: string;
+    updated_at: string;
 };
 
 export type MetricExecutionResult = {
@@ -121,6 +123,9 @@ export type ResultOutput = {
     short_name: string;
     long_name: string;
     description: string;
+    created_at: string;
+    updated_at: string;
+    url: string;
 };
 
 /**
