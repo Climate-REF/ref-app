@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
@@ -56,7 +57,7 @@ interface ExecutionListTableProps {
   metricSlug: string;
 }
 
-function ExecutionListTable({
+function ExecutionGroupTable({
   providerSlug,
   metricSlug,
 }: ExecutionListTableProps) {
@@ -69,7 +70,13 @@ function ExecutionListTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>List of recent metric executions</CardTitle>
+        <CardTitle>Metric Execution Groups</CardTitle>
+        <CardDescription className={"max-w-1/2"}>
+          A Metric Execution Group in the REF represents a unique combination of
+          datasets used to execute a specific metric. Each group can have
+          multiple results associated with it as new datasets are added or
+          removed.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <DataTable
@@ -81,4 +88,4 @@ function ExecutionListTable({
     </Card>
   );
 }
-export default ExecutionListTable;
+export default ExecutionGroupTable;

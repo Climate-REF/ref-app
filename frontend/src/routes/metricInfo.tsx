@@ -1,4 +1,4 @@
-import ExecutionListTable from "@/components/executionListTable.tsx";
+import ExecutionGroupTable from "@/components/executionGroupTable.tsx";
 import PageHeader from "@/components/pageHeader";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -54,7 +54,7 @@ const MetricInfo = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    Number of executions
+                    Number of execution groups
                   </p>
                   <p className="font-medium">
                     {data?.metric_executions.length}
@@ -68,12 +68,12 @@ const MetricInfo = () => {
         <div>
           <Tabs defaultValue="executions" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="executions">Executions</TabsTrigger>
+              <TabsTrigger value="executions">Execution Groups</TabsTrigger>
               <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="executions" className="space-y-4">
-              <ExecutionListTable
+              <ExecutionGroupTable
                 metricSlug={metricSlug}
                 providerSlug={providerSlug}
               />
@@ -82,7 +82,7 @@ const MetricInfo = () => {
             <TabsContent value="raw-data" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Test</CardTitle>
+                  <CardTitle>Portrait plot</CardTitle>
                 </CardHeader>
               </Card>
             </TabsContent>

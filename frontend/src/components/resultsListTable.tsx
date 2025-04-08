@@ -1,8 +1,10 @@
 import type { MetricExecutionResult } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
@@ -23,13 +25,23 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
     accessorKey: "successful",
   },
   {
+    id: "latest",
+    cell: (cell) => {
+      const latestResult = cell.row.index === 0;
+      if (latestResult) {
+        return <Badge variant="outline">Latest</Badge>;
+      }
+    },
+  },
+  {
     id: "updated_at",
+    header: "Updated At",
     accessorFn: (row) => format(new Date(row.updated_at), "yyyy-MM-dd HH:mm"),
   },
   columnHelper.display({
     id: "open",
-    cell: () => (
-      <Link to={`/execution/`}>
+    cell: (cell) => (
+      <Link to={`/execution/something/${cell.row.original.id}`}>
         <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
       </Link>
     ),
@@ -44,7 +56,10 @@ function ResultListTable({ results }: ResultListTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>List of recent metric executions</CardTitle>
+        <CardTitle>History of recent metric executions</CardTitle>
+        <CardDescription>
+          Only the latest results are used in the data explorer
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <DataTable data={results} columns={columns} />
