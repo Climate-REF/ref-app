@@ -1,5 +1,5 @@
 import DatasetTable from "@/components/datasetTable.tsx";
-import { ExecutionLogs } from "@/components/logView.tsx";
+import { ExecutionLogContainer } from "@/components/executionLogs/executionLogContainer.tsx";
 import PageHeader from "@/components/pageHeader";
 import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 
-import { executionsGetExecutionOptions } from "@/client/@tanstack/react-query.gen";
+import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
 
 const ExecutionInfo = () => {
   const { executionId } = useParams();
@@ -24,11 +24,12 @@ const ExecutionInfo = () => {
   }
 
   const { data } = useSuspenseQuery(
-    executionsGetExecutionOptions({
+    executionsGetExecutionGroupOptions({
       path: { execution_id: Number.parseInt(executionId) },
     }),
   );
 
+  // @ts-ignore
   return (
     <>
       <PageHeader
@@ -149,7 +150,10 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
-              <ExecutionLogs type={data?.key ?? "Unknown"} />
+              <ExecutionLogContainer
+                executionId={data?.id}
+                resultId={data?.latest_result?.id as number}
+              />
             </TabsContent>
           </Tabs>
         </div>

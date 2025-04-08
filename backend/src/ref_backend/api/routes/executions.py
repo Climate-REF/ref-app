@@ -49,8 +49,10 @@ async def get_execution_group(
 
 
 async def _get_result(execution_id, result_id, session) -> models.MetricExecutionResult:
-    metric_result = session.query(models.MetricExecutionResult).get(result_id)
-    if not metric_result or not metric_result.metric_execution_id == execution_id:
+    metric_result: models.MetricExecutionResult | None = session.query(
+        models.MetricExecutionResult
+    ).get(result_id)
+    if not metric_result or not metric_result.metric_execution_group_id == execution_id:
         raise HTTPException(status_code=404, detail="Result not found")
     return metric_result
 
@@ -91,7 +93,7 @@ async def get_execution_result_logs(
     file_path = (
         config.paths.results / metric_result.output_fragment / EXECUTION_LOG_FILENAME
     )
-    mime_type, encoding = mimetypes.guess_file_type(file_path)
+    mime_type, encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Log file not found")

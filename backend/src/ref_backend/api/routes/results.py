@@ -26,7 +26,7 @@ async def get_result(
         / result.metric_execution_result.output_fragment
         / result.filename
     )
-    mime_type, encoding = mimetypes.guess_file_type(file_path)
+    mime_type, encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Result file not found")

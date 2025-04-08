@@ -10,7 +10,7 @@ export default function AppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar metrics={data?.data ?? []} />
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden">
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
