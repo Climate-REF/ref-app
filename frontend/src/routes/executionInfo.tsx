@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 
 import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
 
 const ExecutionInfo = () => {
   const { executionId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   if (!executionId) {
     return <div>Not found</div>;
   }
@@ -102,7 +103,13 @@ const ExecutionInfo = () => {
         </div>
 
         <div>
-          <Tabs defaultValue="datasets" className="space-y-4">
+          <Tabs
+            defaultValue={searchParams.get("tab") ?? "datasets"}
+            className="space-y-4"
+            onValueChange={(value) =>
+              setSearchParams({ ...searchParams, tab: value })
+            }
+          >
             <TabsList>
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
