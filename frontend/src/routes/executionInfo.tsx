@@ -69,10 +69,6 @@ const ExecutionInfo = () => {
                   <p className="font-medium">{data?.key}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Dataset</p>
-                  <p className="font-medium">ImageNet-1K</p>
-                </div>
-                <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
                     {data.latest_result?.updated_at}
