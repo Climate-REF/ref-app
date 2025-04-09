@@ -32,20 +32,11 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
 function computeSidebarNav(metrics: MetricInfo[]) {
   return [
     {
-      title: "Overview",
-      items: [
-        {
-          title: "Project Structure",
-          url: "#",
-        },
-      ],
-    },
-    {
       title: "Data explorer",
       items: [
         {
           title: "Data Explorer",
-          url: "#",
+          url: "/explorer",
         },
       ],
     },

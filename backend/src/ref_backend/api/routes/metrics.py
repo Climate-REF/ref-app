@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 
 from cmip_ref import models
 from cmip_ref.models.metric import Metric
-from cmip_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import SessionDep
 from ref_backend.models import Collection, MetricExecutionGroup, MetricSummary
 
@@ -69,51 +68,3 @@ async def get_metric_executions(
         raise HTTPException(status_code=404, detail="Metric not found")
 
     return Collection(data=[MetricExecutionGroup.build(e) for e in executions])
-
-
-@router.get("/{provider_slug}/{metric_slug}/metric_bundle")
-async def get_metric_bundle(
-    session: SessionDep, provider_slug: str, metric_slug: str
-) -> CMECMetric:
-    """
-    Fetch a result using the slug
-    """
-    metric = (
-        session.query(Metric)
-        .join(Metric.provider)
-        .filter(
-            Metric.slug == metric_slug,
-            models.Provider.slug == provider_slug,
-        )
-        .one_or_none()
-    )
-    if metric is None:
-        raise HTTPException(status_code=404, detail="Metric not found")
-
-    execution = metric.executions
-
-    return CMECMetric.load_from_json(metric.r.build(metric))
-
-
-@router.get("/{provider_slug}/{metric_slug}/metric_bundle")
-async def get_metric_values(
-    session: SessionDep, provider_slug: str, metric_slug: str
-) -> CMECMetric:
-    """
-    Fetch a result using the slug
-    """
-    metric = (
-        session.query(Metric)
-        .join(Metric.provider)
-        .filter(
-            Metric.slug == metric_slug,
-            models.Provider.slug == provider_slug,
-        )
-        .one_or_none()
-    )
-    if metric is None:
-        raise HTTPException(status_code=404, detail="Metric not found")
-
-    metric_bundle = CMECMetric.load_from_json()
-
-    return metric_bundle

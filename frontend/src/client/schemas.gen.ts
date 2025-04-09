@@ -106,6 +106,21 @@ export const Collection_MetricSummary_Schema = {
     title: 'Collection[MetricSummary]'
 } as const;
 
+export const Collection_MetricValue_Schema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MetricValue'
+            },
+            type: 'array',
+            title: 'Data'
+        }
+    },
+    type: 'object',
+    required: ['data'],
+    title: 'Collection[MetricValue]'
+} as const;
+
 export const DatasetSchema = {
     properties: {
         id: {
@@ -314,6 +329,59 @@ export const MetricSummarySchema = {
     required: ['id', 'provider', 'slug', 'name', 'metric_executions'],
     title: 'MetricSummary',
     description: 'A unique provider'
+} as const;
+
+export const MetricValueSchema = {
+    properties: {
+        dimensions: {
+            additionalProperties: {
+                type: 'string'
+            },
+            type: 'object',
+            title: 'Dimensions'
+        },
+        value: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string'
+                }
+            ],
+            title: 'Value'
+        },
+        attributes: {
+            anyOf: [
+                {
+                    additionalProperties: {
+                        anyOf: [
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'number'
+                            },
+                            {
+                                type: 'integer'
+                            }
+                        ]
+                    },
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Attributes'
+        }
+    },
+    type: 'object',
+    required: ['dimensions', 'value'],
+    title: 'MetricValue',
+    description: `A flattened representation of a metric value
+
+This includes the dimensions and the value of the metric`
 } as const;
 
 export const ProviderSummarySchema = {

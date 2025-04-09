@@ -28,17 +28,17 @@ export const columns: ColumnDef<Dataset>[] = [
 ];
 
 interface DatasetTableProps {
-  executionId: number;
+  groupId: number;
   resultId?: number;
 }
 
-function DatasetTable({ executionId, resultId }: DatasetTableProps) {
+function DatasetTable({ groupId, resultId }: DatasetTableProps) {
   if (!resultId) {
     return null;
   }
   const { data } = useQuery(
     executionsGetExecutionResultDatasetsOptions({
-      path: { execution_id: executionId, result_id: resultId },
+      path: { group_id: groupId, result_id: resultId },
     }),
   );
   return <DataTable data={data?.data ?? []} columns={columns} />;

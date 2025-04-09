@@ -13,7 +13,7 @@ import { Download } from "lucide-react";
 import { ExecutionLogView, type LogMessage } from "./executionLogView.tsx";
 
 interface ExecutionLogContainerProps {
-  executionId: number;
+  groupId: number;
   resultId: number;
 }
 
@@ -70,12 +70,12 @@ const handleDownload = (fileData: string, filename: string) => {
 };
 
 export function ExecutionLogContainer({
-  executionId,
+  groupId,
   resultId,
 }: ExecutionLogContainerProps) {
   const { data, isLoading, error } = useQuery(
     executionsGetExecutionResultLogsOptions({
-      path: { execution_id: executionId, result_id: resultId },
+      path: { group_id: groupId, result_id: resultId },
     }),
   );
 

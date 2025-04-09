@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 from cmip_ref.config import Config
 from cmip_ref.database import Database
+from cmip_ref.models import MetricValue
+from cmip_ref_core.pycmec.controlled_vocabulary import CV
 
 
 def create_database_connection() -> tuple[Config, Database]:
@@ -16,6 +18,8 @@ def create_database_connection() -> tuple[Config, Database]:
 
 
 ref_config, database = create_database_connection()
+cv = CV.load_from_file(ref_config.paths.dimensions_cv)
+MetricValue.register_cv_dimensions(cv)
 
 
 def get_database_session() -> Generator[Session, None, None]:

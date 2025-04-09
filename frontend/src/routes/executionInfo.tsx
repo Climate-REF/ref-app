@@ -20,15 +20,15 @@ import { useParams, useSearchParams } from "react-router";
 import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
 
 const ExecutionInfo = () => {
-  const { executionId } = useParams();
+  const { groupId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  if (!executionId) {
+  if (!groupId) {
     return <div>Not found</div>;
   }
 
   const { data } = useSuspenseQuery(
     executionsGetExecutionGroupOptions({
-      path: { execution_id: Number.parseInt(executionId) },
+      path: { group_id: Number.parseInt(groupId) },
     }),
   );
 
@@ -132,7 +132,7 @@ const ExecutionInfo = () => {
                 </CardHeader>
                 <CardContent>
                   <DatasetTable
-                    executionId={Number.parseInt(executionId)}
+                    groupId={Number.parseInt(groupId)}
                     resultId={latestResult?.id}
                   />
                 </CardContent>
@@ -181,7 +181,7 @@ const ExecutionInfo = () => {
 
             <TabsContent value="logs" className="space-y-4">
               <ExecutionLogContainer
-                executionId={data?.id}
+                groupId={data?.id}
                 resultId={latestResult?.id as number}
               />
             </TabsContent>

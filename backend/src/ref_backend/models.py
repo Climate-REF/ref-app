@@ -109,7 +109,7 @@ class MetricExecutionGroup(BaseModel):
     id: int
     key: str
     results: "list[MetricExecutionResult]"
-    latest_result: "MetricExecutionResult | None"
+    latest_result: "MetricExecutionResult"
     outputs: "list[ResultOutput]"
     metric: MetricSummary
     created_at: datetime
