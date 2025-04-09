@@ -1,4 +1,4 @@
-import PageHeader from "@/components/pageHeader.tsx";
+import PageHeader from "@/components/app/pageHeader.tsx";
 import { useQuery } from "@tanstack/react-query";
 
 import { executionsListExecutionsOptions } from "@/client/@tanstack/react-query.gen";

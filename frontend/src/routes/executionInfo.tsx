@@ -1,7 +1,7 @@
-import DatasetTable from "@/components/datasetTable.tsx";
-import { ExecutionLogContainer } from "@/components/executionLogs/executionLogContainer.tsx";
-import OutputListTable from "@/components/outputListTable.tsx";
-import PageHeader from "@/components/pageHeader";
+import PageHeader from "@/components/app/pageHeader";
+import DatasetTable from "@/components/execution/datasetTable.tsx";
+import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
+import OutputListTable from "@/components/execution/outputListTable.tsx";
 import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button.tsx";

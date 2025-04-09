@@ -1,4 +1,4 @@
-import PageHeader from "@/components/pageHeader";
+import PageHeader from "@/components/app/pageHeader";
 import {
   Card,
   CardContent,

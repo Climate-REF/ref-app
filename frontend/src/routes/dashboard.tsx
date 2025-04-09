@@ -1,4 +1,4 @@
-import PageHeader from "@/components/pageHeader.tsx";
+import PageHeader from "@/components/app/pageHeader.tsx";
 
 const Dashboard = () => {
   return (

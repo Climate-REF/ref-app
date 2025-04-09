@@ -10,9 +10,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { VersionSwitcher } from "@/components/versionSwitcher.tsx";
 import type { ComponentProps } from "react";
 import { Link } from "react-router";
+import { VersionSwitcher } from "./versionSwitcher.tsx";
 
 interface MetricInfo {
   provider: { slug: string };

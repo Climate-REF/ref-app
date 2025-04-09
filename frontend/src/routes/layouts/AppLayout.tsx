@@ -1,5 +1,5 @@
 import { metricsListMetricsOptions } from "@/client/@tanstack/react-query.gen.ts";
-import { AppSidebar } from "@/components/appSidebar.tsx";
+import { AppSidebar } from "@/components/app/appSidebar.tsx";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet } from "react-router";
