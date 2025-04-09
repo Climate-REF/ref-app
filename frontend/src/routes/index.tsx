@@ -1,5 +1,6 @@
 import ExecutionInfo from "@/routes/executionInfo.tsx";
 import Executions from "@/routes/executions";
+import Metrics from "@/routes/metrics.tsx";
 import { Route, Routes } from "react-router";
 import Dashboard from "./dashboard";
 import AppLayout from "./layouts/AppLayout";
@@ -14,6 +15,7 @@ export const getRoutes = () => {
           path="/metrics/:providerSlug/:metricSlug"
           element={<MetricInfo />}
         />
+        <Route path="/metrics" element={<Metrics />} />
         <Route path="/executions" element={<Executions />} />
         <Route path="/executions/:executionId" element={<ExecutionInfo />} />
       </Route>

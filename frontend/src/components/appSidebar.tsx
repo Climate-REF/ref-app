@@ -51,6 +51,7 @@ function computeSidebarNav(metrics: MetricInfo[]) {
     },
     {
       title: "Metrics",
+      url: "/metrics",
       items: metrics.map((metric) => ({
         title: metric.name,
         url: `/metrics/${metric.provider.slug}/${metric.slug}`,
@@ -73,7 +74,9 @@ export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
         {/* We create a SidebarGroup for each parent. */}
         {sidebarNav.map((item) => (
           <SidebarGroup key={item.title}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+            <SidebarGroupLabel asChild>
+              {item.url ? <Link to={item.url}>{item.title}</Link> : item.title}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {item.items?.map((item) => (

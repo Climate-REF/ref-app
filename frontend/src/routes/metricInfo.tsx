@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 
 import { metricsGetMetricOptions } from "@/client/@tanstack/react-query.gen";
 
 const MetricInfo = () => {
   const { providerSlug, metricSlug } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   if (!metricSlug || !providerSlug) {
     return <div>Not found</div>;
   }
@@ -28,7 +30,10 @@ const MetricInfo = () => {
 
   return (
     <>
-      <PageHeader breadcrumbs={[{ name: "Metrics" }]} title={data?.name} />
+      <PageHeader
+        breadcrumbs={[{ name: "Metrics", url: "/metrics" }]}
+        title={data?.name}
+      />
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <Card className="md:col-span-2">
@@ -66,7 +71,13 @@ const MetricInfo = () => {
         </div>
 
         <div>
-          <Tabs defaultValue="executions" className="space-y-4">
+          <Tabs
+            value={searchParams.get("tab") ?? "executions"}
+            className="space-y-4"
+            onValueChange={(value) =>
+              setSearchParams({ ...searchParams, tab: value })
+            }
+          >
             <TabsList>
               <TabsTrigger value="executions">Execution Groups</TabsTrigger>
               <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
