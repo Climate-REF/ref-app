@@ -42,3 +42,14 @@ def get_ref_config() -> Generator[Config, None, None]:
         The configuration object
     """
     yield ref_config
+
+
+def get_cv() -> Generator[CV, None, None]:
+    """
+    Get the controlled vocabulary used by the REF
+
+    Returns
+    -------
+        CV
+    """
+    yield cv

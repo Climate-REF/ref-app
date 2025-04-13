@@ -32,13 +32,12 @@ interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
 function computeSidebarNav(metrics: MetricInfo[]) {
   return [
     {
-      title: "Data explorer",
-      items: [
-        {
-          title: "Data Explorer",
-          url: "/explorer",
-        },
-      ],
+      title: "Dashboard",
+      url: "/",
+    },
+    {
+      title: "Data Explorer",
+      url: "/explorer",
     },
     {
       title: "Metrics",
@@ -62,26 +61,42 @@ export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
         />
       </SidebarHeader>
       <SidebarContent>
-        {/* We create a SidebarGroup for each parent. */}
-        {sidebarNav.map((item) => (
-          <SidebarGroup key={item.title}>
-            <SidebarGroupLabel asChild>
-              {item.url ? <Link to={item.url}>{item.title}</Link> : item.title}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {item.items?.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    {/*<SidebarMenuButton asChild isActive={item.isActive}>*/}
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>{item.title}</Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {sidebarNav.map((item) => {
+          if (item.items) {
+            return (
+              <SidebarGroup key={item.title}>
+                <SidebarGroupLabel asChild>
+                  {item.url ? (
+                    <Link to={item.url}>{item.title}</Link>
+                  ) : (
+                    <div>{item.title}</div>
+                  )}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {item.items?.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        {/*<SidebarMenuButton asChild isActive={item.isActive}>*/}
+                        <SidebarMenuButton asChild>
+                          <Link to={item.url}>{item.title}</Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          }
+          return (
+            <SidebarGroup key={item.title}>
+              <SidebarGroupContent>
+                <SidebarMenuButton asChild>
+                  <Link to={item.url}>{item.title}</Link>
+                </SidebarMenuButton>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
