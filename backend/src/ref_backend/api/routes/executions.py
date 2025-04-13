@@ -5,28 +5,28 @@ from starlette.responses import StreamingResponse
 
 from cmip_ref import models
 from cmip_ref_core.executor import EXECUTION_LOG_FILENAME
-from cmip_ref_core.pycmec.metric import CMECMetric, MetricValue
+from cmip_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import ConfigDep, SessionDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
-    Collection,
     DatasetCollection,
     MetricExecutionGroup,
     MetricExecutionResult,
     MetricExecutions,
+    ValueCollection,
 )
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
 
 @router.get("/")
-async def list_executions(session: SessionDep, limit: int = 10) -> MetricExecutions:
+async def list(session: SessionDep, limit: int = 10) -> MetricExecutions:
     """
     List the most recent executions
     """
     metrics = (
-        session.query(models.MetricExecution)
-        .order_by(models.MetricExecution.updated_at)
+        session.query(models.MetricExecutionGroup)
+        .order_by(models.MetricExecutionGroup.updated_at)
         .limit(limit)
         .all()
     )
@@ -37,9 +37,7 @@ async def list_executions(session: SessionDep, limit: int = 10) -> MetricExecuti
 
 
 @router.get("/{group_id}")
-async def get_execution_group(
-    session: SessionDep, group_id: int
-) -> MetricExecutionGroup:
+async def get(session: SessionDep, group_id: str) -> MetricExecutionGroup:
     """
     Inspect a specific execution
     """
@@ -50,10 +48,21 @@ async def get_execution_group(
     return MetricExecutionGroup.build(metric_execution)
 
 
-async def _get_result(group_id, result_id, session) -> models.MetricExecutionResult:
-    metric_result: models.MetricExecutionResult | None = session.query(
-        models.MetricExecutionResult
-    ).get(result_id)
+async def _get_result(
+    group_id: str, result_id: str | None, session
+) -> models.MetricExecutionResult:
+    if result_id is not None:
+        metric_result: models.MetricExecutionResult | None = session.query(
+            models.MetricExecutionResult
+        ).get(result_id)
+    else:
+        group: models.MetricExecutionGroup = session.query(
+            models.MetricExecutionGroup
+        ).get(group_id)
+        if not group or len(group.results) == 0:
+            raise HTTPException(status_code=404, detail="Result not found")
+        metric_result = group.results[-1]
+
     if not metric_result or not metric_result.metric_execution_group_id == int(
         group_id
     ):
@@ -61,21 +70,23 @@ async def _get_result(group_id, result_id, session) -> models.MetricExecutionRes
     return metric_result
 
 
-@router.get("/{group_id}/result/{result_id}")
-async def get_execution_result(
-    session: SessionDep, group_id: int, result_id: int
+@router.get("/{group_id}/result")
+async def result(
+    session: SessionDep, group_id: str, result_id: str | None = None
 ) -> MetricExecutionResult:
     """
     Inspect a specific execution result
+
+    Gets the latest result if no result_id is provided
     """
     metric_result = await _get_result(group_id, result_id, session)
 
     return MetricExecutionResult.build(metric_result)
 
 
-@router.get("/{group_id}/result/{result_id}/datasets")
-async def get_execution_result_datasets(
-    session: SessionDep, group_id: int, result_id: int
+@router.get("/{group_id}/datasets")
+async def result_datasets(
+    session: SessionDep, group_id: str, result_id: str | None = None
 ) -> DatasetCollection:
     """
     Query the datasets that were used for a specific execution
@@ -85,9 +96,9 @@ async def get_execution_result_datasets(
     return DatasetCollection.build(metric_result.datasets)
 
 
-@router.get("/{group_id}/result/{result_id}/logs")
-async def get_execution_result_logs(
-    session: SessionDep, config: ConfigDep, group_id: int, result_id: int
+@router.get("/{group_id}/logs")
+async def result_logs(
+    session: SessionDep, config: ConfigDep, group_id: str, result_id: str | None = None
 ) -> StreamingResponse:
     """
     Fetch the logs for an execution result
@@ -111,9 +122,9 @@ async def get_execution_result_logs(
     )
 
 
-@router.get("/{group_id}/result/{result_id}/metric_bundle")
-async def get_metric_bundle(
-    session: SessionDep, config: ConfigDep, group_id: int, result_id: int
+@router.get("/{group_id}/metric_bundle")
+async def metric_bundle(
+    session: SessionDep, config: ConfigDep, group_id: str, result_id: str | None = None
 ) -> CMECMetric:
     """
     Fetch a result using the slug
@@ -128,10 +139,10 @@ async def get_metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
-@router.get("/{group_id}/result/{result_id}/values")
-async def get_metric_values(
-    session: SessionDep, group_id: int, result_id: int
-) -> Collection[MetricValue]:
+@router.get("/{group_id}/values")
+async def metric_values(
+    session: SessionDep, group_id: str, result_id: str | None = None
+) -> ValueCollection:
     """
     Fetch a result using the slug
     """
@@ -143,4 +154,4 @@ async def get_metric_values(
         .all()
     )
 
-    return Collection(data=metric_values)
+    return ValueCollection.build(metric_values)

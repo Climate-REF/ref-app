@@ -7,6 +7,7 @@ from cmip_ref import models
 from cmip_ref.models.dataset import CMIP6Dataset
 from cmip_ref.models.metric_execution import ResultOutput as ResultOutputModel
 from cmip_ref.models.metric_execution import ResultOutputType
+from cmip_ref_core.pycmec.metric import MetricValue
 from ref_backend.core.config import settings
 
 T = TypeVar("T")
@@ -198,4 +199,39 @@ class DatasetCollection(BaseModel):
     def build(datasets: list[models.Dataset]) -> "DatasetCollection":
         return DatasetCollection(
             data=[Dataset.build(d) for d in datasets], count=len(datasets)
+        )
+
+
+class Facet(BaseModel):
+    key: str
+    values: list[str]
+
+
+class ValueCollection(BaseModel):
+    data: list[MetricValue]
+    count: int
+    facets: list[Facet]
+
+    @staticmethod
+    def build(values: list[models.MetricValue]) -> "ValueCollection":
+        # TODO: Query this using SQL
+        facets: dict[str, set[str]] = {}
+        for v in values:
+            for key, value in v.dimensions.items():
+                if key in facets:
+                    facets[key].add(value)
+                else:
+                    facets[key] = {value}
+        return ValueCollection(
+            data=[
+                MetricValue(
+                    dimensions=v.dimensions, attributes=v.attributes, value=v.value
+                )
+                for v in values
+            ],
+            count=len(values),
+            facets=[
+                Facet(key=facet_key, values=list(facet_values))
+                for facet_key, facet_values in facets.items()
+            ],
         )

@@ -1,4 +1,7 @@
-import PageHeader from "@/components/app/pageHeader";
+import {
+  executionsGetOptions,
+  executionsResultOptions,
+} from "@/client/@tanstack/react-query.gen";
 import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
 import OutputListTable from "@/components/execution/outputListTable.tsx";
@@ -16,38 +19,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-
-import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
 import { z } from "zod";
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const { tab, resultId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { data } = useSuspenseQuery(
-    executionsGetExecutionGroupOptions({
-      path: { group_id: Number.parseInt(groupId) },
+    executionsGetOptions({
+      path: { group_id: groupId },
     }),
   );
 
-  const latestResult = data?.latest_result;
+  const { data: executionResult } = useSuspenseQuery(
+    executionsResultOptions({
+      path: { group_id: groupId },
+      query: { result_id: resultId },
+    }),
+  );
 
   return (
     <>
-      <PageHeader
-        breadcrumbs={[
-          {
-            name: "Metrics",
-            url: "/metrics",
-          },
-          {
-            name: data.metric.name,
-            url: `/metrics/${data.metric.provider.slug}/${data.metric.slug}`,
-          },
-        ]}
-        title={data?.key}
-      />
+      {/*<PageHeader*/}
+      {/*  breadcrumbs={[*/}
+      {/*    {*/}
+      {/*      name: "Metrics",*/}
+      {/*      url: "/metrics",*/}
+      {/*    },*/}
+      {/*    {*/}
+      {/*      name: data.metric.name,*/}
+      {/*      url: `/metrics/${data.metric.provider.slug}/${data.metric.slug}`,*/}
+      {/*    },*/}
+      {/*  ]}*/}
+      {/*  title={data?.key}*/}
+      {/*/>*/}
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <Card className="md:col-span-2">
@@ -74,7 +80,7 @@ const ExecutionInfo = () => {
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
                     {format(
-                      new Date(latestResult?.updated_at as string),
+                      new Date(executionResult.updated_at as string),
                       "yyyy-MM-dd HH:mm",
                     )}
                   </p>
@@ -89,7 +95,7 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
                   <Badge className="mt-1">
-                    {latestResult?.successful ? "Success" : "Failed"}
+                    {executionResult.successful ? "Success" : "Failed"}
                   </Badge>
                 </div>
                 <div className="space-y-1">
@@ -131,10 +137,7 @@ const ExecutionInfo = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <DatasetTable
-                    groupId={Number.parseInt(groupId)}
-                    resultId={latestResult?.id}
-                  />
+                  <DatasetTable groupId={groupId} resultId={resultId} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -180,10 +183,7 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
-              <ExecutionLogContainer
-                groupId={data?.id}
-                resultId={latestResult?.id as number}
-              />
+              <ExecutionLogContainer groupId={groupId} resultId={resultId} />
             </TabsContent>
           </Tabs>
         </div>
@@ -191,10 +191,12 @@ const ExecutionInfo = () => {
     </>
   );
 };
+
 const executionInfoSchema = z.object({
   tab: z
     .enum(["datasets", "executions", "files", "raw-data", "logs"])
     .default("datasets"),
+  resultId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/_app/executions/$groupId")({

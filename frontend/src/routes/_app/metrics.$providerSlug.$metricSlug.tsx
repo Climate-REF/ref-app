@@ -1,3 +1,4 @@
+import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
 import ExecutionGroupTable from "@/components/executionGroupTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,11 +9,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
-import { metricsGetMetricOptions } from "@/client/@tanstack/react-query.gen";
+import {
+  metricsGetMetricOptions,
+  metricsListMetricValuesOptions,
+} from "@/client/@tanstack/react-query.gen";
 
 const MetricInfo = () => {
   const { providerSlug, metricSlug } = Route.useParams();
@@ -20,6 +25,17 @@ const MetricInfo = () => {
   const navigate = useNavigate({ from: Route.fullPath });
 
   const data = Route.useLoaderData();
+
+  const { data: metricValues, isLoading } = useQuery(
+    metricsListMetricValuesOptions({
+      path: {
+        provider_slug: providerSlug,
+        metric_slug: metricSlug,
+      },
+    }),
+  );
+
+  console.log(metricValues);
 
   return (
     <>
@@ -74,11 +90,11 @@ const MetricInfo = () => {
         </TabsContent>
 
         <TabsContent value="raw-data" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Portrait plot</CardTitle>
-            </CardHeader>
-          </Card>
+          <ValuesDataTable
+            facets={metricValues?.facets ?? []}
+            values={metricValues?.data ?? []}
+            isLoading={isLoading}
+          />
         </TabsContent>
       </Tabs>
     </>

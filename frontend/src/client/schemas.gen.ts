@@ -106,21 +106,6 @@ export const Collection_MetricSummary_Schema = {
     title: 'Collection[MetricSummary]'
 } as const;
 
-export const Collection_MetricValue_Schema = {
-    properties: {
-        data: {
-            items: {
-                '$ref': '#/components/schemas/MetricValue'
-            },
-            type: 'array',
-            title: 'Data'
-        }
-    },
-    type: 'object',
-    required: ['data'],
-    title: 'Collection[MetricValue]'
-} as const;
-
 export const DatasetSchema = {
     properties: {
         id: {
@@ -170,6 +155,25 @@ export const DatasetCollectionSchema = {
     title: 'DatasetCollection'
 } as const;
 
+export const FacetSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        values: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Values'
+        }
+    },
+    type: 'object',
+    required: ['key', 'values'],
+    title: 'Facet'
+} as const;
+
 export const HTTPValidationErrorSchema = {
     properties: {
         detail: {
@@ -216,14 +220,7 @@ export const MetricExecutionGroupSchema = {
             title: 'Results'
         },
         latest_result: {
-            anyOf: [
-                {
-                    '$ref': '#/components/schemas/MetricExecutionResult'
-                },
-                {
-                    type: 'null'
-                }
-            ]
+            '$ref': '#/components/schemas/MetricExecutionResult'
         },
         outputs: {
             items: {
@@ -485,4 +482,30 @@ export const ValidationErrorSchema = {
     type: 'object',
     required: ['loc', 'msg', 'type'],
     title: 'ValidationError'
+} as const;
+
+export const ValueCollectionSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MetricValue'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        },
+        facets: {
+            items: {
+                '$ref': '#/components/schemas/Facet'
+            },
+            type: 'array',
+            title: 'Facets'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count', 'facets'],
+    title: 'ValueCollection'
 } as const;

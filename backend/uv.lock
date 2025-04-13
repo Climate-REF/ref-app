@@ -242,7 +242,7 @@ wheels = [
 [[package]]
 name = "cmip-ref"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { directory = "../../cmip-ref/packages/ref" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -269,10 +269,35 @@ postgres = [
     { name = "psycopg2-binary" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13.3" },
+    { name = "attrs", specifier = ">=24.2.0" },
+    { name = "cattrs", specifier = ">=24.1.2" },
+    { name = "cmip-ref-celery", marker = "extra == 'celery'", editable = "../../cmip-ref/packages/ref-celery" },
+    { name = "cmip-ref-core", editable = "../../cmip-ref/packages/ref-core" },
+    { name = "cmip-ref-metrics-esmvaltool", marker = "extra == 'metrics'", editable = "../../cmip-ref/packages/ref-metrics-esmvaltool" },
+    { name = "cmip-ref-metrics-example", marker = "extra == 'metrics'", editable = "../../cmip-ref/packages/ref-metrics-example" },
+    { name = "cmip-ref-metrics-ilamb", marker = "extra == 'metrics'", editable = "../../cmip-ref/packages/ref-metrics-ilamb" },
+    { name = "cmip-ref-metrics-pmp", marker = "extra == 'metrics'", editable = "../../cmip-ref/packages/ref-metrics-pmp" },
+    { name = "ecgtools", specifier = ">=2024.7.31" },
+    { name = "environs", specifier = ">=11.0.0" },
+    { name = "loguru", specifier = ">=0.7.2" },
+    { name = "platformdirs", specifier = ">=4.3.6" },
+    { name = "psycopg2-binary", marker = "extra == 'postgres'", specifier = ">=2.9.2" },
+    { name = "setuptools", specifier = ">=75.8.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.36" },
+    { name = "tomlkit", specifier = ">=0.13.2" },
+    { name = "typer", specifier = ">=0.12.5" },
+]
+
+[package.metadata.requires-dev]
+dev = []
+
 [[package]]
 name = "cmip-ref-core"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-core&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { editable = "../../cmip-ref/packages/ref-core" }
 dependencies = [
     { name = "attrs" },
     { name = "numpy" },
@@ -282,10 +307,23 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "attrs", specifier = ">=23.2.0" },
+    { name = "numpy", specifier = ">=1.25.0" },
+    { name = "pandas", specifier = ">=2.1.0" },
+    { name = "pydantic", specifier = ">=2.10.6" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "types-requests" }]
+
 [[package]]
 name = "cmip-ref-metrics-esmvaltool"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-esmvaltool&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { editable = "../../cmip-ref/packages/ref-metrics-esmvaltool" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "pooch" },
@@ -293,10 +331,18 @@ dependencies = [
     { name = "xarray" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "cmip-ref-core", editable = "../../cmip-ref/packages/ref-core" },
+    { name = "pooch", specifier = ">=1.8" },
+    { name = "ruamel-yaml", specifier = ">=0.18" },
+    { name = "xarray", specifier = ">=2023.3.0" },
+]
+
 [[package]]
 name = "cmip-ref-metrics-example"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-example&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { editable = "../../cmip-ref/packages/ref-metrics-example" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "dask" },
@@ -304,24 +350,54 @@ dependencies = [
     { name = "xarray" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "cmip-ref-core", editable = "../../cmip-ref/packages/ref-core" },
+    { name = "dask", specifier = ">=2024.10.0" },
+    { name = "netcdf4", specifier = ">=1.5.0" },
+    { name = "xarray", specifier = ">=2022" },
+]
+
+[package.metadata.requires-dev]
+dev = []
+
 [[package]]
 name = "cmip-ref-metrics-ilamb"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-ilamb&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { editable = "../../cmip-ref/packages/ref-metrics-ilamb" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "ilamb3" },
     { name = "types-pyyaml" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "cmip-ref-core", editable = "../../cmip-ref/packages/ref-core" },
+    { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
+]
+
+[package.metadata.requires-dev]
+dev = []
+
 [[package]]
 name = "cmip-ref-metrics-pmp"
 version = "0.3.1"
-source = { git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref-metrics-pmp&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5#ee099acfa2b09c9689944a26c18dc67b964c4fc5" }
+source = { editable = "../../cmip-ref/packages/ref-metrics-pmp" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "pcmdi-metrics" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "cmip-ref-core", editable = "../../cmip-ref/packages/ref-core" },
+    { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=v3.9" },
+]
+
+[package.metadata.requires-dev]
+dev = []
 
 [[package]]
 name = "colorama"
@@ -2059,7 +2135,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cmip-ref", extras = ["metrics", "postgres"], git = "https://github.com/Climate-REF/climate-ref.git?subdirectory=packages%2Fref&rev=ee099acfa2b09c9689944a26c18dc67b964c4fc5" },
+    { name = "cmip-ref", extras = ["metrics", "postgres"], directory = "../../cmip-ref/packages/ref" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472" },
     { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=v3.9" },

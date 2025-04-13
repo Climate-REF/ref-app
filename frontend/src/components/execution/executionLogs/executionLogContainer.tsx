@@ -1,4 +1,4 @@
-import { executionsGetExecutionResultLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { executionsResultLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,8 +13,8 @@ import { Download } from "lucide-react";
 import { ExecutionLogView, type LogMessage } from "./executionLogView.tsx";
 
 interface ExecutionLogContainerProps {
-  groupId: number;
-  resultId: number;
+  groupId: string;
+  resultId?: string;
 }
 
 function parseLogOutput(logOutput: string) {
@@ -74,8 +74,9 @@ export function ExecutionLogContainer({
   resultId,
 }: ExecutionLogContainerProps) {
   const { data, isLoading, error } = useQuery(
-    executionsGetExecutionResultLogsOptions({
-      path: { group_id: groupId, result_id: resultId },
+    executionsResultLogsOptions({
+      path: { group_id: groupId },
+      query: { result_id: resultId },
     }),
   );
 

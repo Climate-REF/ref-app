@@ -45,10 +45,6 @@ export type CollectionMetricSummary = {
     data: Array<MetricSummary>;
 };
 
-export type CollectionMetricValue = {
-    data: Array<MetricValue>;
-};
-
 export type Dataset = {
     id: number;
     slug: string;
@@ -59,6 +55,11 @@ export type Dataset = {
 export type DatasetCollection = {
     data: Array<Dataset>;
     count: number;
+};
+
+export type Facet = {
+    key: string;
+    values: Array<string>;
 };
 
 export type HttpValidationError = {
@@ -79,7 +80,7 @@ export type MetricExecutionGroup = {
     id: number;
     key: string;
     results: Array<MetricExecutionResult>;
-    latest_result: MetricExecutionResult | null;
+    latest_result: MetricExecutionResult;
     outputs: Array<ResultOutput>;
     metric: MetricSummary;
     created_at: string;
@@ -160,6 +161,12 @@ export type ValidationError = {
     type: string;
 };
 
+export type ValueCollection = {
+    data: Array<MetricValue>;
+    count: number;
+    facets: Array<Facet>;
+};
+
 export type MetricsListMetricsData = {
     body?: never;
     path?: never;
@@ -232,7 +239,35 @@ export type MetricsGetMetricExecutionsResponses = {
 
 export type MetricsGetMetricExecutionsResponse = MetricsGetMetricExecutionsResponses[keyof MetricsGetMetricExecutionsResponses];
 
-export type ExecutionsListExecutionsData = {
+export type MetricsListMetricValuesData = {
+    body?: never;
+    path: {
+        provider_slug: string;
+        metric_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/metrics/{provider_slug}/{metric_slug}/values';
+};
+
+export type MetricsListMetricValuesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MetricsListMetricValuesError = MetricsListMetricValuesErrors[keyof MetricsListMetricValuesErrors];
+
+export type MetricsListMetricValuesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ValueCollection;
+};
+
+export type MetricsListMetricValuesResponse = MetricsListMetricValuesResponses[keyof MetricsListMetricValuesResponses];
+
+export type ExecutionsListData = {
     body?: never;
     path?: never;
     query?: {
@@ -241,188 +276,193 @@ export type ExecutionsListExecutionsData = {
     url: '/api/v1/executions/';
 };
 
-export type ExecutionsListExecutionsErrors = {
+export type ExecutionsListErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsListExecutionsError = ExecutionsListExecutionsErrors[keyof ExecutionsListExecutionsErrors];
+export type ExecutionsListError = ExecutionsListErrors[keyof ExecutionsListErrors];
 
-export type ExecutionsListExecutionsResponses = {
+export type ExecutionsListResponses = {
     /**
      * Successful Response
      */
     200: MetricExecutions;
 };
 
-export type ExecutionsListExecutionsResponse = ExecutionsListExecutionsResponses[keyof ExecutionsListExecutionsResponses];
+export type ExecutionsListResponse = ExecutionsListResponses[keyof ExecutionsListResponses];
 
-export type ExecutionsGetExecutionGroupData = {
+export type ExecutionsGetData = {
     body?: never;
     path: {
-        group_id: number;
+        group_id: string;
     };
     query?: never;
     url: '/api/v1/executions/{group_id}';
 };
 
-export type ExecutionsGetExecutionGroupErrors = {
+export type ExecutionsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetExecutionGroupError = ExecutionsGetExecutionGroupErrors[keyof ExecutionsGetExecutionGroupErrors];
+export type ExecutionsGetError = ExecutionsGetErrors[keyof ExecutionsGetErrors];
 
-export type ExecutionsGetExecutionGroupResponses = {
+export type ExecutionsGetResponses = {
     /**
      * Successful Response
      */
     200: MetricExecutionGroup;
 };
 
-export type ExecutionsGetExecutionGroupResponse = ExecutionsGetExecutionGroupResponses[keyof ExecutionsGetExecutionGroupResponses];
+export type ExecutionsGetResponse = ExecutionsGetResponses[keyof ExecutionsGetResponses];
 
-export type ExecutionsGetExecutionResultData = {
+export type ExecutionsResultData = {
     body?: never;
     path: {
-        group_id: number;
-        result_id: number;
+        group_id: string;
     };
-    query?: never;
-    url: '/api/v1/executions/{group_id}/result/{result_id}';
+    query?: {
+        result_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/result';
 };
 
-export type ExecutionsGetExecutionResultErrors = {
+export type ExecutionsResultErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetExecutionResultError = ExecutionsGetExecutionResultErrors[keyof ExecutionsGetExecutionResultErrors];
+export type ExecutionsResultError = ExecutionsResultErrors[keyof ExecutionsResultErrors];
 
-export type ExecutionsGetExecutionResultResponses = {
+export type ExecutionsResultResponses = {
     /**
      * Successful Response
      */
     200: MetricExecutionResult;
 };
 
-export type ExecutionsGetExecutionResultResponse = ExecutionsGetExecutionResultResponses[keyof ExecutionsGetExecutionResultResponses];
+export type ExecutionsResultResponse = ExecutionsResultResponses[keyof ExecutionsResultResponses];
 
-export type ExecutionsGetExecutionResultDatasetsData = {
+export type ExecutionsResultDatasetsData = {
     body?: never;
     path: {
-        group_id: number;
-        result_id: number;
+        group_id: string;
     };
-    query?: never;
-    url: '/api/v1/executions/{group_id}/result/{result_id}/datasets';
+    query?: {
+        result_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/datasets';
 };
 
-export type ExecutionsGetExecutionResultDatasetsErrors = {
+export type ExecutionsResultDatasetsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetExecutionResultDatasetsError = ExecutionsGetExecutionResultDatasetsErrors[keyof ExecutionsGetExecutionResultDatasetsErrors];
+export type ExecutionsResultDatasetsError = ExecutionsResultDatasetsErrors[keyof ExecutionsResultDatasetsErrors];
 
-export type ExecutionsGetExecutionResultDatasetsResponses = {
+export type ExecutionsResultDatasetsResponses = {
     /**
      * Successful Response
      */
     200: DatasetCollection;
 };
 
-export type ExecutionsGetExecutionResultDatasetsResponse = ExecutionsGetExecutionResultDatasetsResponses[keyof ExecutionsGetExecutionResultDatasetsResponses];
+export type ExecutionsResultDatasetsResponse = ExecutionsResultDatasetsResponses[keyof ExecutionsResultDatasetsResponses];
 
-export type ExecutionsGetExecutionResultLogsData = {
+export type ExecutionsResultLogsData = {
     body?: never;
     path: {
-        group_id: number;
-        result_id: number;
+        group_id: string;
     };
-    query?: never;
-    url: '/api/v1/executions/{group_id}/result/{result_id}/logs';
+    query?: {
+        result_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/logs';
 };
 
-export type ExecutionsGetExecutionResultLogsErrors = {
+export type ExecutionsResultLogsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetExecutionResultLogsError = ExecutionsGetExecutionResultLogsErrors[keyof ExecutionsGetExecutionResultLogsErrors];
+export type ExecutionsResultLogsError = ExecutionsResultLogsErrors[keyof ExecutionsResultLogsErrors];
 
-export type ExecutionsGetExecutionResultLogsResponses = {
+export type ExecutionsResultLogsResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type ExecutionsGetMetricBundleData = {
+export type ExecutionsMetricBundleData = {
     body?: never;
     path: {
-        group_id: number;
-        result_id: number;
+        group_id: string;
     };
-    query?: never;
-    url: '/api/v1/executions/{group_id}/result/{result_id}/metric_bundle';
+    query?: {
+        result_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/metric_bundle';
 };
 
-export type ExecutionsGetMetricBundleErrors = {
+export type ExecutionsMetricBundleErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetMetricBundleError = ExecutionsGetMetricBundleErrors[keyof ExecutionsGetMetricBundleErrors];
+export type ExecutionsMetricBundleError = ExecutionsMetricBundleErrors[keyof ExecutionsMetricBundleErrors];
 
-export type ExecutionsGetMetricBundleResponses = {
+export type ExecutionsMetricBundleResponses = {
     /**
      * Successful Response
      */
     200: CmecMetric;
 };
 
-export type ExecutionsGetMetricBundleResponse = ExecutionsGetMetricBundleResponses[keyof ExecutionsGetMetricBundleResponses];
+export type ExecutionsMetricBundleResponse = ExecutionsMetricBundleResponses[keyof ExecutionsMetricBundleResponses];
 
-export type ExecutionsGetMetricValuesData = {
+export type ExecutionsMetricValuesData = {
     body?: never;
     path: {
-        group_id: number;
-        result_id: number;
+        group_id: string;
     };
-    query?: never;
-    url: '/api/v1/executions/{group_id}/result/{result_id}/values';
+    query?: {
+        result_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/values';
 };
 
-export type ExecutionsGetMetricValuesErrors = {
+export type ExecutionsMetricValuesErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsGetMetricValuesError = ExecutionsGetMetricValuesErrors[keyof ExecutionsGetMetricValuesErrors];
+export type ExecutionsMetricValuesError = ExecutionsMetricValuesErrors[keyof ExecutionsMetricValuesErrors];
 
-export type ExecutionsGetMetricValuesResponses = {
+export type ExecutionsMetricValuesResponses = {
     /**
      * Successful Response
      */
-    200: CollectionMetricValue;
+    200: ValueCollection;
 };
 
-export type ExecutionsGetMetricValuesResponse = ExecutionsGetMetricValuesResponses[keyof ExecutionsGetMetricValuesResponses];
+export type ExecutionsMetricValuesResponse = ExecutionsMetricValuesResponses[keyof ExecutionsMetricValuesResponses];
 
 export type ResultsGetResultData = {
     body?: never;

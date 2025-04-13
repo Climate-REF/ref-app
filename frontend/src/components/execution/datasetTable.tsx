@@ -3,7 +3,7 @@ import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
-import { executionsGetExecutionResultDatasetsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { executionsResultDatasetsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { SquareArrowOutUpRight } from "lucide-react";
 
 const columnHelper = createColumnHelper<Dataset>();
@@ -28,17 +28,15 @@ export const columns: ColumnDef<Dataset>[] = [
 ];
 
 interface DatasetTableProps {
-  groupId: number;
-  resultId?: number;
+  groupId: string;
+  resultId?: string;
 }
 
 function DatasetTable({ groupId, resultId }: DatasetTableProps) {
-  if (!resultId) {
-    return null;
-  }
   const { data } = useQuery(
-    executionsGetExecutionResultDatasetsOptions({
-      path: { group_id: groupId, result_id: resultId },
+    executionsResultDatasetsOptions({
+      path: { group_id: groupId },
+      query: { result_id: resultId },
     }),
   );
   return <DataTable data={data?.data ?? []} columns={columns} />;
