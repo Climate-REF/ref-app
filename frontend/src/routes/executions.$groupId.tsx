@@ -14,17 +14,16 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { useParams, useSearchParams } from "react-router";
 
 import { executionsGetExecutionGroupOptions } from "@/client/@tanstack/react-query.gen";
+import { z } from "zod";
 
 const ExecutionInfo = () => {
-  const { groupId } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  if (!groupId) {
-    return <div>Not found</div>;
-  }
+  const { groupId } = Route.useParams();
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
 
   const { data } = useSuspenseQuery(
     executionsGetExecutionGroupOptions({
@@ -34,7 +33,6 @@ const ExecutionInfo = () => {
 
   const latestResult = data?.latest_result;
 
-  // @ts-ignore
   return (
     <>
       <PageHeader
@@ -107,10 +105,12 @@ const ExecutionInfo = () => {
 
         <div>
           <Tabs
-            defaultValue={searchParams.get("tab") ?? "datasets"}
+            value={tab}
             className="space-y-4"
             onValueChange={(value) =>
-              setSearchParams({ ...searchParams, tab: value })
+              navigate({
+                search: (prev) => ({ ...prev, tab: value }),
+              })
             }
           >
             <TabsList>
@@ -191,5 +191,13 @@ const ExecutionInfo = () => {
     </>
   );
 };
+const executionInfoSchema = z.object({
+  tab: z
+    .enum(["datasets", "executions", "files", "raw-data", "logs"])
+    .default("datasets"),
+});
 
-export default ExecutionInfo;
+export const Route = createFileRoute("/executions/$groupId")({
+  component: ExecutionInfo,
+  validateSearch: executionInfoSchema,
+});

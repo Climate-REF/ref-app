@@ -1,13 +1,22 @@
-import type * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-function Tabs({
+type TabsProps<T extends string = string> = {
+  value?: T;
+  onValueChange?: (value: T) => void;
+} & Omit<
+  React.ComponentProps<typeof TabsPrimitive.Root>,
+  "value" | "onValueChange"
+>;
+
+function Tabs<T extends string = string>({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: TabsProps<T>) {
   return (
+    // @ts-ignore
     <TabsPrimitive.Root
       data-slot="tabs"
       className={cn("flex flex-col gap-2", className)}
@@ -32,10 +41,14 @@ function TabsList({
   );
 }
 
-function TabsTrigger({
+type TabsTriggerProps<T extends string = string> = {
+  value: T;
+} & Omit<React.ComponentProps<typeof TabsPrimitive.Trigger>, "value">;
+
+function TabsTrigger<T extends string = string>({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+}: TabsTriggerProps<T>) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
@@ -48,10 +61,14 @@ function TabsTrigger({
   );
 }
 
-function TabsContent({
+type TabsContentProps<T extends string = string> = {
+  value: T;
+} & Omit<React.ComponentProps<typeof TabsPrimitive.Content>, "value">;
+
+function TabsContent<T extends string = string>({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: TabsContentProps<T>) {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"

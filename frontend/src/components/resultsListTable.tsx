@@ -11,8 +11,8 @@ import {
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 
+import { Link } from "@tanstack/react-router";
 import { SquareArrowOutUpRight } from "lucide-react";
-import { Link } from "react-router";
 
 const columnHelper = createColumnHelper<MetricExecutionResult>();
 

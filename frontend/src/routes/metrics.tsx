@@ -9,6 +9,7 @@ import {
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { metricsListMetricsOptions } from "@/client/@tanstack/react-query.gen";
+import { createFileRoute } from "@tanstack/react-router";
 
 const Metrics = () => {
   const { data } = useSuspenseQuery(metricsListMetricsOptions());
@@ -46,4 +47,6 @@ const Metrics = () => {
   );
 };
 
-export default Metrics;
+export const Route = createFileRoute("/metrics")({
+  component: Metrics,
+});

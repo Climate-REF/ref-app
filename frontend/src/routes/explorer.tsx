@@ -7,10 +7,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs.tsx";
-import { useSearchParams } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 
 const Explorer = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
 
   return (
     <>
@@ -31,10 +34,12 @@ const Explorer = () => {
         </div>
         <div>
           <Tabs
-            value={searchParams.get("tab") ?? "themes"}
+            value={tab}
             className="space-y-4"
             onValueChange={(value) =>
-              setSearchParams({ ...searchParams, tab: value })
+              navigate({
+                search: (prev) => ({ ...prev, tab: value }),
+              })
             }
           >
             <TabsList className="w-full">
@@ -61,4 +66,20 @@ const Explorer = () => {
   );
 };
 
-export default Explorer;
+const explorerSchema = z.object({
+  tab: z.enum(["themes", "models", "metrics"]).default("themes"),
+  theme: z
+    .enum([
+      "atmosphere",
+      "earth-system",
+      "impact-and-adaptation",
+      "land",
+      "sea",
+    ])
+    .default("atmosphere"),
+});
+
+export const Route = createFileRoute("/explorer")({
+  component: Explorer,
+  validateSearch: zodValidator(explorerSchema),
+});

@@ -2,6 +2,7 @@ import PageHeader from "@/components/app/pageHeader.tsx";
 import { useQuery } from "@tanstack/react-query";
 
 import { executionsListExecutionsOptions } from "@/client/@tanstack/react-query.gen";
+import { createFileRoute } from "@tanstack/react-router";
 
 const Executions = () => {
   const { data } = useQuery(
@@ -19,5 +20,6 @@ const Executions = () => {
     </>
   );
 };
-
-export default Executions;
+export const Route = createFileRoute("/executions")({
+  component: Executions,
+});

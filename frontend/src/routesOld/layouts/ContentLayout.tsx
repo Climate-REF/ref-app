@@ -2,7 +2,7 @@ import PageHeader, {
   type BreadcrumbContent,
 } from "@/components/app/pageHeader.tsx";
 import { MDXProvider } from "@mdx-js/react";
-import { Outlet, type UIMatch, useMatches } from "react-router";
+import { Outlet, useMatches } from "@tanstack/react-router";
 
 interface RouteInfo {
   breadcrumbs?: BreadcrumbContent[];

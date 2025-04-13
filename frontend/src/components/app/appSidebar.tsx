@@ -10,8 +10,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Link } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
-import { Link } from "react-router";
 import { VersionSwitcher } from "./versionSwitcher.tsx";
 
 interface MetricInfo {

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button.tsx";
-import { useSearchParams } from "react-router";
+import { Route } from "@/routes/explorer.tsx";
+import { useNavigate } from "@tanstack/react-router";
 
 const themes = [
   {
@@ -30,14 +31,17 @@ const themes = [
 ];
 
 export function ThematicContent() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const themeName = searchParams.get("theme") ?? "atmosphere";
-  const theme = themes.find((theme) => theme.name === themeName);
+  const { theme } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const themeObj = themes.find((t) => t.name === theme);
 
   const setTheme = (theme: string) => {
-    setSearchParams((prev) => {
-      prev.set("theme", theme);
-      return prev;
+    navigate({
+      // @ts-ignore
+      search: (prev) => ({
+        ...prev,
+        theme,
+      }),
     });
   };
   return (
@@ -46,14 +50,14 @@ export function ThematicContent() {
         {themes.map((item) => (
           <Button
             key={item.title}
-            variant={item.name === themeName ? "default" : "outline"}
+            variant={item.name === theme ? "default" : "outline"}
             onClick={() => setTheme(item.name)}
           >
             {item.title}
           </Button>
         ))}
       </div>
-      <div>{theme?.element}</div>
+      <div>{themeObj?.element}</div>
     </>
   );
 }

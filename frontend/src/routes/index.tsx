@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button.tsx";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router";
+
+import { createFileRoute } from "@tanstack/react-router";
 
 const Dashboard = () => {
   return (
@@ -43,4 +45,6 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export const Route = createFileRoute("/")({
+  component: Dashboard,
+});

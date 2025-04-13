@@ -10,17 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useParams, useSearchParams } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 
 import { metricsGetMetricOptions } from "@/client/@tanstack/react-query.gen";
 
 const MetricInfo = () => {
-  const { providerSlug, metricSlug } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  if (!metricSlug || !providerSlug) {
-    return <div>Not found</div>;
-  }
+  const { providerSlug, metricSlug } = Route.useParams();
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
 
   const { data } = useSuspenseQuery(
     metricsGetMetricOptions({
@@ -72,10 +71,12 @@ const MetricInfo = () => {
 
         <div>
           <Tabs
-            value={searchParams.get("tab") ?? "executions"}
+            value={tab}
             className="space-y-4"
             onValueChange={(value) =>
-              setSearchParams({ ...searchParams, tab: value })
+              navigate({
+                search: (prev) => ({ ...prev, tab: value }),
+              })
             }
           >
             <TabsList>
@@ -104,4 +105,11 @@ const MetricInfo = () => {
   );
 };
 
-export default MetricInfo;
+const metricInfoSchema = z.object({
+  tab: z.enum(["executions", "raw-data"]).default("executions"),
+});
+
+export const Route = createFileRoute("/metrics/$providerSlug/$metricSlug")({
+  component: MetricInfo,
+  validateSearch: zodValidator(metricInfoSchema),
+});
