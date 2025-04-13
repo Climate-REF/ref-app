@@ -1,10 +1,12 @@
 import {
   executionsGetOptions,
+  executionsListMetricValuesOptions,
   executionsResultOptions,
 } from "@/client/@tanstack/react-query.gen";
 import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
 import OutputListTable from "@/components/execution/outputListTable.tsx";
+import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
 import ResultListTable from "@/components/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { z } from "zod";
@@ -34,6 +36,13 @@ const ExecutionInfo = () => {
 
   const { data: executionResult } = useSuspenseQuery(
     executionsResultOptions({
+      path: { group_id: groupId },
+      query: { result_id: resultId },
+    }),
+  );
+
+  const metricValues = useQuery(
+    executionsListMetricValuesOptions({
       path: { group_id: groupId },
       query: { result_id: resultId },
     }),
@@ -123,7 +132,7 @@ const ExecutionInfo = () => {
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
               <TabsTrigger value="files">Files</TabsTrigger>
-              <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
+              <TabsTrigger value="raw-data">Metric Values</TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
             </TabsList>
 
@@ -179,6 +188,13 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Metrics</CardTitle>
                 </CardHeader>
+                <CardContent>
+                  <ValuesDataTable
+                    facets={metricValues.data?.facets ?? []}
+                    values={metricValues.data?.data ?? []}
+                    isLoading={metricValues.isLoading}
+                  />
+                </CardContent>
               </Card>
             </TabsContent>
 

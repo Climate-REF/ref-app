@@ -435,7 +435,7 @@ export type ExecutionsMetricBundleResponses = {
 
 export type ExecutionsMetricBundleResponse = ExecutionsMetricBundleResponses[keyof ExecutionsMetricBundleResponses];
 
-export type ExecutionsMetricValuesData = {
+export type ExecutionsListMetricValuesData = {
     body?: never;
     path: {
         group_id: string;
@@ -446,23 +446,23 @@ export type ExecutionsMetricValuesData = {
     url: '/api/v1/executions/{group_id}/values';
 };
 
-export type ExecutionsMetricValuesErrors = {
+export type ExecutionsListMetricValuesErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsMetricValuesError = ExecutionsMetricValuesErrors[keyof ExecutionsMetricValuesErrors];
+export type ExecutionsListMetricValuesError = ExecutionsListMetricValuesErrors[keyof ExecutionsListMetricValuesErrors];
 
-export type ExecutionsMetricValuesResponses = {
+export type ExecutionsListMetricValuesResponses = {
     /**
      * Successful Response
      */
     200: ValueCollection;
 };
 
-export type ExecutionsMetricValuesResponse = ExecutionsMetricValuesResponses[keyof ExecutionsMetricValuesResponses];
+export type ExecutionsListMetricValuesResponse = ExecutionsListMetricValuesResponses[keyof ExecutionsListMetricValuesResponses];
 
 export type ResultsGetResultData = {
     body?: never;

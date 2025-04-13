@@ -140,7 +140,7 @@ async def metric_bundle(
 
 
 @router.get("/{group_id}/values")
-async def metric_values(
+async def list_metric_values(
     session: SessionDep, group_id: str, result_id: str | None = None
 ) -> ValueCollection:
     """

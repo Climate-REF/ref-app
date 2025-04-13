@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { Route } from "@/routes/_app/executions.$groupId.tsx";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { SquareArrowOutUpRight } from "lucide-react";
 
 const columnHelper = createColumnHelper<MetricExecutionResult>();
@@ -27,8 +28,12 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
   {
     id: "latest",
     cell: (cell) => {
-      const latestResult = cell.row.index === 0;
-      if (latestResult) {
+      const rowIndex = cell.row.index;
+      const { resultId } = Route.useSearch();
+      if (resultId && cell.row.original.id.toString() === resultId) {
+        return <Badge variant="default">Selected</Badge>;
+      }
+      if (rowIndex === 0) {
         return <Badge variant="outline">Latest</Badge>;
       }
     },
@@ -40,11 +45,22 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
   },
   columnHelper.display({
     id: "open",
-    cell: (cell) => (
-      <Link to={`/execution/something/${cell.row.original.id}`}>
-        <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
-      </Link>
-    ),
+    cell: (context) => {
+      const navigate = useNavigate({ from: Route.fullPath });
+      return (
+        <SquareArrowOutUpRight
+          className="hover:text-blue-300 text-blue-500"
+          onClick={() => {
+            return navigate({
+              search: (prev) => ({
+                ...prev,
+                resultId: context.row.original.id.toString(),
+              }),
+            });
+          }}
+        />
+      );
+    },
   }),
 ];
 
