@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button.tsx";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router";
 
 const Dashboard = () => {
   return (
@@ -23,7 +24,7 @@ const Dashboard = () => {
                 </a>
               </Button>
               <Button variant="outline" asChild size="lg">
-                <a href="/about">Learn More</a>
+                <Link to="/content/about">Learn More</Link>
               </Button>
             </div>
           </div>

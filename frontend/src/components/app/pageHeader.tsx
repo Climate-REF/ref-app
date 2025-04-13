@@ -9,7 +9,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 
-interface BreadcrumbContent {
+export interface BreadcrumbContent {
   url?: string;
   name: string;
 }
