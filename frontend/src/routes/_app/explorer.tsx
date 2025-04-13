@@ -1,3 +1,4 @@
+import { MetricsExplorer } from "@/components/explorer/metricExplorer.tsx";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -43,7 +44,7 @@ const Explorer = () => {
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="themes" className="space-y-4">
+          <TabsContent value="themes">
             <ThematicContent />
           </TabsContent>
 
@@ -51,8 +52,8 @@ const Explorer = () => {
             <div />
           </TabsContent>
 
-          <TabsContent value="metrics" className="space-y-4">
-            <div />
+          <TabsContent value="metrics">
+            <MetricsExplorer />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,3 +1,5 @@
+import { AtmosphereTheme } from "@/components/explorer/theme/atmosphere.tsx";
+import { EarthSystemTheme } from "@/components/explorer/theme/earthSystem.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Route } from "@/routes/_app/explorer.tsx";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,12 +8,12 @@ const themes = [
   {
     name: "atmosphere",
     title: "Atmosphere",
-    element: <>Test</>,
+    element: <AtmosphereTheme />,
   },
   {
     name: "earth-system",
     title: "Earth System",
-    element: <>Test</>,
+    element: <EarthSystemTheme />,
   },
   {
     name: "impact-and-adaptation",
