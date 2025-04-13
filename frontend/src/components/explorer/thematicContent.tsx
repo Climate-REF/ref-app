@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button.tsx";
-import { Route } from "@/routes/explorer.tsx";
+import { Route } from "@/routes/_app/explorer.tsx";
 import { useNavigate } from "@tanstack/react-router";
 
 const themes = [

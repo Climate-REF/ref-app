@@ -11,30 +11,26 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as MetricsImport } from './routes/metrics'
-import { Route as ExplorerImport } from './routes/explorer'
-import { Route as ExecutionsImport } from './routes/executions'
+import { Route as ContentRouteImport } from './routes/content/route'
+import { Route as AppRouteImport } from './routes/_app/route'
 import { Route as IndexImport } from './routes/index'
-import { Route as ExecutionsGroupIdImport } from './routes/executions.$groupId'
-import { Route as MetricsProviderSlugMetricSlugImport } from './routes/metrics.$providerSlug.$metricSlug'
+import { Route as ContentAboutImport } from './routes/content/about'
+import { Route as AppExplorerImport } from './routes/_app/explorer'
+import { Route as AppExecutionsImport } from './routes/_app/executions'
+import { Route as AppMetricsIndexImport } from './routes/_app/metrics.index'
+import { Route as AppExecutionsGroupIdImport } from './routes/_app/executions.$groupId'
+import { Route as AppMetricsProviderSlugMetricSlugImport } from './routes/_app/metrics.$providerSlug.$metricSlug'
 
 // Create/Update Routes
 
-const MetricsRoute = MetricsImport.update({
-  id: '/metrics',
-  path: '/metrics',
+const ContentRouteRoute = ContentRouteImport.update({
+  id: '/content',
+  path: '/content',
   getParentRoute: () => rootRoute,
 } as any)
 
-const ExplorerRoute = ExplorerImport.update({
-  id: '/explorer',
-  path: '/explorer',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const ExecutionsRoute = ExecutionsImport.update({
-  id: '/executions',
-  path: '/executions',
+const AppRouteRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -44,17 +40,41 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ExecutionsGroupIdRoute = ExecutionsGroupIdImport.update({
-  id: '/$groupId',
-  path: '/$groupId',
-  getParentRoute: () => ExecutionsRoute,
+const ContentAboutRoute = ContentAboutImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => ContentRouteRoute,
 } as any)
 
-const MetricsProviderSlugMetricSlugRoute =
-  MetricsProviderSlugMetricSlugImport.update({
-    id: '/$providerSlug/$metricSlug',
-    path: '/$providerSlug/$metricSlug',
-    getParentRoute: () => MetricsRoute,
+const AppExplorerRoute = AppExplorerImport.update({
+  id: '/explorer',
+  path: '/explorer',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppExecutionsRoute = AppExecutionsImport.update({
+  id: '/executions',
+  path: '/executions',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppMetricsIndexRoute = AppMetricsIndexImport.update({
+  id: '/metrics/',
+  path: '/metrics/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppExecutionsGroupIdRoute = AppExecutionsGroupIdImport.update({
+  id: '/$groupId',
+  path: '/$groupId',
+  getParentRoute: () => AppExecutionsRoute,
+} as any)
+
+const AppMetricsProviderSlugMetricSlugRoute =
+  AppMetricsProviderSlugMetricSlugImport.update({
+    id: '/metrics/$providerSlug/$metricSlug',
+    path: '/metrics/$providerSlug/$metricSlug',
+    getParentRoute: () => AppRouteRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -68,137 +88,193 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/executions': {
-      id: '/executions'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/content': {
+      id: '/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof ContentRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/_app/executions': {
+      id: '/_app/executions'
       path: '/executions'
       fullPath: '/executions'
-      preLoaderRoute: typeof ExecutionsImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AppExecutionsImport
+      parentRoute: typeof AppRouteImport
     }
-    '/explorer': {
-      id: '/explorer'
+    '/_app/explorer': {
+      id: '/_app/explorer'
       path: '/explorer'
       fullPath: '/explorer'
-      preLoaderRoute: typeof ExplorerImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AppExplorerImport
+      parentRoute: typeof AppRouteImport
     }
-    '/metrics': {
-      id: '/metrics'
-      path: '/metrics'
-      fullPath: '/metrics'
-      preLoaderRoute: typeof MetricsImport
-      parentRoute: typeof rootRoute
+    '/content/about': {
+      id: '/content/about'
+      path: '/about'
+      fullPath: '/content/about'
+      preLoaderRoute: typeof ContentAboutImport
+      parentRoute: typeof ContentRouteImport
     }
-    '/executions/$groupId': {
-      id: '/executions/$groupId'
+    '/_app/executions/$groupId': {
+      id: '/_app/executions/$groupId'
       path: '/$groupId'
       fullPath: '/executions/$groupId'
-      preLoaderRoute: typeof ExecutionsGroupIdImport
-      parentRoute: typeof ExecutionsImport
+      preLoaderRoute: typeof AppExecutionsGroupIdImport
+      parentRoute: typeof AppExecutionsImport
     }
-    '/metrics/$providerSlug/$metricSlug': {
-      id: '/metrics/$providerSlug/$metricSlug'
-      path: '/$providerSlug/$metricSlug'
+    '/_app/metrics/': {
+      id: '/_app/metrics/'
+      path: '/metrics'
+      fullPath: '/metrics'
+      preLoaderRoute: typeof AppMetricsIndexImport
+      parentRoute: typeof AppRouteImport
+    }
+    '/_app/metrics/$providerSlug/$metricSlug': {
+      id: '/_app/metrics/$providerSlug/$metricSlug'
+      path: '/metrics/$providerSlug/$metricSlug'
       fullPath: '/metrics/$providerSlug/$metricSlug'
-      preLoaderRoute: typeof MetricsProviderSlugMetricSlugImport
-      parentRoute: typeof MetricsImport
+      preLoaderRoute: typeof AppMetricsProviderSlugMetricSlugImport
+      parentRoute: typeof AppRouteImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface ExecutionsRouteChildren {
-  ExecutionsGroupIdRoute: typeof ExecutionsGroupIdRoute
+interface AppExecutionsRouteChildren {
+  AppExecutionsGroupIdRoute: typeof AppExecutionsGroupIdRoute
 }
 
-const ExecutionsRouteChildren: ExecutionsRouteChildren = {
-  ExecutionsGroupIdRoute: ExecutionsGroupIdRoute,
+const AppExecutionsRouteChildren: AppExecutionsRouteChildren = {
+  AppExecutionsGroupIdRoute: AppExecutionsGroupIdRoute,
 }
 
-const ExecutionsRouteWithChildren = ExecutionsRoute._addFileChildren(
-  ExecutionsRouteChildren,
+const AppExecutionsRouteWithChildren = AppExecutionsRoute._addFileChildren(
+  AppExecutionsRouteChildren,
 )
 
-interface MetricsRouteChildren {
-  MetricsProviderSlugMetricSlugRoute: typeof MetricsProviderSlugMetricSlugRoute
+interface AppRouteRouteChildren {
+  AppExecutionsRoute: typeof AppExecutionsRouteWithChildren
+  AppExplorerRoute: typeof AppExplorerRoute
+  AppMetricsIndexRoute: typeof AppMetricsIndexRoute
+  AppMetricsProviderSlugMetricSlugRoute: typeof AppMetricsProviderSlugMetricSlugRoute
 }
 
-const MetricsRouteChildren: MetricsRouteChildren = {
-  MetricsProviderSlugMetricSlugRoute: MetricsProviderSlugMetricSlugRoute,
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppExecutionsRoute: AppExecutionsRouteWithChildren,
+  AppExplorerRoute: AppExplorerRoute,
+  AppMetricsIndexRoute: AppMetricsIndexRoute,
+  AppMetricsProviderSlugMetricSlugRoute: AppMetricsProviderSlugMetricSlugRoute,
 }
 
-const MetricsRouteWithChildren =
-  MetricsRoute._addFileChildren(MetricsRouteChildren)
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
+interface ContentRouteRouteChildren {
+  ContentAboutRoute: typeof ContentAboutRoute
+}
+
+const ContentRouteRouteChildren: ContentRouteRouteChildren = {
+  ContentAboutRoute: ContentAboutRoute,
+}
+
+const ContentRouteRouteWithChildren = ContentRouteRoute._addFileChildren(
+  ContentRouteRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/executions': typeof ExecutionsRouteWithChildren
-  '/explorer': typeof ExplorerRoute
-  '/metrics': typeof MetricsRouteWithChildren
-  '/executions/$groupId': typeof ExecutionsGroupIdRoute
-  '/metrics/$providerSlug/$metricSlug': typeof MetricsProviderSlugMetricSlugRoute
+  '': typeof AppRouteRouteWithChildren
+  '/content': typeof ContentRouteRouteWithChildren
+  '/executions': typeof AppExecutionsRouteWithChildren
+  '/explorer': typeof AppExplorerRoute
+  '/content/about': typeof ContentAboutRoute
+  '/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/metrics': typeof AppMetricsIndexRoute
+  '/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/executions': typeof ExecutionsRouteWithChildren
-  '/explorer': typeof ExplorerRoute
-  '/metrics': typeof MetricsRouteWithChildren
-  '/executions/$groupId': typeof ExecutionsGroupIdRoute
-  '/metrics/$providerSlug/$metricSlug': typeof MetricsProviderSlugMetricSlugRoute
+  '': typeof AppRouteRouteWithChildren
+  '/content': typeof ContentRouteRouteWithChildren
+  '/executions': typeof AppExecutionsRouteWithChildren
+  '/explorer': typeof AppExplorerRoute
+  '/content/about': typeof ContentAboutRoute
+  '/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/metrics': typeof AppMetricsIndexRoute
+  '/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/executions': typeof ExecutionsRouteWithChildren
-  '/explorer': typeof ExplorerRoute
-  '/metrics': typeof MetricsRouteWithChildren
-  '/executions/$groupId': typeof ExecutionsGroupIdRoute
-  '/metrics/$providerSlug/$metricSlug': typeof MetricsProviderSlugMetricSlugRoute
+  '/_app': typeof AppRouteRouteWithChildren
+  '/content': typeof ContentRouteRouteWithChildren
+  '/_app/executions': typeof AppExecutionsRouteWithChildren
+  '/_app/explorer': typeof AppExplorerRoute
+  '/content/about': typeof ContentAboutRoute
+  '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/_app/metrics/': typeof AppMetricsIndexRoute
+  '/_app/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | ''
+    | '/content'
     | '/executions'
     | '/explorer'
-    | '/metrics'
+    | '/content/about'
     | '/executions/$groupId'
+    | '/metrics'
     | '/metrics/$providerSlug/$metricSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | ''
+    | '/content'
     | '/executions'
     | '/explorer'
-    | '/metrics'
+    | '/content/about'
     | '/executions/$groupId'
+    | '/metrics'
     | '/metrics/$providerSlug/$metricSlug'
   id:
     | '__root__'
     | '/'
-    | '/executions'
-    | '/explorer'
-    | '/metrics'
-    | '/executions/$groupId'
-    | '/metrics/$providerSlug/$metricSlug'
+    | '/_app'
+    | '/content'
+    | '/_app/executions'
+    | '/_app/explorer'
+    | '/content/about'
+    | '/_app/executions/$groupId'
+    | '/_app/metrics/'
+    | '/_app/metrics/$providerSlug/$metricSlug'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ExecutionsRoute: typeof ExecutionsRouteWithChildren
-  ExplorerRoute: typeof ExplorerRoute
-  MetricsRoute: typeof MetricsRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
+  ContentRouteRoute: typeof ContentRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ExecutionsRoute: ExecutionsRouteWithChildren,
-  ExplorerRoute: ExplorerRoute,
-  MetricsRoute: MetricsRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
+  ContentRouteRoute: ContentRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -212,36 +288,54 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/executions",
-        "/explorer",
-        "/metrics"
+        "/_app",
+        "/content"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/executions": {
-      "filePath": "executions.tsx",
+    "/_app": {
+      "filePath": "_app/route.tsx",
       "children": [
-        "/executions/$groupId"
+        "/_app/executions",
+        "/_app/explorer",
+        "/_app/metrics/",
+        "/_app/metrics/$providerSlug/$metricSlug"
       ]
     },
-    "/explorer": {
-      "filePath": "explorer.tsx"
-    },
-    "/metrics": {
-      "filePath": "metrics.tsx",
+    "/content": {
+      "filePath": "content/route.tsx",
       "children": [
-        "/metrics/$providerSlug/$metricSlug"
+        "/content/about"
       ]
     },
-    "/executions/$groupId": {
-      "filePath": "executions.$groupId.tsx",
-      "parent": "/executions"
+    "/_app/executions": {
+      "filePath": "_app/executions.tsx",
+      "parent": "/_app",
+      "children": [
+        "/_app/executions/$groupId"
+      ]
     },
-    "/metrics/$providerSlug/$metricSlug": {
-      "filePath": "metrics.$providerSlug.$metricSlug.tsx",
-      "parent": "/metrics"
+    "/_app/explorer": {
+      "filePath": "_app/explorer.tsx",
+      "parent": "/_app"
+    },
+    "/content/about": {
+      "filePath": "content/about.ts",
+      "parent": "/content"
+    },
+    "/_app/executions/$groupId": {
+      "filePath": "_app/executions.$groupId.tsx",
+      "parent": "/_app/executions"
+    },
+    "/_app/metrics/": {
+      "filePath": "_app/metrics.index.tsx",
+      "parent": "/_app"
+    },
+    "/_app/metrics/$providerSlug/$metricSlug": {
+      "filePath": "_app/metrics.$providerSlug.$metricSlug.tsx",
+      "parent": "/_app"
     }
   }
 }

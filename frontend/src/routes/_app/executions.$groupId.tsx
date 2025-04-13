@@ -197,7 +197,7 @@ const executionInfoSchema = z.object({
     .default("datasets"),
 });
 
-export const Route = createFileRoute("/executions/$groupId")({
+export const Route = createFileRoute("/_app/executions/$groupId")({
   component: ExecutionInfo,
   validateSearch: executionInfoSchema,
 });
