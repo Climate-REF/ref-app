@@ -202,6 +202,17 @@ class DatasetCollection(BaseModel):
         )
 
 
+class MetricValue(MetricValue):
+    """
+    A flattened representation of a metric value
+
+    This includes the dimensions and the value of the metric
+    """
+
+    execution_group_id: int
+    result_id: int
+
+
 class Facet(BaseModel):
     key: str
     values: list[str]
@@ -225,7 +236,11 @@ class ValueCollection(BaseModel):
         return ValueCollection(
             data=[
                 MetricValue(
-                    dimensions=v.dimensions, attributes=v.attributes, value=v.value
+                    dimensions=v.dimensions,
+                    attributes=v.attributes,
+                    value=v.value,
+                    execution_group_id=v.metric_execution_result.metric_execution_group_id,
+                    result_id=v.metric_execution_result_id,
                 )
                 for v in values
             ],

@@ -1,10 +1,16 @@
+import { executionsListOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
 import { createFileRoute } from "@tanstack/react-router";
 
 const Dashboard = () => {
+  const recentExecutions = useQuery(
+    executionsListOptions({ query: { limit: 10 } }),
+  );
   return (
     <>
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -33,7 +39,10 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="grid md:grid-cols-2 grid-cols-1 gap-4 p-4">
+        <div className="col-span-1">
+          <RecentExecutions executions={recentExecutions.data?.data ?? []} />
+        </div>
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="aspect-video rounded-xl bg-muted/50" />
           <div className="aspect-video rounded-xl bg-muted/50" />

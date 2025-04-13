@@ -371,10 +371,18 @@ export const MetricValueSchema = {
                 }
             ],
             title: 'Attributes'
+        },
+        execution_group_id: {
+            type: 'integer',
+            title: 'Execution Group Id'
+        },
+        result_id: {
+            type: 'integer',
+            title: 'Result Id'
         }
     },
     type: 'object',
-    required: ['dimensions', 'value'],
+    required: ['dimensions', 'value', 'execution_group_id', 'result_id'],
     title: 'MetricValue',
     description: `A flattened representation of a metric value
 

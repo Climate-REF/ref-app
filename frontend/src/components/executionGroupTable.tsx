@@ -40,12 +40,16 @@ export const columns: ColumnDef<MetricExecutionGroup>[] = [
   },
   {
     id: "updated_at",
+    header: "Updated At",
     accessorFn: (row) => format(new Date(row.updated_at), "yyyy-MM-dd HH:mm"),
   },
   columnHelper.display({
     id: "link",
     cell: (cell) => (
-      <Link to={`/executions/${cell.row.original.id}`}>
+      <Link
+        to="/executions/$groupId"
+        params={{ groupId: cell.row.original.id.toString() }}
+      >
         <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
       </Link>
     ),

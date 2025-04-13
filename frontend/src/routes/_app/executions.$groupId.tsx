@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -71,7 +71,16 @@ const ExecutionInfo = () => {
                 <div>
                   <CardTitle>Execution Summary</CardTitle>
                   <CardDescription>
-                    Overview of this metric execution
+                    Overview of the execution of a group for{" "}
+                    <Link
+                      to="/metrics/$providerSlug/$metricSlug"
+                      params={{
+                        providerSlug: data.metric.provider.slug,
+                        metricSlug: data.metric.slug,
+                      }}
+                    >
+                      {data?.metric.name}
+                    </Link>
                   </CardDescription>
                 </div>
                 <div>

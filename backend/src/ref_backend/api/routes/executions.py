@@ -26,7 +26,7 @@ async def list(session: SessionDep, limit: int = 10) -> MetricExecutions:
     """
     metrics = (
         session.query(models.MetricExecutionGroup)
-        .order_by(models.MetricExecutionGroup.updated_at)
+        .order_by(models.MetricExecutionGroup.updated_at.desc())
         .limit(limit)
         .all()
     )

@@ -12,18 +12,12 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
-import { VersionSwitcher } from "./versionSwitcher.tsx";
 
 interface MetricInfo {
   provider: { slug: string };
   slug: string;
   name: string;
 }
-
-// This is sample data.
-const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-};
 
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
   metrics: MetricInfo[];
@@ -40,7 +34,21 @@ function computeSidebarNav(metrics: MetricInfo[]) {
       url: "/explorer",
     },
     {
-      title: "Metrics",
+      title: "Thematic Areas",
+      url: "/explorer?tab=themes&theme=atmosphere",
+      items: [
+        {
+          title: "Atmosphere",
+          url: "/explorer?tab=themes&theme=atmosphere",
+        },
+        {
+          title: "Earth System",
+          url: "/explorer?tab=themes&theme=earth-system",
+        },
+      ],
+    },
+    {
+      title: "Diagnostics",
       url: "/metrics",
       items: metrics.map((metric) => ({
         title: metric.name,
@@ -55,10 +63,7 @@ export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VersionSwitcher
-          versions={data.versions}
-          defaultVersion={data.versions[0]}
-        />
+        <span className="font-medium">AR7 Fast Track REF</span>
       </SidebarHeader>
       <SidebarContent>
         {sidebarNav.map((item) => {
