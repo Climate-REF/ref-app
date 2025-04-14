@@ -9,6 +9,7 @@ from cmip_ref.models.metric_execution import ResultOutput as ResultOutputModel
 from cmip_ref.models.metric_execution import ResultOutputType
 from cmip_ref_core.pycmec.metric import MetricValue
 from ref_backend.core.config import settings
+from ref_backend.core.ref import provider_registry
 
 T = TypeVar("T")
 
@@ -42,6 +43,11 @@ class ProviderSummary(BaseModel):
         )
 
 
+class GroupBy(BaseModel):
+    source_type: str
+    group_by: list[str] | None
+
+
 class MetricSummary(BaseModel):
     """
     A unique provider
@@ -68,14 +74,28 @@ class MetricSummary(BaseModel):
     List of IDs for the provider executions associated with this provider
     """
 
+    group_by: list[GroupBy]
+    """
+    Dimensions used for grouping datasets
+    """
+
     @staticmethod
     def build(metric: models.Metric) -> "MetricSummary":
+        concrete_metric = provider_registry.get_metric(
+            metric.provider.slug, metric.slug
+        )
+        group_by_summary = [
+            GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
+            for dr in concrete_metric.data_requirements
+        ]
+
         return MetricSummary(
             id=metric.id,
             provider=ProviderSummary.build(metric.provider),
             slug=metric.slug,
             name=metric.name,
             metric_executions=[e.id for e in metric.execution_groups],
+            group_by=group_by_summary,
         )
 
 
