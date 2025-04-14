@@ -174,6 +174,32 @@ export const FacetSchema = {
     title: 'Facet'
 } as const;
 
+export const GroupBySchema = {
+    properties: {
+        source_type: {
+            type: 'string',
+            title: 'Source Type'
+        },
+        group_by: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Group By'
+        }
+    },
+    type: 'object',
+    required: ['source_type', 'group_by'],
+    title: 'GroupBy'
+} as const;
+
 export const HTTPValidationErrorSchema = {
     properties: {
         detail: {
@@ -348,10 +374,17 @@ export const MetricSummarySchema = {
             },
             type: 'array',
             title: 'Metric Executions'
+        },
+        group_by: {
+            items: {
+                '$ref': '#/components/schemas/GroupBy'
+            },
+            type: 'array',
+            title: 'Group By'
         }
     },
     type: 'object',
-    required: ['id', 'provider', 'slug', 'name', 'metric_executions'],
+    required: ['id', 'provider', 'slug', 'name', 'metric_executions', 'group_by'],
     title: 'MetricSummary',
     description: 'A unique provider'
 } as const;

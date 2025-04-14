@@ -62,6 +62,11 @@ export type Facet = {
     values: Array<string>;
 };
 
+export type GroupBy = {
+    source_type: string;
+    group_by: Array<string> | null;
+};
+
 export type HttpValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -117,6 +122,7 @@ export type MetricSummary = {
     slug: string;
     name: string;
     metric_executions: Array<number>;
+    group_by: Array<GroupBy>;
 };
 
 /**

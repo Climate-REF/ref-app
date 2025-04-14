@@ -1,3 +1,4 @@
+import type { GroupBy } from "@/client";
 import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
 import ExecutionGroupTable from "@/components/metrics/executionGroupTable.tsx";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,18 @@ import {
   metricsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
 
+const GroupByItem = ({ source_type, group_by }: GroupBy) => {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {group_by?.map((value) => (
+        <Badge key={value}>
+          {source_type}:{value}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+
 const MetricInfo = () => {
   const { providerSlug, metricSlug } = Route.useParams();
   const { tab } = Route.useSearch();
@@ -34,8 +47,6 @@ const MetricInfo = () => {
       },
     }),
   );
-
-  console.log(metricValues);
 
   return (
     <>
@@ -59,10 +70,18 @@ const MetricInfo = () => {
               <p className="font-medium">{data?.slug}</p>
             </div>
             <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Groupings</p>
+              <div className="flex flex-col gap-2">
+                {data.group_by.map((groups) => (
+                  <GroupByItem key={groups.source_type} {...groups} />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
                 Number of execution groups
               </p>
-              <p className="font-medium">{data?.metric_executions.length}</p>
+              <p className="font-medium">{data.metric_executions.length}</p>
             </div>
           </div>
         </CardContent>
