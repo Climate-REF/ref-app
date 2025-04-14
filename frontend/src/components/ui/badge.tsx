@@ -1,6 +1,7 @@
-import type * as React from "react";
+import { type SourceType, getSourceTypeColour } from "@/lib/sourceTypes.ts";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -43,4 +44,28 @@ function Badge({
   );
 }
 
-export { Badge, badgeVariants };
+function SourceTypeBadge({
+  className,
+  sourceType,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"span"> & {
+  asChild?: boolean;
+  sourceType: string;
+}) {
+  const Comp = asChild ? Slot : "span";
+
+  return (
+    <Comp
+      data-slot="badge"
+      className={cn(
+        badgeVariants({ variant: "default" }),
+        getSourceTypeColour(sourceType),
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export { Badge, SourceTypeBadge, badgeVariants };

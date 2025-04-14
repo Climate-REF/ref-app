@@ -84,9 +84,12 @@ class MetricSummary(BaseModel):
         concrete_metric = provider_registry.get_metric(
             metric.provider.slug, metric.slug
         )
+        data_requirements = sorted(
+            concrete_metric.data_requirements, key=lambda dr: dr.source_type.value
+        )
         group_by_summary = [
             GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
-            for dr in concrete_metric.data_requirements
+            for dr in data_requirements
         ]
 
         return MetricSummary(

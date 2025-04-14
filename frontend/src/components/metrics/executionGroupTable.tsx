@@ -1,7 +1,7 @@
 import type { MetricExecutionGroup } from "@/client";
 import { metricsGetMetricExecutionsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
+import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
   Card,
   CardContent,
@@ -29,9 +29,10 @@ export const columns: ColumnDef<MetricExecutionGroup>[] = [
         <div className="flex flex-col gap-2">
           {Object.entries(selectors).map(([sourceType, values]) => (
             <div className="flex gap-2" key={sourceType}>
-              {sourceType} :{" "}
               {values.map(([key, value]) => (
-                <Badge key={key}>{value}</Badge>
+                <SourceTypeBadge sourceType={sourceType} key={key}>
+                  {value}
+                </SourceTypeBadge>
               ))}
             </div>
           ))}

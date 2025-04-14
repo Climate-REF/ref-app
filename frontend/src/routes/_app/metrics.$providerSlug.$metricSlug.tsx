@@ -1,7 +1,7 @@
 import type { GroupBy } from "@/client";
 import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
 import ExecutionGroupTable from "@/components/metrics/executionGroupTable.tsx";
-import { Badge } from "@/components/ui/badge";
+import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -24,9 +24,9 @@ const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   return (
     <div className="flex flex-wrap gap-2">
       {group_by?.map((value) => (
-        <Badge key={value}>
+        <SourceTypeBadge sourceType={source_type} key={value}>
           {source_type}:{value}
-        </Badge>
+        </SourceTypeBadge>
       ))}
     </div>
   );
