@@ -20,22 +20,37 @@ const columnHelper = createColumnHelper<MetricExecutionGroup>();
 
 export const columns: ColumnDef<MetricExecutionGroup>[] = [
   {
-    accessorKey: "key",
-    header: "Key",
-    cell: (cell) => (
-      <div className={"max-w-1/3 text-ellipsis"}>
-        {cell.getValue() as string}
-      </div>
-    ),
+    id: "selectors",
+    header: "Selectors",
+    cell: (cell) => {
+      const selectors = cell.row.original.selectors;
+
+      return (
+        <div className="flex flex-col gap-2">
+          {Object.entries(selectors).map(([sourceType, values]) => (
+            <div className="flex gap-2" key={sourceType}>
+              {sourceType} :{" "}
+              {values.map(([key, value]) => (
+                <Badge key={key}>{value}</Badge>
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    },
+  },
+  {
+    header: "Datasets",
+    accessorFn: (row) => row.latest_result.dataset_count,
   },
   {
     header: "Successful",
     accessorKey: "latest_result.successful",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant={"outline"}>Yes</Badge>
+        <Badge variant="outline">Yes</Badge>
       ) : (
-        <Badge variant={"destructive"}>No</Badge>
+        <Badge variant="destructive">No</Badge>
       ),
   },
   {

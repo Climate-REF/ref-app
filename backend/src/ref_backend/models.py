@@ -112,6 +112,7 @@ class MetricExecutionGroup(BaseModel):
     results: "list[MetricExecutionResult]"
     latest_result: "MetricExecutionResult"
     outputs: "list[ResultOutput]"
+    selectors: dict[str, tuple[tuple[str, str], ...]]
     metric: MetricSummary
     created_at: datetime
     updated_at: datetime
@@ -129,6 +130,7 @@ class MetricExecutionGroup(BaseModel):
             results=[MetricExecutionResult.build(r) for r in execution.results],
             latest_result=MetricExecutionResult.build(latest_result),
             outputs=outputs,
+            selectors=execution.selectors,
             metric=MetricSummary.build(execution.metric),
             created_at=execution.created_at,
             updated_at=execution.updated_at,
@@ -138,7 +140,9 @@ class MetricExecutionGroup(BaseModel):
 class MetricExecutionResult(BaseModel):
     id: int
     dataset_hash: str
+    dataset_count: int
     successful: bool
+    retracted: bool
     created_at: datetime
     updated_at: datetime
 
@@ -147,7 +151,9 @@ class MetricExecutionResult(BaseModel):
         return MetricExecutionResult(
             id=execution_result.id,
             successful=execution_result.successful,
+            retracted=execution_result.retracted,
             dataset_hash=execution_result.dataset_hash,
+            dataset_count=len(execution_result.datasets),
             updated_at=execution_result.updated_at,
             created_at=execution_result.created_at,
         )

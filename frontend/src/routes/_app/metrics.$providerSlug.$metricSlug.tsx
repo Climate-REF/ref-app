@@ -1,5 +1,5 @@
 import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
-import ExecutionGroupTable from "@/components/executionGroupTable.tsx";
+import ExecutionGroupTable from "@/components/metrics/executionGroupTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

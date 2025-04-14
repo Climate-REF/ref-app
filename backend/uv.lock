@@ -242,7 +242,7 @@ wheels = [
 [[package]]
 name = "cmip-ref"
 version = "0.3.1"
-source = { directory = "../../cmip-ref/packages/ref" }
+source = { editable = "../../cmip-ref/packages/ref" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -2135,7 +2135,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cmip-ref", extras = ["metrics", "postgres"], directory = "../../cmip-ref/packages/ref" },
+    { name = "cmip-ref", extras = ["metrics", "postgres"], editable = "../../cmip-ref/packages/ref" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472" },
     { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=v3.9" },

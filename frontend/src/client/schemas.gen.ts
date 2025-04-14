@@ -229,6 +229,26 @@ export const MetricExecutionGroupSchema = {
             type: 'array',
             title: 'Outputs'
         },
+        selectors: {
+            additionalProperties: {
+                items: {
+                    prefixItems: [
+                        {
+                            type: 'string'
+                        },
+                        {
+                            type: 'string'
+                        }
+                    ],
+                    type: 'array',
+                    maxItems: 2,
+                    minItems: 2
+                },
+                type: 'array'
+            },
+            type: 'object',
+            title: 'Selectors'
+        },
         metric: {
             '$ref': '#/components/schemas/MetricSummary'
         },
@@ -244,7 +264,7 @@ export const MetricExecutionGroupSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'key', 'results', 'latest_result', 'outputs', 'metric', 'created_at', 'updated_at'],
+    required: ['id', 'key', 'results', 'latest_result', 'outputs', 'selectors', 'metric', 'created_at', 'updated_at'],
     title: 'MetricExecutionGroup'
 } as const;
 
@@ -258,9 +278,17 @@ export const MetricExecutionResultSchema = {
             type: 'string',
             title: 'Dataset Hash'
         },
+        dataset_count: {
+            type: 'integer',
+            title: 'Dataset Count'
+        },
         successful: {
             type: 'boolean',
             title: 'Successful'
+        },
+        retracted: {
+            type: 'boolean',
+            title: 'Retracted'
         },
         created_at: {
             type: 'string',
@@ -274,7 +302,7 @@ export const MetricExecutionResultSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'dataset_hash', 'successful', 'created_at', 'updated_at'],
+    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at'],
     title: 'MetricExecutionResult'
 } as const;
 
