@@ -7,7 +7,7 @@ import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
 import OutputListTable from "@/components/execution/outputListTable.tsx";
 import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
-import ResultListTable from "@/components/resultsListTable.tsx";
+import ResultListTable from "@/components/metrics/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button.tsx";
 import {
