@@ -1,5 +1,5 @@
 import type { GroupBy } from "@/client";
-import ValuesDataTable from "@/components/execution/valuesDataTable.tsx";
+import { Values } from "@/components/execution/values";
 import ExecutionGroupTable from "@/components/metrics/executionGroupTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {
@@ -109,10 +109,10 @@ const MetricInfo = () => {
         </TabsContent>
 
         <TabsContent value="raw-data" className="space-y-4">
-          <ValuesDataTable
+          <Values
             facets={metricValues?.facets ?? []}
             values={metricValues?.data ?? []}
-            isLoading={isLoading}
+            loading={isLoading}
           />
         </TabsContent>
       </Tabs>

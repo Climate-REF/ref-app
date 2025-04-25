@@ -1,6 +1,7 @@
 import type { Facet, MetricValue } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
-import { DataTable } from "@/components/dataTable/dataTable.tsx";
+import { useDataTable } from "@/components/dataTable/dataTable.tsx";
+import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -37,7 +38,7 @@ function ValuesDataTable({ values, facets, isLoading }: DataTableProps) {
       {
         id: "value",
         header: "Value",
-        accessorFn: (cell) => cell.value,
+        accessorFn: (cell) => (cell.value as number).toPrecision(3),
       },
       {
         id: "info",
@@ -68,6 +69,8 @@ function ValuesDataTable({ values, facets, isLoading }: DataTableProps) {
       },
     ];
   }, [facets]);
-  return <DataTable data={values} columns={columns} canHideColumns={true} />;
+  const { table } = useDataTable({ data: values, columns });
+
+  return <InnerDataTable table={table} loading={isLoading} />;
 }
 export default ValuesDataTable;
