@@ -195,7 +195,10 @@ const ExecutionInfo = () => {
             <TabsContent value="raw-data" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Metrics</CardTitle>
+                  <CardTitle>Metric Values</CardTitle>
+                  <CardDescription>
+                    Scalar values from the latest executions
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ValuesDataTable
