@@ -121,6 +121,7 @@ export type MetricSummary = {
     provider: ProviderSummary;
     slug: string;
     name: string;
+    description: string;
     metric_executions: Array<number>;
     group_by: Array<GroupBy>;
 };

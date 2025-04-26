@@ -368,6 +368,10 @@ export const MetricSummarySchema = {
             type: 'string',
             title: 'Name'
         },
+        description: {
+            type: 'string',
+            title: 'Description'
+        },
         metric_executions: {
             items: {
                 type: 'integer'
@@ -384,7 +388,7 @@ export const MetricSummarySchema = {
         }
     },
     type: 'object',
-    required: ['id', 'provider', 'slug', 'name', 'metric_executions', 'group_by'],
+    required: ['id', 'provider', 'slug', 'name', 'description', 'metric_executions', 'group_by'],
     title: 'MetricSummary',
     description: 'A unique provider'
 } as const;

@@ -69,6 +69,10 @@ class MetricSummary(BaseModel):
     """
     Long name of the provider
     """
+    description: str
+    """
+    Description of the metric
+    """
     metric_executions: list[int]
     """
     List of IDs for the provider executions associated with this provider
@@ -97,6 +101,7 @@ class MetricSummary(BaseModel):
             provider=ProviderSummary.build(metric.provider),
             slug=metric.slug,
             name=metric.name,
+            description=concrete_metric.__doc__,
             metric_executions=[e.id for e in metric.execution_groups],
             group_by=group_by_summary,
         )

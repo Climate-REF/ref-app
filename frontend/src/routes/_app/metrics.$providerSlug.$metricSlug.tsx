@@ -52,10 +52,8 @@ const MetricInfo = () => {
     <>
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>{data?.name}</CardTitle>
-          <CardDescription>
-            Metric longer description goes here{" "}
-          </CardDescription>
+          <CardTitle>{data.name}</CardTitle>
+          <CardDescription>{data.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
