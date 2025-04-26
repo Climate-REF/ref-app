@@ -9,11 +9,18 @@ import { GroupedBoxWhiskerChart } from "./groupedBoxWhiskerChart";
 interface ValuesFigureProps {
   values: MetricValue[];
   facets: Facet[];
+  defaultGroupby: string;
+  defaultXAxis: string;
 }
 
-export function ValuesFigure({ values, facets }: ValuesFigureProps) {
-  const [groupby, setGroupby] = useState(facets[0].key);
-  const [xaxis, setXAxis] = useState(facets[1].key);
+export function ValuesFigure({
+  values,
+  facets,
+  defaultGroupby,
+  defaultXAxis,
+}: ValuesFigureProps) {
+  const [groupby, setGroupby] = useState(defaultGroupby);
+  const [xaxis, setXAxis] = useState(defaultXAxis);
 
   const chartData = useMemo(() => {
     const xFacet = facets.find((f) => f.key === xaxis);
@@ -52,31 +59,31 @@ export function ValuesFigure({ values, facets }: ValuesFigureProps) {
     return chartData;
   }, [groupby, xaxis, values, facets]);
 
-  console.log(chartData);
-
   return (
     <>
-      <div className="flex items-center justify-end space-x-2">
-        <FacetSelect
-          facetValues={facets.map((facet) => facet.key)}
-          value={xaxis}
-          onValueChange={setXAxis}
-        >
-          <Axis3D />X Axis
-        </FacetSelect>
-        <FacetSelect
-          facetValues={facets.map((facet) => facet.key)}
-          value={groupby}
-          onValueChange={setGroupby}
-        >
-          <Group />
-          Group by
-        </FacetSelect>
-        <Button variant={"outline"} size="sm">
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-      </div>
+      {facets.length ? (
+        <div className="flex items-center justify-end space-x-2">
+          <FacetSelect
+            facetValues={facets.map((facet) => facet.key)}
+            value={xaxis}
+            onValueChange={setXAxis}
+          >
+            <Axis3D />X Axis
+          </FacetSelect>
+          <FacetSelect
+            facetValues={facets.map((facet) => facet.key)}
+            value={groupby}
+            onValueChange={setGroupby}
+          >
+            <Group />
+            Group by
+          </FacetSelect>
+          <Button variant={"outline"} size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </Button>
+        </div>
+      ) : null}
       <GroupedBoxWhiskerChart data={chartData} />
     </>
   );

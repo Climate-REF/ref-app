@@ -19,7 +19,14 @@ function getInner(viewType: ViewType, props: ValuesProps) {
     case "table":
       return <ValuesDataTable {...props} />;
     case "bar":
-      return <ValuesFigure {...props} />;
+      // The default groupby/xaxis is likely diagnostic dependent
+      return (
+        <ValuesFigure
+          defaultGroupby="model"
+          defaultXAxis="statistic"
+          {...props}
+        />
+      );
   }
 }
 
