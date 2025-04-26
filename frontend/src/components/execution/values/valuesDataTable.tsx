@@ -17,11 +17,11 @@ import { useMemo } from "react";
 interface DataTableProps {
   values: MetricValue[];
   facets: Facet[];
-  isLoading: boolean;
+  loading: boolean;
 }
 
-function ValuesDataTable({ values, facets, isLoading }: DataTableProps) {
-  if (isLoading) {
+function ValuesDataTable({ values, facets, loading }: DataTableProps) {
+  if (loading) {
     return null;
   }
   const columns: ColumnDef<MetricValue>[] = useMemo(() => {
@@ -71,6 +71,6 @@ function ValuesDataTable({ values, facets, isLoading }: DataTableProps) {
   }, [facets]);
   const { table } = useDataTable({ data: values, columns });
 
-  return <InnerDataTable table={table} loading={isLoading} />;
+  return <InnerDataTable table={table} loading={loading} />;
 }
 export default ValuesDataTable;

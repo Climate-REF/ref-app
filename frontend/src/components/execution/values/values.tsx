@@ -12,8 +12,19 @@ type ValuesProps = {
   loading: boolean;
 };
 
-export function Values({ values, facets, loading }: ValuesProps) {
-  const [viewType, setViewType] = useState<"bar" | "table">("table");
+type ViewType = "bar" | "table";
+
+function getInner(viewType: ViewType, props: ValuesProps) {
+  switch (viewType) {
+    case "table":
+      return <ValuesDataTable {...props} />;
+    case "bar":
+      return <ValuesFigure {...props} />;
+  }
+}
+
+export function Values(props: ValuesProps) {
+  const [viewType, setViewType] = useState<ViewType>("table");
 
   return (
     <Card>
@@ -37,15 +48,7 @@ export function Values({ values, facets, loading }: ValuesProps) {
               Table
             </Button>
           </div>
-          {viewType === "table" ? (
-            <ValuesDataTable
-              facets={facets}
-              values={values}
-              isLoading={loading}
-            />
-          ) : (
-            <ValuesFigure values={values} facets={facets} />
-          )}
+          {getInner(viewType, props)}
         </div>
       </CardContent>
     </Card>
