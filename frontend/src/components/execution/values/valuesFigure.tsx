@@ -1,15 +1,10 @@
 import type { Facet, MetricValue } from "@/client";
+import type { GroupedRawDataEntry } from "@/components/execution/values/types.ts";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
 import { Axis3D, Download, Group } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { FacetSelect } from "./facetSelect";
+import { GroupedBoxWhiskerChart } from "./groupedBoxWhiskerChart";
 
 interface ValuesFigureProps {
   values: MetricValue[];
@@ -20,65 +15,44 @@ export function ValuesFigure({ values, facets }: ValuesFigureProps) {
   const [groupby, setGroupby] = useState(facets[0].key);
   const [xaxis, setXAxis] = useState(facets[1].key);
 
-  const { chartData, chartConfig } = useMemo(() => {
+  const chartData = useMemo(() => {
     const xFacet = facets.find((f) => f.key === xaxis);
     const groupbyFacet = facets.find((f) => f.key === groupby);
 
     if (xFacet === undefined || groupbyFacet === undefined) {
-      return { chartData: [], chartConfig: {} };
+      return [];
     }
 
-    const chartConfig = Object.fromEntries(
-      groupbyFacet.values.map((facetValue) => [
-        facetValue,
-        {
-          label: facetValue,
-          color: "#FFFFFF",
-        },
-      ]) ?? {},
-    ) satisfies ChartConfig;
+    const chartData: GroupedRawDataEntry[] = xFacet.values.map((x) => {
+      /// Find the values for a given x-axis group
+      const matches = values
+        .filter(
+          (value) =>
+            value.dimensions[xFacet.key] === x &&
+            value.dimensions[groupbyFacet.key] !== undefined,
+        )
+        .map((value) => ({
+          value: value.value as number,
+          dimension: value.dimensions[groupbyFacet.key],
+        }));
 
-    const chartData =
-      xFacet?.values.map((x) => {
-        /// Find the values for a given x axis group
-        const matches: [string, number][] = values
-          .filter((value) => value.dimensions[xFacet.key] === x)
-          .map((value) => [
-            value.dimensions[groupbyFacet.key],
-            value.value as number,
-          ]);
+      const groups = Object.entries(
+        Object.groupBy(matches, (m) => m.dimension),
+      ).map(([key, values]) => ({
+        label: key,
+        values: values?.map((v) => v.value) ?? [],
+      }));
 
-        //
-        const groupValues = Object.fromEntries(
-          groupbyFacet.values
-            .map((facetValue) => {
-              const valuesToAgg = matches
-                .filter(([key, _]) => key === facetValue)
-                .map(([_, value]) => value);
+      return {
+        category: x,
+        groups,
+      };
+    });
 
-              if (valuesToAgg.length) {
-                if (valuesToAgg.length === 1)
-                  return [facetValue, valuesToAgg[0]];
-                return [
-                  facetValue,
-                  [Math.min(...valuesToAgg), Math.max(...valuesToAgg)],
-                ];
-              }
-            })
-            .filter((res) => res != null) ?? [],
-        );
-
-        return {
-          x,
-          ...groupValues,
-        };
-      }) ?? [];
-
-    return {
-      chartData,
-      chartConfig,
-    };
+    return chartData;
   }, [groupby, xaxis, values, facets]);
+
+  console.log(chartData);
 
   return (
     <>
@@ -103,22 +77,7 @@ export function ValuesFigure({ values, facets }: ValuesFigureProps) {
           Download
         </Button>
       </div>
-      <ChartContainer config={chartConfig} className="h-[200px] w-full">
-        <BarChart accessibilityLayer data={chartData}>
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="x"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-          />
-          <YAxis tickLine={false} tickMargin={10} axisLine={false} />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          {Object.entries(chartConfig).map(([key, _]) => (
-            <Bar key={key} dataKey={key} fill="var(--color-red)" radius={4} />
-          ))}
-        </BarChart>
-      </ChartContainer>
+      <GroupedBoxWhiskerChart data={chartData} />
     </>
   );
 }
