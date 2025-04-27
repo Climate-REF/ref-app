@@ -44,6 +44,7 @@
     "@biomejs/biome": "1.9.4",
     "@eslint/js": "^9.21.0",
     "@hey-api/openapi-ts": "^0.64.10",
+    "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-router-devtools": "^1.115.3",
     "@tanstack/router-plugin": "^1.115.3",
     "@types/node": "^22.13.8",

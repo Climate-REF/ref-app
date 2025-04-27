@@ -30,8 +30,13 @@ function computeSidebarNav(metrics: MetricInfo[]) {
       url: "/",
     },
     {
-      title: "Data Explorer",
-      url: "/explorer",
+      title: "Content",
+      items: [
+        {
+          title: "About",
+          url: "/content/about",
+        },
+      ],
     },
     {
       title: "Thematic Areas",
