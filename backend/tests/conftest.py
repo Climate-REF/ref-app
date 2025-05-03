@@ -3,7 +3,7 @@ from collections.abc import Generator
 import pytest
 from starlette.testclient import TestClient
 
-from cmip_ref.database import Database
+from climate_ref.database import Database
 from ref_backend.core.db import create_database_connection
 from ref_backend.main import app
 

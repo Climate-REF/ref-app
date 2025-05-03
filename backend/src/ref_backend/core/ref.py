@@ -2,11 +2,11 @@ from collections.abc import Generator
 
 from sqlalchemy.orm import Session
 
-from cmip_ref.config import Config
-from cmip_ref.database import Database
-from cmip_ref.models import MetricValue
-from cmip_ref.provider_registry import ProviderRegistry
-from cmip_ref_core.pycmec.controlled_vocabulary import CV
+from climate_ref.config import Config
+from climate_ref.database import Database
+from climate_ref.models import MetricValue
+from climate_ref.provider_registry import ProviderRegistry
+from climate_ref_core.pycmec.controlled_vocabulary import CV
 
 
 def create_database_connection() -> tuple[Config, Database]:

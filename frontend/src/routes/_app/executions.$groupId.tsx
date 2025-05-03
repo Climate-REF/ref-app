@@ -57,8 +57,8 @@ const ExecutionInfo = () => {
       {/*      url: "/metrics",*/}
       {/*    },*/}
       {/*    {*/}
-      {/*      name: data.metric.name,*/}
-      {/*      url: `/metrics/${data.metric.provider.slug}/${data.metric.slug}`,*/}
+      {/*      name: data.diagnostic.name,*/}
+      {/*      url: `/metrics/${data.diagnostic.provider.slug}/${data.diagnostic.slug}`,*/}
       {/*    },*/}
       {/*  ]}*/}
       {/*  title={data?.key}*/}

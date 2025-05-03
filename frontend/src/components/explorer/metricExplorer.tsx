@@ -17,7 +17,7 @@ import { useState } from "react";
 // Mock data for metrics
 const mockMetrics = [
   {
-    id: "metric-001",
+    id: "diagnostic-001",
     name: "Surface Temperature Anomaly",
     description:
       "Global mean surface temperature anomaly relative to pre-industrial baseline",
@@ -28,7 +28,7 @@ const mockMetrics = [
     chartType: "line",
   },
   {
-    id: "metric-002",
+    id: "diagnostic-002",
     name: "Precipitation Patterns",
     description:
       "Spatial patterns of precipitation compared to observational data",
@@ -39,7 +39,7 @@ const mockMetrics = [
     chartType: "bar",
   },
   {
-    id: "metric-003",
+    id: "diagnostic-003",
     name: "Sea Ice Extent",
     description: "Arctic and Antarctic sea ice extent seasonal cycle",
     thematicArea: "Ocean & Sea Ice",
@@ -49,7 +49,7 @@ const mockMetrics = [
     chartType: "line",
   },
   {
-    id: "metric-004",
+    id: "diagnostic-004",
     name: "Ocean Heat Content",
     description: "Change in ocean heat content by depth level",
     thematicArea: "Ocean & Sea Ice",
@@ -59,7 +59,7 @@ const mockMetrics = [
     chartType: "line",
   },
   {
-    id: "metric-005",
+    id: "diagnostic-005",
     name: "Carbon Cycle Feedback",
     description: "Carbon cycle feedback parameters across models",
     thematicArea: "Earth System",
@@ -69,7 +69,7 @@ const mockMetrics = [
     chartType: "bar",
   },
   {
-    id: "metric-006",
+    id: "diagnostic-006",
     name: "Land Surface Albedo",
     description: "Seasonal cycle of land surface albedo by biome type",
     thematicArea: "Land & Land Ice",

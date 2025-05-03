@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from cmip_ref.config import Config
-from cmip_ref_core.pycmec.controlled_vocabulary import CV
+from climate_ref.config import Config
+from climate_ref_core.pycmec.controlled_vocabulary import CV
 from ref_backend.core.ref import get_cv, get_database_session, get_ref_config
 
 SessionDep = Annotated[Session, Depends(get_database_session)]

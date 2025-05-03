@@ -3,11 +3,10 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
-from cmip_ref import models
-from cmip_ref.models.dataset import CMIP6Dataset
-from cmip_ref.models.metric_execution import ResultOutput as ResultOutputModel
-from cmip_ref.models.metric_execution import ResultOutputType
-from cmip_ref_core.pycmec.metric import MetricValue
+from climate_ref import models
+from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.models.execution import ResultOutputType
+from climate_ref_core.pycmec.metric import MetricValue
 from ref_backend.core.config import settings
 from ref_backend.core.ref import provider_registry
 
@@ -29,7 +28,7 @@ class ProviderSummary(BaseModel):
     """
     Summary information about a Metric Provider.
 
-    The metric provider is the framework that was used to generate a set of metrics.
+    The diagnostic provider is the framework that was used to generate a set of metrics.
     """
 
     slug: str
@@ -48,7 +47,7 @@ class GroupBy(BaseModel):
     group_by: list[str] | None
 
 
-class MetricSummary(BaseModel):
+class DiagnosticSummary(BaseModel):
     """
     A unique provider
     """
@@ -71,9 +70,9 @@ class MetricSummary(BaseModel):
     """
     description: str
     """
-    Description of the metric
+    Description of the diagnostic
     """
-    metric_executions: list[int]
+    execution_groups: list[int]
     """
     List of IDs for the provider executions associated with this provider
     """
@@ -84,30 +83,30 @@ class MetricSummary(BaseModel):
     """
 
     @staticmethod
-    def build(metric: models.Metric) -> "MetricSummary":
-        concrete_metric = provider_registry.get_metric(
-            metric.provider.slug, metric.slug
+    def build(diagnostic: models.Diagnostic) -> "DiagnosticSummary":
+        concrete_diagnostic = provider_registry.get_metric(
+            diagnostic.provider.slug, diagnostic.slug
         )
         data_requirements = sorted(
-            concrete_metric.data_requirements, key=lambda dr: dr.source_type.value
+            concrete_diagnostic.data_requirements, key=lambda dr: dr.source_type.value
         )
         group_by_summary = [
             GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
             for dr in data_requirements
         ]
 
-        return MetricSummary(
-            id=metric.id,
-            provider=ProviderSummary.build(metric.provider),
-            slug=metric.slug,
-            name=metric.name,
-            description=concrete_metric.__doc__,
-            metric_executions=[e.id for e in metric.execution_groups],
+        return DiagnosticSummary(
+            id=diagnostic.id,
+            provider=ProviderSummary.build(diagnostic.provider),
+            slug=diagnostic.slug,
+            name=diagnostic.name,
+            description=concrete_diagnostic.__doc__,
+            execution_groups=[e.id for e in diagnostic.execution_groups],
             group_by=group_by_summary,
         )
 
 
-class ResultOutput(BaseModel):
+class ExecutionOutput(BaseModel):
     id: int
     output_type: ResultOutputType
     filename: str
@@ -119,10 +118,10 @@ class ResultOutput(BaseModel):
     url: str
 
     @staticmethod
-    def build(output: ResultOutputModel) -> "ResultOutput":
-        return ResultOutput(
+    def build(output: models.ExecutionOutput) -> "ExecutionOutput":
+        return ExecutionOutput(
             id=output.id,
-            metric_execution_result_id=output.metric_execution_result_id,
+            execution_id=output.execution_id,
             output_type=output.output_type,
             filename=output.filename,
             short_name=output.short_name,
@@ -134,38 +133,35 @@ class ResultOutput(BaseModel):
         )
 
 
-class MetricExecutionGroup(BaseModel):
+class ExecutionGroup(BaseModel):
     id: int
     key: str
-    results: "list[MetricExecutionResult]"
-    latest_result: "MetricExecutionResult"
-    outputs: "list[ResultOutput]"
+    results: "list[Execution]"
+    latest_execution: "Execution"
     selectors: dict[str, tuple[tuple[str, str], ...]]
-    metric: MetricSummary
+    metric: DiagnosticSummary
     created_at: datetime
     updated_at: datetime
 
     @staticmethod
-    def build(execution: models.MetricExecutionGroup):
+    def build(execution: models.ExecutionGroup):
         latest_result = None
         outputs = []
-        if len(execution.results):
-            latest_result = execution.results[-1]
-            outputs = [ResultOutput.build(o) for o in latest_result.outputs]
-        return MetricExecutionGroup(
+        if len(execution.executions):
+            latest_execution = execution.executions[-1]
+        return ExecutionGroup(
             id=execution.id,
             key=execution.dataset_key,
-            results=[MetricExecutionResult.build(r) for r in execution.results],
-            latest_result=MetricExecutionResult.build(latest_result),
-            outputs=outputs,
+            executions=[Execution.build(r) for r in execution.executions],
+            latest_execution=Execution.build(latest_execution),
             selectors=execution.selectors,
-            metric=MetricSummary.build(execution.metric),
+            diagnostic=DiagnosticSummary.build(execution.diagnostic),
             created_at=execution.created_at,
             updated_at=execution.updated_at,
         )
 
 
-class MetricExecutionResult(BaseModel):
+class Execution(BaseModel):
     id: int
     dataset_hash: str
     dataset_count: int
@@ -173,22 +169,25 @@ class MetricExecutionResult(BaseModel):
     retracted: bool
     created_at: datetime
     updated_at: datetime
+    outputs: "list[ExecutionOutput]"
 
     @staticmethod
-    def build(execution_result: models.MetricExecutionResult):
-        return MetricExecutionResult(
-            id=execution_result.id,
-            successful=execution_result.successful,
-            retracted=execution_result.retracted,
-            dataset_hash=execution_result.dataset_hash,
-            dataset_count=len(execution_result.datasets),
-            updated_at=execution_result.updated_at,
-            created_at=execution_result.created_at,
+    def build(execution: models.Execution):
+        outputs = [ExecutionOutput.build(o) for o in execution.outputs]
+        return Execution(
+            id=execution.id,
+            successful=execution.successful,
+            retracted=execution.retracted,
+            dataset_hash=execution.dataset_hash,
+            dataset_count=len(execution.datasets),
+            updated_at=execution.updated_at,
+            created_at=execution.created_at,
+            outputs=outputs,
         )
 
 
-class MetricExecutions(BaseModel):
-    data: list[MetricExecutionGroup]
+class ExecutionGroupSummary(BaseModel):
+    data: list[ExecutionGroup]
     count: int
 
 
@@ -238,13 +237,13 @@ class DatasetCollection(BaseModel):
 
 class MetricValue(MetricValue):
     """
-    A flattened representation of a metric value
+    A flattened representation of a diagnostic value
 
-    This includes the dimensions and the value of the metric
+    This includes the dimensions and the value of the diagnostic
     """
 
     execution_group_id: int
-    result_id: int
+    execution_id: int
 
 
 class Facet(BaseModel):
@@ -252,13 +251,13 @@ class Facet(BaseModel):
     values: list[str]
 
 
-class ValueCollection(BaseModel):
+class MetricValueCollection(BaseModel):
     data: list[MetricValue]
     count: int
     facets: list[Facet]
 
     @staticmethod
-    def build(values: list[models.MetricValue]) -> "ValueCollection":
+    def build(values: list[models.MetricValue]) -> "MetricValueCollection":
         # TODO: Query this using SQL
         facets: dict[str, set[str]] = {}
         for v in values:
@@ -267,14 +266,14 @@ class ValueCollection(BaseModel):
                     facets[key].add(value)
                 else:
                     facets[key] = {value}
-        return ValueCollection(
+        return MetricValueCollection(
             data=[
                 MetricValue(
                     dimensions=v.dimensions,
                     attributes=v.attributes,
                     value=v.value,
                     execution_group_id=v.metric_execution_result.metric_execution_group_id,
-                    result_id=v.metric_execution_result_id,
+                    execution_id=v.execution_id,
                 )
                 for v in values
             ],

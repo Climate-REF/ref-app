@@ -3,7 +3,7 @@ import mimetypes
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from cmip_ref.models.metric_execution import ResultOutput
+from climate_ref.models import ExecutionOutput
 from ref_backend.api.deps import ConfigDep, SessionDep
 from ref_backend.core.file_handling import file_iterator
 
@@ -17,7 +17,7 @@ async def get_result(
     """
     Fetch a result
     """
-    result = session.query(ResultOutput).get(result_id)
+    result = session.query(ExecutionOutput).get(result_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Result not found")
 

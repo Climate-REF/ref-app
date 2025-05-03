@@ -3,85 +3,81 @@ import mimetypes
 from fastapi import APIRouter, HTTPException
 from starlette.responses import StreamingResponse
 
-from cmip_ref import models
-from cmip_ref_core.executor import EXECUTION_LOG_FILENAME
-from cmip_ref_core.pycmec.metric import CMECMetric
+from climate_ref import models
+from climate_ref_core.executor import EXECUTION_LOG_FILENAME
+from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import ConfigDep, SessionDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
+    Collection,
     DatasetCollection,
-    MetricExecutionGroup,
-    MetricExecutionResult,
-    MetricExecutions,
-    ValueCollection,
+    Execution,
+    ExecutionGroup,
+    MetricValueCollection,
 )
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
 
 @router.get("/")
-async def list(session: SessionDep, limit: int = 10) -> MetricExecutions:
+async def list(session: SessionDep, limit: int = 10) -> Collection[ExecutionGroup]:
     """
-    List the most recent executions
+    List the most recent execution groups
     """
-    metrics = (
-        session.query(models.MetricExecutionGroup)
-        .order_by(models.MetricExecutionGroup.updated_at.desc())
+    execution_groups = (
+        session.query(models.ExecutionGroup)
+        .order_by(models.ExecutionGroup.updated_at.desc())
         .limit(limit)
         .all()
     )
 
-    return MetricExecutions(
-        data=[MetricExecutionGroup.build(m) for m in metrics], count=len(metrics)
-    )
+    return Collection(data=[ExecutionGroup.build(m) for m in execution_groups])
 
 
 @router.get("/{group_id}")
-async def get(session: SessionDep, group_id: str) -> MetricExecutionGroup:
+async def get(session: SessionDep, group_id: str) -> ExecutionGroup:
     """
     Inspect a specific execution
     """
-    metric_execution = session.query(models.MetricExecutionGroup).get(group_id)
-    if not metric_execution:
+    execution_group = session.query(models.ExecutionGroup).get(group_id)
+    if not execution_group:
         raise HTTPException(status_code=404, detail="Execution not found")
 
-    return MetricExecutionGroup.build(metric_execution)
+    return ExecutionGroup.build(execution_group)
 
 
-async def _get_result(
-    group_id: str, result_id: str | None, session
-) -> models.MetricExecutionResult:
-    if result_id is not None:
-        metric_result: models.MetricExecutionResult | None = session.query(
-            models.MetricExecutionResult
-        ).get(result_id)
+async def _get_execution(
+    group_id: str, execution_id: str | None, session
+) -> models.Execution:
+    if execution_id is not None:
+        execution: models.Execution | None = session.query(models.Execution).get(
+            execution_id
+        )
     else:
-        group: models.MetricExecutionGroup = session.query(
-            models.MetricExecutionGroup
-        ).get(group_id)
-        if not group or len(group.results) == 0:
+        group: models.ExecutionGroup = session.query(models.ExecutionGroup).get(
+            group_id
+        )
+        if not group or len(group.executions) == 0:
             raise HTTPException(status_code=404, detail="Result not found")
-        metric_result = group.results[-1]
+        execution = group.executions[-1]
 
-    if not metric_result or not metric_result.metric_execution_group_id == int(
-        group_id
-    ):
+    if not execution or not execution.execution_group_id == int(group_id):
         raise HTTPException(status_code=404, detail="Result not found")
-    return metric_result
+    return execution
 
 
-@router.get("/{group_id}/result")
-async def result(
-    session: SessionDep, group_id: str, result_id: str | None = None
-) -> MetricExecutionResult:
+@router.get("/{group_id}/execution")
+async def execution(
+    session: SessionDep, group_id: str, execution_id: str | None = None
+) -> Execution:
     """
-    Inspect a specific execution result
+    Inspect a specific execution
 
-    Gets the latest result if no result_id is provided
+    Gets the latest result if no execution_id is provided
     """
-    metric_result = await _get_result(group_id, result_id, session)
+    execution = await _get_execution(group_id, execution_id, session)
 
-    return MetricExecutionResult.build(metric_result)
+    return Execution.build(execution)
 
 
 @router.get("/{group_id}/datasets")
@@ -91,9 +87,9 @@ async def result_datasets(
     """
     Query the datasets that were used for a specific execution
     """
-    metric_result = await _get_result(group_id, result_id, session)
+    execution = await _get_execution(group_id, result_id, session)
 
-    return DatasetCollection.build(metric_result.datasets)
+    return DatasetCollection.build(execution.datasets)
 
 
 @router.get("/{group_id}/logs")
@@ -103,10 +99,10 @@ async def result_logs(
     """
     Fetch the logs for an execution result
     """
-    metric_result = await _get_result(group_id, result_id, session)
+    execution = await _get_execution(group_id, result_id, session)
 
     file_path = (
-        config.paths.results / metric_result.output_fragment / EXECUTION_LOG_FILENAME
+        config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
     )
     mime_type, encoding = mimetypes.guess_type(file_path)
 
@@ -129,9 +125,9 @@ async def metric_bundle(
     """
     Fetch a result using the slug
     """
-    metric_result = await _get_result(group_id, result_id, session)
+    execution = await _get_execution(group_id, result_id, session)
 
-    file_path = config.paths.results / metric_result.output_fragment / "metric.json"
+    file_path = config.paths.results / execution.output_fragment / "diagnostic.json"
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Metrics bundle not found")
@@ -142,16 +138,16 @@ async def metric_bundle(
 @router.get("/{group_id}/values")
 async def list_metric_values(
     session: SessionDep, group_id: str, result_id: str | None = None
-) -> ValueCollection:
+) -> MetricValueCollection:
     """
     Fetch a result using the slug
     """
-    metric_result = await _get_result(group_id, result_id, session)
+    execution = await _get_execution(group_id, result_id, session)
 
     metric_values = (
         session.query(models.MetricValue)
-        .filter(models.MetricValue.metric_execution_result_id == metric_result.id)
+        .filter(models.MetricValue.execution_id == execution.id)
         .all()
     )
 
-    return ValueCollection.build(metric_values)
+    return MetricValueCollection.build(metric_values)

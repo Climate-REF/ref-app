@@ -47,9 +47,9 @@ export const CMECMetricSchema = {
     type: 'object',
     required: ['DIMENSIONS', 'RESULTS'],
     title: 'CMECMetric',
-    description: `CMEC metric bundle object
+    description: `CMEC diagnostic bundle object
 
-Contains the metrics calculated during a metric execution, in a standardised format.`
+Contains the diagnostics calculated during a diagnostic execution, in a standardised format.`
 } as const;
 
 export const CMIP6DatasetMetadataSchema = {
@@ -76,11 +76,11 @@ export const CMIP6DatasetMetadataSchema = {
     title: 'CMIP6DatasetMetadata'
 } as const;
 
-export const Collection_MetricExecutionGroup_Schema = {
+export const Collection_DiagnosticSummary_Schema = {
     properties: {
         data: {
             items: {
-                '$ref': '#/components/schemas/MetricExecutionGroup'
+                '$ref': '#/components/schemas/DiagnosticSummary'
             },
             type: 'array',
             title: 'Data'
@@ -88,14 +88,14 @@ export const Collection_MetricExecutionGroup_Schema = {
     },
     type: 'object',
     required: ['data'],
-    title: 'Collection[MetricExecutionGroup]'
+    title: 'Collection[DiagnosticSummary]'
 } as const;
 
-export const Collection_MetricSummary_Schema = {
+export const Collection_ExecutionGroup_Schema = {
     properties: {
         data: {
             items: {
-                '$ref': '#/components/schemas/MetricSummary'
+                '$ref': '#/components/schemas/ExecutionGroup'
             },
             type: 'array',
             title: 'Data'
@@ -103,7 +103,7 @@ export const Collection_MetricSummary_Schema = {
     },
     type: 'object',
     required: ['data'],
-    title: 'Collection[MetricSummary]'
+    title: 'Collection[ExecutionGroup]'
 } as const;
 
 export const DatasetSchema = {
@@ -153,6 +153,197 @@ export const DatasetCollectionSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'DatasetCollection'
+} as const;
+
+export const DiagnosticSummarySchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        provider: {
+            '$ref': '#/components/schemas/ProviderSummary'
+        },
+        slug: {
+            type: 'string',
+            title: 'Slug'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        description: {
+            type: 'string',
+            title: 'Description'
+        },
+        execution_groups: {
+            items: {
+                type: 'integer'
+            },
+            type: 'array',
+            title: 'Execution Groups'
+        },
+        group_by: {
+            items: {
+                '$ref': '#/components/schemas/GroupBy'
+            },
+            type: 'array',
+            title: 'Group By'
+        }
+    },
+    type: 'object',
+    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'group_by'],
+    title: 'DiagnosticSummary',
+    description: 'A unique provider'
+} as const;
+
+export const ExecutionSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        dataset_hash: {
+            type: 'string',
+            title: 'Dataset Hash'
+        },
+        dataset_count: {
+            type: 'integer',
+            title: 'Dataset Count'
+        },
+        successful: {
+            type: 'boolean',
+            title: 'Successful'
+        },
+        retracted: {
+            type: 'boolean',
+            title: 'Retracted'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        outputs: {
+            items: {
+                '$ref': '#/components/schemas/ExecutionOutput'
+            },
+            type: 'array',
+            title: 'Outputs'
+        }
+    },
+    type: 'object',
+    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at', 'outputs'],
+    title: 'Execution'
+} as const;
+
+export const ExecutionGroupSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        results: {
+            items: {
+                '$ref': '#/components/schemas/Execution'
+            },
+            type: 'array',
+            title: 'Results'
+        },
+        latest_execution: {
+            '$ref': '#/components/schemas/Execution'
+        },
+        selectors: {
+            additionalProperties: {
+                items: {
+                    prefixItems: [
+                        {
+                            type: 'string'
+                        },
+                        {
+                            type: 'string'
+                        }
+                    ],
+                    type: 'array',
+                    maxItems: 2,
+                    minItems: 2
+                },
+                type: 'array'
+            },
+            type: 'object',
+            title: 'Selectors'
+        },
+        metric: {
+            '$ref': '#/components/schemas/DiagnosticSummary'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'key', 'results', 'latest_execution', 'selectors', 'metric', 'created_at', 'updated_at'],
+    title: 'ExecutionGroup'
+} as const;
+
+export const ExecutionOutputSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        output_type: {
+            '$ref': '#/components/schemas/ResultOutputType'
+        },
+        filename: {
+            type: 'string',
+            title: 'Filename'
+        },
+        short_name: {
+            type: 'string',
+            title: 'Short Name'
+        },
+        long_name: {
+            type: 'string',
+            title: 'Long Name'
+        },
+        description: {
+            type: 'string',
+            title: 'Description'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        url: {
+            type: 'string',
+            title: 'Url'
+        }
+    },
+    type: 'object',
+    required: ['id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
+    title: 'ExecutionOutput'
 } as const;
 
 export const FacetSchema = {
@@ -217,180 +408,15 @@ export const HTTPValidationErrorSchema = {
 export const MetricDimensionsSchema = {
     type: 'object',
     title: 'MetricDimensions',
-    description: `CMEC metric bundle DIMENSIONS object
+    description: `CMEC diagnostic bundle DIMENSIONS object
 
 This describes the order of the dimensions and their possible values.
-The order of the dimensions matter as that determines how the results are nested.`,
+The order of the dimensions matter as that determines how the executions are nested.`,
     default: {
         json_structure: ['model', 'metric'],
         model: {},
         metric: {}
     }
-} as const;
-
-export const MetricExecutionGroupSchema = {
-    properties: {
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        key: {
-            type: 'string',
-            title: 'Key'
-        },
-        results: {
-            items: {
-                '$ref': '#/components/schemas/MetricExecutionResult'
-            },
-            type: 'array',
-            title: 'Results'
-        },
-        latest_result: {
-            '$ref': '#/components/schemas/MetricExecutionResult'
-        },
-        outputs: {
-            items: {
-                '$ref': '#/components/schemas/ResultOutput'
-            },
-            type: 'array',
-            title: 'Outputs'
-        },
-        selectors: {
-            additionalProperties: {
-                items: {
-                    prefixItems: [
-                        {
-                            type: 'string'
-                        },
-                        {
-                            type: 'string'
-                        }
-                    ],
-                    type: 'array',
-                    maxItems: 2,
-                    minItems: 2
-                },
-                type: 'array'
-            },
-            type: 'object',
-            title: 'Selectors'
-        },
-        metric: {
-            '$ref': '#/components/schemas/MetricSummary'
-        },
-        created_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Created At'
-        },
-        updated_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Updated At'
-        }
-    },
-    type: 'object',
-    required: ['id', 'key', 'results', 'latest_result', 'outputs', 'selectors', 'metric', 'created_at', 'updated_at'],
-    title: 'MetricExecutionGroup'
-} as const;
-
-export const MetricExecutionResultSchema = {
-    properties: {
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        dataset_hash: {
-            type: 'string',
-            title: 'Dataset Hash'
-        },
-        dataset_count: {
-            type: 'integer',
-            title: 'Dataset Count'
-        },
-        successful: {
-            type: 'boolean',
-            title: 'Successful'
-        },
-        retracted: {
-            type: 'boolean',
-            title: 'Retracted'
-        },
-        created_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Created At'
-        },
-        updated_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Updated At'
-        }
-    },
-    type: 'object',
-    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at'],
-    title: 'MetricExecutionResult'
-} as const;
-
-export const MetricExecutionsSchema = {
-    properties: {
-        data: {
-            items: {
-                '$ref': '#/components/schemas/MetricExecutionGroup'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count'
-        }
-    },
-    type: 'object',
-    required: ['data', 'count'],
-    title: 'MetricExecutions'
-} as const;
-
-export const MetricSummarySchema = {
-    properties: {
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        provider: {
-            '$ref': '#/components/schemas/ProviderSummary'
-        },
-        slug: {
-            type: 'string',
-            title: 'Slug'
-        },
-        name: {
-            type: 'string',
-            title: 'Name'
-        },
-        description: {
-            type: 'string',
-            title: 'Description'
-        },
-        metric_executions: {
-            items: {
-                type: 'integer'
-            },
-            type: 'array',
-            title: 'Metric Executions'
-        },
-        group_by: {
-            items: {
-                '$ref': '#/components/schemas/GroupBy'
-            },
-            type: 'array',
-            title: 'Group By'
-        }
-    },
-    type: 'object',
-    required: ['id', 'provider', 'slug', 'name', 'description', 'metric_executions', 'group_by'],
-    title: 'MetricSummary',
-    description: 'A unique provider'
 } as const;
 
 export const MetricValueSchema = {
@@ -441,17 +467,43 @@ export const MetricValueSchema = {
             type: 'integer',
             title: 'Execution Group Id'
         },
-        result_id: {
+        execution_id: {
             type: 'integer',
-            title: 'Result Id'
+            title: 'Execution Id'
         }
     },
     type: 'object',
-    required: ['dimensions', 'value', 'execution_group_id', 'result_id'],
+    required: ['dimensions', 'value', 'execution_group_id', 'execution_id'],
     title: 'MetricValue',
-    description: `A flattened representation of a metric value
+    description: `A flattened representation of a diagnostic value
 
-This includes the dimensions and the value of the metric`
+This includes the dimensions and the value of the diagnostic`
+} as const;
+
+export const MetricValueCollectionSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MetricValue'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        },
+        facets: {
+            items: {
+                '$ref': '#/components/schemas/Facet'
+            },
+            type: 'array',
+            title: 'Facets'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count', 'facets'],
+    title: 'MetricValueCollection'
 } as const;
 
 export const ProviderSummarySchema = {
@@ -470,52 +522,7 @@ export const ProviderSummarySchema = {
     title: 'ProviderSummary',
     description: `Summary information about a Metric Provider.
 
-The metric provider is the framework that was used to generate a set of metrics.`
-} as const;
-
-export const ResultOutputSchema = {
-    properties: {
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        output_type: {
-            '$ref': '#/components/schemas/ResultOutputType'
-        },
-        filename: {
-            type: 'string',
-            title: 'Filename'
-        },
-        short_name: {
-            type: 'string',
-            title: 'Short Name'
-        },
-        long_name: {
-            type: 'string',
-            title: 'Long Name'
-        },
-        description: {
-            type: 'string',
-            title: 'Description'
-        },
-        created_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Created At'
-        },
-        updated_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Updated At'
-        },
-        url: {
-            type: 'string',
-            title: 'Url'
-        }
-    },
-    type: 'object',
-    required: ['id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
-    title: 'ResultOutput'
+The diagnostic provider is the framework that was used to generate a set of metrics.`
 } as const;
 
 export const ResultOutputTypeSchema = {
@@ -555,30 +562,4 @@ export const ValidationErrorSchema = {
     type: 'object',
     required: ['loc', 'msg', 'type'],
     title: 'ValidationError'
-} as const;
-
-export const ValueCollectionSchema = {
-    properties: {
-        data: {
-            items: {
-                '$ref': '#/components/schemas/MetricValue'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count'
-        },
-        facets: {
-            items: {
-                '$ref': '#/components/schemas/Facet'
-            },
-            type: 'array',
-            title: 'Facets'
-        }
-    },
-    type: 'object',
-    required: ['data', 'count', 'facets'],
-    title: 'ValueCollection'
 } as const;
