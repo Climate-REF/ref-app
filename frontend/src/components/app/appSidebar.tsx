@@ -1,3 +1,4 @@
+import { SidebarLogo } from "@/components/app/sidebarLogo.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -68,7 +69,7 @@ export function AppSidebar({ diagnostics, ...props }: AppSidebarProps) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <span className="font-medium">AR7 Fast Track REF</span>
+        <SidebarLogo />
       </SidebarHeader>
       <SidebarContent>
         {sidebarNav.map((item) => {
