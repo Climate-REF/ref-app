@@ -1,4 +1,4 @@
-import { executionsResultLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { executionsExecutionLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +14,7 @@ import { ExecutionLogView, type LogMessage } from "./executionLogView.tsx";
 
 interface ExecutionLogContainerProps {
   groupId: string;
-  resultId?: string;
+  executionId?: string;
 }
 
 function parseLogOutput(logOutput: string) {
@@ -71,12 +71,12 @@ const handleDownload = (fileData: string, filename: string) => {
 
 export function ExecutionLogContainer({
   groupId,
-  resultId,
+  executionId,
 }: ExecutionLogContainerProps) {
   const { data, isLoading, error } = useQuery(
-    executionsResultLogsOptions({
+    executionsExecutionLogsOptions({
       path: { group_id: groupId },
-      query: { result_id: resultId },
+      query: { execution_id: executionId },
     }),
   );
 
@@ -99,9 +99,7 @@ export function ExecutionLogContainer({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Execution Logs</CardTitle>
-            <CardDescription>
-              Log output from the metric calculation process.
-            </CardDescription>
+            <CardDescription>Log output during the execution.</CardDescription>
           </div>
           <Button
             variant={isLoading ? "ghost" : "outline"}

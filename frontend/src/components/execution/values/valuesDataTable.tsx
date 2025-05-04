@@ -57,7 +57,10 @@ function ValuesDataTable({ values, facets, loading }: DataTableProps) {
                   params={{
                     groupId: cell.row.original.execution_group_id.toString(),
                   }}
-                  search={{ resultId: cell.row.original.result_id.toString() }}
+                  search={{
+                    executionId:
+                      cell.row.original.execution_group_id.toString(),
+                  }}
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   View Details

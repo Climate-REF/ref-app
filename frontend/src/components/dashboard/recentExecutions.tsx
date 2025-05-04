@@ -1,6 +1,6 @@
 "use client";
 
-import type { MetricExecutionGroup } from "@/client";
+import type { ExecutionGroup } from "@/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 
 interface RecentExecutionsProps {
-  executions: MetricExecutionGroup[];
+  executions: ExecutionGroup[];
 }
 
 export function RecentExecutions({ executions }: RecentExecutionsProps) {
@@ -22,9 +22,7 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
     <Card>
       <CardHeader>
         <CardTitle>Recent Executions</CardTitle>
-        <CardDescription>
-          Latest metric evaluations across all groups
-        </CardDescription>
+        <CardDescription>Latest evaluations across all groups</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -35,24 +33,26 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{execution.metric.name}</span>
+                  <span className="font-medium">
+                    {execution.diagnostic.name}
+                  </span>
                   <Badge
                     variant={
-                      execution.latest_result.successful
+                      execution.latest_execution.successful
                         ? "default"
                         : "destructive"
                     }
                   >
-                    {execution.latest_result.successful && (
+                    {execution.latest_execution.successful && (
                       <CheckCircle className="mr-1 h-3 w-3" />
                     )}
-                    {!execution.latest_result.successful && (
+                    {!execution.latest_execution.successful && (
                       <XCircle className="mr-1 h-3 w-3" />
                     )}
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <Badge>{execution.metric.provider.name}</Badge> •
+                  <Badge>{execution.diagnostic.provider.name}</Badge> •
                   {new Date(execution.updated_at).toLocaleString()} • 5m 34s
                 </div>
               </div>

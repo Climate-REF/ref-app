@@ -27,15 +27,15 @@ function PageHeader({ breadcrumbs, title }: PageHeaderProps) {
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumbs?.map(({ url, name }: BreadcrumbContent) => (
-            <>
-              <BreadcrumbItem key={name} className="hidden md:block">
+            <span key={name} className={"flex items-center"}>
+              <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink href={url ?? "#"}>{name}</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator
                 key={`${url}-sep`}
                 className="hidden md:block"
               />
-            </>
+            </span>
           ))}
           <BreadcrumbItem className="hidden md:block">
             <BreadcrumbPage>{title}</BreadcrumbPage>

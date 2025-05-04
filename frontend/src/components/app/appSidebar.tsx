@@ -13,17 +13,17 @@ import {
 import { Link } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
 
-interface MetricInfo {
+interface DiagnosticInfo {
   provider: { slug: string };
   slug: string;
   name: string;
 }
 
 interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
-  metrics: MetricInfo[];
+  diagnostics: DiagnosticInfo[];
 }
 
-function computeSidebarNav(metrics: MetricInfo[]) {
+function computeSidebarNav(diagnostics: DiagnosticInfo[]) {
   return [
     {
       title: "Dashboard",
@@ -54,17 +54,17 @@ function computeSidebarNav(metrics: MetricInfo[]) {
     },
     {
       title: "Diagnostics",
-      url: "/metrics",
-      items: metrics.map((metric) => ({
-        title: metric.name,
-        url: `/metrics/${metric.provider.slug}/${metric.slug}`,
+      url: "/diagnostics",
+      items: diagnostics.map((diagnostic) => ({
+        title: diagnostic.name,
+        url: `/diagnostics/${diagnostic.provider.slug}/${diagnostic.slug}`,
       })),
     },
   ];
 }
 
-export function AppSidebar({ metrics, ...props }: AppSidebarProps) {
-  const sidebarNav = computeSidebarNav(metrics);
+export function AppSidebar({ diagnostics, ...props }: AppSidebarProps) {
+  const sidebarNav = computeSidebarNav(diagnostics);
   return (
     <Sidebar {...props}>
       <SidebarHeader>

@@ -81,25 +81,28 @@ async def execution(
 
 
 @router.get("/{group_id}/datasets")
-async def result_datasets(
-    session: SessionDep, group_id: str, result_id: str | None = None
+async def execution_datasets(
+    session: SessionDep, group_id: str, execution_id: str | None = None
 ) -> DatasetCollection:
     """
     Query the datasets that were used for a specific execution
     """
-    execution = await _get_execution(group_id, result_id, session)
+    execution = await _get_execution(group_id, execution_id, session)
 
     return DatasetCollection.build(execution.datasets)
 
 
 @router.get("/{group_id}/logs")
-async def result_logs(
-    session: SessionDep, config: ConfigDep, group_id: str, result_id: str | None = None
+async def execution_logs(
+    session: SessionDep,
+    config: ConfigDep,
+    group_id: str,
+    execution_id: str | None = None,
 ) -> StreamingResponse:
     """
     Fetch the logs for an execution result
     """
-    execution = await _get_execution(group_id, result_id, session)
+    execution = await _get_execution(group_id, execution_id, session)
 
     file_path = (
         config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
@@ -113,19 +116,22 @@ async def result_logs(
         file_iterator(file_path),
         media_type=mime_type,
         headers={
-            "Content-Disposition": f"attachment; filename=execution_result_{result_id}.log"
+            "Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"
         },
     )
 
 
 @router.get("/{group_id}/metric_bundle")
 async def metric_bundle(
-    session: SessionDep, config: ConfigDep, group_id: str, result_id: str | None = None
+    session: SessionDep,
+    config: ConfigDep,
+    group_id: str,
+    execution_id: str | None = None,
 ) -> CMECMetric:
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, result_id, session)
+    execution = await _get_execution(group_id, execution_id, session)
 
     file_path = config.paths.results / execution.output_fragment / "diagnostic.json"
 
@@ -136,13 +142,13 @@ async def metric_bundle(
 
 
 @router.get("/{group_id}/values")
-async def list_metric_values(
-    session: SessionDep, group_id: str, result_id: str | None = None
+async def metric_values(
+    session: SessionDep, group_id: str, execution_id: str | None = None
 ) -> MetricValueCollection:
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, result_id, session)
+    execution = await _get_execution(group_id, execution_id, session)
 
     metric_values = (
         session.query(models.MetricValue)

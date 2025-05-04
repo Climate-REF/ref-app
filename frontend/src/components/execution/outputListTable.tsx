@@ -1,4 +1,4 @@
-import type { ResultOutput } from "@/client";
+import type { ExecutionOutput } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import {
   Card,
@@ -11,7 +11,7 @@ import { format } from "date-fns";
 
 import { SquareArrowOutUpRight } from "lucide-react";
 
-export const columns: ColumnDef<ResultOutput>[] = [
+export const columns: ColumnDef<ExecutionOutput>[] = [
   {
     accessorKey: "short_name",
     header: "Short Name",
@@ -39,14 +39,14 @@ export const columns: ColumnDef<ResultOutput>[] = [
 ];
 
 interface OutputListTableProps {
-  results: ResultOutput[];
+  results: ExecutionOutput[];
 }
 
 function OutputListTable({ results }: OutputListTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>List of recent metric executions</CardTitle>
+        <CardTitle>List of outputs</CardTitle>
       </CardHeader>
       <CardContent>
         <DataTable data={results} columns={columns} />

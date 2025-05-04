@@ -88,10 +88,15 @@ class DiagnosticSummary(BaseModel):
             diagnostic.provider.slug, diagnostic.slug
         )
         data_requirements = sorted(
-            concrete_diagnostic.data_requirements, key=lambda dr: dr.source_type.value
+            concrete_diagnostic.data_requirements,
+            key=lambda dr: dr[0].source_type.value
+            if isinstance(dr, tuple)
+            else dr.source_type.value,
         )
         group_by_summary = [
-            GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
+            GroupBy(source_type=dr[0].source_type.value, group_by=dr[0].group_by)
+            if isinstance(dr, tuple)
+            else GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
             for dr in data_requirements
         ]
 
@@ -108,6 +113,7 @@ class DiagnosticSummary(BaseModel):
 
 class ExecutionOutput(BaseModel):
     id: int
+    execution_id: int
     output_type: ResultOutputType
     filename: str
     short_name: str
@@ -136,22 +142,21 @@ class ExecutionOutput(BaseModel):
 class ExecutionGroup(BaseModel):
     id: int
     key: str
-    results: "list[Execution]"
+    executions: "list[Execution]"
     latest_execution: "Execution"
     selectors: dict[str, tuple[tuple[str, str], ...]]
-    metric: DiagnosticSummary
+    diagnostic: DiagnosticSummary
     created_at: datetime
     updated_at: datetime
 
     @staticmethod
     def build(execution: models.ExecutionGroup):
-        latest_result = None
-        outputs = []
+        latest_execution = None
         if len(execution.executions):
             latest_execution = execution.executions[-1]
         return ExecutionGroup(
             id=execution.id,
-            key=execution.dataset_key,
+            key=execution.key,
             executions=[Execution.build(r) for r in execution.executions],
             latest_execution=Execution.build(latest_execution),
             selectors=execution.selectors,
@@ -272,7 +277,7 @@ class MetricValueCollection(BaseModel):
                     dimensions=v.dimensions,
                     attributes=v.attributes,
                     value=v.value,
-                    execution_group_id=v.metric_execution_result.metric_execution_group_id,
+                    execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
                 )
                 for v in values

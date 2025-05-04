@@ -1,4 +1,4 @@
-import type { MetricExecutionResult } from "@/client";
+import type { Execution } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
@@ -15,9 +15,9 @@ import { format } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
 import { SquareArrowOutUpRight } from "lucide-react";
 
-const columnHelper = createColumnHelper<MetricExecutionResult>();
+const columnHelper = createColumnHelper<Execution>();
 
-export const columns: ColumnDef<MetricExecutionResult>[] = [
+export const columns: ColumnDef<Execution>[] = [
   {
     accessorKey: "dataset_hash",
     header: "Dataset Hash",
@@ -29,8 +29,8 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
     id: "latest",
     cell: (cell) => {
       const rowIndex = cell.row.index;
-      const { resultId } = Route.useSearch();
-      if (resultId && cell.row.original.id.toString() === resultId) {
+      const { executionId } = Route.useSearch();
+      if (executionId && cell.row.original.id.toString() === executionId) {
         return <Badge variant="default">Selected</Badge>;
       }
       if (rowIndex === 0) {
@@ -65,14 +65,14 @@ export const columns: ColumnDef<MetricExecutionResult>[] = [
 ];
 
 interface ResultListTableProps {
-  results: MetricExecutionResult[];
+  results: Execution[];
 }
 
-function ResultListTable({ results }: ResultListTableProps) {
+function ExecutionsTable({ results }: ResultListTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>History of recent metric executions</CardTitle>
+        <CardTitle>History of recent diagnostic executions</CardTitle>
         <CardDescription>
           Only the latest results are used in the data explorer
         </CardDescription>
@@ -83,4 +83,4 @@ function ResultListTable({ results }: ResultListTableProps) {
     </Card>
   );
 }
-export default ResultListTable;
+export default ExecutionsTable;

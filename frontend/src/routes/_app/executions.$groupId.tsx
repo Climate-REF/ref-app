@@ -1,13 +1,13 @@
 import {
+  executionsExecutionOptions,
   executionsGetOptions,
-  executionsListMetricValuesOptions,
-  executionsResultOptions,
+  executionsMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
+import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
 import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
 import OutputListTable from "@/components/execution/outputListTable.tsx";
 import { Values } from "@/components/execution/values";
-import ResultListTable from "@/components/metrics/resultsListTable.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -25,7 +25,7 @@ import { z } from "zod";
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
-  const { tab, resultId } = Route.useSearch();
+  const { tab, executionId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { data } = useSuspenseQuery(
@@ -34,17 +34,17 @@ const ExecutionInfo = () => {
     }),
   );
 
-  const { data: executionResult } = useSuspenseQuery(
-    executionsResultOptions({
+  const { data: execution } = useSuspenseQuery(
+    executionsExecutionOptions({
       path: { group_id: groupId },
-      query: { result_id: resultId },
+      query: { execution_id: executionId },
     }),
   );
 
   const metricValues = useQuery(
-    executionsListMetricValuesOptions({
+    executionsMetricValuesOptions({
       path: { group_id: groupId },
-      query: { result_id: resultId },
+      query: { execution_id: executionId },
     }),
   );
 
@@ -73,13 +73,13 @@ const ExecutionInfo = () => {
                   <CardDescription>
                     Overview of the execution of a group for{" "}
                     <Link
-                      to="/metrics/$providerSlug/$metricSlug"
+                      to="/diagnostics/$providerSlug/$diagnosticSlug"
                       params={{
-                        providerSlug: data.metric.provider.slug,
-                        metricSlug: data.metric.slug,
+                        providerSlug: data.diagnostic.provider.slug,
+                        diagnosticSlug: data.diagnostic.slug,
                       }}
                     >
-                      {data?.metric.name}
+                      {data.diagnostic.name}
                     </Link>
                   </CardDescription>
                 </div>
@@ -98,7 +98,7 @@ const ExecutionInfo = () => {
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
                     {format(
-                      new Date(executionResult.updated_at as string),
+                      new Date(execution.updated_at as string),
                       "yyyy-MM-dd HH:mm",
                     )}
                   </p>
@@ -113,14 +113,14 @@ const ExecutionInfo = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
                   <Badge className="mt-1">
-                    {executionResult.successful ? "Success" : "Failed"}
+                    {execution.successful ? "Success" : "Failed"}
                   </Badge>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
                     Number of outputs
                   </p>
-                  <p className="font-medium">{data?.outputs.length}</p>
+                  <p className="font-medium">{execution.outputs.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -155,13 +155,13 @@ const ExecutionInfo = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <DatasetTable groupId={groupId} resultId={resultId} />
+                  <DatasetTable groupId={groupId} executionId={executionId} />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="executions" className="space-y-4">
-              <ResultListTable results={data?.results} />
+              <ExecutionsTable results={data?.executions} />
             </TabsContent>
 
             <TabsContent value="files" className="space-y-4">
@@ -170,12 +170,12 @@ const ExecutionInfo = () => {
                   <CardTitle>Figures</CardTitle>
                   <CardDescription>
                     The datasets that were used in the calculation of this
-                    metric
+                    diagnostic.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    {data?.outputs
+                    {execution.outputs
                       .filter((output) => output.output_type === "plot")
                       .map((output) => (
                         <div
@@ -189,7 +189,7 @@ const ExecutionInfo = () => {
                   </div>
                 </CardContent>
               </Card>
-              <OutputListTable results={data?.outputs} />
+              <OutputListTable results={data?.latest_execution.outputs} />
             </TabsContent>
 
             <TabsContent value="raw-data" className="space-y-4">
@@ -211,7 +211,10 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
-              <ExecutionLogContainer groupId={groupId} resultId={resultId} />
+              <ExecutionLogContainer
+                groupId={groupId}
+                executionId={executionId}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -224,7 +227,7 @@ const executionInfoSchema = z.object({
   tab: z
     .enum(["datasets", "executions", "files", "raw-data", "logs"])
     .default("datasets"),
-  resultId: z.string().optional(),
+  executionId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/_app/executions/$groupId")({

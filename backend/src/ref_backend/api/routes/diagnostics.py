@@ -9,17 +9,17 @@ from ref_backend.models import (
     MetricValueCollection,
 )
 
-router = APIRouter(prefix="/diagnostics", tags=["metrics"])
+router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
 
 async def _get_diagnostic(
-    session, provider_slug: str, metric_slug: str
+    session, provider_slug: str, diagnostic_slug: str
 ) -> models.Diagnostic:
     diagnostic = (
         session.query(models.Diagnostic)
         .join(models.Diagnostic.provider)
         .filter(
-            models.Diagnostic.slug == metric_slug,
+            models.Diagnostic.slug == diagnostic_slug,
             models.Provider.slug == provider_slug,
         )
         .one_or_none()
@@ -30,7 +30,7 @@ async def _get_diagnostic(
 
 
 @router.get("/")
-async def list_metrics(session: SessionDep) -> Collection[DiagnosticSummary]:
+async def list(session: SessionDep) -> Collection[DiagnosticSummary]:
     """
     List the currently registered diagnostics
     """
@@ -39,26 +39,26 @@ async def list_metrics(session: SessionDep) -> Collection[DiagnosticSummary]:
     return Collection(data=[DiagnosticSummary.build(m) for m in diagnostics])
 
 
-@router.get("/{provider_slug}/{metric_slug}")
-async def get_metric(
-    session: SessionDep, provider_slug: str, metric_slug: str
+@router.get("/{provider_slug}/{diagnostic_slug}")
+async def get(
+    session: SessionDep, provider_slug: str, diagnostic_slug: str
 ) -> DiagnosticSummary:
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, metric_slug)
+    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
 
     return DiagnosticSummary.build(diagnostic)
 
 
-@router.get("/{provider_slug}/{metric_slug}/executions")
+@router.get("/{provider_slug}/{diagnostic_slug}/executions")
 async def list_execution_groups(
-    session: SessionDep, provider_slug: str, metric_slug: str
+    session: SessionDep, provider_slug: str, diagnostic_slug: str
 ) -> Collection[ExecutionGroup]:
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, metric_slug)
+    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
 
     execution_groups = (
         session.query(models.ExecutionGroup)
@@ -69,14 +69,14 @@ async def list_execution_groups(
     return Collection(data=[ExecutionGroup.build(e) for e in execution_groups])
 
 
-@router.get("/{provider_slug}/{metric_slug}/values")
+@router.get("/{provider_slug}/{diagnostic_slug}/values")
 async def list_metric_values(
-    session: SessionDep, provider_slug: str, metric_slug: str
+    session: SessionDep, provider_slug: str, diagnostic_slug: str
 ) -> MetricValueCollection:
     """
     Get all the diagnostic values for a given diagnostic
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, metric_slug)
+    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
 
     metric_values = (
         session.query(models.MetricValue)

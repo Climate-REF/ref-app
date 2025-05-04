@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { metricsListMetricsOptions } from "@/client/@tanstack/react-query.gen";
+import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import { createFileRoute } from "@tanstack/react-router";
 
 const Metrics = () => {
-  const { data } = useSuspenseQuery(metricsListMetricsOptions());
+  const { data } = useSuspenseQuery(diagnosticsListOptions());
 
   const metrics = data.data;
 
@@ -26,10 +26,12 @@ const Metrics = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
-            {metrics.map((metric) => (
-              <div key={metric.slug} className="space-y-1">
-                <p className="text-sm text-muted-foreground">{metric.name}</p>
-                <p className="font-medium">{metric.slug}</p>
+            {metrics.map((diagnostic) => (
+              <div key={diagnostic.slug} className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  {diagnostic.name}
+                </p>
+                <p className="font-medium">{diagnostic.slug}</p>
               </div>
             ))}
           </div>
@@ -39,12 +41,12 @@ const Metrics = () => {
   );
 };
 
-export const Route = createFileRoute("/_app/metrics/")({
+export const Route = createFileRoute("/_app/diagnostics/")({
   component: Metrics,
   staticData: {
     title: "Metrics",
   },
   loader: ({ context: { queryClient } }) => {
-    return queryClient.ensureQueryData(metricsListMetricsOptions());
+    return queryClient.ensureQueryData(diagnosticsListOptions());
   },
 });

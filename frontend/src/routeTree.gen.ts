@@ -16,10 +16,10 @@ import { Route as AppRouteImport } from './routes/_app/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as ContentAboutImport } from './routes/content/about'
 import { Route as AppExplorerImport } from './routes/_app/explorer'
-import { Route as AppMetricsIndexImport } from './routes/_app/metrics.index'
 import { Route as AppExecutionsIndexImport } from './routes/_app/executions.index'
+import { Route as AppDiagnosticsIndexImport } from './routes/_app/diagnostics.index'
 import { Route as AppExecutionsGroupIdImport } from './routes/_app/executions.$groupId'
-import { Route as AppMetricsProviderSlugMetricSlugImport } from './routes/_app/metrics.$providerSlug.$metricSlug'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug'
 
 // Create/Update Routes
 
@@ -52,15 +52,15 @@ const AppExplorerRoute = AppExplorerImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppMetricsIndexRoute = AppMetricsIndexImport.update({
-  id: '/metrics/',
-  path: '/metrics/',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-
 const AppExecutionsIndexRoute = AppExecutionsIndexImport.update({
   id: '/executions/',
   path: '/executions/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppDiagnosticsIndexRoute = AppDiagnosticsIndexImport.update({
+  id: '/diagnostics/',
+  path: '/diagnostics/',
   getParentRoute: () => AppRouteRoute,
 } as any)
 
@@ -70,10 +70,10 @@ const AppExecutionsGroupIdRoute = AppExecutionsGroupIdImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppMetricsProviderSlugMetricSlugRoute =
-  AppMetricsProviderSlugMetricSlugImport.update({
-    id: '/metrics/$providerSlug/$metricSlug',
-    path: '/metrics/$providerSlug/$metricSlug',
+const AppDiagnosticsProviderSlugDiagnosticSlugRoute =
+  AppDiagnosticsProviderSlugDiagnosticSlugImport.update({
+    id: '/diagnostics/$providerSlug/$diagnosticSlug',
+    path: '/diagnostics/$providerSlug/$diagnosticSlug',
     getParentRoute: () => AppRouteRoute,
   } as any)
 
@@ -123,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExecutionsGroupIdImport
       parentRoute: typeof AppRouteImport
     }
+    '/_app/diagnostics/': {
+      id: '/_app/diagnostics/'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof AppDiagnosticsIndexImport
+      parentRoute: typeof AppRouteImport
+    }
     '/_app/executions/': {
       id: '/_app/executions/'
       path: '/executions'
@@ -130,18 +137,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExecutionsIndexImport
       parentRoute: typeof AppRouteImport
     }
-    '/_app/metrics/': {
-      id: '/_app/metrics/'
-      path: '/metrics'
-      fullPath: '/metrics'
-      preLoaderRoute: typeof AppMetricsIndexImport
-      parentRoute: typeof AppRouteImport
-    }
-    '/_app/metrics/$providerSlug/$metricSlug': {
-      id: '/_app/metrics/$providerSlug/$metricSlug'
-      path: '/metrics/$providerSlug/$metricSlug'
-      fullPath: '/metrics/$providerSlug/$metricSlug'
-      preLoaderRoute: typeof AppMetricsProviderSlugMetricSlugImport
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug'
+      path: '/diagnostics/$providerSlug/$diagnosticSlug'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugImport
       parentRoute: typeof AppRouteImport
     }
   }
@@ -152,17 +152,18 @@ declare module '@tanstack/react-router' {
 interface AppRouteRouteChildren {
   AppExplorerRoute: typeof AppExplorerRoute
   AppExecutionsGroupIdRoute: typeof AppExecutionsGroupIdRoute
+  AppDiagnosticsIndexRoute: typeof AppDiagnosticsIndexRoute
   AppExecutionsIndexRoute: typeof AppExecutionsIndexRoute
-  AppMetricsIndexRoute: typeof AppMetricsIndexRoute
-  AppMetricsProviderSlugMetricSlugRoute: typeof AppMetricsProviderSlugMetricSlugRoute
+  AppDiagnosticsProviderSlugDiagnosticSlugRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppExplorerRoute: AppExplorerRoute,
   AppExecutionsGroupIdRoute: AppExecutionsGroupIdRoute,
+  AppDiagnosticsIndexRoute: AppDiagnosticsIndexRoute,
   AppExecutionsIndexRoute: AppExecutionsIndexRoute,
-  AppMetricsIndexRoute: AppMetricsIndexRoute,
-  AppMetricsProviderSlugMetricSlugRoute: AppMetricsProviderSlugMetricSlugRoute,
+  AppDiagnosticsProviderSlugDiagnosticSlugRoute:
+    AppDiagnosticsProviderSlugDiagnosticSlugRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
@@ -188,9 +189,9 @@ export interface FileRoutesByFullPath {
   '/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
-  '/metrics': typeof AppMetricsIndexRoute
-  '/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRoute
 }
 
 export interface FileRoutesByTo {
@@ -200,9 +201,9 @@ export interface FileRoutesByTo {
   '/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
-  '/metrics': typeof AppMetricsIndexRoute
-  '/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRoute
 }
 
 export interface FileRoutesById {
@@ -213,9 +214,9 @@ export interface FileRoutesById {
   '/_app/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
+  '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
   '/_app/executions/': typeof AppExecutionsIndexRoute
-  '/_app/metrics/': typeof AppMetricsIndexRoute
-  '/_app/metrics/$providerSlug/$metricSlug': typeof AppMetricsProviderSlugMetricSlugRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRoute
 }
 
 export interface FileRouteTypes {
@@ -227,9 +228,9 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/content/about'
     | '/executions/$groupId'
+    | '/diagnostics'
     | '/executions'
-    | '/metrics'
-    | '/metrics/$providerSlug/$metricSlug'
+    | '/diagnostics/$providerSlug/$diagnosticSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -238,9 +239,9 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/content/about'
     | '/executions/$groupId'
+    | '/diagnostics'
     | '/executions'
-    | '/metrics'
-    | '/metrics/$providerSlug/$metricSlug'
+    | '/diagnostics/$providerSlug/$diagnosticSlug'
   id:
     | '__root__'
     | '/'
@@ -249,9 +250,9 @@ export interface FileRouteTypes {
     | '/_app/explorer'
     | '/content/about'
     | '/_app/executions/$groupId'
+    | '/_app/diagnostics/'
     | '/_app/executions/'
-    | '/_app/metrics/'
-    | '/_app/metrics/$providerSlug/$metricSlug'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug'
   fileRoutesById: FileRoutesById
 }
 
@@ -290,9 +291,9 @@ export const routeTree = rootRoute
       "children": [
         "/_app/explorer",
         "/_app/executions/$groupId",
+        "/_app/diagnostics/",
         "/_app/executions/",
-        "/_app/metrics/",
-        "/_app/metrics/$providerSlug/$metricSlug"
+        "/_app/diagnostics/$providerSlug/$diagnosticSlug"
       ]
     },
     "/content": {
@@ -313,16 +314,16 @@ export const routeTree = rootRoute
       "filePath": "_app/executions.$groupId.tsx",
       "parent": "/_app"
     },
+    "/_app/diagnostics/": {
+      "filePath": "_app/diagnostics.index.tsx",
+      "parent": "/_app"
+    },
     "/_app/executions/": {
       "filePath": "_app/executions.index.tsx",
       "parent": "/_app"
     },
-    "/_app/metrics/": {
-      "filePath": "_app/metrics.index.tsx",
-      "parent": "/_app"
-    },
-    "/_app/metrics/$providerSlug/$metricSlug": {
-      "filePath": "_app/metrics.$providerSlug.$metricSlug.tsx",
+    "/_app/diagnostics/$providerSlug/$diagnosticSlug": {
+      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug.tsx",
       "parent": "/_app"
     }
   }

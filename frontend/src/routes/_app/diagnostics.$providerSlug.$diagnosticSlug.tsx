@@ -1,6 +1,6 @@
 import type { GroupBy } from "@/client";
+import ExecutionGroupTable from "@/components/diagnostics/executionGroupTable.tsx";
 import { Values } from "@/components/execution/values";
-import ExecutionGroupTable from "@/components/metrics/executionGroupTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {
   Card,
@@ -16,8 +16,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 import {
-  metricsGetMetricOptions,
-  metricsListMetricValuesOptions,
+  diagnosticsGetOptions,
+  diagnosticsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
@@ -32,18 +32,18 @@ const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   );
 };
 
-const MetricInfo = () => {
-  const { providerSlug, metricSlug } = Route.useParams();
+const DiagnosticInfo = () => {
+  const { providerSlug, diagnosticSlug } = Route.useParams();
   const { tab } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   const data = Route.useLoaderData();
 
   const { data: metricValues, isLoading } = useQuery(
-    metricsListMetricValuesOptions({
+    diagnosticsListMetricValuesOptions({
       path: {
         provider_slug: providerSlug,
-        metric_slug: metricSlug,
+        diagnostic_slug: diagnosticSlug,
       },
     }),
   );
@@ -79,7 +79,7 @@ const MetricInfo = () => {
               <p className="text-sm text-muted-foreground">
                 Number of execution groups
               </p>
-              <p className="font-medium">{data.metric_executions.length}</p>
+              <p className="font-medium">{data.execution_groups.length}</p>
             </div>
           </div>
         </CardContent>
@@ -101,7 +101,7 @@ const MetricInfo = () => {
 
         <TabsContent value="executions" className="space-y-4">
           <ExecutionGroupTable
-            metricSlug={metricSlug}
+            diagnosticSlug={diagnosticSlug}
             providerSlug={providerSlug}
           />
         </TabsContent>
@@ -122,23 +122,23 @@ const metricInfoSchema = z.object({
   tab: z.enum(["executions", "raw-data"]).default("executions"),
 });
 
-export const Route = createFileRoute("/_app/metrics/$providerSlug/$metricSlug")(
-  {
-    component: MetricInfo,
-    validateSearch: zodValidator(metricInfoSchema),
-    staticData: {
-      breadcrumbs: [{ name: "Metrics", url: "/metrics" }],
-      title: "",
-    },
-    loader: ({ context: { queryClient }, params }) => {
-      return queryClient.ensureQueryData(
-        metricsGetMetricOptions({
-          path: {
-            provider_slug: params.providerSlug,
-            metric_slug: params.metricSlug,
-          },
-        }),
-      );
-    },
+export const Route = createFileRoute(
+  "/_app/diagnostics/$providerSlug/$diagnosticSlug",
+)({
+  component: DiagnosticInfo,
+  validateSearch: zodValidator(metricInfoSchema),
+  staticData: {
+    breadcrumbs: [{ name: "Metrics", url: "/metrics" }],
+    title: "",
   },
-);
+  loader: ({ context: { queryClient }, params }) => {
+    return queryClient.ensureQueryData(
+      diagnosticsGetOptions({
+        path: {
+          provider_slug: params.providerSlug,
+          diagnostic_slug: params.diagnosticSlug,
+        },
+      }),
+    );
+  },
+});

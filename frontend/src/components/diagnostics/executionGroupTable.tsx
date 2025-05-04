@@ -1,5 +1,5 @@
-import type { MetricExecutionGroup } from "@/client";
-import { metricsGetMetricExecutionsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import type { ExecutionGroup } from "@/client";
+import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
@@ -16,9 +16,9 @@ import { format } from "date-fns";
 import { Link } from "@tanstack/react-router";
 import { SquareArrowOutUpRight } from "lucide-react";
 
-const columnHelper = createColumnHelper<MetricExecutionGroup>();
+const columnHelper = createColumnHelper<ExecutionGroup>();
 
-export const columns: ColumnDef<MetricExecutionGroup>[] = [
+export const columns: ColumnDef<ExecutionGroup>[] = [
   {
     id: "selectors",
     header: "Selectors",
@@ -42,11 +42,11 @@ export const columns: ColumnDef<MetricExecutionGroup>[] = [
   },
   {
     header: "Datasets",
-    accessorFn: (row) => row.latest_result.dataset_count,
+    accessorFn: (row) => row.latest_execution.dataset_count,
   },
   {
     header: "Successful",
-    accessorKey: "latest_result.successful",
+    accessorKey: "latest_execution.successful",
     cell: (cell) =>
       cell.getValue() ? (
         <Badge variant="outline">Yes</Badge>
@@ -74,28 +74,27 @@ export const columns: ColumnDef<MetricExecutionGroup>[] = [
 
 interface ExecutionListTableProps {
   providerSlug: string;
-  metricSlug: string;
+  diagnosticSlug: string;
 }
 
 function ExecutionGroupTable({
   providerSlug,
-  metricSlug,
+  diagnosticSlug,
 }: ExecutionListTableProps) {
   const { data, isLoading } = useSuspenseQuery(
-    metricsGetMetricExecutionsOptions({
-      path: { provider_slug: providerSlug, metric_slug: metricSlug },
+    diagnosticsListExecutionGroupsOptions({
+      path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
     }),
   );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Metric Execution Groups</CardTitle>
-        <CardDescription className={"max-w-1/2"}>
-          A Metric Execution Group in the REF represents a unique combination of
-          datasets used to execute a specific metric. Each group can have
-          multiple results associated with it as new datasets are added or
-          removed.
+        <CardTitle>Execution Groups</CardTitle>
+        <CardDescription className={"max-w-3/4"}>
+          An Execution Group represents a unique combination of datasets used to
+          execute a specific diagnostic. Each group can have multiple results
+          associated with it as new datasets are added or removed.
         </CardDescription>
       </CardHeader>
       <CardContent>

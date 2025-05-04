@@ -142,8 +142,8 @@ export function MetricsExplorer() {
               <CardFooter>
                 <Button variant="outline" className="w-full" asChild>
                   <Link
-                    to="/metrics/$providerSlug/$metricSlug"
-                    params={{ providerSlug: "", metricSlug: "" }}
+                    to="/diagnostics/$providerSlug/$diagnosticSlug"
+                    params={{ providerSlug: "", diagnosticSlug: "" }}
                   >
                     View Details
                   </Link>
@@ -185,8 +185,8 @@ export function MetricsExplorer() {
                   <td className="p-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link
-                        to="/metrics/$providerSlug/$metricSlug"
-                        params={{ providerSlug: "", metricSlug: "" }}
+                        to="/diagnostics/$providerSlug/$diagnosticSlug"
+                        params={{ providerSlug: "", diagnosticSlug: "" }}
                       >
                         View
                       </Link>

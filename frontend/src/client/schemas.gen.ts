@@ -252,12 +252,12 @@ export const ExecutionGroupSchema = {
             type: 'string',
             title: 'Key'
         },
-        results: {
+        executions: {
             items: {
                 '$ref': '#/components/schemas/Execution'
             },
             type: 'array',
-            title: 'Results'
+            title: 'Executions'
         },
         latest_execution: {
             '$ref': '#/components/schemas/Execution'
@@ -282,7 +282,7 @@ export const ExecutionGroupSchema = {
             type: 'object',
             title: 'Selectors'
         },
-        metric: {
+        diagnostic: {
             '$ref': '#/components/schemas/DiagnosticSummary'
         },
         created_at: {
@@ -297,7 +297,7 @@ export const ExecutionGroupSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'key', 'results', 'latest_execution', 'selectors', 'metric', 'created_at', 'updated_at'],
+    required: ['id', 'key', 'executions', 'latest_execution', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
     title: 'ExecutionGroup'
 } as const;
 

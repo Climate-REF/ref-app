@@ -6,7 +6,7 @@ const Executions = () => {
   return (
     <>
       {data.map((d) => (
-        <div key={`${d.metric.id}-${d.key}`}>{d.latest_result?.id}</div>
+        <div key={`${d.diagnostic.id}-${d.key}`}>{d.latest_execution?.id}</div>
       ))}
     </>
   );
@@ -14,7 +14,7 @@ const Executions = () => {
 export const Route = createFileRoute("/_app/executions/")({
   component: Executions,
   staticData: {
-    title: "Metric Executions",
+    title: "Executions",
   },
   loader: ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(
