@@ -1,4 +1,4 @@
-# REF App
+# Rapid Evaluation Framework App
 
 This repository contains a quick proof of concept for an API to serve outputs from the Rapid Evaluation Framework (REF).
 This system enables near real-time evaluation of Earth system models.
@@ -9,7 +9,7 @@ This is a full-stack application that consists of a:
 * **Frontend**: React frontend
   * TypeScript, Tanstack Query, Shadcn, Vite
 
-**Status**: Pre-Alpha
+**Status**: Alpha
 
 **Other info :**
 [![Licence](https://img.shields.io/github/license/Climate-REF/ref-app.svg)](https://github.com/Climate-REF/climate-ref/blob/main/LICENCE)
@@ -29,7 +29,7 @@ The REF Web Application provides researchers and scientists with tools to:
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - PostgreSQL database 
 - Node.js v20 and npm (for frontend)
 - Docker and Docker Compose (optional)
@@ -45,13 +45,15 @@ cd ref-app
 
 2. **Set up environment variables**
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in the project root by copying the `.env.example` file.
 
+```bash
+cp .env.example .env
 ```
-PROJECT_NAME=REF Web Application
-SQLALCHEMY_DATABASE_URI=postgresql://user:password@localhost:5432/refdb
-BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-```
+
+Modify the `.env` to your needs.
+The `REF_CONFIGURATION` variable should point to the configuration directory for the REF.
+This will be used to define the database connection string.
 
 3. **Install dependencies**
 

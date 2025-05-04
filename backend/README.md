@@ -1,28 +1,21 @@
 # REF App Backend
 
-A web application interface for the Rapid Evaluation Framework (REF). 
-This system enables near real-time evaluation of Earth system models.
+A FastAPI application that serves as the backend for the REF App.
 
-This is a full-stack application that consists of a:
-* FastAPI-based API 
-    * PostgreSQL database
-* Modern React frontend
-  * TypeScript, Tanstack Query, Shadcn, Vite
 
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
-- PostgreSQL database 
-- Node.js v20 and npm (for frontend)
-- Docker and Docker Compose (optional)
+- Python 3.11+
+- A working REF installation
 
 ### Backend Setup
 
 See the project setup in the [root README](../README.md).
 
+Make sure that you have correctly set the `REF_CONFIGURATION` variable in your `.env` file.
 
 ## Development
 
