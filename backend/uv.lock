@@ -233,7 +233,7 @@ wheels = [
 [[package]]
 name = "climate-ref"
 version = "0.5.0"
-source = { editable = "../../climate-ref/packages/climate-ref" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -248,6 +248,10 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typer" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/99/b4/95f67a3f672830e01cacc129edc1ccd4f5779d5c865ec9fd39f00661fbec/climate_ref-0.5.0.tar.gz", hash = "sha256:69a56e1ad0c91c46cec2097e6c318db891b5491f1c2bfc2e1f5c4208e1d2f380", size = 75838 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/9a/7c3cb285873e01238878af2f7ac39f86f3e54e065ad7618d76a1abf97b07/climate_ref-0.5.0-py3-none-any.whl", hash = "sha256:9b2e0392c186615b9261d66c665c1048abbccec0187f749c0aa1edd6fa20a519", size = 67149 },
+]
 
 [package.optional-dependencies]
 metrics = [
@@ -259,34 +263,10 @@ postgres = [
     { name = "psycopg2-binary" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.13.3" },
-    { name = "attrs", specifier = ">=24.2.0" },
-    { name = "cattrs", specifier = ">=24.1.2" },
-    { name = "climate-ref-celery", marker = "extra == 'celery'", editable = "../../climate-ref/packages/climate-ref-celery" },
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "climate-ref-esmvaltool", marker = "extra == 'metrics'", editable = "../../climate-ref/packages/climate-ref-esmvaltool" },
-    { name = "climate-ref-ilamb", marker = "extra == 'metrics'", editable = "../../climate-ref/packages/climate-ref-ilamb" },
-    { name = "climate-ref-pmp", marker = "extra == 'metrics'", editable = "../../climate-ref/packages/climate-ref-pmp" },
-    { name = "ecgtools", specifier = ">=2024.7.31" },
-    { name = "environs", specifier = ">=11.0.0" },
-    { name = "loguru", specifier = ">=0.7.2" },
-    { name = "platformdirs", specifier = ">=4.3.6" },
-    { name = "psycopg2-binary", marker = "extra == 'postgres'", specifier = ">=2.9.2" },
-    { name = "setuptools", specifier = ">=75.8.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.36" },
-    { name = "tomlkit", specifier = ">=0.13.2" },
-    { name = "typer", specifier = ">=0.12.5" },
-]
-
-[package.metadata.requires-dev]
-dev = []
-
 [[package]]
 name = "climate-ref-core"
 version = "0.5.0"
-source = { editable = "../../climate-ref/packages/climate-ref-core" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "numpy" },
@@ -296,77 +276,52 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "attrs", specifier = ">=23.2.0" },
-    { name = "numpy", specifier = ">=1.25.0" },
-    { name = "pandas", specifier = ">=2.1.0" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "typing-extensions" },
+sdist = { url = "https://files.pythonhosted.org/packages/e0/fb/b5ee19a26790997ff94c57366ae312339dec00d54fa0f0c325baa5fc2a35/climate_ref_core-0.5.0.tar.gz", hash = "sha256:f6d8ebf3156fc58b4770b8c9a70240ece78e8449e8844fefce942ea94e66ec87", size = 41490 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/e9/44caf3a1b23a21e430b8fcf8c73a3e9f8c42a7cd68f960fc3afac246dbb6/climate_ref_core-0.5.0-py3-none-any.whl", hash = "sha256:3ff57e326c4c08c30982f7600f1d237347b7d5243a04d0c7e20fcc033ef808bb", size = 35346 },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "types-requests" }]
 
 [[package]]
 name = "climate-ref-esmvaltool"
 version = "0.5.0"
-source = { editable = "../../climate-ref/packages/climate-ref-esmvaltool" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "pooch" },
     { name = "ruamel-yaml" },
     { name = "xarray" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "pooch", specifier = ">=1.8" },
-    { name = "ruamel-yaml", specifier = ">=0.18" },
-    { name = "xarray", specifier = ">=2023.3.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/7f/f8/8832c45992de622ee8d04f2c5e9802ebbe62551e6723ac5852830fa485cd/climate_ref_esmvaltool-0.5.0.tar.gz", hash = "sha256:d4d1d3b0682469aa0bfca208959a819364586888a4592028b13c405b9f6e2222", size = 129710 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f3/5c/b583c6d2d66505773f922307f26928fd953ecdf148b46016cf1b573f7f04/climate_ref_esmvaltool-0.5.0-py3-none-any.whl", hash = "sha256:f46a56a127bd8d339138a1865bcc9f8af0d6e3a9ca0ec12a86fabc310e3c3f53", size = 128659 },
 ]
 
 [[package]]
 name = "climate-ref-ilamb"
 version = "0.5.0"
-source = { editable = "../../climate-ref/packages/climate-ref-ilamb" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "ilamb3" },
     { name = "types-pyyaml" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "ilamb3", git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
+sdist = { url = "https://files.pythonhosted.org/packages/5b/8a/6a64428f0a85a50162f74ed087767013932e2fdce1245ff02daf1e208380/climate_ref_ilamb-0.5.0.tar.gz", hash = "sha256:4f0954a1d06c5a101dc8e46fe5ea2d34ea8b99e5c01a4b8c1840348cda0720ec", size = 11407 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/58/ac927787a179854a8b8604ff2cb3683b2d9f6630aaae61f6c120e41a7f3c/climate_ref_ilamb-0.5.0-py3-none-any.whl", hash = "sha256:4212a060028822116eabe6eca04d8f49a9855e013811f4bed85db5282004ba1f", size = 12349 },
 ]
-
-[package.metadata.requires-dev]
-dev = []
 
 [[package]]
 name = "climate-ref-pmp"
 version = "0.5.0"
-source = { editable = "../../climate-ref/packages/climate-ref-pmp" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "pcmdi-metrics" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=v3.9.1" },
+sdist = { url = "https://files.pythonhosted.org/packages/cc/f4/f4495282378cb530aac29e7e418e890beee5f510b44e24f11b144d75e3f2/climate_ref_pmp-0.5.0.tar.gz", hash = "sha256:b5d9545e6c2b3759d15e6b44092b3d74ab30099aee7561f36fa22256603dc8d6", size = 2288039 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/f3/e3909a2bb25e4697888d2ae180f924c0178e66153054ad1f3bcbfc724fdd/climate_ref_pmp-0.5.0-py3-none-any.whl", hash = "sha256:d161335006324cd9fe5f2f6e583f5a3a9e50e4b5ab1a260de2db0952ff889fcf", size = 86690 },
 ]
-
-[package.metadata.requires-dev]
-dev = []
 
 [[package]]
 name = "cloudpickle"
@@ -946,14 +901,16 @@ wheels = [
 
 [[package]]
 name = "ilamb3"
-version = "2025.2.13.post1.dev15+g7c64e37"
-source = { git = "https://github.com/rubisco-sfa/ilamb3?rev=7c64e37ebda04b6902b39ef30db96f4bcabba472#7c64e37ebda04b6902b39ef30db96f4bcabba472" }
+version = "2025.4.28"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cartopy" },
     { name = "cf-xarray" },
+    { name = "dask" },
     { name = "jinja2" },
     { name = "loguru" },
     { name = "matplotlib" },
+    { name = "nc-time-axis" },
     { name = "netcdf4" },
     { name = "numpy" },
     { name = "pandas" },
@@ -963,6 +920,10 @@ dependencies = [
     { name = "scipy" },
     { name = "statsmodels" },
     { name = "xarray" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/03/15/18be6e5490162d7076b0d839e488169a67a8bfc3134bf850d8ebd86347b7/ilamb3-2025.4.28.tar.gz", hash = "sha256:309a70f259e34f538a4dcdab41d65093267cd2c3b8f85c0f726f1b512bc4de3c", size = 413810 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/54/e627139829a263f851dc61c1fa00087119338cb6ca7871753bd94ca05ef9/ilamb3-2025.4.28-py3-none-any.whl", hash = "sha256:dd1a42353b138ceadc177dcf38701f991d01509fc44ee7352c58125e38709e8c", size = 82772 },
 ]
 
 [[package]]
@@ -1133,28 +1094,34 @@ wheels = [
 
 [[package]]
 name = "lz4"
-version = "4.4.3"
+version = "4.4.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cc/bc/b2e79af05be82841706ddd7d78059e5f78e6ca5828f92034394b54e303b7/lz4-4.4.3.tar.gz", hash = "sha256:91ed5b71f9179bf3dbfe85d92b52d4b53de2e559aa4daa3b7de18e0dd24ad77d", size = 171848 }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/5a/945f5086326d569f14c84ac6f7fcc3229f0b9b1e8cc536b951fd53dfb9e1/lz4-4.4.4.tar.gz", hash = "sha256:070fd0627ec4393011251a094e08ed9fdcc78cb4e7ab28f507638eee4e39abda", size = 171884 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/28/9b72434d3f41f49637138ff4545e3900b34ece8771e20b84d268b28f4d11/lz4-4.4.3-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:b1b98f0a4137d01b84c680813eef6198e1e00f1f28bc20ce7b5c436459a0d146", size = 220711 },
-    { url = "https://files.pythonhosted.org/packages/27/08/ab9008c869ad16f158255514e1870156cebf9c2bf0509aadfddeb5dc2183/lz4-4.4.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:20e385cb8bd8321593788f11101d8c89a823a56191978e427e3c5141e129f14b", size = 189494 },
-    { url = "https://files.pythonhosted.org/packages/49/3c/00115af6394c26bb54f863eba5680fdb7962747944db0b1df6c757a61054/lz4-4.4.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5c9e32989df06c57f10aa09ad9b30e8a25baf1aefe850e13b0ea5de600477d6a", size = 1265694 },
-    { url = "https://files.pythonhosted.org/packages/e1/6d/693b58fe1fcb2118a5bb858417212bcc6b24794ccf3e9ffb4ccaab7ddf1c/lz4-4.4.3-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c3d2d5df5476b065aae9d1ad551fdc7b17c151b84e8edd9212108946b2337c66", size = 1185404 },
-    { url = "https://files.pythonhosted.org/packages/80/c6/05179ce2968c434208f2a816de2ebef86b04249d77c694fdd7c8fba0d12b/lz4-4.4.3-cp311-cp311-win32.whl", hash = "sha256:e365850166729fa82be618f476966161d5c47ea081eafc4febfc542bc85bac5d", size = 88141 },
-    { url = "https://files.pythonhosted.org/packages/7c/b3/26e04a07a9f5d3f4682853d0bd4ebf1fc83ceb3c72cc55c50bbfbe15a0a2/lz4-4.4.3-cp311-cp311-win_amd64.whl", hash = "sha256:7f5c05bd4b0909b682608c453acc31f1a9170d55f56d27cd701213e0683fc66a", size = 99826 },
-    { url = "https://files.pythonhosted.org/packages/7e/40/9a6db39950ba872c3b75ccf4826288a46b109ded1d20508d6044cc36e33c/lz4-4.4.3-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:43461e439ef71d49bb0ee3a1719494cd952a58d205496698e0cde866f22006bc", size = 220484 },
-    { url = "https://files.pythonhosted.org/packages/b7/25/edd77ac155e167f0d183f0a30be1665ab581f77108ca6e19d628cd381e42/lz4-4.4.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:2ae50a175fb7b900f7aa42575f4fe99c32ca0ff57e5a8c1fd25e1243e67409db", size = 189473 },
-    { url = "https://files.pythonhosted.org/packages/55/59/80673123358c0e0b2b773b74ac3d14717e35cfcceac5243b61f88e08b883/lz4-4.4.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:38df5929ffefa9dda120ba1790a2e94fda81916c5aaa1ee652f4b1e515ebb9ed", size = 1264959 },
-    { url = "https://files.pythonhosted.org/packages/ea/69/24a3d8609f9a05d93b407d93842d35e953bebf625cb4d128a9105c983d59/lz4-4.4.3-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2b45914f25d916324531d0259072b402c5f99b67c6e9ac8cbc3d49935aeb1d97", size = 1184842 },
-    { url = "https://files.pythonhosted.org/packages/88/6e/680d0fc3dbec31aaffcad23d2e429b2974253ffda4636ea8a7e2cce5461c/lz4-4.4.3-cp312-cp312-win32.whl", hash = "sha256:848c5b040d2cfe35097b1d65d1095d83a3f86374ce879e189533f61405d8763b", size = 88157 },
-    { url = "https://files.pythonhosted.org/packages/d4/c9/8fcaf3445d3dc2973861b1a1a27090e23952807facabcf092a587ff77754/lz4-4.4.3-cp312-cp312-win_amd64.whl", hash = "sha256:b1d179bdefd9ddb8d11d7de7825e73fb957511b722a8cb484e417885c210e68c", size = 99833 },
-    { url = "https://files.pythonhosted.org/packages/7a/81/61ca14fb0939d03f6ab4710fb92048cde9e1b924ce198912545808ef9e8a/lz4-4.4.3-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:174b7ce5456671c73b81bb115defac8a584363d8b38a48ed3ad976e08eea27cd", size = 220487 },
-    { url = "https://files.pythonhosted.org/packages/23/9b/8841de45b452b291aa0cae1fb9a961cee4fe119ff8eed1584b1633c5c4e6/lz4-4.4.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:ab26b4af13308b8296688b03d74c3b0c8e8ed1f6b2d1454ef97bdb589db409db", size = 189483 },
-    { url = "https://files.pythonhosted.org/packages/d9/18/379429ec69468ee57e1641dc4e1aa324a39510f2ab4d9991a036fc3e74ad/lz4-4.4.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:61e08d84e3bf8ca9f43dc6b33f8cd7ba19f49864e2c91eb2160f83b6f9a268fa", size = 1264934 },
-    { url = "https://files.pythonhosted.org/packages/c3/fa/3578da2d0f8062ae53bcc5ef2e9a225896b05332fff746ebe2fd5889eee7/lz4-4.4.3-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:71ebdaadf546d6d393b9a21796172723724b737e84f68f36caf367d1c87a86a1", size = 1184767 },
-    { url = "https://files.pythonhosted.org/packages/a1/ed/af96817ac69772d3d676a86f59a583740d25b2f45163625cb3632479102f/lz4-4.4.3-cp313-cp313-win32.whl", hash = "sha256:1f25e1b571a8be2c3d60d46679ef2471ae565f7ba9ba8382596695413523b188", size = 88164 },
-    { url = "https://files.pythonhosted.org/packages/96/1f/a6b4b87038d1057675afdd017ca606662f266a41018ed617bc3395a5d10d/lz4-4.4.3-cp313-cp313-win_amd64.whl", hash = "sha256:da091dd8c96dbda124d766231f38619afd5c544051fb4424d2566c905957d342", size = 99840 },
+    { url = "https://files.pythonhosted.org/packages/28/e8/63843dc5ecb1529eb38e1761ceed04a0ad52a9ad8929ab8b7930ea2e4976/lz4-4.4.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:ddfc7194cd206496c445e9e5b0c47f970ce982c725c87bd22de028884125b68f", size = 220898 },
+    { url = "https://files.pythonhosted.org/packages/e4/94/c53de5f07c7dc11cf459aab2a1d754f5df5f693bfacbbe1e4914bfd02f1e/lz4-4.4.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:714f9298c86f8e7278f1c6af23e509044782fa8220eb0260f8f8f1632f820550", size = 189685 },
+    { url = "https://files.pythonhosted.org/packages/fe/59/c22d516dd0352f2a3415d1f665ccef2f3e74ecec3ca6a8f061a38f97d50d/lz4-4.4.4-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a8474c91de47733856c6686df3c4aca33753741da7e757979369c2c0d32918ba", size = 1239225 },
+    { url = "https://files.pythonhosted.org/packages/81/af/665685072e71f3f0e626221b7922867ec249cd8376aca761078c8f11f5da/lz4-4.4.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:80dd27d7d680ea02c261c226acf1d41de2fd77af4fb2da62b278a9376e380de0", size = 1265881 },
+    { url = "https://files.pythonhosted.org/packages/90/04/b4557ae381d3aa451388a29755cc410066f5e2f78c847f66f154f4520a68/lz4-4.4.4-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9b7d6dddfd01b49aedb940fdcaf32f41dc58c926ba35f4e31866aeec2f32f4f4", size = 1185593 },
+    { url = "https://files.pythonhosted.org/packages/7b/e4/03636979f4e8bf92c557f998ca98ee4e6ef92e92eaf0ed6d3c7f2524e790/lz4-4.4.4-cp311-cp311-win32.whl", hash = "sha256:4134b9fd70ac41954c080b772816bb1afe0c8354ee993015a83430031d686a4c", size = 88259 },
+    { url = "https://files.pythonhosted.org/packages/07/f0/9efe53b4945441a5d2790d455134843ad86739855b7e6199977bf6dc8898/lz4-4.4.4-cp311-cp311-win_amd64.whl", hash = "sha256:f5024d3ca2383470f7c4ef4d0ed8eabad0b22b23eeefde1c192cf1a38d5e9f78", size = 99916 },
+    { url = "https://files.pythonhosted.org/packages/87/c8/1675527549ee174b9e1db089f7ddfbb962a97314657269b1e0344a5eaf56/lz4-4.4.4-cp311-cp311-win_arm64.whl", hash = "sha256:6ea715bb3357ea1665f77874cf8f55385ff112553db06f3742d3cdcec08633f7", size = 89741 },
+    { url = "https://files.pythonhosted.org/packages/f7/2d/5523b4fabe11cd98f040f715728d1932eb7e696bfe94391872a823332b94/lz4-4.4.4-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:23ae267494fdd80f0d2a131beff890cf857f1b812ee72dbb96c3204aab725553", size = 220669 },
+    { url = "https://files.pythonhosted.org/packages/91/06/1a5bbcacbfb48d8ee5b6eb3fca6aa84143a81d92946bdb5cd6b005f1863e/lz4-4.4.4-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:fff9f3a1ed63d45cb6514bfb8293005dc4141341ce3500abdfeb76124c0b9b2e", size = 189661 },
+    { url = "https://files.pythonhosted.org/packages/fa/08/39eb7ac907f73e11a69a11576a75a9e36406b3241c0ba41453a7eb842abb/lz4-4.4.4-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1ea7f07329f85a8eda4d8cf937b87f27f0ac392c6400f18bea2c667c8b7f8ecc", size = 1238775 },
+    { url = "https://files.pythonhosted.org/packages/e9/26/05840fbd4233e8d23e88411a066ab19f1e9de332edddb8df2b6a95c7fddc/lz4-4.4.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8ccab8f7f7b82f9fa9fc3b0ba584d353bd5aa818d5821d77d5b9447faad2aaad", size = 1265143 },
+    { url = "https://files.pythonhosted.org/packages/b7/5d/5f2db18c298a419932f3ab2023deb689863cf8fd7ed875b1c43492479af2/lz4-4.4.4-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e43e9d48b2daf80e486213128b0763deed35bbb7a59b66d1681e205e1702d735", size = 1185032 },
+    { url = "https://files.pythonhosted.org/packages/c4/e6/736ab5f128694b0f6aac58343bcf37163437ac95997276cd0be3ea4c3342/lz4-4.4.4-cp312-cp312-win32.whl", hash = "sha256:33e01e18e4561b0381b2c33d58e77ceee850a5067f0ece945064cbaac2176962", size = 88284 },
+    { url = "https://files.pythonhosted.org/packages/40/b8/243430cb62319175070e06e3a94c4c7bd186a812e474e22148ae1290d47d/lz4-4.4.4-cp312-cp312-win_amd64.whl", hash = "sha256:d21d1a2892a2dcc193163dd13eaadabb2c1b803807a5117d8f8588b22eaf9f12", size = 99918 },
+    { url = "https://files.pythonhosted.org/packages/6c/e1/0686c91738f3e6c2e1a243e0fdd4371667c4d2e5009b0a3605806c2aa020/lz4-4.4.4-cp312-cp312-win_arm64.whl", hash = "sha256:2f4f2965c98ab254feddf6b5072854a6935adab7bc81412ec4fe238f07b85f62", size = 89736 },
+    { url = "https://files.pythonhosted.org/packages/3b/3c/d1d1b926d3688263893461e7c47ed7382a969a0976fc121fc678ec325fc6/lz4-4.4.4-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:ed6eb9f8deaf25ee4f6fad9625d0955183fdc90c52b6f79a76b7f209af1b6e54", size = 220678 },
+    { url = "https://files.pythonhosted.org/packages/26/89/8783d98deb058800dabe07e6cdc90f5a2a8502a9bad8c5343c641120ace2/lz4-4.4.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:18ae4fe3bafb344dbd09f976d45cbf49c05c34416f2462828f9572c1fa6d5af7", size = 189670 },
+    { url = "https://files.pythonhosted.org/packages/22/ab/a491ace69a83a8914a49f7391e92ca0698f11b28d5ce7b2ececa2be28e9a/lz4-4.4.4-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:57fd20c5fc1a49d1bbd170836fccf9a338847e73664f8e313dce6ac91b8c1e02", size = 1238746 },
+    { url = "https://files.pythonhosted.org/packages/97/12/a1f2f4fdc6b7159c0d12249456f9fe454665b6126e98dbee9f2bd3cf735c/lz4-4.4.4-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e9cb387c33f014dae4db8cb4ba789c8d2a0a6d045ddff6be13f6c8d9def1d2a6", size = 1265119 },
+    { url = "https://files.pythonhosted.org/packages/50/6e/e22e50f5207649db6ea83cd31b79049118305be67e96bec60becf317afc6/lz4-4.4.4-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d0be9f68240231e1e44118a4ebfecd8a5d4184f0bdf5c591c98dd6ade9720afd", size = 1184954 },
+    { url = "https://files.pythonhosted.org/packages/4c/c4/2a458039645fcc6324ece731d4d1361c5daf960b553d1fcb4261ba07d51c/lz4-4.4.4-cp313-cp313-win32.whl", hash = "sha256:e9ec5d45ea43684f87c316542af061ef5febc6a6b322928f059ce1fb289c298a", size = 88289 },
+    { url = "https://files.pythonhosted.org/packages/00/96/b8e24ea7537ab418074c226279acfcaa470e1ea8271003e24909b6db942b/lz4-4.4.4-cp313-cp313-win_amd64.whl", hash = "sha256:a760a175b46325b2bb33b1f2bbfb8aa21b48e1b9653e29c10b6834f9bb44ead4", size = 99925 },
+    { url = "https://files.pythonhosted.org/packages/a5/a5/f9838fe6aa132cfd22733ed2729d0592259fff074cefb80f19aa0607367b/lz4-4.4.4-cp313-cp313-win_arm64.whl", hash = "sha256:f4c21648d81e0dda38b4720dccc9006ae33b0e9e7ffe88af6bf7d4ec124e2fba", size = 89743 },
 ]
 
 [[package]]
@@ -1372,6 +1339,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/98/a4/1ab47638b92648243faf97a5aeb6ea83059cc3624972ab6b8d2316078d3f/mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782", size = 4433 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/e2/5d3f6ada4297caebe1a2add3b126fe800c96f56dbe5d1988a2cbe0b267aa/mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d", size = 4695 },
+]
+
+[[package]]
+name = "nc-time-axis"
+version = "1.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cftime" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/39/c7/ceaba2047ef4e08660a5a89a71cea30547bddb0e51236dab2dcb771a6fe1/nc-time-axis-1.4.1.tar.gz", hash = "sha256:72d80f492f34bbf59490838d8cb3d92f14e88900b0ee35498b2b33c82795eb81", size = 66231 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/89/dbeab77a217f8fbda97a637acf1e3f0ce8c9c9fb3f5e5d1ff843da859520/nc_time_axis-1.4.1-py3-none-any.whl", hash = "sha256:96a6fb28cede0d07998fcd666599f76e51a086e1929fbcbfb758c1d0f3e7b0d1", size = 17757 },
 ]
 
 [[package]]
@@ -2092,7 +2073,7 @@ source = { editable = "." }
 dependencies = [
     { name = "climate-ref", extra = ["metrics", "postgres"] },
     { name = "fastapi", extra = ["standard"] },
-    { name = "ilamb3" },
+    { name = "lz4" },
     { name = "pcmdi-metrics" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
@@ -2113,9 +2094,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "climate-ref", extras = ["metrics", "postgres"], editable = "../../climate-ref/packages/climate-ref" },
+    { name = "climate-ref", extras = ["metrics", "postgres"], specifier = ">=0.5.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
-    { name = "ilamb3" },
+    { name = "lz4", specifier = "==4.4.4" },
     { name = "pcmdi-metrics", git = "https://github.com/PCMDI/pcmdi_metrics?rev=v3.9.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
     { name = "pydantic", specifier = ">2.0" },

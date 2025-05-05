@@ -1,7 +1,9 @@
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 
 from ref_backend.api.main import api_router
 from ref_backend.core.config import settings
@@ -31,3 +33,12 @@ if settings.all_cors_origins:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+if settings.STATIC_DIR:
+    logger.info(f"Serving static files from {settings.STATIC_DIR}")
+    app.mount(
+        "/",
+        StaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
+        name="static",
+    )

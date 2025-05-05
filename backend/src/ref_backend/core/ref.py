@@ -3,7 +3,7 @@ from collections.abc import Generator
 from sqlalchemy.orm import Session
 
 from climate_ref.config import Config
-from climate_ref.database import Database
+from climate_ref.database import Database, _get_database_revision
 from climate_ref.models import MetricValue
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.pycmec.controlled_vocabulary import CV
@@ -15,6 +15,12 @@ def create_database_connection() -> tuple[Config, Database]:
     """
     config = Config.default()
     database = Database.from_config(config, run_migrations=False)
+    with database._engine.connect() as connection:
+        if _get_database_revision(connection) is None:
+            raise ValueError(
+                "The database migration has not been run."
+                "Check the database URL in your config file and run the migration."
+            )
     return config, database
 
 

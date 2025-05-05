@@ -2,8 +2,6 @@
 
 A FastAPI application that serves as the backend for the REF App.
 
-
-
 ## Getting Started
 
 ### Prerequisites
