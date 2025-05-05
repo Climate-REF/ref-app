@@ -1,0 +1,27 @@
+name: "Setup Python and uv"
+description: "setup Python and uv with caches"
+inputs:
+  python-version:
+    description: "The version of Python to use"
+    required: true
+    default: "3.11"
+  uv-version:
+    description: "The version of uv to use"
+    required: true
+    default: "0.5.17"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: ${{ inputs.uv-version }}
+        python-version: ${{ inputs.python-version }}
+        enable-cache: true
+        working-directory: backend
+    # Install dependencies and builds the rust crate
+    - name: Install the project
+      shell: bash
+      run: |
+        uv sync --all-extras --dev --locked
