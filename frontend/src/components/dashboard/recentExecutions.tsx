@@ -17,6 +17,15 @@ interface RecentExecutionsProps {
   executions: ExecutionGroup[];
 }
 
+function ExecutionStatusBadge({ successful }: { successful: boolean }) {
+  return (
+    <Badge variant={successful ? "default" : "destructive"} className="h-6">
+      {successful && <CheckCircle className="h-3 w-3" />}
+      {!successful && <XCircle className="h-3 w-3" />}
+    </Badge>
+  );
+}
+
 export function RecentExecutions({ executions }: RecentExecutionsProps) {
   return (
     <Card>
@@ -31,29 +40,24 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
               key={execution.id}
               className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
             >
-              <div className="space-y-1">
+              <div className="space-y-1 overflow-hidden">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">
+                  <span className="font-medium text-nowrap">
                     {execution.diagnostic.name}
                   </span>
-                  <Badge
-                    variant={
-                      execution.latest_execution.successful
-                        ? "default"
-                        : "destructive"
-                    }
-                  >
-                    {execution.latest_execution.successful && (
-                      <CheckCircle className="mr-1 h-3 w-3" />
-                    )}
-                    {!execution.latest_execution.successful && (
-                      <XCircle className="mr-1 h-3 w-3" />
-                    )}
-                  </Badge>
+
+                  <span className="text-sm text-muted-foreground overflow-hidden text-nowrap text-ellipsis">
+                    {execution.key}
+                  </span>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  <Badge>{execution.diagnostic.provider.name}</Badge> •
-                  {new Date(execution.updated_at).toLocaleString()} • 5m 34s
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <ExecutionStatusBadge
+                    successful={execution.latest_execution.successful}
+                  />
+                  <Badge className="h-6">
+                    {execution.diagnostic.provider.name}
+                  </Badge>
+                  <span>{new Date(execution.updated_at).toLocaleString()}</span>
                 </div>
               </div>
               <Button variant="ghost" size="sm" asChild>
