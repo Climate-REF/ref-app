@@ -307,6 +307,10 @@ export const ExecutionOutputSchema = {
             type: 'integer',
             title: 'Id'
         },
+        execution_id: {
+            type: 'integer',
+            title: 'Execution Id'
+        },
         output_type: {
             '$ref': '#/components/schemas/ResultOutputType'
         },
@@ -342,7 +346,7 @@ export const ExecutionOutputSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
+    required: ['id', 'execution_id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
     title: 'ExecutionOutput'
 } as const;
 

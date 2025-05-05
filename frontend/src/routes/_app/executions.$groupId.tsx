@@ -5,11 +5,11 @@ import {
 } from "@/client/@tanstack/react-query.gen";
 import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
 import DatasetTable from "@/components/execution/datasetTable.tsx";
+import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
 import OutputListTable from "@/components/execution/outputListTable.tsx";
 import { Values } from "@/components/execution/values";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -101,7 +101,14 @@ const ExecutionInfo = () => {
                   </CardDescription>
                 </div>
                 <div>
-                  <Button>Download outputs</Button>
+                  <DownloadOutputs
+                    executionGroup={groupId}
+                    executionId={(
+                      executionId ??
+                      data?.latest_execution.id ??
+                      ""
+                    ).toString()}
+                  />
                 </div>
               </div>
             </CardHeader>
@@ -117,11 +124,15 @@ const ExecutionInfo = () => {
                   <span title={data?.key}>{data?.key}</span>
                 </SummaryItem>
 
-                <SummaryItem title="Status"><Badge className="mt-1">
+                <SummaryItem title="Status">
+                  <Badge className="mt-1">
                     {execution.successful ? "Success" : "Failed"}
-                  </Badge></SummaryItem>
+                  </Badge>
+                </SummaryItem>
                 <SummaryItem title="Execution Time">3m 42s</SummaryItem>
-                <SummaryItem title="Number of outputs">{execution.outputs.length}</SummaryItem>
+                <SummaryItem title="Number of outputs">
+                  {execution.outputs.length}
+                </SummaryItem>
               </div>
             </CardContent>
           </Card>

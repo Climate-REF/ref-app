@@ -99,6 +99,7 @@ export type ExecutionGroup = {
 
 export type ExecutionOutput = {
     id: number;
+    execution_id: number;
     output_type: ResultOutputType;
     filename: string;
     short_name: string;
@@ -475,6 +476,33 @@ export type ExecutionsMetricValuesResponses = {
 };
 
 export type ExecutionsMetricValuesResponse = ExecutionsMetricValuesResponses[keyof ExecutionsMetricValuesResponses];
+
+export type ExecutionsExecutionArchiveData = {
+    body?: never;
+    path: {
+        group_id: string;
+    };
+    query?: {
+        execution_id?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/archive';
+};
+
+export type ExecutionsExecutionArchiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecutionsExecutionArchiveError = ExecutionsExecutionArchiveErrors[keyof ExecutionsExecutionArchiveErrors];
+
+export type ExecutionsExecutionArchiveResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type ResultsGetResultData = {
     body?: never;

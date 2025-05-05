@@ -1,4 +1,8 @@
 import mimetypes
+import os
+import tarfile
+import tempfile
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from starlette.responses import StreamingResponse
@@ -157,3 +161,50 @@ async def metric_values(
     )
 
     return MetricValueCollection.build(metric_values)
+
+
+@router.get("/{group_id}/archive")
+async def execution_archive(
+    session: SessionDep,
+    config: ConfigDep,
+    group_id: str,
+    execution_id: str | None = None,
+) -> StreamingResponse:
+    """
+    Stream a tar.gz archive of the execution results
+
+    The archive is created on-the-fly and streamed directly to the client.
+    """
+    execution = await _get_execution(group_id, execution_id, session)
+    result_path = config.paths.results / execution.output_fragment
+
+    if not result_path.exists():
+        raise HTTPException(status_code=404, detail="Execution output not found")
+
+    # This is an arbitrary value as a placeholder
+    # No experimentation has been done to find the best chunk size
+    CHUNK_SIZE = 128 * 1024  # 128 KB chunks
+
+    def generate_archive():
+        with tempfile.NamedTemporaryFile(delete=True) as temp_tar:
+            # Open the tar file in write mode with gzip compression
+            with tarfile.open(temp_tar.name, mode="w:gz") as tar:
+                for root, _, files in os.walk(result_path):
+                    for file in files:
+                        file_path = Path(root) / file
+                        arcname = str(file_path.relative_to(result_path))
+                        tar.add(file_path, arcname=arcname)
+
+            # Read and stream the tar file in chunks
+            with open(temp_tar.name, "rb") as f:
+                while chunk := f.read(CHUNK_SIZE):
+                    yield chunk
+        # The temp file will be deleted automatically when closed
+
+    return StreamingResponse(
+        generate_archive(),
+        media_type="application/x-gzip",
+        headers={
+            "Content-Disposition": f"attachment; filename=execution_{execution.id}.tar.gz"
+        },
+    )
