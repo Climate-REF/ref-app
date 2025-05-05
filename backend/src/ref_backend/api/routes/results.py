@@ -22,9 +22,7 @@ async def get_result(
         raise HTTPException(status_code=404, detail="Result not found")
 
     file_path = (
-        config.paths.results
-        / result.metric_execution_result.output_fragment
-        / result.filename
+        config.paths.results / result.execution.output_fragment / result.filename
     )
     mime_type, encoding = mimetypes.guess_type(file_path)
 

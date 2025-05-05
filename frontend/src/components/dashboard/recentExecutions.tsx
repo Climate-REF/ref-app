@@ -40,15 +40,15 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
               key={execution.id}
               className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
             >
-              <div className="space-y-1 overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-nowrap">
-                    {execution.diagnostic.name}
-                  </span>
-
-                  <span className="text-sm text-muted-foreground overflow-hidden text-nowrap text-ellipsis">
-                    {execution.key}
-                  </span>
+              <div className="flex flex-col gap-2 overflow-hidden">
+                <span className="font-medium text-nowrap">
+                  {execution.diagnostic.name}
+                </span>
+                <div
+                  className="text-sm text-muted-foreground overflow-hidden text-nowrap text-ellipsis"
+                  title={execution.key}
+                >
+                  {execution.key}
                 </div>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <ExecutionStatusBadge
@@ -57,7 +57,9 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
                   <Badge className="h-6">
                     {execution.diagnostic.provider.name}
                   </Badge>
-                  <span>{new Date(execution.updated_at).toLocaleString()}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(execution.updated_at).toLocaleString()}
+                  </span>
                 </div>
               </div>
               <Button variant="ghost" size="sm" asChild>

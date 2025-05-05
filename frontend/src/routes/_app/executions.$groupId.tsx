@@ -18,10 +18,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils.ts";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import type * as React from "react";
 import { z } from "zod";
+
+function SummaryItem({
+  className,
+  title,
+  children,
+}: React.ComponentProps<"div">) {
+  return (
+    <div className={cn("space-y-1", className)}>
+      <p className="text-sm text-muted-foreground">{title}</p>
+      <p className="font-medium overflow-hidden text-nowrap text-ellipsis">
+        {children}
+      </p>
+    </div>
+  );
+}
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
@@ -90,38 +107,21 @@ const ExecutionInfo = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Key</p>
-                  <p className="font-medium">{data?.key}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium">
-                    {format(
-                      new Date(execution.updated_at as string),
-                      "yyyy-MM-dd HH:mm",
-                    )}
-                  </p>
-                </div>
+                <SummaryItem title="Date">
+                  {format(
+                    new Date(execution.updated_at as string),
+                    "yyyy-MM-dd HH:mm",
+                  )}{" "}
+                </SummaryItem>
+                <SummaryItem title="Key" className="col-span-2">
+                  <span title={data?.key}>{data?.key}</span>
+                </SummaryItem>
 
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    Execution Time
-                  </p>
-                  <p className="font-medium">3m 42s</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className="mt-1">
+                <SummaryItem title="Status"><Badge className="mt-1">
                     {execution.successful ? "Success" : "Failed"}
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    Number of outputs
-                  </p>
-                  <p className="font-medium">{execution.outputs.length}</p>
-                </div>
+                  </Badge></SummaryItem>
+                <SummaryItem title="Execution Time">3m 42s</SummaryItem>
+                <SummaryItem title="Number of outputs">{execution.outputs.length}</SummaryItem>
               </div>
             </CardContent>
           </Card>
