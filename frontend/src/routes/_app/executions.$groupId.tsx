@@ -6,8 +6,8 @@ import {
 import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
 import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
-import { ExecutionLogContainer } from "@/components/execution/executionLogs/executionLogContainer.tsx";
-import OutputListTable from "@/components/execution/outputListTable.tsx";
+import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
+import { ExecutionLogContainer } from "@/components/execution/executionLogs";
 import { Values } from "@/components/execution/values";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -176,31 +176,7 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="files" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Figures</CardTitle>
-                  <CardDescription>
-                    The datasets that were used in the calculation of this
-                    diagnostic.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    {execution.outputs
-                      .filter((output) => output.output_type === "plot")
-                      .map((output) => (
-                        <div
-                          key={output.id}
-                          className="flex flex-col items-center gap-2"
-                        >
-                          <img src={output.url} alt={output.description} />
-                          <small>{output.description}</small>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <OutputListTable results={data?.latest_execution.outputs} />
+              <ExecutionFilesContainer outputs={execution?.outputs ?? []} />
             </TabsContent>
 
             <TabsContent value="raw-data" className="space-y-4">
