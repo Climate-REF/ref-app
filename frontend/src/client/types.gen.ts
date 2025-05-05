@@ -37,11 +37,39 @@ export type Cmip6DatasetMetadata = {
     variant_label: string;
 };
 
-export type CollectionDiagnosticSummary = {
+export type CollectionDatasetReadable = {
+    data: Array<Dataset>;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionDatasetWritable = {
+    data: Array<Dataset>;
+};
+
+export type CollectionDiagnosticSummaryReadable = {
+    data: Array<DiagnosticSummary>;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionDiagnosticSummaryWritable = {
     data: Array<DiagnosticSummary>;
 };
 
-export type CollectionExecutionGroup = {
+export type CollectionExecutionGroupReadable = {
+    data: Array<ExecutionGroup>;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionExecutionGroupWritable = {
     data: Array<ExecutionGroup>;
 };
 
@@ -50,11 +78,6 @@ export type Dataset = {
     slug: string;
     dataset_type: string;
     metadata: Cmip6DatasetMetadata | null;
-};
-
-export type DatasetCollection = {
-    data: Array<Dataset>;
-    count: number;
 };
 
 /**
@@ -191,7 +214,7 @@ export type DiagnosticsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDiagnosticSummary;
+    200: CollectionDiagnosticSummaryReadable;
 };
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
@@ -247,7 +270,7 @@ export type DiagnosticsListExecutionGroupsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroup;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
@@ -302,7 +325,7 @@ export type ExecutionsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroup;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type ExecutionsListResponse = ExecutionsListResponses[keyof ExecutionsListResponses];
@@ -387,7 +410,7 @@ export type ExecutionsExecutionDatasetsResponses = {
     /**
      * Successful Response
      */
-    200: DatasetCollection;
+    200: CollectionDatasetReadable;
 };
 
 export type ExecutionsExecutionDatasetsResponse = ExecutionsExecutionDatasetsResponses[keyof ExecutionsExecutionDatasetsResponses];

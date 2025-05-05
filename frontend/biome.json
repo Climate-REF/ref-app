@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist", "src/client", "*.gen.ts"]
+    "ignore": ["dist", "src/client", "*.gen.ts", "openapi.json"]
   },
   "formatter": {
     "enabled": true,

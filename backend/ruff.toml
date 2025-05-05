@@ -19,6 +19,9 @@ unfixable = [
 ]
 ignore = [
     "D100",
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
     "D105", # Missing docstring in magic method
     "D200",
     "D400",

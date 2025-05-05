@@ -63,12 +63,10 @@ jobs:
         uv sync --all-extras --dev --locked
 
     - name: Run linting
-      continue-on-error: true
       run: |
         uv run ruff check .
 
     - name: Run tests
-      continue-on-error: true
       run: |
         uv run pytest tests/
 

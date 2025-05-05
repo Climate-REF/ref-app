@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
@@ -16,6 +16,7 @@ T = TypeVar("T")
 class Collection(BaseModel, Generic[T]):
     data: list[T]
 
+    @computed_field
     @property
     def count(self) -> int:
         """
@@ -226,17 +227,6 @@ class Dataset(BaseModel):
             slug=dataset.slug,
             dataset_type=dataset.dataset_type,
             metadata=metadata,
-        )
-
-
-class DatasetCollection(BaseModel):
-    data: list[Dataset]
-    count: int
-
-    @staticmethod
-    def build(datasets: list[models.Dataset]) -> "DatasetCollection":
-        return DatasetCollection(
-            data=[Dataset.build(d) for d in datasets], count=len(datasets)
         )
 
 

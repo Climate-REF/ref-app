@@ -1,7 +1,7 @@
 [project]
 name = "ref-backend"
 version = "0.1.0"
-description = ""
+description = "Backend for the Climate Rapid Evaluation Framework"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",

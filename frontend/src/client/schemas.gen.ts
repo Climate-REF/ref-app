@@ -76,6 +76,27 @@ export const CMIP6DatasetMetadataSchema = {
     title: 'CMIP6DatasetMetadata'
 } as const;
 
+export const Collection_Dataset_Schema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/Dataset'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'Collection[Dataset]'
+} as const;
+
 export const Collection_DiagnosticSummary_Schema = {
     properties: {
         data: {
@@ -84,10 +105,16 @@ export const Collection_DiagnosticSummary_Schema = {
             },
             type: 'array',
             title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[DiagnosticSummary]'
 } as const;
 
@@ -99,10 +126,16 @@ export const Collection_ExecutionGroup_Schema = {
             },
             type: 'array',
             title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[ExecutionGroup]'
 } as const;
 
@@ -134,25 +167,6 @@ export const DatasetSchema = {
     type: 'object',
     required: ['id', 'slug', 'dataset_type', 'metadata'],
     title: 'Dataset'
-} as const;
-
-export const DatasetCollectionSchema = {
-    properties: {
-        data: {
-            items: {
-                '$ref': '#/components/schemas/Dataset'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count'
-        }
-    },
-    type: 'object',
-    required: ['data', 'count'],
-    title: 'DatasetCollection'
 } as const;
 
 export const DiagnosticSummarySchema = {

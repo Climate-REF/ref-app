@@ -14,7 +14,7 @@ from ref_backend.api.deps import ConfigDep, SessionDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
     Collection,
-    DatasetCollection,
+    Dataset,
     Execution,
     ExecutionGroup,
     MetricValueCollection,
@@ -87,13 +87,13 @@ async def execution(
 @router.get("/{group_id}/datasets")
 async def execution_datasets(
     session: SessionDep, group_id: str, execution_id: str | None = None
-) -> DatasetCollection:
+) -> Collection[Dataset]:
     """
     Query the datasets that were used for a specific execution
     """
     execution = await _get_execution(group_id, execution_id, session)
 
-    return DatasetCollection.build(execution.datasets)
+    return Collection(data=[Dataset.build(dataset) for dataset in execution.datasets])
 
 
 @router.get("/{group_id}/logs")
