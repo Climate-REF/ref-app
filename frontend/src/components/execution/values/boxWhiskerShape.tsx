@@ -1,5 +1,6 @@
 import type { ProcessedGroupedDataEntry } from "@/components/execution/values/types.ts";
 import { scaleLinear } from "d3-scale";
+import { Cross } from "recharts";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
@@ -32,8 +33,6 @@ export function BoxWhiskerShape({
     strokeWidth = 1,
   } = props;
 
-  console.log(props);
-
   // Ensure we have the necessary data and the scale function
   if (!payload || payload.groups[prefix] === undefined) {
     return null; // Don't render if data or scale is missing
@@ -51,23 +50,34 @@ export function BoxWhiskerShape({
   const yMax = scale(max) as number;
 
   const whiskerX = x + width / 2; // Center X for vertical lines
+  const crossWidth = 10; // Center X for cross lines
   const boxX = x; // Box starts at the calculated x
+
+  function scatterValues(color: string, strokeWidth = 1) {
+    return values.map((v) => (
+      <Cross
+        key={v}
+        strokeWidth={strokeWidth}
+        stroke={color}
+        x={whiskerX}
+        y={scale(v)}
+        left={whiskerX - crossWidth / 2}
+        // @ts-ignore
+        top={scale(v) - crossWidth / 2}
+        height={crossWidth} // Cross height
+        width={crossWidth} // Cross width
+        style={{
+          transform: "rotate(45deg)",
+          transformOrigin: "center",
+          transformBox: "fill-box",
+        }}
+      />
+    ));
+  }
 
   if (values.length < 5) {
     return (
-      <g className={props.className}>
-        {values.map((v) => (
-          <line
-            key={v}
-            x1={boxX - width / 4}
-            y1={scale(v)}
-            x2={boxX + width / 4}
-            y2={scale(v)}
-            stroke={stroke}
-            strokeWidth={strokeWidth * 2}
-          />
-        ))}
-      </g>
+      <g className={props.className}>{scatterValues(fill, strokeWidth * 2)}</g>
     );
   }
   return (
@@ -127,17 +137,7 @@ export function BoxWhiskerShape({
         strokeWidth={strokeWidth}
       />
       {/*Value markers*/}
-      {/*{values.map((v) => (*/}
-      {/*  <line*/}
-      {/*    key={v}*/}
-      {/*    x1={boxX + width * 0.4}*/}
-      {/*    y1={scale(v)}*/}
-      {/*    x2={boxX + width * 0.6}*/}
-      {/*    y2={scale(v)}*/}
-      {/*    stroke={stroke}*/}
-      {/*    strokeWidth={strokeWidth * 2}*/}
-      {/*  />*/}
-      {/*))}*/}
+      {scatterValues(fill, strokeWidth * 2)}
     </g>
   );
 }
