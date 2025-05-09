@@ -6,7 +6,7 @@ from pydantic import BaseModel, computed_field
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.execution import ResultOutputType
-from climate_ref_core.pycmec.metric import MetricValue
+from climate_ref_core.metric_values import ScalarMetricValue
 from ref_backend.core.config import settings
 from ref_backend.core.ref import provider_registry
 
@@ -230,7 +230,7 @@ class Dataset(BaseModel):
         )
 
 
-class MetricValue(MetricValue):
+class MetricValue(ScalarMetricValue):
     """
     A flattened representation of a diagnostic value
 
