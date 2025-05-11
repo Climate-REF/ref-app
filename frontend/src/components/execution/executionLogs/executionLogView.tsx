@@ -76,7 +76,7 @@ export function ExecutionLogView({ logs }: ExecutionLogViewProps) {
       </div>
 
       <div className="">
-        <ScrollArea className="h-[500px] rounded-md border bg-muted p-4">
+        <ScrollArea className="h-[1200px] rounded-md border bg-muted p-4">
           <pre className="font-mono text-xs">
             {filteredLogs.map((log, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
