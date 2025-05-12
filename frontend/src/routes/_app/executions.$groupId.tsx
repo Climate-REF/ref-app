@@ -105,7 +105,7 @@ const ExecutionInfo = () => {
                     executionGroup={groupId}
                     executionId={(
                       executionId ??
-                      data?.latest_execution.id ??
+                      data.latest_execution?.id ??
                       ""
                     ).toString()}
                   />
