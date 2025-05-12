@@ -52,7 +52,7 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
                 </div>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <ExecutionStatusBadge
-                    successful={execution.latest_execution.successful}
+                    successful={execution.latest_execution?.successful ?? false}
                   />
                   <Badge className="h-6">
                     {execution.diagnostic.provider.name}

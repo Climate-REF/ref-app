@@ -11,7 +11,6 @@ dependencies = [
     "psycopg[binary]<4.0.0,>=3.1.13",
     "pydantic-settings<3.0.0,>=2.2.1",
     "sentry-sdk[fastapi]<2.0.0,>=1.40.6",
-    "pcmdi-metrics",
     "climate-ref[metrics,postgres]>=0.5.0",
 
     # Not exactly sure why we need to pin this
@@ -28,9 +27,8 @@ dev-dependencies = [
 ]
 
 [tool.uv.sources]
-pcmdi-metrics = { git = "https://github.com/PCMDI/pcmdi_metrics", rev = "v3.9.1" }
 # Uncomment the following line to use a local version of climate-ref
-# climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
+climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -107,8 +107,9 @@ export type Execution = {
 export type ExecutionGroup = {
     id: number;
     key: string;
+    dirty: boolean;
     executions: Array<Execution>;
-    latest_execution: Execution;
+    latest_execution: Execution | null;
     selectors: {
         [key: string]: Array<[
             string,
@@ -166,7 +167,7 @@ export type MetricValue = {
     dimensions: {
         [key: string]: string;
     };
-    value: number | string;
+    value: number | number;
     attributes?: {
         [key: string]: string | number | number;
     } | null;

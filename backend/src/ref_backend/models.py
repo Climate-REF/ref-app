@@ -143,27 +143,32 @@ class ExecutionOutput(BaseModel):
 class ExecutionGroup(BaseModel):
     id: int
     key: str
+    dirty: bool
     executions: "list[Execution]"
-    latest_execution: "Execution"
+    latest_execution: "Execution | None"
     selectors: dict[str, tuple[tuple[str, str], ...]]
     diagnostic: DiagnosticSummary
     created_at: datetime
     updated_at: datetime
 
     @staticmethod
-    def build(execution: models.ExecutionGroup):
+    def build(execution_group: models.ExecutionGroup):
         latest_execution = None
-        if len(execution.executions):
-            latest_execution = execution.executions[-1]
+        if len(execution_group.executions):
+            latest_execution = execution_group.executions[-1]
+
         return ExecutionGroup(
-            id=execution.id,
-            key=execution.key,
-            executions=[Execution.build(r) for r in execution.executions],
-            latest_execution=Execution.build(latest_execution),
-            selectors=execution.selectors,
-            diagnostic=DiagnosticSummary.build(execution.diagnostic),
-            created_at=execution.created_at,
-            updated_at=execution.updated_at,
+            id=execution_group.id,
+            key=execution_group.key,
+            dirty=execution_group.dirty,
+            executions=[Execution.build(r) for r in execution_group.executions],
+            latest_execution=Execution.build(latest_execution)
+            if latest_execution
+            else None,
+            selectors=execution_group.selectors,
+            diagnostic=DiagnosticSummary.build(execution_group.diagnostic),
+            created_at=execution_group.created_at,
+            updated_at=execution_group.updated_at,
         )
 
 

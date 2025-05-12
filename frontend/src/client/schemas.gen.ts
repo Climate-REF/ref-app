@@ -266,6 +266,10 @@ export const ExecutionGroupSchema = {
             type: 'string',
             title: 'Key'
         },
+        dirty: {
+            type: 'boolean',
+            title: 'Dirty'
+        },
         executions: {
             items: {
                 '$ref': '#/components/schemas/Execution'
@@ -274,7 +278,14 @@ export const ExecutionGroupSchema = {
             title: 'Executions'
         },
         latest_execution: {
-            '$ref': '#/components/schemas/Execution'
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/Execution'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         },
         selectors: {
             additionalProperties: {
@@ -311,7 +322,7 @@ export const ExecutionGroupSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'key', 'executions', 'latest_execution', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
+    required: ['id', 'key', 'dirty', 'executions', 'latest_execution', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
     title: 'ExecutionGroup'
 } as const;
 
@@ -431,9 +442,7 @@ export const MetricDimensionsSchema = {
 This describes the order of the dimensions and their possible values.
 The order of the dimensions matter as that determines how the executions are nested.`,
     default: {
-        json_structure: ['model', 'metric'],
-        model: {},
-        metric: {}
+        json_structure: []
     }
 } as const;
 
@@ -452,7 +461,7 @@ export const MetricValueSchema = {
                     type: 'number'
                 },
                 {
-                    type: 'string'
+                    type: 'integer'
                 }
             ],
             title: 'Value'

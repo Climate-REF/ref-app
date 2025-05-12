@@ -42,7 +42,17 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   },
   {
     header: "Datasets",
-    accessorFn: (row) => row.latest_execution.dataset_count,
+    accessorFn: (row) => row.latest_execution?.dataset_count,
+  },
+  {
+    header: "Dirty",
+    accessorKey: "dirty",
+    cell: (cell) =>
+      cell.getValue() ? (
+        <Badge variant="destructive">Yes</Badge>
+      ) : (
+        <Badge variant="outline">No</Badge>
+      ),
   },
   {
     header: "Successful",
