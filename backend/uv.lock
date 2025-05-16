@@ -246,7 +246,7 @@ wheels = [
 [[package]]
 name = "climate-ref"
 version = "0.5.2"
-source = { editable = "../../climate-ref/packages/climate-ref" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -262,6 +262,10 @@ dependencies = [
     { name = "tqdm" },
     { name = "typer" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/d5/ec30d6f77a8d2556660c38797c82e39795ad65afb32439bc5d044164c842/climate_ref-0.5.2.tar.gz", hash = "sha256:50e6f6d8a042da5d41d8c33091cc7f69ba77135c71b1920b6f97cb9ec1d82d24", size = 82034 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/4b/b5df46efb1d54695623a6eb0193cb00119fa421846ace3f7d62bfc1c1603/climate_ref-0.5.2-py3-none-any.whl", hash = "sha256:160a316a663ddf32ded67f1c65797e2b5f64c74c8a0ca840a4a9e6519e03e364", size = 72176 },
+]
 
 [package.optional-dependencies]
 aft-providers = [
@@ -274,39 +278,10 @@ postgres = [
     { name = "psycopg2-binary" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.13.3" },
-    { name = "alembic-postgresql-enum", marker = "extra == 'postgres'", specifier = ">=1.7.0" },
-    { name = "attrs", specifier = ">=24.2.0" },
-    { name = "cattrs", specifier = ">=24.1.2" },
-    { name = "climate-ref-celery", marker = "extra == 'celery'", editable = "../../climate-ref/packages/climate-ref-celery" },
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "climate-ref-esmvaltool", marker = "extra == 'aft-providers'", editable = "../../climate-ref/packages/climate-ref-esmvaltool" },
-    { name = "climate-ref-esmvaltool", marker = "extra == 'providers'", editable = "../../climate-ref/packages/climate-ref-esmvaltool" },
-    { name = "climate-ref-ilamb", marker = "extra == 'aft-providers'", editable = "../../climate-ref/packages/climate-ref-ilamb" },
-    { name = "climate-ref-ilamb", marker = "extra == 'providers'", editable = "../../climate-ref/packages/climate-ref-ilamb" },
-    { name = "climate-ref-pmp", marker = "extra == 'aft-providers'", editable = "../../climate-ref/packages/climate-ref-pmp" },
-    { name = "climate-ref-pmp", marker = "extra == 'providers'", editable = "../../climate-ref/packages/climate-ref-pmp" },
-    { name = "ecgtools", specifier = ">=2024.7.31" },
-    { name = "environs", specifier = ">=11.0.0" },
-    { name = "loguru", specifier = ">=0.7.2" },
-    { name = "platformdirs", specifier = ">=4.3.6" },
-    { name = "psycopg2-binary", marker = "extra == 'postgres'", specifier = ">=2.9.2" },
-    { name = "setuptools", specifier = ">=75.8.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.36" },
-    { name = "tomlkit", specifier = ">=0.13.2" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "typer", specifier = ">=0.12.5" },
-]
-
-[package.metadata.requires-dev]
-dev = []
-
 [[package]]
 name = "climate-ref-core"
-version = "0.5.2"
-source = { editable = "../../climate-ref/packages/climate-ref-core" }
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "numpy" },
@@ -314,77 +289,53 @@ dependencies = [
     { name = "pydantic" },
     { name = "requests" },
     { name = "rich" },
-    { name = "ruamel-yaml" },
     { name = "typing-extensions" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "attrs", specifier = ">=23.2.0" },
-    { name = "numpy", specifier = ">=1.25.0" },
-    { name = "pandas", specifier = ">=2.1.0" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "ruamel-yaml" },
-    { name = "typing-extensions" },
+sdist = { url = "https://files.pythonhosted.org/packages/c9/1d/7c356df887f01a99460a75f0347a1752d4218253e4d892113eb9c78922d7/climate_ref_core-0.5.1.tar.gz", hash = "sha256:00f8930a1def60412672cfbcb12c1d88a5fd16b3ba33fa44af75961ddbb946ec", size = 46159 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/f0/ffbef480ac51477053c46d2e59b26499948f8c309bc289122f7c5fa58dab/climate_ref_core-0.5.1-py3-none-any.whl", hash = "sha256:88e2695ba51c10a698deb03343848151615e04580aa955d5afa2609d0be00330", size = 39644 },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "types-requests" }]
 
 [[package]]
 name = "climate-ref-esmvaltool"
 version = "0.5.2"
-source = { editable = "../../climate-ref/packages/climate-ref-esmvaltool" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "pooch" },
     { name = "ruamel-yaml" },
     { name = "xarray" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "pooch", specifier = ">=1.8" },
-    { name = "ruamel-yaml", specifier = ">=0.18" },
-    { name = "xarray", specifier = ">=2023.3.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/ef/85/2308dca1666a969e99d3d93e2aa9c175674897b702357cdb05a5cfa7d279/climate_ref_esmvaltool-0.5.2.tar.gz", hash = "sha256:ba6e5d580bdec69fd09318e4a436c25b34175abe5954f30296cf05f6746b41a5", size = 131280 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/19/c3a2526525eac70d2c448cfd14cd5f2b336b65ed18b7141f495330a3436f/climate_ref_esmvaltool-0.5.2-py3-none-any.whl", hash = "sha256:87ca648efcdd9e0ae283ee2f8337d48cbde8aebaaa54daafc96bfb2fc73a6e7b", size = 130662 },
 ]
 
 [[package]]
 name = "climate-ref-ilamb"
 version = "0.5.2"
-source = { editable = "../../climate-ref/packages/climate-ref-ilamb" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "ilamb3" },
     { name = "types-pyyaml" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" },
-    { name = "ilamb3", specifier = ">=2025.4.28" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
+sdist = { url = "https://files.pythonhosted.org/packages/d9/a2/120fb26e7261784212c921281d7ba4262cf6f2fbf4d33b349adfd861f16b/climate_ref_ilamb-0.5.2.tar.gz", hash = "sha256:32b6ad638a8511b9cb0e42a6e1b7a1105dc0dfab2481ed9dc76c6246d593bec0", size = 11492 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/f1/f28d8d6d6fad8a918be23e24bba0baebbe80ea3c97201af5c53bc51024d8/climate_ref_ilamb-0.5.2-py3-none-any.whl", hash = "sha256:80ffa40f33fa3353a06ef0466fd960dbd05806c3adc926ea1401cea7d7db1ed4", size = 12474 },
 ]
-
-[package.metadata.requires-dev]
-dev = []
 
 [[package]]
 name = "climate-ref-pmp"
 version = "0.5.2"
-source = { editable = "../../climate-ref/packages/climate-ref-pmp" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "climate-ref-core" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "climate-ref-core", editable = "../../climate-ref/packages/climate-ref-core" }]
-
-[package.metadata.requires-dev]
-dev = []
+sdist = { url = "https://files.pythonhosted.org/packages/f2/9b/47a81cede9c4d9ff3f9c4648d823fe1bceb7896befc11c35b8d86e9fc0ae/climate_ref_pmp-0.5.2.tar.gz", hash = "sha256:3be62bde06cf701db3bafdf4fd1f303b1ce9b45b312fc59483ae757fc585824c", size = 85884 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/3f/268cae25cba6d1803654636835f0d2df057bdf22af9702d307aefeb40af1/climate_ref_pmp-0.5.2-py3-none-any.whl", hash = "sha256:2822aab6a28d18ad985a38745bf3bef505ccf2d072043d3b6c1ee4a5d6453ca5", size = 86874 },
+]
 
 [[package]]
 name = "cloudpickle"
@@ -2151,7 +2102,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "climate-ref", extras = ["aft-providers", "postgres"], editable = "../../climate-ref/packages/climate-ref" },
+    { name = "climate-ref", extras = ["aft-providers", "postgres"], specifier = ">=0.5.2" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "lz4", specifier = "==4.4.4" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
