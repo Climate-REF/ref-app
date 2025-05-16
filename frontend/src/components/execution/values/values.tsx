@@ -22,7 +22,7 @@ function getInner(viewType: ViewType, props: ValuesProps) {
       // The default groupby/xaxis is likely diagnostic dependent
       return (
         <ValuesFigure
-          defaultGroupby="model"
+          defaultGroupby="source_id"
           defaultXAxis="statistic"
           {...props}
         />

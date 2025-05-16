@@ -22,7 +22,7 @@ const Explorer = () => {
           <CardContent className="space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">Data Explorer</h1>
             <p className="text-muted-foreground">
-              Explore and visualize climate model evaluation metrics across
+              Explore and visualize climate model evaluation diagnostics across
               different dimensions
             </p>
           </CardContent>
@@ -41,7 +41,7 @@ const Explorer = () => {
           <TabsList className="w-full">
             <TabsTrigger value="themes">Thematic Areas</TabsTrigger>
             <TabsTrigger value="models">Models</TabsTrigger>
-            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="themes">
@@ -52,7 +52,7 @@ const Explorer = () => {
             <div />
           </TabsContent>
 
-          <TabsContent value="metrics">
+          <TabsContent value="diagnostics">
             <MetricsExplorer />
           </TabsContent>
         </Tabs>
@@ -62,7 +62,7 @@ const Explorer = () => {
 };
 
 const explorerSchema = z.object({
-  tab: z.enum(["themes", "models", "metrics"]).default("themes"),
+  tab: z.enum(["themes", "models", "diagnostics"]).default("themes"),
   theme: z
     .enum([
       "atmosphere",

@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref_core.executor import EXECUTION_LOG_FILENAME
+from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import ConfigDep, SessionDep
 from ref_backend.core.file_handling import file_iterator

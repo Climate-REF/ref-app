@@ -30,29 +30,29 @@ function computeSidebarNav(diagnostics: DiagnosticInfo[]) {
       title: "Dashboard",
       url: "/",
     },
-    {
-      title: "Content",
-      items: [
-        {
-          title: "About",
-          url: "/content/about",
-        },
-      ],
-    },
-    {
-      title: "Thematic Areas",
-      url: "/explorer?tab=themes&theme=atmosphere",
-      items: [
-        {
-          title: "Atmosphere",
-          url: "/explorer?tab=themes&theme=atmosphere",
-        },
-        {
-          title: "Earth System",
-          url: "/explorer?tab=themes&theme=earth-system",
-        },
-      ],
-    },
+    // {
+    //   title: "Content",
+    //   items: [
+    //     {
+    //       title: "About",
+    //       url: "/content/about",
+    //     },
+    //   ],
+    // },
+    // {
+    //   title: "Thematic Areas",
+    //   url: "/explorer?tab=themes&theme=atmosphere",
+    //   items: [
+    //     {
+    //       title: "Atmosphere",
+    //       url: "/explorer?tab=themes&theme=atmosphere",
+    //     },
+    //     {
+    //       title: "Earth System",
+    //       url: "/explorer?tab=themes&theme=earth-system",
+    //     },
+    //   ],
+    // },
     {
       title: "Diagnostics",
       url: "/diagnostics",

@@ -13,20 +13,20 @@ import { createFileRoute } from "@tanstack/react-router";
 const Metrics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
 
-  const metrics = data.data;
+  const diagnostics = data.data;
 
   return (
     <>
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Metric List</CardTitle>
+          <CardTitle>Diagnostic List</CardTitle>
           <CardDescription>
             Metric longer description goes here{" "}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
-            {metrics.map((diagnostic) => (
+            {diagnostics.map((diagnostic) => (
               <div key={diagnostic.slug} className="space-y-1">
                 <p className="text-sm text-muted-foreground">
                   {diagnostic.name}
@@ -44,7 +44,7 @@ const Metrics = () => {
 export const Route = createFileRoute("/_app/diagnostics/")({
   component: Metrics,
   staticData: {
-    title: "Metrics",
+    title: "Diagnostics",
   },
   loader: ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(diagnosticsListOptions());
