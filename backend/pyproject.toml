@@ -28,7 +28,7 @@ dev-dependencies = [
 
 [tool.uv.sources]
 # Uncomment the following line to use a local version of climate-ref
-climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
+#climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
 
 [build-system]
 requires = ["hatchling"]
