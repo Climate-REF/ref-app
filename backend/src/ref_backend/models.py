@@ -187,7 +187,7 @@ class Execution(BaseModel):
         outputs = [ExecutionOutput.build(o) for o in execution.outputs]
         return Execution(
             id=execution.id,
-            successful=execution.successful,
+            successful=execution.successful or False,
             retracted=execution.retracted,
             dataset_hash=execution.dataset_hash,
             dataset_count=len(execution.datasets),
