@@ -15,15 +15,19 @@ export const columns: ColumnDef<Dataset>[] = [
   }) as ColumnDef<Dataset>,
   columnHelper.display({
     id: "esgf_link",
-    cell: () => (
-      <a
-        href="https://esgf-node.llnl.gov/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
-      </a>
-    ),
+    cell: (cellContext) => {
+      if (cellContext.row.original.more_info_url) {
+        return (
+          <a
+            href={cellContext.row.original.more_info_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
+          </a>
+        );
+      }
+    },
   }),
 ];
 

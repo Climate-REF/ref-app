@@ -78,6 +78,7 @@ export type Dataset = {
     slug: string;
     dataset_type: string;
     metadata: Cmip6DatasetMetadata | null;
+    more_info_url: string | null;
 };
 
 /**

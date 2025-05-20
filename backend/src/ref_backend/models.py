@@ -215,6 +215,13 @@ class Dataset(BaseModel):
     dataset_type: str
     metadata: CMIP6DatasetMetadata | None
 
+    @computed_field
+    @property
+    def more_info_url(self) -> str | None:
+        if "cmip6" in self.dataset_type:
+            # Use the WDC service to look up the dataset
+            return f"https://www.wdc-climate.de/ui/cmip6?input={self.slug}"
+
     @staticmethod
     def build(dataset: models.Dataset) -> "Dataset":
         if isinstance(dataset, CMIP6Dataset):

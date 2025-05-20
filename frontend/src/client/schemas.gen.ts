@@ -162,10 +162,22 @@ export const DatasetSchema = {
                     type: 'null'
                 }
             ]
+        },
+        more_info_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'More Info Url',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['id', 'slug', 'dataset_type', 'metadata'],
+    required: ['id', 'slug', 'dataset_type', 'metadata', 'more_info_url'],
     title: 'Dataset'
 } as const;
 
