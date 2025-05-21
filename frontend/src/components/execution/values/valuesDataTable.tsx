@@ -1,8 +1,8 @@
 import type { Facet, MetricValue } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
-import { useDataTable } from "@/components/dataTable/dataTable.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,30 +10,75 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Link } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
+import {
+  type ColumnDef,
+  type OnChangeFn,
+  type RowSelectionState,
+  type SortingState,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Eye, MoreHorizontal } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+
+// Update to use ProcessedMetricValue which includes rowId
+type ProcessedMetricValue = MetricValue & { rowId: string };
 
 interface DataTableProps {
-  values: MetricValue[];
+  values: ProcessedMetricValue[];
   facets: Facet[];
   loading: boolean;
+  rowSelection: RowSelectionState;
+  setRowSelection: OnChangeFn<RowSelectionState>;
 }
 
-function ValuesDataTable({ values, facets, loading }: DataTableProps) {
-  if (loading) {
-    return null;
-  }
-  const columns: ColumnDef<MetricValue>[] = useMemo(() => {
-    const indexColumns: ColumnDef<MetricValue>[] = facets.map((facet) => ({
-      id: facet.key,
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={facet.key} />
-      ),
-      accessorFn: (cell: MetricValue) => cell.dimensions[facet.key],
-    }));
+function ValuesDataTable({
+  values,
+  facets,
+  loading,
+  rowSelection,
+  setRowSelection,
+}: DataTableProps) {
+  const columns: ColumnDef<ProcessedMetricValue>[] = useMemo(() => {
+    const indexColumns: ColumnDef<ProcessedMetricValue>[] = facets.map(
+      (facet) => ({
+        id: facet.key,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={facet.key} />
+        ),
+        accessorFn: (cell: ProcessedMetricValue) => cell.dimensions[facet.key],
+      }),
+    );
 
     return [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+            className="translate-y-[2px]"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       ...indexColumns,
       {
         id: "value",
@@ -72,7 +117,26 @@ function ValuesDataTable({ values, facets, loading }: DataTableProps) {
       },
     ];
   }, [facets]);
-  const { table } = useDataTable({ data: values, columns });
+
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const table = useReactTable({
+    data: values,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      rowSelection,
+    },
+    getRowId: (row) => row.rowId,
+  });
+
+  if (loading && values.length === 0) {
+    return <div className="text-center p-4">Loading table data...</div>;
+  }
 
   return <InnerDataTable table={table} loading={loading} />;
 }

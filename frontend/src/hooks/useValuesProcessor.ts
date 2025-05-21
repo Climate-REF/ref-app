@@ -1,5 +1,6 @@
 import type { MetricValue } from "@/client";
-import { useCallback, useMemo, useState } from "react";
+import type { RowSelectionState } from "@tanstack/react-table";
+import { type SetStateAction, useMemo, useState } from "react";
 
 // Define types used by the hook
 export type ProcessedMetricValue = MetricValue & { rowId: string };
@@ -21,9 +22,19 @@ export function useValuesProcessor({
 }: UseValuesProcessorProps) {
   const [filters, setFilters] = useState<Filter[]>([]);
   const [excludedRowIds, setExcludedRowIds] = useState<Set<string>>(new Set());
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const handleExcludeRowIds = (excluded: SetStateAction<Set<string>>) => {
+    // Reset the row selection when excluding rows
+    setRowSelection({});
+
+    setExcludedRowIds(excluded);
+  };
 
   const processedValues = useMemo((): ProcessedMetricValue[] => {
     if (!initialValues) return [];
+
+    // Ensure each value has a unique rowId
     return initialValues.map((v) => ({
       ...v,
       rowId: crypto.randomUUID(),
@@ -52,22 +63,13 @@ export function useValuesProcessor({
     );
   }, [facetFilteredValues, excludedRowIds]);
 
-  const handleExcludeRows = useCallback((rowIdsToExclude: string[]) => {
-    setExcludedRowIds((prev) => {
-      const newSet = new Set(prev);
-      for (const id of rowIdsToExclude) {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }, []);
-
   return {
     filters,
     setFilters,
     finalDisplayedValues,
-    handleExcludeRows,
-    // Exposing excludedRowIds might be useful for debugging or other UI elements
-    // excludedRowIds,
+    excludedRowIds,
+    setExcludedRowIds: handleExcludeRowIds,
+    rowSelection,
+    setRowSelection,
   };
 }

@@ -3,19 +3,28 @@ import { FilterAddPopover } from "@/components/execution/values/filterAddPopover
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Filter } from "@/hooks/useValuesProcessor";
-import { X } from "lucide-react";
+import type { RowSelectionState } from "@tanstack/react-table";
+import { PlusCircle, X } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 
 interface FilterControlsProps {
+  values: { rowId: string }[];
   facets: Facet[];
   filters: Filter[];
   setFilters: Dispatch<SetStateAction<Filter[]>>;
+  excludedRowIds: Set<string>;
+  setExcludedRowIds: Dispatch<SetStateAction<Set<string>>>;
+  rowSelection: RowSelectionState;
 }
 
 export function FilterControls({
+  values,
   facets,
   filters,
   setFilters,
+  rowSelection,
+  excludedRowIds,
+  setExcludedRowIds,
 }: FilterControlsProps) {
   const availableFacets = facets.filter(
     (facet) => !filters.some((filter) => filter.facetKey === facet.key),
@@ -51,6 +60,21 @@ export function FilterControls({
           </Badge>
         ))}
 
+        {excludedRowIds.size > 0 ? (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <span>Filtered Rows: {excludedRowIds.size}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setExcludedRowIds(new Set())}
+              className="ml-1 h-5 w-5"
+              aria-label="Remove filter"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </Badge>
+        ) : null}
+
         <FilterAddPopover
           facets={availableFacets}
           onAdd={(facetKey, value) => {
@@ -65,6 +89,42 @@ export function FilterControls({
           }}
           disabled={availableFacets.length === 0 && facets.length > 0}
         />
+
+        {Object.keys(rowSelection).length ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setExcludedRowIds((existing) => {
+                  const selectedRowIds = new Set(Object.keys(rowSelection));
+
+                  // Filter out the selected row IDs from the excludedRowIds
+                  const toExclude = values
+                    .map((v) => v.rowId)
+                    .filter((v) => !selectedRowIds.has(v));
+
+                  return new Set([...existing, ...toExclude]);
+                })
+              }
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Isolate Selected
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                setExcludedRowIds(
+                  (existing) =>
+                    new Set([...existing, ...Object.keys(rowSelection)]),
+                )
+              }
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Exclude Selected
+            </Button>
+          </>
+        ) : null}
       </div>
     </div>
   );

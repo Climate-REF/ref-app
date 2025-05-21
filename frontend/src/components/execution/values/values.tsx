@@ -20,11 +20,18 @@ type ViewType = "bar" | "table";
 export function Values(props: ValuesProps) {
   const [viewType, setViewType] = useState<ViewType>("table");
 
-  const { filters, setFilters, finalDisplayedValues, handleExcludeRows } =
-    useValuesProcessor({
-      initialValues: props.values,
-      loading: props.loading,
-    });
+  const {
+    filters,
+    setFilters,
+    finalDisplayedValues,
+    setRowSelection,
+    rowSelection,
+    excludedRowIds,
+    setExcludedRowIds,
+  } = useValuesProcessor({
+    initialValues: props.values,
+    loading: props.loading,
+  });
 
   return (
     <Card>
@@ -33,9 +40,13 @@ export function Values(props: ValuesProps) {
           <div className="flex items-center justify-end space-x-2">
             <div className="grow">
               <FilterControls
+                values={finalDisplayedValues}
                 facets={props.facets}
                 filters={filters}
                 setFilters={setFilters}
+                rowSelection={rowSelection}
+                excludedRowIds={excludedRowIds}
+                setExcludedRowIds={setExcludedRowIds}
               />
             </div>
 
@@ -62,7 +73,8 @@ export function Values(props: ValuesProps) {
               values={finalDisplayedValues}
               facets={props.facets}
               loading={props.loading}
-              onExcludeRows={handleExcludeRows}
+              rowSelection={rowSelection}
+              setRowSelection={setRowSelection}
             />
           )}
           {viewType === "bar" && (
