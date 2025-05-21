@@ -30,14 +30,15 @@ export function Values(props: ValuesProps) {
     <Card>
       <CardContent>
         <div className="flex flex-col gap-4">
-          {/* Filter UI is now handled by FilterControls */}
-          <FilterControls
-            facets={props.facets}
-            filters={filters}
-            setFilters={setFilters}
-          />
-
           <div className="flex items-center justify-end space-x-2">
+            <div className="grow">
+              <FilterControls
+                facets={props.facets}
+                filters={filters}
+                setFilters={setFilters}
+              />
+            </div>
+
             <Button
               variant={viewType === "bar" ? "default" : "outline"}
               size="sm"
