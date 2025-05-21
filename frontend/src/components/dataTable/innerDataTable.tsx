@@ -9,10 +9,18 @@ import {
 } from "@/components/ui/table.tsx";
 import { type Table as TTable, flexRender } from "@tanstack/react-table";
 
-function renderBody<TData>(table: TTable<TData>) {
+function renderBody<TData>(
+  table: TTable<TData>,
+  onRowClick?: (row: TData) => void,
+) {
   return table.getRowModel().rows?.length ? (
     table.getRowModel().rows.map((row) => (
-      <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+      <TableRow
+        key={row.id}
+        data-state={row.getIsSelected() && "selected"}
+        onClick={() => onRowClick?.(row.original)}
+        className={onRowClick ? "cursor-pointer" : ""}
+      >
         {row.getVisibleCells().map((cell) => (
           <TableCell key={cell.id}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -52,11 +60,13 @@ function renderSkeleton<TData>(table: TTable<TData>, numRows = 5) {
 interface InnerDataTableProps<TData> {
   table: TTable<TData>;
   loading?: boolean;
+  onRowClick?: (row: TData) => void;
 }
 
 export function InnerDataTable<TData>({
   table,
   loading,
+  onRowClick,
 }: InnerDataTableProps<TData>) {
   return (
     <Table>
@@ -79,7 +89,7 @@ export function InnerDataTable<TData>({
         ))}
       </TableHeader>
       <TableBody>
-        {loading ? renderSkeleton(table) : renderBody(table)}
+        {loading ? renderSkeleton(table) : renderBody(table, onRowClick)}
       </TableBody>
     </Table>
   );
