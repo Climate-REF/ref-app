@@ -1,4 +1,4 @@
-import type { ExecutionGroup } from "@/client";
+import type { DiagnosticSummary, ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
@@ -13,7 +13,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { SquareArrowOutUpRight } from "lucide-react";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
@@ -96,6 +96,14 @@ function ExecutionGroupTable({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
     }),
   );
+  const navigate = useNavigate();
+
+  const handleRowClick = (row: ExecutionGroup) => {
+    navigate({
+      to: "/executions/$groupId",
+      params: { groupId: row.id.toString() },
+    });
+  };
 
   return (
     <Card>
@@ -112,6 +120,7 @@ function ExecutionGroupTable({
           data={data?.data ?? []}
           columns={columns}
           loading={isLoading}
+          onRowClick={handleRowClick}
         />
       </CardContent>
     </Card>

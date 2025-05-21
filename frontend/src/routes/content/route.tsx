@@ -16,7 +16,6 @@ function Content() {
 
   return (
     <MDXProvider components={components}>
-      <PageHeader title={title} breadcrumbs={breadcrumbs} />
       <article className="prose prose-slate flex flex-1 flex-col gap-4 container mx-auto mt-8">
         <Outlet />
       </article>
