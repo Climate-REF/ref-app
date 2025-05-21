@@ -1,8 +1,11 @@
 import type { Facet, MetricValue } from "@/client";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+
+import { useValuesProcessor } from "@/hooks/useValuesProcessor";
 import { BarChart, Table } from "lucide-react";
 import { useState } from "react";
+import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
 import ValuesDataTable from "./valuesDataTable.tsx";
 import { ValuesFigure } from "./valuesFigure.tsx";
 
@@ -14,29 +17,26 @@ type ValuesProps = {
 
 type ViewType = "bar" | "table";
 
-function getInner(viewType: ViewType, props: ValuesProps) {
-  switch (viewType) {
-    case "table":
-      return <ValuesDataTable {...props} />;
-    case "bar":
-      // The default groupby/xaxis is likely diagnostic dependent
-      return (
-        <ValuesFigure
-          defaultGroupby="source_id"
-          defaultXAxis="statistic"
-          {...props}
-        />
-      );
-  }
-}
-
 export function Values(props: ValuesProps) {
   const [viewType, setViewType] = useState<ViewType>("table");
+
+  const { filters, setFilters, finalDisplayedValues, handleExcludeRows } =
+    useValuesProcessor({
+      initialValues: props.values,
+      loading: props.loading,
+    });
 
   return (
     <Card>
       <CardContent>
         <div className="flex flex-col gap-4">
+          {/* Filter UI is now handled by FilterControls */}
+          <FilterControls
+            facets={props.facets}
+            filters={filters}
+            setFilters={setFilters}
+          />
+
           <div className="flex items-center justify-end space-x-2">
             <Button
               variant={viewType === "bar" ? "default" : "outline"}
@@ -44,7 +44,7 @@ export function Values(props: ValuesProps) {
               onClick={() => setViewType("bar")}
             >
               <BarChart className="h-4 w-4 mr-2" />
-              Bar Chart
+              Chart
             </Button>
             <Button
               variant={viewType === "table" ? "default" : "outline"}
@@ -55,7 +55,24 @@ export function Values(props: ValuesProps) {
               Table
             </Button>
           </div>
-          {getInner(viewType, props)}
+          {/* Content: Table or Chart */}
+          {viewType === "table" && (
+            <ValuesDataTable
+              values={finalDisplayedValues}
+              facets={props.facets}
+              loading={props.loading}
+              onExcludeRows={handleExcludeRows}
+            />
+          )}
+          {viewType === "bar" && (
+            <ValuesFigure
+              defaultGroupby="source_id"
+              defaultXAxis="statistic"
+              values={finalDisplayedValues}
+              facets={props.facets}
+              loading={props.loading}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

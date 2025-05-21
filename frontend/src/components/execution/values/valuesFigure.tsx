@@ -11,6 +11,7 @@ interface ValuesFigureProps {
   facets: Facet[];
   defaultGroupby: string;
   defaultXAxis: string;
+  loading?: boolean; // Add loading as an optional prop
 }
 
 export function ValuesFigure({
@@ -18,6 +19,7 @@ export function ValuesFigure({
   facets,
   defaultGroupby,
   defaultXAxis,
+  loading, // Destructure loading
 }: ValuesFigureProps) {
   const [groupby, setGroupby] = useState(defaultGroupby);
   const [xaxis, setXAxis] = useState(defaultXAxis);
@@ -58,6 +60,10 @@ export function ValuesFigure({
 
     return chartData;
   }, [groupby, xaxis, values, facets]);
+
+  if (loading) {
+    return <div className="text-center p-4">Loading chart data...</div>;
+  }
 
   return (
     <>

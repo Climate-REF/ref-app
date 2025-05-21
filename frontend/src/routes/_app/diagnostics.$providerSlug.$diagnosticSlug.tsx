@@ -96,7 +96,7 @@ const DiagnosticInfo = () => {
       >
         <TabsList>
           <TabsTrigger value="executions">Execution Groups</TabsTrigger>
-          <TabsTrigger value="raw-data">Raw Data</TabsTrigger>
+          <TabsTrigger value="values">Metric Values</TabsTrigger>
         </TabsList>
 
         <TabsContent value="executions" className="space-y-4">
@@ -106,7 +106,7 @@ const DiagnosticInfo = () => {
           />
         </TabsContent>
 
-        <TabsContent value="raw-data" className="space-y-4">
+        <TabsContent value="values" className="space-y-4">
           <Values
             facets={metricValues?.facets ?? []}
             values={metricValues?.data ?? []}
@@ -119,7 +119,7 @@ const DiagnosticInfo = () => {
 };
 
 const metricInfoSchema = z.object({
-  tab: z.enum(["executions", "raw-data"]).default("executions"),
+  tab: z.enum(["executions", "values"]).default("executions"),
 });
 
 export const Route = createFileRoute(
