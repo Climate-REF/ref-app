@@ -15,6 +15,7 @@ T = TypeVar("T")
 
 class Collection(BaseModel, Generic[T]):
     data: list[T]
+    total_count: int | None = None
 
     @computed_field
     @property

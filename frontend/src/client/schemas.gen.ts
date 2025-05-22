@@ -85,6 +85,17 @@ export const Collection_Dataset_Schema = {
             type: 'array',
             title: 'Data'
         },
+        total_count: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Total Count'
+        },
         count: {
             type: 'integer',
             title: 'Count',
@@ -106,6 +117,17 @@ export const Collection_DiagnosticSummary_Schema = {
             type: 'array',
             title: 'Data'
         },
+        total_count: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Total Count'
+        },
         count: {
             type: 'integer',
             title: 'Count',
@@ -126,6 +148,17 @@ export const Collection_ExecutionGroup_Schema = {
             },
             type: 'array',
             title: 'Data'
+        },
+        total_count: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Total Count'
         },
         count: {
             type: 'integer',

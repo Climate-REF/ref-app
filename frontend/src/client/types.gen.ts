@@ -39,6 +39,7 @@ export type Cmip6DatasetMetadata = {
 
 export type CollectionDatasetReadable = {
     data: Array<Dataset>;
+    total_count?: number | null;
     /**
      * Number of data items present
      */
@@ -47,10 +48,12 @@ export type CollectionDatasetReadable = {
 
 export type CollectionDatasetWritable = {
     data: Array<Dataset>;
+    total_count?: number | null;
 };
 
 export type CollectionDiagnosticSummaryReadable = {
     data: Array<DiagnosticSummary>;
+    total_count?: number | null;
     /**
      * Number of data items present
      */
@@ -59,10 +62,12 @@ export type CollectionDiagnosticSummaryReadable = {
 
 export type CollectionDiagnosticSummaryWritable = {
     data: Array<DiagnosticSummary>;
+    total_count?: number | null;
 };
 
 export type CollectionExecutionGroupReadable = {
     data: Array<ExecutionGroup>;
+    total_count?: number | null;
     /**
      * Number of data items present
      */
@@ -71,6 +76,7 @@ export type CollectionExecutionGroupReadable = {
 
 export type CollectionExecutionGroupWritable = {
     data: Array<ExecutionGroup>;
+    total_count?: number | null;
 };
 
 export type Dataset = {
@@ -204,6 +210,64 @@ export type ValidationError = {
     msg: string;
     type: string;
 };
+
+export type DatasetsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        offset?: number;
+        limit?: number;
+    };
+    url: '/api/v1/datasets/';
+};
+
+export type DatasetsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DatasetsListError = DatasetsListErrors[keyof DatasetsListErrors];
+
+export type DatasetsListResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionDatasetReadable;
+};
+
+export type DatasetsListResponse = DatasetsListResponses[keyof DatasetsListResponses];
+
+export type DatasetsExecutionsData = {
+    body?: never;
+    path: {
+        dataset_id: number;
+    };
+    query?: {
+        offset?: number;
+        limit?: number;
+    };
+    url: '/api/v1/datasets/{dataset_id}/executions';
+};
+
+export type DatasetsExecutionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DatasetsExecutionsError = DatasetsExecutionsErrors[keyof DatasetsExecutionsErrors];
+
+export type DatasetsExecutionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionDiagnosticSummaryReadable;
+};
+
+export type DatasetsExecutionsResponse = DatasetsExecutionsResponses[keyof DatasetsExecutionsResponses];
 
 export type DiagnosticsListData = {
     body?: never;

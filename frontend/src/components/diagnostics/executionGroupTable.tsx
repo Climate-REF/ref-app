@@ -1,4 +1,4 @@
-import type { DiagnosticSummary, ExecutionGroup } from "@/client";
+import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
