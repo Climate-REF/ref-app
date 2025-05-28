@@ -1,0 +1,203 @@
+    <svg id="taylor-diagram" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+
+const models = [
+  {
+    name: "Model A",
+    stddev: 1.2,      // normalized to reference
+    correlation: 0.95 // Pearson correlation coefficient
+  },
+    {
+    name: "Model A",
+    stddev: 1.0,      // normalized to reference
+    correlation: 0.8 // Pearson correlation coefficient
+  },
+  // ... more models
+];
+const referenceStddev = 1.0; // normalized
+const width = 500, height = 500, margin = 50;
+const radius = width - margin * 2;
+const center = { x: margin, y: height - margin }; // bottom-left
+
+// Scales
+const stddevMax = 1.6; // adjust as needed
+const r = d3.scaleLinear()
+  .domain([0, stddevMax])
+  .range([0, radius]);
+
+// Correlation to angle (0 = 1.0, π/2 = 0)
+const corrToAngle = c => Math.acos(c);
+
+// Draw axes, arcs, and contours
+const svg = d3.select("#taylor-diagram");
+
+const arc = d3.arc()
+  .innerRadius(d => r(d))
+  .outerRadius(d => r(d))
+  .startAngle(0)
+  .endAngle(Math.PI / 2);
+
+// Standard deviation arcs
+[0.4, 0.8, 1.0,  1.2, 1.6].forEach(sd => {
+  svg.append("path")
+    .attr("d", arc(sd))
+    .attr("transform", `translate(${center.x},${center.y})`)
+    .attr("fill", "none")
+    .attr("stroke", "#aaa");
+      // svg.append("text")
+      //   .attr("x", center.x)
+      //   .attr("y", center.y - r(sd))
+      //   .attr("text-anchor", "middle")
+      //   .text(sd);
+});
+
+// Reference point
+svg.append("rect")
+  .attr("x", center.x + r(referenceStddev) - 5)
+  .attr("y", center.y - 5)
+  .attr("width", 10)
+  .attr("height", 10)
+  .attr("fill", "black");
+
+// Add a light grey dashed circle at stddev = referenceStddev
+svg.append("path")
+  .attr("d", arc(referenceStddev))
+    .attr("transform", `translate(${center.x},${center.y})`)
+  .attr("fill", "none")
+  .attr("stroke", "#888")
+  .attr("stroke-dasharray", "10,10")
+  .attr("stroke-width", 2);
+
+// Plot models
+models.forEach(model => {
+  const angle = corrToAngle(model.correlation);
+  const x = center.x + r(model.stddev) * Math.cos(angle);
+  const y = center.y - r(model.stddev) * Math.sin(angle);
+  svg.append("circle")
+    .attr("cx", x)
+    .attr("cy", y)
+    .attr("r", 6)
+    .attr("fill", "orange");
+  svg.append("text")
+    .attr("x", x + 8)
+    .attr("y", y)
+    .text(model.name);
+});
+
+// Draw x-axis (Standard deviation)
+svg.append("line")
+  .attr("x1", center.x)
+  .attr("y1", center.y)
+  .attr("x2", center.x + r(stddevMax))
+  .attr("y2", center.y)
+  .attr("stroke", "black");
+
+// Draw y-axis (Standard deviation)
+svg.append("line")
+  .attr("x1", center.x)
+  .attr("y1", center.y)
+  .attr("x2", center.x)
+  .attr("y2", center.y - r(stddevMax))
+  .attr("stroke", "black");
+
+// X-axis ticks and labels
+[0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6].forEach(sd => {
+  const x = center.x + r(sd);
+  svg.append("line")
+    .attr("x1", x)
+    .attr("y1", center.y - 5)
+    .attr("x2", x)
+    .attr("y2", center.y + 5)
+    .attr("stroke", "black");
+  svg.append("text")
+    .attr("x", x)
+    .attr("y", center.y + 18)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text(sd);
+});
+
+// Y-axis ticks and labels
+[0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6].forEach(sd => {
+  const y = center.y - r(sd);
+  svg.append("line")
+    .attr("x1", center.x - 5)
+    .attr("y1", y)
+    .attr("x2", center.x + 5)
+    .attr("y2", y)
+    .attr("stroke", "black");
+  svg.append("text")
+    .attr("x", center.x - 18)
+    .attr("y", y + 4)
+    .attr("text-anchor", "end")
+    .attr("font-size", "12px")
+    .text(sd);
+});
+
+// X-axis label
+svg.append("text")
+  .attr("x", center.x + r(stddevMax) / 2)
+  .attr("y", center.y + 40)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "14px")
+  .text("Standard deviation (Normalized)");
+
+// Add short tick marks and labels for correlation on the outer arc
+[0.99, 0.95, 0.9, 0.8, 0.7, 0.6, 0.4].forEach(corr => {
+  const angle = corrToAngle(corr);
+  const rOuter = r(stddevMax);
+  const rTick = rOuter + 8; // length of tick
+  const x1 = center.x + rOuter * Math.cos(angle);
+  const y1 = center.y - rOuter * Math.sin(angle);
+  const x2 = center.x + rTick * Math.cos(angle);
+  const y2 = center.y - rTick * Math.sin(angle);
+  svg.append("line")
+    .attr("x1", x1)
+    .attr("y1", y1)
+    .attr("x2", x2)
+    .attr("y2", y2)
+    .attr("stroke", "#888")
+    .attr("stroke-width", 2);
+  svg.append("text")
+    .attr("x", center.x + (rTick + 16) * Math.cos(angle))
+    .attr("y", center.y - (rTick + 8) * Math.sin(angle))
+    .attr("text-anchor", "middle")
+    .attr("font-size", "13px")
+    .text(corr);
+});
+
+// Add RMSE arcs
+const refX = center.x + r(referenceStddev);
+const refY = center.y;
+
+
+const rmseArc = d3.arc()
+  .innerRadius(rmse => r(rmse))
+  .outerRadius(rmse => r(rmse))
+  .startAngle(Math.PI / 2)   // top
+  .endAngle(-Math.PI / 2);   // left
+
+[0.4, 0.8, 1.2, 1.6].forEach(rmse => {
+  const radiusVal = r(rmse);
+  const arcLength = (Math.PI / 2) * radiusVal;
+  const dash = arcLength / 50;
+  const gap = arcLength / 20;
+
+  svg.append("path")
+    .attr("d", rmseArc(rmse))
+    .attr("transform", `translate(${refX},${refY})`)
+    .attr("fill", "none")
+    .attr("stroke", "#bbb")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-dasharray", `${dash},${gap}`)
+
+  // Add labels
+  svg.append("text")
+    .attr("x", refX + radiusVal * Math.cos(Math.PI * 1.45))
+    .attr("y", refY + radiusVal * Math.sin(Math.PI * 1.45))
+    .attr("font-size", "14px")
+    .attr("fill", "#bbb")
+    .text(rmse);
+});
+</script>
