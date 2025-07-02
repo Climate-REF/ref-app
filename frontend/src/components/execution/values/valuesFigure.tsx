@@ -1,8 +1,8 @@
+import { Axis3D, Download, Group } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { Facet, MetricValue } from "@/client";
 import type { GroupedRawDataEntry } from "@/components/execution/values/types.ts";
 import { Button } from "@/components/ui/button.tsx";
-import { Axis3D, Download, Group } from "lucide-react";
-import { useMemo, useState } from "react";
 import { FacetSelect } from "./facetSelect";
 import { GroupedBoxWhiskerChart } from "./groupedBoxWhiskerChart";
 

@@ -1,7 +1,7 @@
-import { getSourceTypeColour } from "@/lib/sourceTypes.ts";
 import { Slot } from "@radix-ui/react-slot";
-import { type VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
+import { getSourceTypeColour } from "@/lib/sourceTypes.ts";
 
 import { cn } from "@/lib/utils";
 

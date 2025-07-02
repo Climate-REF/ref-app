@@ -1,11 +1,11 @@
+import type { RowSelectionState } from "@tanstack/react-table";
+import { PlusCircle, X } from "lucide-react";
+import type { Dispatch, SetStateAction } from "react";
 import type { Facet } from "@/client";
 import { FilterAddPopover } from "@/components/execution/values/filterAddPopover.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Filter } from "@/hooks/useValuesProcessor";
-import type { RowSelectionState } from "@tanstack/react-table";
-import { PlusCircle, X } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
 
 interface FilterControlsProps {
   values: { rowId: string }[];

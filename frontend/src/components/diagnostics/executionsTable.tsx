@@ -1,3 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { SquareArrowOutUpRight } from "lucide-react";
 import type { Execution } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -9,11 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Route } from "@/routes/_app/executions.$groupId.tsx";
-import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
-
-import { useNavigate } from "@tanstack/react-router";
-import { SquareArrowOutUpRight } from "lucide-react";
 
 const columnHelper = createColumnHelper<Execution>();
 

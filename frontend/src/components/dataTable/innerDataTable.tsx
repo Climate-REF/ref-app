@@ -1,3 +1,4 @@
+import { flexRender, type Table as TTable } from "@tanstack/react-table";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Table,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
-import { type Table as TTable, flexRender } from "@tanstack/react-table";
 
 function renderBody<TData>(
   table: TTable<TData>,
@@ -44,7 +44,7 @@ function renderSkeleton<TData>(table: TTable<TData>, numRows = 5) {
   return (
     <>
       {Array.from(new Array(numRows)).map((_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+        // biome-ignore lint/suspicious/noArrayIndexKey: Using index as key for skeleton rows is acceptable here
         <TableRow key={index}>
           {table.getVisibleLeafColumns().map((column) => (
             <TableCell key={column.id}>

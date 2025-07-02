@@ -1,10 +1,10 @@
-import type { Dataset } from "@/client";
-import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { SquareArrowOutUpRight } from "lucide-react";
+import type { Dataset } from "@/client";
 
 import { executionsExecutionDatasetsOptions } from "@/client/@tanstack/react-query.gen.ts";
-import { SquareArrowOutUpRight } from "lucide-react";
+import { DataTable } from "@/components/dataTable/dataTable.tsx";
 
 const columnHelper = createColumnHelper<Dataset>();
 

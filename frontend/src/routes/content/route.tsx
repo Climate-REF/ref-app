@@ -1,5 +1,5 @@
 import { MDXProvider } from "@mdx-js/react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 function Content() {
   const components = {};

@@ -1,5 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 
 interface RecentExecutionsProps {
   executions: ExecutionGroup[];

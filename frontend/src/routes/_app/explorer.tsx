@@ -1,3 +1,6 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { MetricsExplorer } from "@/components/explorer/metricExplorer.tsx";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,9 +10,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs.tsx";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
 
 const Explorer = () => {
   const { tab } = Route.useSearch();

@@ -79,7 +79,7 @@ export function ExecutionLogView({ logs }: ExecutionLogViewProps) {
         <ScrollArea className="h-[1200px] rounded-md border bg-muted p-4">
           <pre className="font-mono text-xs">
             {filteredLogs.map((log, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+              // biome-ignore lint/suspicious/noArrayIndexKey: The message might not have a unique identifier,
               <div key={index} className="mb-1 flex">
                 <span className="mr-2 text-muted-foreground">
                   {log.timestamp}

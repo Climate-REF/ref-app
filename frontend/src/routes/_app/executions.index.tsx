@@ -1,5 +1,5 @@
-import { executionsListOptions } from "@/client/@tanstack/react-query.gen";
 import { createFileRoute } from "@tanstack/react-router";
+import { executionsListOptions } from "@/client/@tanstack/react-query.gen";
 
 const Executions = () => {
   const { data } = Route.useLoaderData();

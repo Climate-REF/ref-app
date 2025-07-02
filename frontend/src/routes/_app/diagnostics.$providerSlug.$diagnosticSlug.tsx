@@ -1,4 +1,12 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import type { GroupBy } from "@/client";
+import {
+  diagnosticsGetOptions,
+  diagnosticsListMetricValuesOptions,
+} from "@/client/@tanstack/react-query.gen";
 import ExecutionGroupTable from "@/components/diagnostics/executionGroupTable.tsx";
 import { Values } from "@/components/execution/values";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
@@ -10,15 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
-
-import {
-  diagnosticsGetOptions,
-  diagnosticsListMetricValuesOptions,
-} from "@/client/@tanstack/react-query.gen";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   return (

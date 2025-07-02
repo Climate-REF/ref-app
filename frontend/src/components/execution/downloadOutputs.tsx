@@ -1,14 +1,13 @@
-import { Button } from "@/components/ui/button.tsx";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { executionsExecutionArchive, executionsMetricBundle } from "@/client";
+import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
-import { executionsExecutionArchive, executionsMetricBundle } from "@/client";
 
 interface DownloadOutputsProps {
   executionGroup: string;

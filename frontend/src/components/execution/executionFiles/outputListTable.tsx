@@ -1,3 +1,6 @@
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionOutput } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import {
@@ -6,10 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import type { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-
-import { SquareArrowOutUpRight } from "lucide-react";
 
 export const columns: ColumnDef<ExecutionOutput>[] = [
   {

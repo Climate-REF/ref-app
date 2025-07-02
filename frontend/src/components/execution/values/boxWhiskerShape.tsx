@@ -1,6 +1,6 @@
-import type { ProcessedGroupedDataEntry } from "@/components/execution/values/types.ts";
 import { scaleLinear } from "d3-scale";
 import { Cross } from "recharts";
+import type { ProcessedGroupedDataEntry } from "@/components/execution/values/types.ts";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
