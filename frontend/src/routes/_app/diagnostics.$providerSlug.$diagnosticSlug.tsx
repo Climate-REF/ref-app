@@ -128,7 +128,6 @@ export const Route = createFileRoute(
   component: DiagnosticInfo,
   validateSearch: zodValidator(metricInfoSchema),
   staticData: {
-    breadcrumbs: [{ name: "Diagnostics", url: "/diagnostics" }],
     title: "",
   },
   loader: ({ context: { queryClient }, params }) => {
