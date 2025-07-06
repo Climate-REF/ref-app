@@ -7,8 +7,9 @@ from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.execution import ResultOutputType
 from climate_ref_core.metric_values import ScalarMetricValue
-from ref_backend.core.config import settings
-from ref_backend.core.ref import provider_registry
+
+from ref_backend.core.config import Settings
+from ref_backend.core.ref import get_provider_registry
 
 T = TypeVar("T")
 
@@ -86,14 +87,10 @@ class DiagnosticSummary(BaseModel):
 
     @staticmethod
     def build(diagnostic: models.Diagnostic) -> "DiagnosticSummary":
-        concrete_diagnostic = provider_registry.get_metric(
-            diagnostic.provider.slug, diagnostic.slug
-        )
+        concrete_diagnostic = get_provider_registry().get_metric(diagnostic.provider.slug, diagnostic.slug)
         data_requirements = sorted(
             concrete_diagnostic.data_requirements,
-            key=lambda dr: dr[0].source_type.value
-            if isinstance(dr, tuple)
-            else dr.source_type.value,
+            key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,
         )
         group_by_summary = [
             GroupBy(source_type=dr[0].source_type.value, group_by=dr[0].group_by)
@@ -126,7 +123,7 @@ class ExecutionOutput(BaseModel):
     url: str
 
     @staticmethod
-    def build(output: models.ExecutionOutput) -> "ExecutionOutput":
+    def build(output: models.ExecutionOutput, settings: Settings) -> "ExecutionOutput":
         return ExecutionOutput(
             id=output.id,
             execution_id=output.execution_id,
@@ -163,9 +160,7 @@ class ExecutionGroup(BaseModel):
             key=execution_group.key,
             dirty=execution_group.dirty,
             executions=[Execution.build(r) for r in execution_group.executions],
-            latest_execution=Execution.build(latest_execution)
-            if latest_execution
-            else None,
+            latest_execution=Execution.build(latest_execution) if latest_execution else None,
             selectors=execution_group.selectors,
             diagnostic=DiagnosticSummary.build(execution_group.diagnostic),
             created_at=execution_group.created_at,
@@ -184,8 +179,8 @@ class Execution(BaseModel):
     outputs: "list[ExecutionOutput]"
 
     @staticmethod
-    def build(execution: models.Execution):
-        outputs = [ExecutionOutput.build(o) for o in execution.outputs]
+    def build(execution: models.Execution, settings: Settings) -> "Execution":
+        outputs = [ExecutionOutput.build(o, settings) for o in execution.outputs]
         return Execution(
             id=execution.id,
             successful=execution.successful or False,
@@ -287,7 +282,6 @@ class MetricValueCollection(BaseModel):
             ],
             count=len(values),
             facets=[
-                Facet(key=facet_key, values=list(facet_values))
-                for facet_key, facet_values in facets.items()
+                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
             ],
         )

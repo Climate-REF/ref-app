@@ -5,41 +5,55 @@ from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
+from climate_ref.models import MetricValue
 from ref_backend.api.main import api_router
-from ref_backend.core.config import settings
+from ref_backend.core.config import get_settings
+from ref_backend.core.ref import get_cv
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
-if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
-    sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
+def build_app() -> FastAPI:
+    """
+    Build the FastAPI application with the necessary configurations and middlewares.
+    """
+    settings = get_settings()
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    generate_unique_id_function=custom_generate_unique_id,
+    if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
+        sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
 
-)
+    # TODO: Remove this when we have a better way to handle CVs
+    MetricValue.register_cv_dimensions(next(get_cv()))
 
-# Set all CORS enabled origins
-if settings.all_cors_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.all_cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    app = FastAPI(
+        title=settings.PROJECT_NAME,
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        generate_unique_id_function=custom_generate_unique_id,
     )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+    # Set all CORS enabled origins
+    if settings.all_cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.all_cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    app.include_router(api_router, prefix=settings.API_V1_STR)
+
+    if settings.STATIC_DIR:
+        logger.info(f"Serving static files from {settings.STATIC_DIR}")
+        app.mount(
+            "/",
+            StaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
+            name="static",
+        )
+
+    return app
 
 
-if settings.STATIC_DIR:
-    logger.info(f"Serving static files from {settings.STATIC_DIR}")
-    app.mount(
-        "/",
-        StaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
-        name="static",
-    )
+app = build_app()

@@ -10,7 +10,7 @@ from starlette.responses import StreamingResponse
 from climate_ref import models
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
-from ref_backend.api.deps import ConfigDep, SessionDep
+from ref_backend.api.deps import ConfigDep, SessionDep, SettingsDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
     Collection,
@@ -72,7 +72,7 @@ async def _get_execution(
 
 @router.get("/{group_id}/execution")
 async def execution(
-    session: SessionDep, group_id: str, execution_id: str | None = None
+    session: SessionDep, settings: SettingsDep, group_id: str, execution_id: str | None = None
 ) -> Execution:
     """
     Inspect a specific execution
@@ -81,7 +81,7 @@ async def execution(
     """
     execution = await _get_execution(group_id, execution_id, session)
 
-    return Execution.build(execution)
+    return Execution.build(execution, settings)
 
 
 @router.get("/{group_id}/datasets")

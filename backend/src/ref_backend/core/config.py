@@ -1,7 +1,9 @@
+import functools
 import secrets
 import warnings
 from typing import Annotated, Any, Literal
 
+import fastapi
 from pydantic import (
     AnyUrl,
     BeforeValidator,
@@ -68,4 +70,7 @@ class Settings(BaseSettings):
         return self
 
 
-settings = Settings()  # type: ignore
+@functools.lru_cache
+def get_settings() -> Settings:
+    """Get default settings object."""
+    return Settings()

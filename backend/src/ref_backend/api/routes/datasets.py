@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 
 from climate_ref import models
-from ref_backend.api.deps import SessionDep
+from ref_backend.api.deps import SessionDep, SettingsDep
 from ref_backend.models import Collection, Dataset, DiagnosticSummary, Execution
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
@@ -28,6 +28,7 @@ async def list(
 @router.get("/{dataset_id}/executions")
 async def executions(
     session: SessionDep,
+    settings: SettingsDep,
     dataset_id: int,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -44,5 +45,5 @@ async def executions(
     _executions = executions_query.offset(offset).limit(limit).all()
 
     return Collection(
-        data=[Execution.build(m) for m in _executions], total_count=total_count
+        data=[Execution.build(m, settings) for m in _executions], total_count=total_count
     )
