@@ -24,9 +24,13 @@ dev-dependencies = [
     "ruff<1.0.0,>=0.2.2",
     "pre-commit<4.0.0,>=3.6.2",
     "coverage<8.0.0,>=7.4.3",
+    "climate-ref-example",
 ]
 
 [tool.uv.sources]
+# Temporary pin for testing
+climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", rev="0bde8531bdaa56e0c0a3b444b61c04238ca93d1a" }
+climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example", rev="0bde8531bdaa56e0c0a3b444b61c04238ca93d1a" }
 # Uncomment the following line to use a local version of climate-ref
 #climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
 

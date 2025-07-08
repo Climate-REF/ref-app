@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Query
 
 from climate_ref import models
-from ref_backend.api.deps import SessionDep, SettingsDep
+from ref_backend.api.deps import SessionDep, AppContextDep
 from ref_backend.models import Collection, Dataset, DiagnosticSummary, Execution
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
 
-@router.get("/")
-async def list(
+@router.get("/", name="list")
+async def _list(
     session: SessionDep,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -27,8 +27,7 @@ async def list(
 
 @router.get("/{dataset_id}/executions")
 async def executions(
-    session: SessionDep,
-    settings: SettingsDep,
+    app_context: AppContextDep,
     dataset_id: int,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -37,7 +36,7 @@ async def executions(
     List the currently registered diagnostics
     """
     executions_query = (
-        session.query(models.Execution)
+        app_context.session.query(models.Execution)
         .join(models.Execution.datasets)
         .filter(models.Dataset.id == dataset_id)
     )
@@ -45,5 +44,6 @@ async def executions(
     _executions = executions_query.offset(offset).limit(limit).all()
 
     return Collection(
-        data=[Execution.build(m, settings) for m in _executions], total_count=total_count
+        data=[Execution.build(m, app_context) for m in _executions],
+        total_count=total_count,
     )

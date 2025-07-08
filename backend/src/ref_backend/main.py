@@ -1,59 +1,23 @@
-import sentry_sdk
-from fastapi import FastAPI
-from fastapi.routing import APIRoute
-from loguru import logger
-from starlette.middleware.cors import CORSMiddleware
-from starlette.staticfiles import StaticFiles
+"""
+Main entry point for the FastAPI application
+"""
 
-from climate_ref.models import MetricValue
-from ref_backend.api.main import api_router
+from ref_backend.api import deps
 from ref_backend.core.config import get_settings
-from ref_backend.core.ref import get_cv
+from ref_backend.testing import test_ref_config, test_settings
 
+# Load the settings early, to avoid climate-ref setting the `REF_CONFIGURATION` environment variable
+settings = get_settings()
 
-def custom_generate_unique_id(route: APIRoute) -> str:
-    return f"{route.tags[0]}-{route.name}"
+from ref_backend.builder import build_app
+from ref_backend.core.ref import get_ref_config
 
+ref_config = get_ref_config(settings)
 
-def build_app() -> FastAPI:
-    """
-    Build the FastAPI application with the necessary configurations and middlewares.
-    """
-    settings = get_settings()
+app = build_app(settings, ref_config)
 
-    if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
-        sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
+if settings.USE_TEST_DATA:
+    print("Using test data for the application.")
 
-    # TODO: Remove this when we have a better way to handle CVs
-    MetricValue.register_cv_dimensions(next(get_cv()))
-
-    app = FastAPI(
-        title=settings.PROJECT_NAME,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
-        generate_unique_id_function=custom_generate_unique_id,
-    )
-
-    # Set all CORS enabled origins
-    if settings.all_cors_origins:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.all_cors_origins,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
-    app.include_router(api_router, prefix=settings.API_V1_STR)
-
-    if settings.STATIC_DIR:
-        logger.info(f"Serving static files from {settings.STATIC_DIR}")
-        app.mount(
-            "/",
-            StaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
-            name="static",
-        )
-
-    return app
-
-
-app = build_app()
+    app.dependency_overrides[get_settings] = test_settings
+    app.dependency_overrides[deps._ref_config_dependency] = test_ref_config

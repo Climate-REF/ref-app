@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field
 
@@ -8,8 +8,9 @@ from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.execution import ResultOutputType
 from climate_ref_core.metric_values import ScalarMetricValue
 
-from ref_backend.core.config import Settings
-from ref_backend.core.ref import get_provider_registry
+if TYPE_CHECKING:
+    from ref_backend.api.deps import AppContext
+
 
 T = TypeVar("T")
 
@@ -86,11 +87,17 @@ class DiagnosticSummary(BaseModel):
     """
 
     @staticmethod
-    def build(diagnostic: models.Diagnostic) -> "DiagnosticSummary":
-        concrete_diagnostic = get_provider_registry().get_metric(diagnostic.provider.slug, diagnostic.slug)
+    def build(
+        diagnostic: models.Diagnostic, app_context: "AppContext"
+    ) -> "DiagnosticSummary":
+        concrete_diagnostic = app_context.provider_registry.get_metric(
+            diagnostic.provider.slug, diagnostic.slug
+        )
         data_requirements = sorted(
             concrete_diagnostic.data_requirements,
-            key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,
+            key=lambda dr: dr[0].source_type.value
+            if isinstance(dr, tuple)
+            else dr.source_type.value,
         )
         group_by_summary = [
             GroupBy(source_type=dr[0].source_type.value, group_by=dr[0].group_by)
@@ -123,7 +130,9 @@ class ExecutionOutput(BaseModel):
     url: str
 
     @staticmethod
-    def build(output: models.ExecutionOutput, settings: Settings) -> "ExecutionOutput":
+    def build(
+        output: models.ExecutionOutput, app_context: "AppContext"
+    ) -> "ExecutionOutput":
         return ExecutionOutput(
             id=output.id,
             execution_id=output.execution_id,
@@ -134,7 +143,7 @@ class ExecutionOutput(BaseModel):
             description=output.description,
             created_at=output.created_at,
             updated_at=output.updated_at,
-            url=f"{settings.BACKEND_HOST}{settings.API_V1_STR}/results/{output.id}",
+            url=f"{app_context.settings.BACKEND_HOST}{app_context.settings.API_V1_STR}/results/{output.id}",
         )
 
 
@@ -150,7 +159,9 @@ class ExecutionGroup(BaseModel):
     updated_at: datetime
 
     @staticmethod
-    def build(execution_group: models.ExecutionGroup):
+    def build(
+        execution_group: models.ExecutionGroup, app_context: "AppContext"
+    ) -> "ExecutionGroup":
         latest_execution = None
         if len(execution_group.executions):
             latest_execution = execution_group.executions[-1]
@@ -159,10 +170,14 @@ class ExecutionGroup(BaseModel):
             id=execution_group.id,
             key=execution_group.key,
             dirty=execution_group.dirty,
-            executions=[Execution.build(r) for r in execution_group.executions],
-            latest_execution=Execution.build(latest_execution) if latest_execution else None,
+            executions=[
+                Execution.build(r, app_context) for r in execution_group.executions
+            ],
+            latest_execution=Execution.build(latest_execution, app_context)
+            if latest_execution
+            else None,
             selectors=execution_group.selectors,
-            diagnostic=DiagnosticSummary.build(execution_group.diagnostic),
+            diagnostic=DiagnosticSummary.build(execution_group.diagnostic, app_context),
             created_at=execution_group.created_at,
             updated_at=execution_group.updated_at,
         )
@@ -179,8 +194,8 @@ class Execution(BaseModel):
     outputs: "list[ExecutionOutput]"
 
     @staticmethod
-    def build(execution: models.Execution, settings: Settings) -> "Execution":
-        outputs = [ExecutionOutput.build(o, settings) for o in execution.outputs]
+    def build(execution: models.Execution, app_context: "AppContext") -> "Execution":
+        outputs = [ExecutionOutput.build(o, app_context) for o in execution.outputs]
         return Execution(
             id=execution.id,
             successful=execution.successful or False,
@@ -282,6 +297,7 @@ class MetricValueCollection(BaseModel):
             ],
             count=len(values),
             facets=[
-                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
+                Facet(key=facet_key, values=list(facet_values))
+                for facet_key, facet_values in facets.items()
             ],
         )

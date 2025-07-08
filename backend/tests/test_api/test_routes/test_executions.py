@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 
 def test_execution_list_count(client: TestClient, settings) -> None:
@@ -9,5 +8,5 @@ def test_execution_list_count(client: TestClient, settings) -> None:
 
     data = r.json()
 
-    assert data["count"] == 0
-    assert len(data["data"]) == 0
+    assert data["count"] == 10
+    assert len(data["data"]) == 10

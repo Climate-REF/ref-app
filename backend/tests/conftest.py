@@ -1,20 +1,16 @@
-import functools
 from collections.abc import Generator
 
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ref_backend.core.config import Settings
+from ref_backend.api import deps
+from ref_backend.builder import build_app
+from ref_backend.core.config import get_settings
+from ref_backend.testing import test_ref_config, test_settings
 
 
-@functools.lru_cache
-def test_settings():
-    """Settings to use the decimated test data included in the git repo."""
-    return Settings()
-
-
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def settings():
     return test_settings()
 
@@ -27,12 +23,10 @@ def app() -> FastAPI:
     This creates the application with the necessary overrides for testing,
     including mocking Sentry setup and using a custom settings function.
     """
-    # Late load the application to ensure that we are in the pytest context
-    import ref_backend.main
+    app = build_app(settings=test_settings(), ref_config=test_ref_config())
 
-    app = ref_backend.main.build_app()
-
-    app.dependency_overrides[ref_backend.core.config.get_settings] = lambda: settings()
+    app.dependency_overrides[get_settings] = test_settings
+    app.dependency_overrides[deps._ref_config_dependency] = test_ref_config
 
     return app
 
