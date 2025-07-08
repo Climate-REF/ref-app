@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 
 from climate_ref import models
-from ref_backend.api.deps import SessionDep, AppContextDep
+from ref_backend.api.deps import AppContextDep, SessionDep
 from ref_backend.models import Collection, Dataset, DiagnosticSummary, Execution
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])

@@ -9,8 +9,8 @@ from ref_backend.testing import test_ref_config, test_settings
 # Load the settings early, to avoid climate-ref setting the `REF_CONFIGURATION` environment variable
 settings = get_settings()
 
-from ref_backend.builder import build_app
-from ref_backend.core.ref import get_ref_config
+from ref_backend.builder import build_app  # noqa: E402
+from ref_backend.core.ref import get_ref_config  # noqa: E402
 
 ref_config = get_ref_config(settings)
 

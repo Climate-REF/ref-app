@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     USE_TEST_DATA: bool = False
     """
     Use test data for development purposes.
-    
+
     This is useful for local development and testing, but should not be used in production.
     """
 
