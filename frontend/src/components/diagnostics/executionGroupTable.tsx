@@ -1,3 +1,8 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
@@ -9,12 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
-
-import { Link, useNavigate } from "@tanstack/react-router";
-import { SquareArrowOutUpRight } from "lucide-react";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 

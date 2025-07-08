@@ -1,0 +1,35 @@
+{
+  "DIMENSIONS": {
+    "json_structure": [
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "region": {
+      "global": {}
+    },
+    "metric": {
+      "tas": {},
+      "pr": {}
+    },
+    "statistic": {
+      "rmse": {},
+      "mb": {}
+    }
+  },
+  "RESULTS": {
+    "global": {
+      "tas": {
+        "rmse": 0,
+        "mb": 0
+      },
+      "pr": {
+        "rmse": 0,
+        "mb": 0
+      }
+    }
+  },
+  "PROVENANCE": null,
+  "DISCLAIMER": null,
+  "NOTES": null
+}

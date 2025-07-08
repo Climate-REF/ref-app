@@ -1,3 +1,16 @@
+import { Link } from "@tanstack/react-router";
+import {
+  type ColumnDef,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  type OnChangeFn,
+  type RowSelectionState,
+  type SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Eye, MoreHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { Facet, MetricValue } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
@@ -9,19 +22,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Link } from "@tanstack/react-router";
-import {
-  type ColumnDef,
-  type OnChangeFn,
-  type RowSelectionState,
-  type SortingState,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { Eye, MoreHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
 
 // Update to use ProcessedMetricValue which includes rowId
 type ProcessedMetricValue = MetricValue & { rowId: string };

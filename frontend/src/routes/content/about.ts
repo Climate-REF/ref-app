@@ -5,11 +5,5 @@ export const Route = createFileRoute("/content/about")({
   component: About,
   staticData: {
     title: "About",
-    breadcrumbs: [
-      {
-        name: "Home",
-        url: "/",
-      },
-    ],
   },
 });

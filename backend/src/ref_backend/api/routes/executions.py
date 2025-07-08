@@ -10,7 +10,7 @@ from starlette.responses import StreamingResponse
 from climate_ref import models
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
-from ref_backend.api.deps import ConfigDep, SessionDep
+from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.models import (
     Collection,
@@ -24,30 +24,34 @@ router = APIRouter(prefix="/executions", tags=["executions"])
 
 
 @router.get("/")
-async def list(session: SessionDep, limit: int = 10) -> Collection[ExecutionGroup]:
+async def list(
+    app_context: AppContextDep, limit: int = 10
+) -> Collection[ExecutionGroup]:
     """
     List the most recent execution groups
     """
     execution_groups = (
-        session.query(models.ExecutionGroup)
+        app_context.session.query(models.ExecutionGroup)
         .order_by(models.ExecutionGroup.updated_at.desc())
         .limit(limit)
         .all()
     )
 
-    return Collection(data=[ExecutionGroup.build(m) for m in execution_groups])
+    return Collection(
+        data=[ExecutionGroup.build(m, app_context) for m in execution_groups]
+    )
 
 
 @router.get("/{group_id}")
-async def get(session: SessionDep, group_id: str) -> ExecutionGroup:
+async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     """
     Inspect a specific execution
     """
-    execution_group = session.query(models.ExecutionGroup).get(group_id)
+    execution_group = app_context.session.query(models.ExecutionGroup).get(group_id)
     if not execution_group:
         raise HTTPException(status_code=404, detail="Execution not found")
 
-    return ExecutionGroup.build(execution_group)
+    return ExecutionGroup.build(execution_group, app_context)
 
 
 async def _get_execution(
@@ -72,44 +76,47 @@ async def _get_execution(
 
 @router.get("/{group_id}/execution")
 async def execution(
-    session: SessionDep, group_id: str, execution_id: str | None = None
+    app_context: AppContextDep,
+    group_id: str,
+    execution_id: str | None = None,
 ) -> Execution:
     """
     Inspect a specific execution
 
     Gets the latest result if no execution_id is provided
     """
-    execution = await _get_execution(group_id, execution_id, session)
+    execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    return Execution.build(execution)
+    return Execution.build(execution, app_context)
 
 
 @router.get("/{group_id}/datasets")
 async def execution_datasets(
-    session: SessionDep, group_id: str, execution_id: str | None = None
+    app_context: AppContextDep, group_id: str, execution_id: str | None = None
 ) -> Collection[Dataset]:
     """
     Query the datasets that were used for a specific execution
     """
-    execution = await _get_execution(group_id, execution_id, session)
+    execution = await _get_execution(group_id, execution_id, app_context.session)
 
     return Collection(data=[Dataset.build(dataset) for dataset in execution.datasets])
 
 
 @router.get("/{group_id}/logs")
 async def execution_logs(
-    session: SessionDep,
-    config: ConfigDep,
+    app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
 ) -> StreamingResponse:
     """
     Fetch the logs for an execution result
     """
-    execution = await _get_execution(group_id, execution_id, session)
+    execution = await _get_execution(group_id, execution_id, app_context.session)
 
     file_path = (
-        config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
+        app_context.ref_config.paths.results
+        / execution.output_fragment
+        / EXECUTION_LOG_FILENAME
     )
     mime_type, encoding = mimetypes.guess_type(file_path)
 
@@ -127,17 +134,20 @@ async def execution_logs(
 
 @router.get("/{group_id}/metric_bundle")
 async def metric_bundle(
-    session: SessionDep,
-    config: ConfigDep,
+    app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
 ) -> CMECMetric:
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, execution_id, session)
+    execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    file_path = config.paths.results / execution.output_fragment / "diagnostic.json"
+    file_path = (
+        app_context.ref_config.paths.results
+        / execution.output_fragment
+        / "diagnostic.json"
+    )
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Metrics bundle not found")
@@ -147,15 +157,15 @@ async def metric_bundle(
 
 @router.get("/{group_id}/values")
 async def metric_values(
-    session: SessionDep, group_id: str, execution_id: str | None = None
+    app_context: AppContextDep, group_id: str, execution_id: str | None = None
 ) -> MetricValueCollection:
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, execution_id, session)
+    execution = await _get_execution(group_id, execution_id, app_context.session)
 
     metric_values = (
-        session.query(models.MetricValue)
+        app_context.session.query(models.MetricValue)
         .filter(models.MetricValue.execution_id == execution.id)
         .all()
     )
@@ -165,8 +175,7 @@ async def metric_values(
 
 @router.get("/{group_id}/archive")
 async def execution_archive(
-    session: SessionDep,
-    config: ConfigDep,
+    app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
 ) -> StreamingResponse:
@@ -175,8 +184,8 @@ async def execution_archive(
 
     The archive is created on-the-fly and streamed directly to the client.
     """
-    execution = await _get_execution(group_id, execution_id, session)
-    result_path = config.paths.results / execution.output_fragment
+    execution = await _get_execution(group_id, execution_id, app_context.session)
+    result_path = app_context.ref_config.paths.results / execution.output_fragment
 
     if not result_path.exists():
         raise HTTPException(status_code=404, detail="Execution output not found")

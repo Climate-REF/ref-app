@@ -1,10 +1,9 @@
+import { BarChart, Table } from "lucide-react";
+import { useState } from "react";
 import type { Facet, MetricValue } from "@/client";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-
 import { useValuesProcessor } from "@/hooks/useValuesProcessor";
-import { BarChart, Table } from "lucide-react";
-import { useState } from "react";
 import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
 import ValuesDataTable from "./valuesDataTable.tsx";
 import { ValuesFigure } from "./valuesFigure.tsx";

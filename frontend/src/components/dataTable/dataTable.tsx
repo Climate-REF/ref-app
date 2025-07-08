@@ -1,12 +1,12 @@
-import { DataTableViewOptions } from "@/components/dataTable/columnToggle.tsx";
 import {
   type ColumnDef,
-  type SortingState,
   getCoreRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import { DataTableViewOptions } from "@/components/dataTable/columnToggle.tsx";
 import { InnerDataTable } from "./innerDataTable";
 
 interface TDataTable<TData, TValue> {

@@ -1,3 +1,10 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  datasetsListInfiniteOptions,
+  datasetsListOptions,
+} from "@/client/@tanstack/react-query.gen";
+import DatasetTable from "@/components/datasets/datasetTable";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -6,14 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-
-import {
-  datasetsListInfiniteOptions,
-  datasetsListOptions,
-} from "@/client/@tanstack/react-query.gen";
-import DatasetTable from "@/components/datasets/datasetTable";
 
 export const Route = createFileRoute("/_app/datasets/")({
   component: SourcesIndexPage,

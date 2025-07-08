@@ -1,3 +1,7 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
 import type { DiagnosticSummary } from "@/client";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import { DataTable } from "@/components/dataTable/dataTable";
@@ -9,10 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
 
 const Diagnostics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
@@ -58,32 +58,30 @@ const Diagnostics = () => {
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Diagnostic List</CardTitle>
-          <CardDescription>
-            Search and view available diagnostics. Click on a row for more
-            details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Input
-              placeholder="Search diagnostics..."
-              value={globalFilter}
-              onChange={(event) => setGlobalFilter(event.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-          <DataTable
-            columns={columns}
-            data={filteredDiagnostics}
-            onRowClick={handleRowClick}
+    <Card>
+      <CardHeader>
+        <CardTitle>Diagnostic List</CardTitle>
+        <CardDescription>
+          Search and view available diagnostics. Click on a row for more
+          details.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <Input
+            placeholder="Search diagnostics..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-sm"
           />
-        </CardContent>
-      </Card>
-    </>
+        </div>
+        <DataTable
+          columns={columns}
+          data={filteredDiagnostics}
+          onRowClick={handleRowClick}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,3 +1,5 @@
+import { PlusCircle } from "lucide-react";
+import { type ComponentProps, useEffect, useState } from "react";
 import type { Facet } from "@/client/types.gen";
 import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -13,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { PlusCircle } from "lucide-react";
-import { type ComponentProps, useEffect, useState } from "react";
 
 interface FilterAddPopoverProps extends ComponentProps<typeof Button> {
   facets: Facet[];

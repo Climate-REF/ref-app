@@ -22,6 +22,11 @@ export PRINT_HELP_PYSCRIPT
 help:  ## print short description of each target
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
+
+.PHONY: virtual-environment
+virtual-environment: # Install the project dependencies
+	uv sync
+
 .PHONY: dev
 dev: # Start the backend
 	uv run fastapi dev "src/ref_backend/main.py" --reload

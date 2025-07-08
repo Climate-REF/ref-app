@@ -1,7 +1,7 @@
-import type { Dataset } from "@/client";
-import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
+import type { Dataset } from "@/client";
+import { DataTable } from "@/components/dataTable/dataTable.tsx";
 
 const columnHelper = createColumnHelper<Dataset>();
 

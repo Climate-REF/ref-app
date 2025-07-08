@@ -1,7 +1,7 @@
 "use client";
 
-import { NavbarLogo } from "@/components/app/navbarLogo.tsx";
 import { Link } from "@tanstack/react-router";
+import { NavbarLogo } from "@/components/app/navbarLogo.tsx";
 
 import {
   NavigationMenu,

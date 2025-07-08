@@ -1,5 +1,8 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
+import { BarChart, LineChart, PieChart, Table } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,9 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "@tanstack/react-router";
-import { BarChart, LineChart, PieChart, Table } from "lucide-react";
-import { useState } from "react";
 
 // Mock data for metrics
 const mockMetrics = [

@@ -1,0 +1,25 @@
+log_level = "INFO"
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan> - <level>{message}</level>"
+
+[paths]
+log = "/home/runner/work/climate-ref/climate-ref/test-outputs/tests.integration.test_solve/test_solve/log"
+scratch = "/home/runner/work/climate-ref/climate-ref/test-outputs/tests.integration.test_solve/test_solve/scratch"
+software = "/home/runner/.config/climate_ref/software"
+results = "/home/runner/work/climate-ref/climate-ref/test-outputs/tests.integration.test_solve/test_solve/results"
+dimensions_cv = "/home/runner/work/climate-ref/climate-ref/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml"
+
+[db]
+database_url = "sqlite:///test-outputs/tests.integration.test_solve/test_solve/db/climate_ref.db"
+run_migrations = true
+max_backups = 5
+
+[executor]
+executor = "climate_ref.executor.LocalExecutor"
+
+[executor.config]
+n = 1
+
+[[diagnostic_providers]]
+provider = "climate_ref_example"
+
+[diagnostic_providers.config]

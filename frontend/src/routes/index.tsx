@@ -1,11 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import { executionsListOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-
-import { createFileRoute } from "@tanstack/react-router";
 
 const Dashboard = () => {
   const recentExecutions = useQuery(

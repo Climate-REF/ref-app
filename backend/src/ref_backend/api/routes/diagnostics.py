@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from climate_ref import models
-from ref_backend.api.deps import SessionDep
+from ref_backend.api.deps import AppContextDep, SessionDep
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
@@ -29,44 +29,52 @@ async def _get_diagnostic(
     return diagnostic
 
 
-@router.get("/")
-async def list(session: SessionDep) -> Collection[DiagnosticSummary]:
+@router.get("/", name="list")
+async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     """
     List the currently registered diagnostics
     """
-    diagnostics = session.query(models.Diagnostic).all()
+    diagnostics = app_context.session.query(models.Diagnostic).all()
 
-    return Collection(data=[DiagnosticSummary.build(m) for m in diagnostics])
+    return Collection(
+        data=[DiagnosticSummary.build(m, app_context) for m in diagnostics]
+    )
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}")
 async def get(
-    session: SessionDep, provider_slug: str, diagnostic_slug: str
+    app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
 ) -> DiagnosticSummary:
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
+    diagnostic = await _get_diagnostic(
+        app_context.session, provider_slug, diagnostic_slug
+    )
 
-    return DiagnosticSummary.build(diagnostic)
+    return DiagnosticSummary.build(diagnostic, app_context)
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/executions")
 async def list_execution_groups(
-    session: SessionDep, provider_slug: str, diagnostic_slug: str
+    app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
 ) -> Collection[ExecutionGroup]:
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
+    diagnostic = await _get_diagnostic(
+        app_context.session, provider_slug, diagnostic_slug
+    )
 
     execution_groups = (
-        session.query(models.ExecutionGroup)
+        app_context.session.query(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
         .all()
     )
 
-    return Collection(data=[ExecutionGroup.build(e) for e in execution_groups])
+    return Collection(
+        data=[ExecutionGroup.build(e, app_context) for e in execution_groups]
+    )
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values")

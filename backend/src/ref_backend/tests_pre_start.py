@@ -3,7 +3,7 @@ import logging
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
 from climate_ref.database import Database
-from ref_backend.core.ref import create_database_connection
+from ref_backend.core.ref import get_database
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def init(db_engine: Database) -> None:
 def main() -> None:
     logger.info("Initializing service")
 
-    init(create_database_connection()[1].session)
+    init(get_database())
     logger.info("Service finished initializing")
 
 

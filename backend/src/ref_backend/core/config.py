@@ -1,3 +1,4 @@
+import functools
 import secrets
 import warnings
 from typing import Annotated, Any, Literal
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
+
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     FRONTEND_HOST: str = "http://localhost:5173"
@@ -49,6 +51,12 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     REF_CONFIGURATION: str
     STATIC_DIR: str | None = None
+    USE_TEST_DATA: bool = False
+    """
+    Use test data for development purposes.
+
+    This is useful for local development and testing, but should not be used in production.
+    """
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
@@ -68,4 +76,7 @@ class Settings(BaseSettings):
         return self
 
 
-settings = Settings()  # type: ignore
+@functools.lru_cache
+def get_settings() -> Settings:
+    """Get default settings object."""
+    return Settings()
