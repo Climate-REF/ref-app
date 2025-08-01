@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import type { ExecutionGroup } from "@/client";

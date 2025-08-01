@@ -1,13 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { executionsListOptions } from "@/client/@tanstack/react-query.gen.ts";
+import {
+  datasetsListOptions,
+  executionsListOptions,
+} from "@/client/@tanstack/react-query.gen.ts";
+import { RecentDatasets } from "@/components/dashboard/recentDatasets.tsx";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 const Dashboard = () => {
   const recentExecutions = useQuery(
     executionsListOptions({ query: { limit: 10 } }),
+  );
+  const recentDatasets = useQuery(
+    datasetsListOptions({ query: { limit: 10 } }),
   );
   return (
     <>
@@ -40,6 +47,10 @@ const Dashboard = () => {
       <div className="grid md:grid-cols-2 grid-cols-1 gap-4 p-4">
         <div className="col-span-1">
           <RecentExecutions executions={recentExecutions.data?.data ?? []} />
+        </div>
+
+        <div className="col-span-1">
+          <RecentDatasets datasets={recentDatasets.data?.data ?? []} />
         </div>
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="aspect-video rounded-xl bg-muted/50" />
