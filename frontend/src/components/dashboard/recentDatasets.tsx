@@ -31,9 +31,13 @@ export function RecentDatasets({ datasets }: RecentDatasetsProps) {
               className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
             >
               <div className="flex flex-col gap-2 overflow-hidden">
-                <span className="font-medium text-sm text-nowrap">
+                <Link
+                  to="/datasets/$slug"
+                  params={{ slug: dataset.slug }}
+                  className="font-medium text-sm text-nowrap text-blue-500 hover:text-blue-300"
+                >
                   {dataset.slug}
-                </span>
+                </Link>
               </div>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/executions/$groupId" params={{ groupId: "" }}>

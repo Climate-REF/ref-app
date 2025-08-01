@@ -6,12 +6,14 @@ export const CMECMetricSchema = {
             '$ref': '#/components/schemas/MetricDimensions'
         },
         RESULTS: {
+            additionalProperties: true,
             type: 'object',
             title: 'Results'
         },
         PROVENANCE: {
             anyOf: [
                 {
+                    additionalProperties: true,
                     type: 'object'
                 },
                 {
@@ -23,6 +25,7 @@ export const CMECMetricSchema = {
         DISCLAIMER: {
             anyOf: [
                 {
+                    additionalProperties: true,
                     type: 'object'
                 },
                 {
@@ -34,6 +37,7 @@ export const CMECMetricSchema = {
         NOTES: {
             anyOf: [
                 {
+                    additionalProperties: true,
                     type: 'object'
                 },
                 {
@@ -480,6 +484,7 @@ export const HTTPValidationErrorSchema = {
 } as const;
 
 export const MetricDimensionsSchema = {
+    additionalProperties: true,
     type: 'object',
     title: 'MetricDimensions',
     description: `CMEC diagnostic bundle DIMENSIONS object

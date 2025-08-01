@@ -22,23 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils.ts";
-
-function SummaryItem({
-  className,
-  title,
-  children,
-}: React.ComponentProps<"div">) {
-  return (
-    <div className={cn("space-y-1", className)}>
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="font-medium overflow-hidden text-nowrap text-ellipsis">
-        {children}
-      </p>
-    </div>
-  );
-}
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
@@ -82,60 +67,60 @@ const ExecutionInfo = () => {
       {/*/>*/}
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Execution Summary</CardTitle>
-                  <CardDescription>
-                    Overview of the execution of a group for{" "}
-                    <Link
-                      to="/diagnostics/$providerSlug/$diagnosticSlug"
-                      params={{
-                        providerSlug: data.diagnostic.provider.slug,
-                        diagnosticSlug: data.diagnostic.slug,
-                      }}
-                    >
-                      {data.diagnostic.name}
-                    </Link>
-                  </CardDescription>
-                </div>
-                <div>
-                  <DownloadOutputs
-                    executionGroup={groupId}
-                    executionId={(
-                      executionId ??
-                      data.latest_execution?.id ??
-                      ""
-                    ).toString()}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <SummaryItem title="Date">
-                  {format(
-                    new Date(execution.updated_at as string),
-                    "yyyy-MM-dd HH:mm",
-                  )}{" "}
-                </SummaryItem>
-                <SummaryItem title="Key" className="col-span-2">
-                  <span title={data?.key}>{data?.key}</span>
-                </SummaryItem>
-
-                <SummaryItem title="Status">
+          <DetailsPanel
+            title="Execution Summary"
+            description={
+              <>
+                Overview of the execution of a group for{" "}
+                <Link
+                  to="/diagnostics/$providerSlug/$diagnosticSlug"
+                  params={{
+                    providerSlug: data.diagnostic.provider.slug,
+                    diagnosticSlug: data.diagnostic.slug,
+                  }}
+                >
+                  {data.diagnostic.name}
+                </Link>
+              </>
+            }
+            action={
+              <DownloadOutputs
+                executionGroup={groupId}
+                executionId={(
+                  executionId ??
+                  data.latest_execution?.id ??
+                  ""
+                ).toString()}
+              />
+            }
+            items={[
+              {
+                label: "Date",
+                value: format(
+                  new Date(execution.updated_at as string),
+                  "yyyy-MM-dd HH:mm",
+                ),
+              },
+              {
+                label: "Key",
+                value: <span title={data?.key}>{data?.key}</span>,
+                className: "col-span-2",
+              },
+              {
+                label: "Status",
+                value: (
                   <Badge className="mt-1">
                     {execution.successful ? "Success" : "Failed"}
                   </Badge>
-                </SummaryItem>
-                <SummaryItem title="Execution Time">3m 42s</SummaryItem>
-                <SummaryItem title="Number of outputs">
-                  {execution.outputs.length}
-                </SummaryItem>
-              </div>
-            </CardContent>
-          </Card>
+                ),
+              },
+              { label: "Execution Time", value: "3m 42s" },
+              {
+                label: "Number of outputs",
+                value: execution.outputs.length,
+              },
+            ]}
+          />
         </div>
 
         <div>

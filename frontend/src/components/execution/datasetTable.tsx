@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Dataset } from "@/client";
@@ -9,7 +10,20 @@ import { DataTable } from "@/components/dataTable/dataTable.tsx";
 const columnHelper = createColumnHelper<Dataset>();
 
 export const columns: ColumnDef<Dataset>[] = [
-  columnHelper.accessor("slug", { header: "Slug" }) as ColumnDef<Dataset>,
+  columnHelper.accessor("slug", {
+    header: "Slug",
+    cell: (cellContext) => {
+      return (
+        <Link
+          to="/datasets/$slug"
+          params={{ slug: cellContext.row.original.slug }}
+          className="text-blue-500 hover:text-blue-300"
+        >
+          {cellContext.getValue()}
+        </Link>
+      );
+    },
+  }) as ColumnDef<Dataset>,
   columnHelper.accessor("dataset_type", {
     header: "Dataset Type",
   }) as ColumnDef<Dataset>,

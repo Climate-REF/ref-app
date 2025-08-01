@@ -239,6 +239,33 @@ export type DatasetsListResponses = {
 
 export type DatasetsListResponse = DatasetsListResponses[keyof DatasetsListResponses];
 
+export type DatasetsGetData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/datasets/{slug}';
+};
+
+export type DatasetsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DatasetsGetError = DatasetsGetErrors[keyof DatasetsGetErrors];
+
+export type DatasetsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Dataset;
+};
+
+export type DatasetsGetResponse = DatasetsGetResponses[keyof DatasetsGetResponses];
+
 export type DatasetsExecutionsData = {
     body?: never;
     path: {
