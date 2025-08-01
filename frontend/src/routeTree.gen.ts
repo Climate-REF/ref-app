@@ -20,6 +20,7 @@ import { Route as AppExecutionsIndexImport } from './routes/_app/executions.inde
 import { Route as AppDiagnosticsIndexImport } from './routes/_app/diagnostics.index'
 import { Route as AppDatasetsIndexImport } from './routes/_app/datasets.index'
 import { Route as AppExecutionsGroupIdImport } from './routes/_app/executions.$groupId'
+import { Route as AppDatasetsSlugImport } from './routes/_app/datasets.$slug'
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug'
 
 // Create/Update Routes
@@ -77,6 +78,12 @@ const AppExecutionsGroupIdRoute = AppExecutionsGroupIdImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
+const AppDatasetsSlugRoute = AppDatasetsSlugImport.update({
+  id: '/datasets/$slug',
+  path: '/datasets/$slug',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
 const AppDiagnosticsProviderSlugDiagnosticSlugRoute =
   AppDiagnosticsProviderSlugDiagnosticSlugImport.update({
     id: '/diagnostics/$providerSlug/$diagnosticSlug',
@@ -123,6 +130,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContentAboutImport
       parentRoute: typeof ContentRouteImport
     }
+    '/_app/datasets/$slug': {
+      id: '/_app/datasets/$slug'
+      path: '/datasets/$slug'
+      fullPath: '/datasets/$slug'
+      preLoaderRoute: typeof AppDatasetsSlugImport
+      parentRoute: typeof AppRouteImport
+    }
     '/_app/executions/$groupId': {
       id: '/_app/executions/$groupId'
       path: '/executions/$groupId'
@@ -165,6 +179,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppExplorerRoute: typeof AppExplorerRoute
+  AppDatasetsSlugRoute: typeof AppDatasetsSlugRoute
   AppExecutionsGroupIdRoute: typeof AppExecutionsGroupIdRoute
   AppDatasetsIndexRoute: typeof AppDatasetsIndexRoute
   AppDiagnosticsIndexRoute: typeof AppDiagnosticsIndexRoute
@@ -174,6 +189,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppExplorerRoute: AppExplorerRoute,
+  AppDatasetsSlugRoute: AppDatasetsSlugRoute,
   AppExecutionsGroupIdRoute: AppExecutionsGroupIdRoute,
   AppDatasetsIndexRoute: AppDatasetsIndexRoute,
   AppDiagnosticsIndexRoute: AppDiagnosticsIndexRoute,
@@ -204,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/content': typeof ContentRouteRouteWithChildren
   '/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
+  '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
@@ -217,6 +234,7 @@ export interface FileRoutesByTo {
   '/content': typeof ContentRouteRouteWithChildren
   '/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
+  '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
@@ -231,6 +249,7 @@ export interface FileRoutesById {
   '/content': typeof ContentRouteRouteWithChildren
   '/_app/explorer': typeof AppExplorerRoute
   '/content/about': typeof ContentAboutRoute
+  '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/_app/datasets/': typeof AppDatasetsIndexRoute
   '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
@@ -246,6 +265,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/explorer'
     | '/content/about'
+    | '/datasets/$slug'
     | '/executions/$groupId'
     | '/datasets'
     | '/diagnostics'
@@ -258,6 +278,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/explorer'
     | '/content/about'
+    | '/datasets/$slug'
     | '/executions/$groupId'
     | '/datasets'
     | '/diagnostics'
@@ -270,6 +291,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/_app/explorer'
     | '/content/about'
+    | '/_app/datasets/$slug'
     | '/_app/executions/$groupId'
     | '/_app/datasets/'
     | '/_app/diagnostics/'
@@ -312,6 +334,7 @@ export const routeTree = rootRoute
       "filePath": "_app/route.tsx",
       "children": [
         "/_app/explorer",
+        "/_app/datasets/$slug",
         "/_app/executions/$groupId",
         "/_app/datasets/",
         "/_app/diagnostics/",
@@ -332,6 +355,10 @@ export const routeTree = rootRoute
     "/content/about": {
       "filePath": "content/about.ts",
       "parent": "/content"
+    },
+    "/_app/datasets/$slug": {
+      "filePath": "_app/datasets.$slug.tsx",
+      "parent": "/_app"
     },
     "/_app/executions/$groupId": {
       "filePath": "_app/executions.$groupId.tsx",

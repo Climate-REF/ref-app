@@ -1,33 +1,6 @@
-import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { SquareArrowOutUpRight } from "lucide-react";
 import type { Dataset } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-
-const columnHelper = createColumnHelper<Dataset>();
-
-export const columns: ColumnDef<Dataset>[] = [
-  columnHelper.accessor("slug", { header: "Slug" }) as ColumnDef<Dataset>,
-  columnHelper.accessor("dataset_type", {
-    header: "Dataset Type",
-  }) as ColumnDef<Dataset>,
-  columnHelper.display({
-    id: "esgf_link",
-    cell: (cellContext) => {
-      if (cellContext.row.original.more_info_url) {
-        return (
-          <a
-            href={cellContext.row.original.more_info_url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
-          </a>
-        );
-      }
-    },
-    header: "More Info",
-  }),
-];
+import { columns } from "./datasetColumns.tsx";
 
 interface DatasetTableProps {
   data: Dataset[];
