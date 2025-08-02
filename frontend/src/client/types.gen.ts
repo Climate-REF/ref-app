@@ -217,6 +217,14 @@ export type DatasetsListData = {
     query?: {
         offset?: number;
         limit?: number;
+        /**
+         * Filter datasets by name
+         */
+        name_contains?: string | null;
+        /**
+         * Filter datasets using a JSON blob
+         */
+        facets?: string | null;
     };
     url: '/api/v1/datasets/';
 };
@@ -291,7 +299,7 @@ export type DatasetsExecutionsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDiagnosticSummaryReadable;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type DatasetsExecutionsResponse = DatasetsExecutionsResponses[keyof DatasetsExecutionsResponses];

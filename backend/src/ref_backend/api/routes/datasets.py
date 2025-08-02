@@ -1,12 +1,13 @@
+import json
+
 from fastapi import APIRouter, HTTPException, Query
 
 from climate_ref import models
+from climate_ref_core.datasets import SourceDatasetType
 from ref_backend.api.deps import AppContextDep, SessionDep
 from ref_backend.models import (
     Collection,
     Dataset,
-    DiagnosticSummary,
-    Execution,
     ExecutionGroup,
 )
 
@@ -18,11 +19,44 @@ async def _list(
     session: SessionDep,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
+    name_contains: str = Query(None, description="Filter datasets by name"),
+    dataset_type: str = Query(
+        SourceDatasetType.CMIP6.value,
+        description="Filter datasets by the type of dataset",
+    ),
+    facets: str = Query(None, description="Filter datasets by facets (JSON string)"),
 ) -> Collection[Dataset]:
     """
     Paginated list of currently ingested datasets
     """
     dataset_query = session.query(models.Dataset)
+
+    if name_contains:
+        dataset_query = dataset_query.filter(
+            models.Dataset.slug.ilike(f"%{name_contains}%")
+        )
+
+    if dataset_type:
+        dataset_query = dataset_query.filter(
+            models.Dataset.dataset_type == dataset_type.upper()
+        )
+
+        if facets:
+            facet_filters = json.loads(facets)
+            for dataset_type_model in models.Dataset.__subclasses__():
+                if (
+                    dataset_type_model.__mapper_args__["polymorphic_identity"].value
+                    == dataset_type
+                ):
+                    for key, value in facet_filters.items():
+                        if hasattr(dataset_type_model, key):
+                            dataset_query = dataset_query.filter(
+                                getattr(dataset_type_model, key) == value
+                            )
+                    break
+    elif facets:
+        raise ValueError("Cannot filter using facets if a source type is not specified")
+
     total_count = dataset_query.count()
     datasets = dataset_query.offset(offset).limit(limit)
 
