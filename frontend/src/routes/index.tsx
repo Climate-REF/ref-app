@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import {
   datasetsListOptions,
-  executionsListOptions,
+  executionsListRecentExecutionGroupsOptions,
 } from "@/client/@tanstack/react-query.gen.ts";
 import { RecentDatasets } from "@/components/dashboard/recentDatasets.tsx";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button.tsx";
 
 const Dashboard = () => {
   const recentExecutions = useQuery(
-    executionsListOptions({ query: { limit: 10 } }),
+    executionsListRecentExecutionGroupsOptions({ query: { limit: 10 } }),
   );
   const recentDatasets = useQuery(
     datasetsListOptions({ query: { limit: 10 } }),

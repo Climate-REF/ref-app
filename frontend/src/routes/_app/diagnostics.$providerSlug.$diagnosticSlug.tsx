@@ -7,6 +7,8 @@ import {
   diagnosticsGetOptions,
   diagnosticsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
+import { diagnosticsListMetricValues } from "@/client";
+import { MetricValueCollection } from "@/components/execution/values/types";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { Values } from "@/components/execution/values";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
@@ -107,9 +109,29 @@ const DiagnosticInfo = () => {
 
         <TabsContent value="values" className="space-y-4">
           <Values
-            facets={metricValues?.facets ?? []}
-            values={metricValues?.data ?? []}
+            facets={
+              (metricValues as MetricValueCollection)?.facets ?? []
+            }
+            values={(metricValues as MetricValueCollection)?.data ?? []}
             loading={isLoading}
+            onDownload={async () => {
+              const response = await diagnosticsListMetricValues({
+                path: {
+                  provider_slug: providerSlug,
+                  diagnostic_slug: diagnosticSlug,
+                },
+                query: { format: "csv" },
+              });
+              const blob = new Blob([response as unknown as string], {
+                type: "text/csv",
+              });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `metric-values-${providerSlug}-${diagnosticSlug}.csv`;
+              a.click();
+              window.URL.revokeObjectURL(url);
+            }}
           />
         </TabsContent>
       </Tabs>

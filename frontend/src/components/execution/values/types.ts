@@ -1,25 +1,18 @@
-export type BoxPlot = {
-  min: number;
-  lowerQuartile: number;
-  median: number;
-  upperQuartile: number;
-  max: number;
-  average: number;
-  values: number[];
+export type MetricValue = {
+  dimensions: { [key: string]: string };
+  value: number;
+  attributes?: { [key: string]: string | number | null };
+  execution_group_id: number;
+  execution_id: number;
 };
 
-export interface GroupData {
-  label: string;
-  values: number[];
-}
+export type Facet = {
+  key: string;
+  values: string[];
+};
 
-// Represents the raw input for a single category on the X-axis
-export interface GroupedRawDataEntry {
-  category: string; // The label for the X-axis tick
-  groups: GroupData[];
-}
-
-export interface ProcessedGroupedDataEntry {
-  category: string; // The label for the X-axis tick
-  groups: Record<string, BoxPlot>;
-}
+export type MetricValueCollection = {
+  data: MetricValue[];
+  count: number;
+  facets: Facet[];
+};

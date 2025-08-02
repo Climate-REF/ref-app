@@ -7,6 +7,8 @@ import {
   executionsGetOptions,
   executionsMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
+import { executionsMetricValues } from "@/client";
+import { MetricValueCollection } from "@/components/execution/values/types";
 import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
 import ExecutionDatasetTable from "@/components/execution/executionDatasetTable.tsx";
@@ -176,9 +178,28 @@ const ExecutionInfo = () => {
                 </CardHeader>
                 <CardContent>
                   <Values
-                    facets={metricValues.data?.facets ?? []}
-                    values={metricValues.data?.data ?? []}
+                    facets={
+                      (metricValues.data as MetricValueCollection)?.facets ?? []
+                    }
+                    values={
+                      (metricValues.data as MetricValueCollection)?.data ?? []
+                    }
                     loading={metricValues.isLoading}
+                    onDownload={async () => {
+                      const response = await executionsMetricValues({
+                        path: { group_id: groupId },
+                        query: { execution_id: executionId, format: "csv" },
+                      });
+                      const blob = new Blob([response as unknown as string], {
+                        type: "text/csv",
+                      });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `metric-values-${groupId}.csv`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    }}
                   />
                 </CardContent>
               </Card>

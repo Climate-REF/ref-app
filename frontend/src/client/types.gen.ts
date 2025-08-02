@@ -141,11 +141,6 @@ export type ExecutionOutput = {
     url: string;
 };
 
-export type Facet = {
-    key: string;
-    values: Array<string>;
-};
-
 export type GroupBy = {
     source_type: string;
     group_by: Array<string> | null;
@@ -163,29 +158,6 @@ export type HttpValidationError = {
  */
 export type MetricDimensions = {
     [key: string]: unknown;
-};
-
-/**
- * A flattened representation of a diagnostic value
- *
- * This includes the dimensions and the value of the diagnostic
- */
-export type MetricValue = {
-    dimensions: {
-        [key: string]: string;
-    };
-    value: number | number;
-    attributes?: {
-        [key: string]: string | number | number;
-    } | null;
-    execution_group_id: number;
-    execution_id: number;
-};
-
-export type MetricValueCollection = {
-    data: Array<MetricValue>;
-    count: number;
-    facets: Array<Facet>;
 };
 
 /**
@@ -220,11 +192,15 @@ export type DatasetsListData = {
         /**
          * Filter datasets by name
          */
-        name_contains?: string | null;
+        name_contains?: string;
         /**
-         * Filter datasets using a JSON blob
+         * Filter datasets by the type of dataset
          */
-        facets?: string | null;
+        dataset_type?: string;
+        /**
+         * Filter datasets by facets (JSON string)
+         */
+        facets?: string;
     };
     url: '/api/v1/datasets/';
 };
@@ -382,7 +358,9 @@ export type DiagnosticsListMetricValuesData = {
         provider_slug: string;
         diagnostic_slug: string;
     };
-    query?: never;
+    query?: {
+        format?: string | null;
+    };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
 
@@ -399,12 +377,10 @@ export type DiagnosticsListMetricValuesResponses = {
     /**
      * Successful Response
      */
-    200: MetricValueCollection;
+    200: unknown;
 };
 
-export type DiagnosticsListMetricValuesResponse = DiagnosticsListMetricValuesResponses[keyof DiagnosticsListMetricValuesResponses];
-
-export type ExecutionsListData = {
+export type ExecutionsListRecentExecutionGroupsData = {
     body?: never;
     path?: never;
     query?: {
@@ -413,23 +389,23 @@ export type ExecutionsListData = {
     url: '/api/v1/executions/';
 };
 
-export type ExecutionsListErrors = {
+export type ExecutionsListRecentExecutionGroupsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsListError = ExecutionsListErrors[keyof ExecutionsListErrors];
+export type ExecutionsListRecentExecutionGroupsError = ExecutionsListRecentExecutionGroupsErrors[keyof ExecutionsListRecentExecutionGroupsErrors];
 
-export type ExecutionsListResponses = {
+export type ExecutionsListRecentExecutionGroupsResponses = {
     /**
      * Successful Response
      */
     200: CollectionExecutionGroupReadable;
 };
 
-export type ExecutionsListResponse = ExecutionsListResponses[keyof ExecutionsListResponses];
+export type ExecutionsListRecentExecutionGroupsResponse = ExecutionsListRecentExecutionGroupsResponses[keyof ExecutionsListRecentExecutionGroupsResponses];
 
 export type ExecutionsGetData = {
     body?: never;
@@ -579,6 +555,7 @@ export type ExecutionsMetricValuesData = {
     };
     query?: {
         execution_id?: string | null;
+        format?: string | null;
     };
     url: '/api/v1/executions/{group_id}/values';
 };
@@ -596,10 +573,8 @@ export type ExecutionsMetricValuesResponses = {
     /**
      * Successful Response
      */
-    200: MetricValueCollection;
+    200: unknown;
 };
-
-export type ExecutionsMetricValuesResponse = ExecutionsMetricValuesResponses[keyof ExecutionsMetricValuesResponses];
 
 export type ExecutionsExecutionArchiveData = {
     body?: never;

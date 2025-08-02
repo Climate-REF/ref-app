@@ -1,4 +1,9 @@
+import csv
+import io
+
 from fastapi import APIRouter, HTTPException
+from starlette.responses import StreamingResponse
+from typing import cast
 
 from climate_ref import models
 from ref_backend.api.deps import AppContextDep, SessionDep
@@ -77,21 +82,55 @@ async def list_execution_groups(
     )
 
 
-@router.get("/{provider_slug}/{diagnostic_slug}/values")
+@router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=None)
 async def list_metric_values(
-    session: SessionDep, provider_slug: str, diagnostic_slug: str
-) -> MetricValueCollection:
+    session: SessionDep,
+    provider_slug: str,
+    diagnostic_slug: str,
+    format: str | None = None,
+) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic
     """
     diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
 
-    metric_values = (
-        session.query(models.MetricValue)
+    metric_values_query = (
+        session.query(models.ScalarMetricValue)
         .join(models.Execution)
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-        .all()
     )
 
-    return MetricValueCollection.build(metric_values)
+    if format == "csv":
+        metric_values = metric_values_query.all()
+
+        def generate_csv():
+            output = io.StringIO()
+            writer = csv.writer(output)
+
+            if not metric_values:
+                yield ""
+                return
+
+            dimensions = sorted(metric_values[0].dimensions.keys())
+            header = dimensions + ["value"]
+            writer.writerow(header)
+
+            for mv in metric_values:
+                row = [mv.dimensions.get(d) for d in dimensions] + [mv.value]
+                writer.writerow(row)
+
+            output.seek(0)
+            yield output.read()
+
+        return StreamingResponse(
+            generate_csv(),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=metric_values_{provider_slug}_{diagnostic_slug}.csv"
+            },
+        )
+    else:
+        return MetricValueCollection.build(
+            cast(list[models.MetricValue], metric_values_query.all())
+        )

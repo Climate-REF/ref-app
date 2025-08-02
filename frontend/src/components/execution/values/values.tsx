@@ -1,6 +1,6 @@
-import { BarChart, Table } from "lucide-react";
+import { BarChart, Download, Table } from "lucide-react";
 import { useState } from "react";
-import type { Facet, MetricValue } from "@/client";
+import type { Facet, MetricValue } from "./types";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { useValuesProcessor } from "@/hooks/useValuesProcessor";
@@ -12,6 +12,7 @@ type ValuesProps = {
   values: MetricValue[];
   facets: Facet[];
   loading: boolean;
+  onDownload?: () => void;
 };
 
 type ViewType = "bar" | "table";
@@ -65,6 +66,12 @@ export function Values(props: ValuesProps) {
               <Table className="h-4 w-4 mr-2" />
               Table
             </Button>
+            {viewType === "table" && props.onDownload && (
+              <Button variant="outline" size="sm" onClick={props.onDownload}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            )}
           </div>
           {/* Content: Table or Chart */}
           {viewType === "table" && (

@@ -1,24 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { executionsListOptions } from "@/client/@tanstack/react-query.gen";
+import { executionsListRecentExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 
-const Executions = () => {
-  const { data } = Route.useLoaderData();
-  return (
-    <>
-      {data.map((d) => (
-        <div key={`${d.diagnostic.id}-${d.key}`}>{d.latest_execution?.id}</div>
-      ))}
-    </>
+const ExecutionsList = () => {
+  const { data } = useSuspenseQuery(
+    executionsListRecentExecutionGroupsOptions({ query: { limit: 100 } }),
   );
+  return <ExecutionGroupTable executionGroups={data.data} />;
 };
+
 export const Route = createFileRoute("/_app/executions/")({
-  component: Executions,
+  component: ExecutionsList,
   staticData: {
     title: "Executions",
   },
   loader: ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(
-      executionsListOptions({ query: { limit: 10 } }),
+      executionsListRecentExecutionGroupsOptions({ query: { limit: 100 } }),
     );
   },
 });

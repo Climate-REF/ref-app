@@ -59,7 +59,7 @@ export function DownloadOutputs({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button disabled={isLoading}>
           {isLoading ? "Downloading..." : "Download Outputs"} <ChevronDown />
         </Button>
