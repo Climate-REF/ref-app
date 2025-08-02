@@ -40,6 +40,18 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
     },
   },
   {
+    accessorKey: "diagnostic.name",
+    header: "Diagnostic",
+  },
+  {
+    accessorKey: "diagnostic.provider.name",
+    header: "Provider",
+  },
+  {
+    accessorKey: "key",
+    header: "Key",
+  },
+  {
     header: "Datasets",
     accessorFn: (row) => row.latest_execution?.dataset_count,
   },
@@ -81,20 +93,17 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   }),
 ];
 
-interface ExecutionListTableProps {
-  providerSlug: string;
-  diagnosticSlug: string;
+interface ExecutionGroupTableProps {
+  executionGroups?: ExecutionGroup[];
+  providerSlug?: string;
+  diagnosticSlug?: string;
 }
 
 function ExecutionGroupTable({
+  executionGroups,
   providerSlug,
   diagnosticSlug,
-}: ExecutionListTableProps) {
-  const { data, isLoading } = useSuspenseQuery(
-    diagnosticsListExecutionGroupsOptions({
-      path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
-    }),
-  );
+}: ExecutionGroupTableProps) {
   const navigate = useNavigate();
 
   const handleRowClick = (row: ExecutionGroup) => {
@@ -104,25 +113,34 @@ function ExecutionGroupTable({
     });
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Execution Groups</CardTitle>
-        <CardDescription className={"max-w-3/4"}>
-          An Execution Group represents a unique combination of datasets used to
-          execute a specific diagnostic. Each group can have multiple results
-          associated with it as new datasets are added or removed.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          data={data?.data ?? []}
-          columns={columns}
-          loading={isLoading}
-          onRowClick={handleRowClick}
-        />
-      </CardContent>
-    </Card>
-  );
+  if (providerSlug && diagnosticSlug) {
+    const { data, isLoading } = useSuspenseQuery(
+      diagnosticsListExecutionGroupsOptions({
+        path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+      }),
+    );
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Execution Groups</CardTitle>
+          <CardDescription className={"max-w-3/4"}>
+            An Execution Group represents a unique combination of datasets used to
+            execute a specific diagnostic. Each group can have multiple results
+            associated with it as new datasets are added or removed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            data={data?.data ?? []}
+            columns={columns}
+            loading={isLoading}
+            onRowClick={handleRowClick}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <DataTable data={executionGroups ?? []} columns={columns} />;
 }
 export default ExecutionGroupTable;

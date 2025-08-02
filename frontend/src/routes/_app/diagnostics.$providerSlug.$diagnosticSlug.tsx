@@ -7,7 +7,7 @@ import {
   diagnosticsGetOptions,
   diagnosticsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
-import ExecutionGroupTable from "@/components/diagnostics/executionGroupTable.tsx";
+import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { Values } from "@/components/execution/values";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {

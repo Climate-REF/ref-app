@@ -1,4 +1,3 @@
-import React from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ExecutionGroup } from "@/client";
@@ -6,27 +5,32 @@ import {
   datasetsExecutionsOptions,
   datasetsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
-import ExecutionGroupList from "@/components/execution/executionGroupList.tsx";
+import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 export const Route = createFileRoute("/_app/datasets/$slug")({
   loader: async ({ params, context: { queryClient } }) => {
-      const slug = params.slug;
-      const dataset = await queryClient.ensureQueryData(
-        datasetsGetOptions({ path: { slug: slug } }),
-      );
-      await queryClient.invalidateQueries({
-        queryKey: datasetsExecutionsOptions({
-          path: { dataset_id: dataset.id },
-        }).queryKey,
-      });
-      const executions = await queryClient.ensureQueryData(
-        datasetsExecutionsOptions({ path: { dataset_id: dataset.id } }),
-      );
-      return { dataset, executions };
-    },
+    const slug = params.slug;
+    const dataset = await queryClient.ensureQueryData(
+      datasetsGetOptions({ path: { slug: slug } }),
+    );
+    await queryClient.invalidateQueries({
+      queryKey: datasetsExecutionsOptions({
+        path: { dataset_id: dataset.id },
+      }).queryKey,
+    });
+    const executions = await queryClient.ensureQueryData(
+      datasetsExecutionsOptions({ path: { dataset_id: dataset.id } }),
+    );
+    return { dataset, executions };
+  },
   component: DatasetPage,
   errorComponent: ({ error }) => {
     return <div>Error: {error.message}</div>;
@@ -82,7 +86,7 @@ function DatasetPage() {
           <CardTitle>Executions</CardTitle>
         </CardHeader>
         <CardContent>
-          <ExecutionGroupList executionGroups={exs} />
+          <ExecutionGroupTable executionGroups={exs} />
         </CardContent>
       </Card>
     </div>

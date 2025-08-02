@@ -45,12 +45,15 @@ export const columns: ColumnDef<Dataset>[] = [
   }),
 ];
 
-interface DatasetTableProps {
+interface ExecutionDatasetTableProps {
   groupId: string;
   executionId?: string;
 }
 
-function DatasetTable({ groupId, executionId }: DatasetTableProps) {
+function ExecutionDatasetTable({
+  groupId,
+  executionId,
+}: ExecutionDatasetTableProps) {
   const { data } = useQuery(
     executionsExecutionDatasetsOptions({
       path: { group_id: groupId },
@@ -59,4 +62,4 @@ function DatasetTable({ groupId, executionId }: DatasetTableProps) {
   );
   return <DataTable data={data?.data ?? []} columns={columns} />;
 }
-export default DatasetTable;
+export default ExecutionDatasetTable;

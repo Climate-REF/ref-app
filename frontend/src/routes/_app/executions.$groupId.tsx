@@ -1,7 +1,6 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import type * as React from "react";
 import { z } from "zod";
 import {
   executionsExecutionOptions,
@@ -9,8 +8,8 @@ import {
   executionsMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
 import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
-import DatasetTable from "@/components/execution/datasetTable.tsx";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
+import ExecutionDatasetTable from "@/components/execution/executionDatasetTable.tsx";
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs";
 import { Values } from "@/components/execution/values";
@@ -151,7 +150,10 @@ const ExecutionInfo = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <DatasetTable groupId={groupId} executionId={executionId} />
+                  <ExecutionDatasetTable
+                    groupId={groupId}
+                    executionId={executionId}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
