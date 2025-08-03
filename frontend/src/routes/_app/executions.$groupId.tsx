@@ -75,6 +75,7 @@ const ExecutionInfo = () => {
                 Overview of the execution of a group for{" "}
                 <Link
                   to="/diagnostics/$providerSlug/$diagnosticSlug"
+                  className="underline"
                   params={{
                     providerSlug: data.diagnostic.provider.slug,
                     diagnosticSlug: data.diagnostic.slug,
