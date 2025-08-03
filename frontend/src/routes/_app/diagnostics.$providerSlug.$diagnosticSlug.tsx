@@ -3,14 +3,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import type { GroupBy } from "@/client";
+import { diagnosticsListMetricValues } from "@/client";
 import {
   diagnosticsGetOptions,
   diagnosticsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
-import { diagnosticsListMetricValues } from "@/client";
-import { MetricValueCollection } from "@/components/execution/values/types";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { Values } from "@/components/execution/values";
+import type { MetricValueCollection } from "@/components/execution/values/types";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {
   Card,
@@ -109,9 +109,7 @@ const DiagnosticInfo = () => {
 
         <TabsContent value="values" className="space-y-4">
           <Values
-            facets={
-              (metricValues as MetricValueCollection)?.facets ?? []
-            }
+            facets={(metricValues as MetricValueCollection)?.facets ?? []}
             values={(metricValues as MetricValueCollection)?.data ?? []}
             loading={isLoading}
             onDownload={async () => {

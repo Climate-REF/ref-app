@@ -5,10 +5,10 @@ import os
 import tarfile
 import tempfile
 from pathlib import Path
+from typing import cast
 
 from fastapi import APIRouter, HTTPException
 from starlette.responses import StreamingResponse
-from typing import cast
 
 from climate_ref import models
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -187,7 +187,7 @@ async def metric_values(
 
             # Use the dimensions from the first metric value to build the header
             dimensions = sorted(metric_values[0].dimensions.keys())
-            header = dimensions + ["value"]
+            header = [*dimensions, "value"]
             writer.writerow(header)
 
             for mv in metric_values:

@@ -15,7 +15,7 @@ router = APIRouter(prefix="/datasets", tags=["datasets"])
 
 
 @router.get("/", name="list")
-async def _list(
+async def _list(  # noqa: PLR0913
     session: SessionDep,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),

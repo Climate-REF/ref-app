@@ -1,9 +1,9 @@
 import csv
 import io
+from typing import cast
 
 from fastapi import APIRouter, HTTPException
 from starlette.responses import StreamingResponse
-from typing import cast
 
 from climate_ref import models
 from ref_backend.api.deps import AppContextDep, SessionDep
@@ -113,7 +113,7 @@ async def list_metric_values(
                 return
 
             dimensions = sorted(metric_values[0].dimensions.keys())
-            header = dimensions + ["value"]
+            header = [*dimensions, "value"]
             writer.writerow(header)
 
             for mv in metric_values:
@@ -127,7 +127,8 @@ async def list_metric_values(
             generate_csv(),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=metric_values_{provider_slug}_{diagnostic_slug}.csv"
+                "Content-Disposition": f"attachment; "
+                f"filename=metric_values_{provider_slug}_{diagnostic_slug}.csv"
             },
         )
     else:

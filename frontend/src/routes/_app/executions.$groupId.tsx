@@ -2,19 +2,19 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { z } from "zod";
+import { executionsMetricValues } from "@/client";
 import {
   executionsExecutionOptions,
   executionsGetOptions,
   executionsMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
-import { executionsMetricValues } from "@/client";
-import { MetricValueCollection } from "@/components/execution/values/types";
 import ExecutionsTable from "@/components/diagnostics/executionsTable.tsx";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
 import ExecutionDatasetTable from "@/components/execution/executionDatasetTable.tsx";
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs";
 import { Values } from "@/components/execution/values";
+import type { MetricValueCollection } from "@/components/execution/values/types";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

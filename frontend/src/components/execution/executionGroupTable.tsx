@@ -99,11 +99,15 @@ interface ExecutionGroupTableProps {
   diagnosticSlug?: string;
 }
 
-function ExecutionGroupTable({
-  executionGroups,
+interface ExecutionGroupTableWithQueryProps {
+  providerSlug: string;
+  diagnosticSlug: string;
+}
+
+function ExecutionGroupTableWithQuery({
   providerSlug,
   diagnosticSlug,
-}: ExecutionGroupTableProps) {
+}: ExecutionGroupTableWithQueryProps) {
   const navigate = useNavigate();
 
   const handleRowClick = (row: ExecutionGroup) => {
@@ -113,34 +117,63 @@ function ExecutionGroupTable({
     });
   };
 
+  const { data, isLoading } = useSuspenseQuery(
+    diagnosticsListExecutionGroupsOptions({
+      path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+    }),
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Execution Groups</CardTitle>
+        <CardDescription className={"max-w-3/4"}>
+          An Execution Group represents a unique combination of datasets used to
+          execute a specific diagnostic. Each group can have multiple results
+          associated with it as new datasets are added or removed.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <DataTable
+          data={data?.data ?? []}
+          columns={columns}
+          loading={isLoading}
+          onRowClick={handleRowClick}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ExecutionGroupTable({
+  executionGroups,
+  providerSlug,
+  diagnosticSlug,
+}: ExecutionGroupTableProps) {
+  const navigate = useNavigate();
+
   if (providerSlug && diagnosticSlug) {
-    const { data, isLoading } = useSuspenseQuery(
-      diagnosticsListExecutionGroupsOptions({
-        path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
-      }),
-    );
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Execution Groups</CardTitle>
-          <CardDescription className={"max-w-3/4"}>
-            An Execution Group represents a unique combination of datasets used to
-            execute a specific diagnostic. Each group can have multiple results
-            associated with it as new datasets are added or removed.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={data?.data ?? []}
-            columns={columns}
-            loading={isLoading}
-            onRowClick={handleRowClick}
-          />
-        </CardContent>
-      </Card>
+      <ExecutionGroupTableWithQuery
+        providerSlug={providerSlug}
+        diagnosticSlug={diagnosticSlug}
+      />
     );
   }
 
-  return <DataTable data={executionGroups ?? []} columns={columns} />;
+  const handleRowClick = (row: ExecutionGroup) => {
+    navigate({
+      to: "/executions/$groupId",
+      params: { groupId: row.id.toString() },
+    });
+  };
+
+  return (
+    <DataTable
+      data={executionGroups ?? []}
+      columns={columns}
+      onRowClick={handleRowClick}
+    />
+  );
 }
 export default ExecutionGroupTable;

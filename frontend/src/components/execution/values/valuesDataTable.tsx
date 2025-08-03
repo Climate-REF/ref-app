@@ -11,9 +11,9 @@ import {
 } from "@tanstack/react-table";
 import { Eye, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Facet, MetricValue } from "@/components/execution/values/types";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
+import type { Facet, MetricValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {

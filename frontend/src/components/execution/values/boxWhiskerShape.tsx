@@ -38,14 +38,8 @@ export function BoxWhiskerShape({
     return null; // Don't render if data or scale is missing
   }
 
-  const {
-    min,
-    lowerQuartile,
-    median,
-    upperQuartile,
-    max,
-    values,
-  } = payload.groups[prefix];
+  const { min, lowerQuartile, median, upperQuartile, max, values } =
+    payload.groups[prefix];
 
   // Calculate pixel coordinates for each value
   const scale = scaleLinear(yDomain, [props.background?.height, 0]);

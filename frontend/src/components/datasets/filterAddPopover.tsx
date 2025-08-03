@@ -1,3 +1,5 @@
+import { PlusCircle } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,8 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
-import { useState } from "react";
 
 interface FilterAddPopoverProps {
   facets: Record<string, string[]>;
@@ -63,12 +63,11 @@ export function FilterAddPopover({
                   <SelectValue placeholder="Select a value" />
                 </SelectTrigger>
                 <SelectContent>
-                  {facets[selectedFacet] &&
-                    facets[selectedFacet].map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
+                  {facets[selectedFacet]?.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             )}

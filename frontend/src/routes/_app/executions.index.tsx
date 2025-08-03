@@ -1,6 +1,6 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { executionsListRecentExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 
 const ExecutionsList = () => {

@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
 import { type ComponentProps, useEffect, useState } from "react";
-import { Facet } from "@/components/execution/values/types";
+import type { Facet } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {

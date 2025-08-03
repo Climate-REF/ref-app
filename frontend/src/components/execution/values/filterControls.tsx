@@ -1,8 +1,8 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 import { PlusCircle, X } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import { Facet } from "@/components/execution/values/types";
 import { FilterAddPopover } from "@/components/execution/values/filterAddPopover.tsx";
+import type { Facet } from "@/components/execution/values/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Filter } from "@/hooks/useValuesProcessor";
