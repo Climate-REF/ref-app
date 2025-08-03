@@ -1,6 +1,6 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 import { type SetStateAction, useMemo, useState } from "react";
-import type { MetricValue } from "@/client";
+import type { MetricValue } from "@/components/execution/values/types";
 
 // Define types used by the hook
 export type ProcessedMetricValue = MetricValue & { rowId: string };

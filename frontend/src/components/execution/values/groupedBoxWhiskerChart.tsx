@@ -13,7 +13,7 @@ import type {
   BoxPlot,
   GroupedRawDataEntry,
   ProcessedGroupedDataEntry,
-} from "./types.ts"; // Import new types
+} from "./types"; // Import new types
 
 // Helper to generate distinct colors (replace with a proper palette if needed)
 const defaultColors = [
@@ -55,7 +55,6 @@ export const calculateBoxPlotData = (values: number[]): BoxPlot => {
 
   const min = sortedData[0];
   const max = sortedData[n - 1];
-  const average = sortedData.reduce((a, b) => a + b, 0) / n;
 
   const median = calculateMedian(sortedData);
 
@@ -82,8 +81,7 @@ export const calculateBoxPlotData = (values: number[]): BoxPlot => {
     median,
     upperQuartile,
     max,
-    average,
-    values,
+    values: sortedData, // Add values back to BoxPlot
   };
 };
 
@@ -115,7 +113,7 @@ export const GroupedBoxWhiskerChart = ({
   const processedData = useMemo((): ProcessedGroupedDataEntry[] => {
     return data.map((entry) => {
       const processedEntry: ProcessedGroupedDataEntry = {
-        category: entry.category,
+        name: entry.name,
         groups: {},
       };
       for (const group of entry.groups) {
@@ -174,7 +172,7 @@ export const GroupedBoxWhiskerChart = ({
           // barGap={4} // Gap between bars within the same category
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="category" />
+          <XAxis dataKey="name" />
           <YAxis domain={yDomain} allowDataOverflow={true} />
           {/*<Tooltip*/}
           {/*  content={<CustomGroupedTooltip groupMeta={groupMeta} />}*/}
@@ -186,7 +184,7 @@ export const GroupedBoxWhiskerChart = ({
             <Bar
               key={groupName}
               dataKey={(d: ProcessedGroupedDataEntry) => {
-                return d.groups[groupName]?.average;
+                return d.groups[groupName]?.median;
               }}
               name={groupName}
               fill={groupMeta.colors[groupName]}

@@ -1,6 +1,6 @@
 import { scaleLinear } from "d3-scale";
 import { Cross } from "recharts";
-import type { ProcessedGroupedDataEntry } from "@/components/execution/values/types.ts";
+import type { ProcessedGroupedDataEntry } from "./types";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
@@ -38,8 +38,14 @@ export function BoxWhiskerShape({
     return null; // Don't render if data or scale is missing
   }
 
-  const { min, lowerQuartile, median, upperQuartile, max, values } =
-    payload.groups[prefix];
+  const {
+    min,
+    lowerQuartile,
+    median,
+    upperQuartile,
+    max,
+    values,
+  } = payload.groups[prefix];
 
   // Calculate pixel coordinates for each value
   const scale = scaleLinear(yDomain, [props.background?.height, 0]);
@@ -54,7 +60,7 @@ export function BoxWhiskerShape({
   const boxX = x; // Box starts at the calculated x
 
   function scatterValues(color: string, strokeWidth = 1) {
-    return values.map((v) => (
+    return values.map((v: number) => (
       <Cross
         key={v}
         strokeWidth={strokeWidth}

@@ -1,7 +1,6 @@
 import { Axis3D, Download, Group } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Facet, MetricValue } from "@/client";
-import type { GroupedRawDataEntry } from "@/components/execution/values/types.ts";
+import type { Facet, MetricValue, GroupedRawDataEntry } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
 import { FacetSelect } from "./facetSelect";
 import { GroupedBoxWhiskerChart } from "./groupedBoxWhiskerChart";
@@ -33,7 +32,6 @@ export function ValuesFigure({
     }
 
     const chartData: GroupedRawDataEntry[] = xFacet.values.map((x) => {
-      /// Find the values for a given x-axis group
       const matches = values
         .filter(
           (value) =>
@@ -53,7 +51,7 @@ export function ValuesFigure({
       }));
 
       return {
-        category: x,
+        name: x,
         groups,
       };
     });
