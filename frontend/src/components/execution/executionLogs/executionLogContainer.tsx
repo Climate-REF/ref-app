@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import { executionsExecutionLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,6 +81,44 @@ export function ExecutionLogContainer({
     }),
   );
 
+  const [logContent, setLogContent] = useState<string>("");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    if (data instanceof ReadableStream) {
+      setIsStreaming(true);
+      const reader = data.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = "";
+
+      const processStream = async () => {
+        // biome-ignore lint/correctness/noConstantCondition: stream reading
+        while (true) {
+          try {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            accumulatedContent += decoder.decode(value, { stream: true });
+            setLogContent(accumulatedContent);
+          } catch (e) {
+            console.error("Error reading stream:", e);
+            break;
+          }
+        }
+        setIsStreaming(false);
+      };
+
+      processStream();
+    } else if (typeof data === "string") {
+      setLogContent(data);
+    }
+  }, [data]);
+
   if (error) {
     return (
       <Card>
@@ -93,6 +132,9 @@ export function ExecutionLogContainer({
     );
   }
 
+  const isBusy = isLoading || isStreaming;
+  const parsedLogs = parseLogOutput(logContent);
+
   return (
     <Card>
       <CardHeader>
@@ -102,10 +144,10 @@ export function ExecutionLogContainer({
             <CardDescription>Log output during the execution.</CardDescription>
           </div>
           <Button
-            variant={isLoading ? "ghost" : "outline"}
-            disabled={isLoading}
+            variant={isBusy ? "ghost" : "outline"}
+            disabled={isBusy}
             size="sm"
-            onClick={() => handleDownload(data as string, "logs.txt")}
+            onClick={() => handleDownload(logContent, "logs.txt")}
           >
             <Download className="mr-2 h-4 w-4" />
             Download Logs
@@ -113,10 +155,10 @@ export function ExecutionLogContainer({
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isLoading && !logContent ? (
           <Skeleton className="h-40" />
         ) : (
-          <ExecutionLogView logs={parseLogOutput((data as string) ?? "")} />
+          <ExecutionLogView logs={parsedLogs} />
         )}
       </CardContent>
     </Card>
