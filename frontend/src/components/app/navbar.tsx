@@ -2,13 +2,13 @@
 
 import { Link } from "@tanstack/react-router";
 import { NavbarLogo } from "@/components/app/navbarLogo.tsx";
-
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils.ts";
 
 function NavItem({ title, to }: { title: string; to: string }) {
   return (
@@ -22,15 +22,16 @@ function NavItem({ title, to }: { title: string; to: string }) {
 
 export function Navbar() {
   return (
-    <NavigationMenu className="w-screen justify-start gap-4 px-8">
-      <div className="flex items-center justify-between">
-        <NavbarLogo />
-        <h1 className="font-display font-bold text-xl ">
-          Rapid Evaluation Framework
-        </h1>
-      </div>
+    <NavigationMenu className="w-screen justify-start gap-4 px-8 py-4">
+      <Link to={"/"} className={cn(navigationMenuTriggerStyle(), "relative")}>
+        <div className="flex items-center justify-between">
+          <NavbarLogo />
+          <h1 className="font-display font-medium text-lg">
+            Rapid Evaluation Framework
+          </h1>
+        </div>
+      </Link>
       <NavigationMenuList>
-        <NavItem title="Home" to={"/"} />
         <NavItem title="Diagnostics" to={"/diagnostics"} />
         <NavItem title="By Source" to={"/source"} />
         <NavItem title="By Dataset" to={"/datasets"} />
