@@ -35,7 +35,13 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_HOST: str = "http://localhost:8000"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    DIAGNOSTIC_PROVIDERS: list[str] | None = None
+    """
+    Limit the diagnostics to only query the providers defined in this list.
 
+    If this is not set, all diagnostics will be returned.
+    """
+ 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
@@ -49,7 +55,7 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Climate Rapid Evaluation Framework"
     SENTRY_DSN: HttpUrl | None = None
-    REF_CONFIGURATION: str
+    REF_CONFIGURATION: str = "data"
     STATIC_DIR: str | None = None
     USE_TEST_DATA: bool = False
     """

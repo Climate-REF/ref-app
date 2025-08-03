@@ -18,10 +18,14 @@ router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
 
 async def _get_diagnostic(
-    session, provider_slug: str, diagnostic_slug: str
+    app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
 ) -> models.Diagnostic:
+    if app_context.settings.DIAGNOSTIC_PROVIDERS:
+        if provider_slug not in app_context.settings.DIAGNOSTIC_PROVIDERS:
+            raise HTTPException(status_code=404, detail="Metric not found")
+
     diagnostic = (
-        session.query(models.Diagnostic)
+        app_context.session.query(models.Diagnostic)
         .join(models.Diagnostic.provider)
         .filter(
             models.Diagnostic.slug == diagnostic_slug,
@@ -39,7 +43,13 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     """
     List the currently registered diagnostics
     """
-    diagnostics = app_context.session.query(models.Diagnostic).all()
+    diagnostics_query = app_context.session.query(models.Diagnostic)
+    if app_context.settings.DIAGNOSTIC_PROVIDERS:
+        diagnostics_query = diagnostics_query.join(models.Provider).filter(
+            models.Provider.slug.in_(app_context.settings.DIAGNOSTIC_PROVIDERS)
+        )
+
+    diagnostics = diagnostics_query.all()
 
     return Collection(
         data=[DiagnosticSummary.build(m, app_context) for m in diagnostics]
@@ -53,9 +63,7 @@ async def get(
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(
-        app_context.session, provider_slug, diagnostic_slug
-    )
+    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
     return DiagnosticSummary.build(diagnostic, app_context)
 
@@ -67,9 +75,7 @@ async def list_execution_groups(
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(
-        app_context.session, provider_slug, diagnostic_slug
-    )
+    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
     execution_groups = (
         app_context.session.query(models.ExecutionGroup)
@@ -84,7 +90,7 @@ async def list_execution_groups(
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=None)
 async def list_metric_values(
-    session: SessionDep,
+    app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
     format: str | None = None,
@@ -92,10 +98,10 @@ async def list_metric_values(
     """
     Get all the diagnostic values for a given diagnostic
     """
-    diagnostic = await _get_diagnostic(session, provider_slug, diagnostic_slug)
+    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
     metric_values_query = (
-        session.query(models.ScalarMetricValue)
+        app_context.session.query(models.ScalarMetricValue)
         .join(models.Execution)
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
