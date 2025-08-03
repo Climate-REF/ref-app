@@ -74,12 +74,13 @@ export function ExecutionLogContainer({
   groupId,
   executionId,
 }: ExecutionLogContainerProps) {
-  const { data, isLoading, error } = useQuery(
-    executionsExecutionLogsOptions({
+  const { data, isLoading, error } = useQuery({
+    ...executionsExecutionLogsOptions({
       path: { group_id: groupId },
       query: { execution_id: executionId },
     }),
-  );
+    gcTime: 0,
+  });
 
   const [logContent, setLogContent] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -90,30 +91,42 @@ export function ExecutionLogContainer({
     }
 
     if (data instanceof ReadableStream) {
+      // Ensure we don't try to read a locked stream
+      if (data.locked) {
+        return;
+      }
       setIsStreaming(true);
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let accumulatedContent = "";
+      setLogContent(""); // Reset for new stream
 
       const processStream = async () => {
-        // biome-ignore lint/correctness/noConstantCondition: stream reading
-        while (true) {
-          try {
+        try {
+          while (true) {
             const { done, value } = await reader.read();
             if (done) {
               break;
             }
             accumulatedContent += decoder.decode(value, { stream: true });
             setLogContent(accumulatedContent);
-          } catch (e) {
-            console.error("Error reading stream:", e);
-            break;
           }
+        } catch (e) {
+          // Log error if it's not a user-initiated cancellation
+          if (e instanceof Error && e.name !== "AbortError") {
+            console.error("Error reading stream:", e);
+          }
+        } finally {
+          setIsStreaming(false);
         }
-        setIsStreaming(false);
       };
 
       processStream();
+
+      return () => {
+        reader.cancel();
+      };
+      // biome-ignore lint/style/noUselessElse: Handled elsewhere
     } else if (typeof data === "string") {
       setLogContent(data);
     }
