@@ -1,12 +1,13 @@
 import {
-  ExplorerCard,
+  type ExplorerCard,
   ExplorerThemeLayout,
 } from "./_components/explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
-    {
+  {
     title: "Warming Levels",
-    description: "Climate conditions at different global warming levels, relevant to policy targets.",
+    description:
+      "Climate conditions at different global warming levels, relevant to policy targets.",
     content: [
       {
         type: "ensemble-chart",

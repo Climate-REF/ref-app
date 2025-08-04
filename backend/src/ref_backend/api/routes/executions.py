@@ -28,7 +28,7 @@ router = APIRouter(prefix="/executions", tags=["executions"])
 
 
 @router.get("/")
-async def list_recent_execution_groups(
+async def list_recent_execution_groups(  # noqa: PLR0913
     app_context: AppContextDep,
     limit: int = 10,
     offset: int = 0,

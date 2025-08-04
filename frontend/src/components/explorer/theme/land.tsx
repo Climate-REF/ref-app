@@ -1,12 +1,13 @@
 import {
-  ExplorerCard,
+  type ExplorerCard,
   ExplorerThemeLayout,
 } from "./_components/explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {
     title: "Terrestrial Carbon Cycle",
-    description: "The exchange of carbon between the land surface and the atmosphere.",
+    description:
+      "The exchange of carbon between the land surface and the atmosphere.",
     content: [
       {
         type: "ensemble-chart",
@@ -29,7 +30,7 @@ const cards: ExplorerCard[] = [
         title: "Soil Carbon",
         metricUnits: "kgC/m^2",
       },
-       {
+      {
         type: "ensemble-chart",
         provider: "ilamb",
         diagnostic: "burntFractionAll-GFED",
@@ -38,9 +39,10 @@ const cards: ExplorerCard[] = [
       },
     ],
   },
-   {
+  {
     title: "Land Surface & Hydrology",
-    description: "Properties of the land surface including snow, soil moisture, and runoff.",
+    description:
+      "Properties of the land surface including snow, soil moisture, and runoff.",
     content: [
       {
         type: "ensemble-chart",
@@ -56,14 +58,14 @@ const cards: ExplorerCard[] = [
         title: "Surface Soil Moisture",
         metricUnits: "kg/m^2",
       },
-       {
+      {
         type: "ensemble-chart",
         provider: "ilamb",
         diagnostic: "mrro-lora",
         title: "Total Runoff",
         metricUnits: "kg/m^2/s",
       },
-       {
+      {
         type: "ensemble-chart",
         provider: "ilamb",
         diagnostic: "lai-avh15c1",
@@ -73,7 +75,6 @@ const cards: ExplorerCard[] = [
     ],
   },
 ];
-
 
 export function LandTheme() {
   return <ExplorerThemeLayout cards={cards} />;

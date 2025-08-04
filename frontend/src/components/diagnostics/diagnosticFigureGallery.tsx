@@ -1,13 +1,15 @@
 import { useState } from "react";
+import type { Execution } from "@/client/types.gen.ts";
 import { Figure } from "@/components/execution/executionFiles/figure.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import type { Execution } from "@/client/types.gen.ts";
 
 interface DiagnosticFigureGalleryProps {
   executions: Execution[];
 }
 
-export function DiagnosticFigureGallery({ executions }: DiagnosticFigureGalleryProps) {
+export function DiagnosticFigureGallery({
+  executions,
+}: DiagnosticFigureGalleryProps) {
   const [filter, setFilter] = useState("");
 
   const figures = executions.flatMap((execution) =>
@@ -19,7 +21,7 @@ export function DiagnosticFigureGallery({ executions }: DiagnosticFigureGalleryP
         try {
           const regex = new RegExp(filter, "i");
           return regex.test(output.description);
-        } catch (e) {
+        } catch (_e) {
           // Invalid regex, don't filter
           return true;
         }

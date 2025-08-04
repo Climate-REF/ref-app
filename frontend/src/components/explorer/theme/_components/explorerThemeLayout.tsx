@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import {
-  EnsembleChartCard,
-  EnsembleChartCardSkeleton,
-} from "@/components/diagnostics/ensembleChartCard.tsx";
-import {
   DiagnosticFigureGalleryCard,
   DiagnosticFigureGalleryCardSkeleton,
 } from "@/components/diagnostics/diagnosticFigureGalleryCard.tsx";
+import {
+  EnsembleChartCard,
+  EnsembleChartCardSkeleton,
+} from "@/components/diagnostics/ensembleChartCard.tsx";
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 
-export type CardContent = (
+export type ExplorerCardContent =
   | {
       type: "ensemble-chart";
       provider: string;
@@ -35,13 +35,12 @@ export type CardContent = (
       title: string;
       description?: string;
       span?: 1 | 2;
-    }
-);
+    };
 
 export type ExplorerCard = {
   title: string;
   description?: string;
-  content: CardContent[];
+  content: ExplorerCardContent[];
 };
 
 interface ExplorerThemeLayoutProps {
@@ -62,41 +61,46 @@ export const ExplorerThemeLayout = ({ cards }: ExplorerThemeLayoutProps) => {
           <CardContent>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {card.content.map((contentItem) => {
-                const spanClass = contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
+                const spanClass =
+                  contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
                 if (contentItem.type === "ensemble-chart") {
                   return (
-                    <div key={`${card.title}:${contentItem.diagnostic}`} className={spanClass}>
-                    <Suspense
-                      fallback={<EnsembleChartCardSkeleton />}
+                    <div
+                      key={`${card.title}:${contentItem.diagnostic}`}
+                      className={spanClass}
                     >
-                      <EnsembleChartCard
-                        providerSlug={contentItem.provider}
-                        diagnosticSlug={contentItem.diagnostic}
-                        metricName={contentItem.title}
-                        metricUnits={contentItem.metricUnits ?? "unitless"}
-                        title={contentItem.title}
-                        xAxis={contentItem.xAxis}
-                        otherFilters={contentItem.otherFilters}
-                        clipMin={contentItem.clipMin}
-                        clipMax={contentItem.clipMax}
-                      />
-                    </Suspense>
+                      <Suspense fallback={<EnsembleChartCardSkeleton />}>
+                        <EnsembleChartCard
+                          providerSlug={contentItem.provider}
+                          diagnosticSlug={contentItem.diagnostic}
+                          metricName={contentItem.title}
+                          metricUnits={contentItem.metricUnits ?? "unitless"}
+                          title={contentItem.title}
+                          xAxis={contentItem.xAxis}
+                          otherFilters={contentItem.otherFilters}
+                          clipMin={contentItem.clipMin}
+                          clipMax={contentItem.clipMax}
+                        />
+                      </Suspense>
                     </div>
                   );
                 }
                 if (contentItem.type === "figure-gallery") {
-                   return (
-                     <div key={`${card.title}:${contentItem.diagnostic}`} className={spanClass}>
-                    <Suspense
-                      fallback={<DiagnosticFigureGalleryCardSkeleton />}
+                  return (
+                    <div
+                      key={`${card.title}:${contentItem.diagnostic}`}
+                      className={spanClass}
                     >
-                      <DiagnosticFigureGalleryCard
-                        providerSlug={contentItem.provider}
-                        diagnosticSlug={contentItem.diagnostic}
-                        title={contentItem.title}
-                        description={contentItem.description}
-                      />
-                    </Suspense>
+                      <Suspense
+                        fallback={<DiagnosticFigureGalleryCardSkeleton />}
+                      >
+                        <DiagnosticFigureGalleryCard
+                          providerSlug={contentItem.provider}
+                          diagnosticSlug={contentItem.diagnostic}
+                          title={contentItem.title}
+                          description={contentItem.description}
+                        />
+                      </Suspense>
                     </div>
                   );
                 }

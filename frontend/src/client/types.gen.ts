@@ -111,6 +111,9 @@ export type DiagnosticSummary = {
     name: string;
     description: string;
     execution_groups: Array<number>;
+    has_metric_values: boolean;
+    execution_count: number;
+    successful_execution_count: number;
     group_by: Array<GroupBy>;
 };
 

@@ -1,12 +1,13 @@
 import {
-  ExplorerCard,
+  type ExplorerCard,
   ExplorerThemeLayout,
 } from "./_components/explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {
     title: "Ocean State",
-    description: "Key indicators of ocean health, circulation, and heat content.",
+    description:
+      "Key indicators of ocean health, circulation, and heat content.",
     content: [
       {
         type: "ensemble-chart",

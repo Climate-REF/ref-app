@@ -75,10 +75,10 @@ async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
     for dimension_name in models.ScalarMetricValue._cv_dimensions:
         dimension_query = text(f"""
             SELECT DISTINCT {dimension_name}
-            FROM {models.ScalarMetricValue.__tablename__} 
+            FROM {models.ScalarMetricValue.__tablename__}
             WHERE {dimension_name} IS NOT NULL
             ORDER BY {dimension_name}
-        """)
+        """)  # noqa: S608
         dimension_result = app_context.session.execute(dimension_query).fetchall()
         dimension_summary[dimension_name] = [row[0] for row in dimension_result]
 

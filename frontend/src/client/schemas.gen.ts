@@ -278,6 +278,18 @@ export const DiagnosticSummarySchema = {
             type: 'array',
             title: 'Execution Groups'
         },
+        has_metric_values: {
+            type: 'boolean',
+            title: 'Has Metric Values'
+        },
+        execution_count: {
+            type: 'integer',
+            title: 'Execution Count'
+        },
+        successful_execution_count: {
+            type: 'integer',
+            title: 'Successful Execution Count'
+        },
         group_by: {
             items: {
                 '$ref': '#/components/schemas/GroupBy'
@@ -287,7 +299,7 @@ export const DiagnosticSummarySchema = {
         }
     },
     type: 'object',
-    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'group_by'],
+    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'has_metric_values', 'execution_count', 'successful_execution_count', 'group_by'],
     title: 'DiagnosticSummary',
     description: 'A unique provider'
 } as const;

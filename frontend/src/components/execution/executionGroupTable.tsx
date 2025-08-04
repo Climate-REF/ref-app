@@ -6,7 +6,6 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { cn } from "@/lib/tanstack-query-ext.ts";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
   Card,
@@ -15,12 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -36,11 +29,12 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
           {Object.entries(selectors).map(([sourceType, values]) => (
             <div className="flex gap-2 flex-wrap" key={sourceType}>
               {values.map(([key, value]) => (
-                <span className="inline-flex max-w-[260px] truncate" title={`${sourceType}:${key} = ${value}`}>
-                  <SourceTypeBadge
-                    sourceType={sourceType}
-                    key={key}
-                  >
+                <span
+                  key={`${sourceType}:${key}`}
+                  className="inline-flex max-w-[260px] truncate"
+                  title={`${sourceType}:${key} = ${value}`}
+                >
+                  <SourceTypeBadge sourceType={sourceType} key={key}>
                     {value}
                   </SourceTypeBadge>
                 </span>
@@ -88,10 +82,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
     cell: ({ getValue }) => {
       const val = String(getValue() ?? "");
       return (
-        <span
-          className="truncate block pr-2 max-w-[320px]"
-          title={val}
-        >
+        <span className="truncate block pr-2 max-w-[320px]" title={val}>
           {val}
         </span>
       );

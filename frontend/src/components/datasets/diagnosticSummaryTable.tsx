@@ -1,7 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { DiagnosticSummary } from "@/client";
+import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 
 const columnHelper = createColumnHelper<DiagnosticSummary>();
@@ -9,16 +10,76 @@ const columnHelper = createColumnHelper<DiagnosticSummary>();
 export const columns: ColumnDef<DiagnosticSummary>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    enableSorting: true,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
   },
   {
     accessorKey: "provider.name",
-    header: "Provider",
+    enableSorting: true,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Provider" />
+    ),
   },
   {
     accessorKey: "description",
     header: "Description",
+    enableSorting: false,
   },
+  {
+    id: "has_metric_values",
+    accessorFn: (row) => row.has_metric_values,
+    enableSorting: true,
+    sortingFn: (rowA, rowB, columnId) => {
+      const a = rowA.getValue<boolean>(columnId) ? 1 : 0;
+      const b = rowB.getValue<boolean>(columnId) ? 1 : 0;
+      return a - b;
+    },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Scalar Values" />
+    ),
+    cell: (cell) =>
+      cell.getValue() ? (
+        <span
+          className="inline-flex items-center gap-1 text-emerald-600"
+          title="This diagnostic has scalar metric values available."
+        >
+          ● Available
+        </span>
+      ) : (
+        <span
+          className="inline-flex items-center gap-1 text-muted-foreground"
+          title="No scalar metric values available."
+        >
+          ○ None
+        </span>
+      ),
+  },
+  {
+    accessorKey: "successful_execution_group_count",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Execution Groups" />
+    ),
+    enableSorting: true,
+    cell: (cell) => {
+      const successful = cell.getValue<number>();
+      const total = (cell.row.original as any).execution_group_count ?? 0;
+      const allSuccessful = total > 0 && successful === total;
+      const className = allSuccessful
+        ? "text-emerald-600 font-medium"
+        : "text-muted-foreground";
+      return (
+        <span
+          className={className}
+          title={`${successful} successful out of ${total} groups`}
+        >
+          {successful}/{total}
+        </span>
+      );
+    },
+  },
+
   columnHelper.display({
     id: "link",
     cell: (cell) => (
@@ -40,6 +101,16 @@ interface DiagnosticSummaryTableProps {
 }
 
 function DiagnosticSummaryTable({ summaries }: DiagnosticSummaryTableProps) {
-  return <DataTable data={summaries} columns={columns} />;
+  const navigate = useNavigate();
+
+  const handleRowClick = (row: DiagnosticSummary) => {
+    navigate({
+      to: "/diagnostics/$providerSlug/$diagnosticSlug",
+      params: { providerSlug: row.provider.slug, diagnosticSlug: row.slug },
+    });
+  };
+  return (
+    <DataTable data={summaries} columns={columns} onRowClick={handleRowClick} />
+  );
 }
 export default DiagnosticSummaryTable;

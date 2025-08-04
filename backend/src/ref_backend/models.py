@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field
+from sqlalchemy import func
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
@@ -80,7 +81,26 @@ class DiagnosticSummary(BaseModel):
     """
     List of IDs for the provider executions associated with this provider
     """
-
+    has_metric_values: bool
+    """
+    Whether any scalar metric values exist in the database for this diagnostic
+    """
+    execution_count: int
+    """
+    Total number of executions across all execution groups for this diagnostic
+    """
+    successful_execution_count: int
+    """
+    Number of successful executions across all execution groups for this diagnostic
+    """
+    execution_group_count: int
+    """
+    Number of execution groups for this diagnostic
+    """
+    successful_execution_group_count: int
+    """
+    Number of execution groups whose latest execution is successful
+    """
     group_by: list[GroupBy]
     """
     Dimensions used for grouping datasets
@@ -94,25 +114,109 @@ class DiagnosticSummary(BaseModel):
             diagnostic.provider.slug, diagnostic.slug
         )
         data_requirements = sorted(
-            concrete_diagnostic.data_requirements,
-            key=lambda dr: dr[0].source_type.value
-            if isinstance(dr, tuple)
-            else dr.source_type.value,
+            list(concrete_diagnostic.data_requirements),
+            key=lambda dr: (
+                dr[0].source_type.value
+                if isinstance(dr, tuple)
+                else dr.source_type.value
+            ),  # type: ignore[attr-defined]
         )
-        group_by_summary = [
-            GroupBy(source_type=dr[0].source_type.value, group_by=dr[0].group_by)
-            if isinstance(dr, tuple)
-            else GroupBy(source_type=dr.source_type.value, group_by=dr.group_by)
-            for dr in data_requirements
-        ]
+        group_by_summary: list[GroupBy] = []
+        for dr in data_requirements:
+            if isinstance(dr, tuple):
+                _dr = dr[
+                    0
+                ]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
+            else:
+                _dr = dr
+            # Normalize group_by to list[str] | None
+            gb = (
+                list(_dr.group_by)
+                if getattr(_dr, "group_by", None) is not None
+                else None
+            )  # type: ignore[attr-defined]
+            group_by_summary.append(
+                GroupBy(
+                    source_type=_dr.source_type.value,  # type: ignore[attr-defined]
+                    group_by=gb,
+                )
+            )
+
+        # Efficient existence check for scalar metric values for this diagnostic
+        has_metric_values = (
+            app_context.session.query(models.ScalarMetricValue)
+            .join(models.Execution)
+            .join(models.ExecutionGroup)
+            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+            .first()
+            is not None
+        )
+
+        # Execution counts for this diagnostic
+        execution_count = (
+            app_context.session.query(models.Execution)
+            .join(models.ExecutionGroup)
+            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+            .count()
+        )
+        successful_execution_count = (
+            app_context.session.query(models.Execution)
+            .join(models.ExecutionGroup)
+            .filter(
+                models.ExecutionGroup.diagnostic_id == diagnostic.id,
+                models.Execution.successful.is_(True),
+            )
+            .count()
+        )
+
+        # Execution group counts for this diagnostic
+        execution_group_count = (
+            app_context.session.query(models.ExecutionGroup)
+            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+            .count()
+        )
+
+        # Count execution groups whose latest execution is successful.
+        # We define "currently successful" as groups
+        # with at least one execution and the last (max id) successful.
+        ExecutionGroup = models.ExecutionGroup
+        Execution = models.Execution
+
+        # Subquery: latest execution id per group
+        latest_exec_per_group = (
+            app_context.session.query(
+                Execution.execution_group_id.label("egid"),
+                func.max(Execution.id).label("latest_exec_id"),
+            )
+            .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+            .filter(ExecutionGroup.diagnostic_id == diagnostic.id)
+            .group_by(Execution.execution_group_id)
+            .subquery()
+        )
+
+        # Join back to executions to check success of latest
+        successful_execution_group_count = (
+            app_context.session.query(Execution)
+            .join(
+                latest_exec_per_group,
+                Execution.id == latest_exec_per_group.c.latest_exec_id,
+            )
+            .filter(Execution.successful.is_(True))
+            .count()
+        )
 
         return DiagnosticSummary(
             id=diagnostic.id,
             provider=ProviderSummary.build(diagnostic.provider),
             slug=diagnostic.slug,
             name=diagnostic.name,
-            description=concrete_diagnostic.__doc__,
+            description=concrete_diagnostic.__doc__ or "",
             execution_groups=[e.id for e in diagnostic.execution_groups],
+            has_metric_values=has_metric_values,
+            execution_count=execution_count,
+            successful_execution_count=successful_execution_count,
+            execution_group_count=execution_group_count,
+            successful_execution_group_count=successful_execution_group_count,
             group_by=group_by_summary,
         )
 
@@ -248,7 +352,7 @@ class Dataset(BaseModel):
         return Dataset(
             id=dataset.id,
             slug=dataset.slug,
-            dataset_type=dataset.dataset_type,
+            dataset_type=str(dataset.dataset_type),
             metadata=metadata,
         )
 
@@ -289,7 +393,8 @@ class MetricValueCollection(BaseModel):
                 MetricValue(
                     dimensions=v.dimensions,
                     attributes=v.attributes,
-                    value=v.value,
+                    # v.value is expected to exist and be numeric in climate_ref MetricValue
+                    value=float(v.value),
                     execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
                 )

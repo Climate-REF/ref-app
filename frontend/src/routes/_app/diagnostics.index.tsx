@@ -1,10 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import type { DiagnosticSummary } from "@/client";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
-import { DataTable } from "@/components/dataTable/dataTable";
+import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import {
   Card,
   CardContent,
@@ -16,25 +14,9 @@ import { Input } from "@/components/ui/input";
 
 const Diagnostics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
-  const navigate = useNavigate();
   const [globalFilter, setGlobalFilter] = useState("");
 
   const diagnostics = data.data;
-
-  const columns: ColumnDef<DiagnosticSummary>[] = [
-    {
-      accessorKey: "name",
-      header: "Name",
-    },
-    {
-      accessorKey: "slug",
-      header: "Slug",
-    },
-    {
-      accessorKey: "provider.name",
-      header: "Provider",
-    },
-  ];
 
   const filteredDiagnostics = useMemo(() => {
     if (!globalFilter) {
@@ -49,13 +31,6 @@ const Diagnostics = () => {
           .includes(globalFilter.toLowerCase()),
     );
   }, [diagnostics, globalFilter]);
-
-  const handleRowClick = (row: DiagnosticSummary) => {
-    navigate({
-      to: "/diagnostics/$providerSlug/$diagnosticSlug",
-      params: { providerSlug: row.provider.slug, diagnosticSlug: row.slug },
-    });
-  };
 
   return (
     <Card>
@@ -75,11 +50,7 @@ const Diagnostics = () => {
             className="max-w-sm"
           />
         </div>
-        <DataTable
-          columns={columns}
-          data={filteredDiagnostics}
-          onRowClick={handleRowClick}
-        />
+        <DiagnosticSummaryTable summaries={filteredDiagnostics} />
       </CardContent>
     </Card>
   );

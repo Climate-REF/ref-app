@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     If this is not set, all diagnostics will be returned.
     """
- 
+
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
