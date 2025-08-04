@@ -1,9 +1,10 @@
 import csv
 import io
+import json
 from typing import cast
 
-from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import text
+from fastapi import APIRouter, HTTPException, Query, Request
+from sqlalchemy import and_, not_, text
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -27,7 +28,7 @@ async def _get_diagnostic(
 ) -> models.Diagnostic:
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
         if provider_slug not in app_context.settings.DIAGNOSTIC_PROVIDERS:
-            raise HTTPException(status_code=404, detail="Metric not found")
+            raise HTTPException(status_code=404, detail="Diagnostic not found")
 
     diagnostic = (
         app_context.session.query(models.Diagnostic)
@@ -39,7 +40,7 @@ async def _get_diagnostic(
         .one_or_none()
     )
     if diagnostic is None:
-        raise HTTPException(status_code=404, detail="Metric not found")
+        raise HTTPException(status_code=404, detail="Diagnostic not found")
     return diagnostic
 
 
@@ -124,11 +125,16 @@ async def comparison(
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
-    source_id: str,
-    metrics: list[str] = Query(...),
+    request: Request,
+    source_filters: str = Query(..., description="JSON string for source filters"),
 ) -> MetricValueComparison:
     """
-    Get all the diagnostic values for a given diagnostic
+    Get all the diagnostic values for a given diagnostic, with flexible filtering.
+
+    - `source_filters`: A JSON string representing a dictionary of filters to apply to
+      the source data. For example: `{"source_id": "MIROC6", "experiment_id": "ssp585"}`
+    - Other query parameters are treated as filters to be applied to all data before
+      being split into source and ensemble.
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
@@ -137,15 +143,43 @@ async def comparison(
         .join(models.Execution)
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-        .filter(models.ScalarMetricValue.metric.in_(metrics))
     )
 
-    source_values = metric_values_query.filter(
-        models.ScalarMetricValue.source_id == source_id
-    ).all()
-    ensemble_values = metric_values_query.filter(
-        models.ScalarMetricValue.source_id != source_id
-    ).all()
+    try:
+        source_filter_dict = json.loads(source_filters)
+        if not isinstance(source_filter_dict, dict):
+            raise ValueError("source_filters must be a JSON object")
+    except (json.JSONDecodeError, ValueError) as e:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid source_filters: {e}"
+        ) from e
+
+    # Apply general filters from query parameters
+    query_params = request.query_params
+    for key, value in query_params.items():
+        if key == "source_filters":
+            continue
+        if key in models.ScalarMetricValue._cv_dimensions:
+            metric_values_query = metric_values_query.filter(
+                getattr(models.ScalarMetricValue, key) == value
+            )
+
+    source_filter_clauses = []
+    for key, value in source_filter_dict.items():
+        if key not in models.ScalarMetricValue._cv_dimensions:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid filter key in source_filters: {key}"
+            )
+        source_filter_clauses.append(getattr(models.ScalarMetricValue, key) == value)
+
+    if not source_filter_clauses:
+        raise HTTPException(status_code=400, detail="source_filters cannot be empty")
+
+    source_conditions = and_(*source_filter_clauses)
+
+    source_values = metric_values_query.filter(source_conditions).all()
+    ensemble_values = metric_values_query.filter(not_(source_conditions)).all()
+
     return MetricValueComparison(
         source=MetricValueCollection.build(
             cast(list[models.MetricValue], source_values)
@@ -164,23 +198,30 @@ async def list_executions(
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
-    source_id: str,
+    request: Request,
 ) -> Collection[Execution]:
     """
-    Fetch executions for a specific diagnostic and source_id
+    Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
+
+    e.g. `?source_id=MIROC6&experiment_id=ssp585`
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
-    executions = (
+    executions_query = (
         app_context.session.query(models.Execution)
         .join(CMIP6Dataset, models.Execution.datasets)
         .join(models.ExecutionGroup)
-        .filter(
-            models.ExecutionGroup.diagnostic_id == diagnostic.id,
-            CMIP6Dataset.source_id == source_id,
-        )
-        .all()
+        .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
     )
+
+    query_params = request.query_params
+    for key, value in query_params.items():
+        if hasattr(CMIP6Dataset, key):
+            executions_query = executions_query.filter(
+                getattr(CMIP6Dataset, key) == value
+            )
+
+    executions = executions_query.all()
 
     return Collection(data=[Execution.build(e, app_context) for e in executions])
 

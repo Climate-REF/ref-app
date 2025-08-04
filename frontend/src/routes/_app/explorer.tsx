@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MetricsExplorer } from "@/components/explorer/metricExplorer.tsx";
+import { SourceExplorer } from "@/components/explorer/sourceExplorer.tsx";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -34,13 +34,13 @@ const Explorer = () => {
           className="space-y-4"
           onValueChange={(value) =>
             navigate({
-              search: (prev) => ({ ...prev, tab: value }),
+              search: (prev: any) => ({ ...prev, tab: value }),
             })
           }
         >
           <TabsList className="w-full">
             <TabsTrigger value="themes">Thematic Areas</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
+            <TabsTrigger value="sources">Sources</TabsTrigger>
             <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
           </TabsList>
 
@@ -48,13 +48,11 @@ const Explorer = () => {
             <ThematicContent />
           </TabsContent>
 
-          <TabsContent value="models" className="space-y-4">
-            <div />
+          <TabsContent value="sources" className="space-y-4">
+            <SourceExplorer />
           </TabsContent>
 
-          <TabsContent value="diagnostics">
-            <MetricsExplorer />
-          </TabsContent>
+          <TabsContent value="diagnostics" />
         </Tabs>
       </div>
     </>
@@ -62,7 +60,7 @@ const Explorer = () => {
 };
 
 const explorerSchema = z.object({
-  tab: z.enum(["themes", "models", "diagnostics"]).default("themes"),
+  tab: z.enum(["themes", "sources", "diagnostics"]).default("themes"),
   theme: z
     .enum([
       "atmosphere",
@@ -72,10 +70,10 @@ const explorerSchema = z.object({
       "sea",
     ])
     .default("atmosphere"),
+  sourceId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/_app/explorer")({
   component: Explorer,
   validateSearch: zodValidator(explorerSchema),
-  staticData: {},
 });

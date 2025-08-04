@@ -176,6 +176,38 @@ export const Collection_ExecutionGroup_Schema = {
     title: 'Collection[ExecutionGroup]'
 } as const;
 
+export const Collection_Execution_Schema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/Execution'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        total_count: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Total Count'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'Collection[Execution]'
+} as const;
+
 export const DatasetSchema = {
     properties: {
         id: {
@@ -424,6 +456,25 @@ export const ExecutionOutputSchema = {
     title: 'ExecutionOutput'
 } as const;
 
+export const FacetSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        values: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Values'
+        }
+    },
+    type: 'object',
+    required: ['key', 'values'],
+    title: 'Facet'
+} as const;
+
 export const GroupBySchema = {
     properties: {
         source_type: {
@@ -475,6 +526,131 @@ The order of the dimensions matter as that determines how the executions are nes
     default: {
         json_structure: []
     }
+} as const;
+
+export const MetricValueSchema = {
+    properties: {
+        dimensions: {
+            additionalProperties: {
+                type: 'string'
+            },
+            type: 'object',
+            title: 'Dimensions'
+        },
+        value: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'integer'
+                }
+            ],
+            title: 'Value'
+        },
+        attributes: {
+            anyOf: [
+                {
+                    additionalProperties: {
+                        anyOf: [
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'number'
+                            },
+                            {
+                                type: 'integer'
+                            }
+                        ]
+                    },
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Attributes'
+        },
+        execution_group_id: {
+            type: 'integer',
+            title: 'Execution Group Id'
+        },
+        execution_id: {
+            type: 'integer',
+            title: 'Execution Id'
+        }
+    },
+    type: 'object',
+    required: ['dimensions', 'value', 'execution_group_id', 'execution_id'],
+    title: 'MetricValue',
+    description: `A flattened representation of a diagnostic value
+
+This includes the dimensions and the value of the diagnostic`
+} as const;
+
+export const MetricValueCollectionSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MetricValue'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        },
+        facets: {
+            items: {
+                '$ref': '#/components/schemas/Facet'
+            },
+            type: 'array',
+            title: 'Facets'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count', 'facets'],
+    title: 'MetricValueCollection'
+} as const;
+
+export const MetricValueComparisonSchema = {
+    properties: {
+        source: {
+            '$ref': '#/components/schemas/MetricValueCollection'
+        },
+        ensemble: {
+            '$ref': '#/components/schemas/MetricValueCollection'
+        }
+    },
+    type: 'object',
+    required: ['source', 'ensemble'],
+    title: 'MetricValueComparison',
+    description: 'A comparison of metric values for a specific source against an ensemble.'
+} as const;
+
+export const MetricValueFacetSummarySchema = {
+    properties: {
+        dimensions: {
+            additionalProperties: {
+                items: {
+                    type: 'string'
+                },
+                type: 'array'
+            },
+            type: 'object',
+            title: 'Dimensions'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['dimensions', 'count'],
+    title: 'MetricValueFacetSummary',
+    description: 'Summary of the dimensions used in a metric value collection.'
 } as const;
 
 export const ProviderSummarySchema = {

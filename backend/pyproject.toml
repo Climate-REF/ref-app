@@ -29,7 +29,7 @@ dev-dependencies = [
 
 [tool.uv.sources]
 # Temporary pin for testing
-#climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", rev="0bde8531bdaa56e0c0a3b444b61c04238ca93d1a" }
+climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref" }
 climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example" }
 # Uncomment the following line to use a local version of climate-ref
 #climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }

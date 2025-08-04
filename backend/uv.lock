@@ -311,7 +311,7 @@ wheels = [
 [[package]]
 name = "climate-ref"
 version = "0.6.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref#e8e6649536d14e36a345af057721f1a4ad9fc6f6" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -326,10 +326,6 @@ dependencies = [
     { name = "tomlkit" },
     { name = "tqdm" },
     { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/32/db/17d71a5b2caf5e68667cbb5cfaf5eba6bfa35011466a135c3b9ad6bf44e0/climate_ref-0.6.3.tar.gz", hash = "sha256:bcaef68606b4115d5033248960daf237bee5810af8642f9faf59c4d99bdee298", size = 100760, upload-time = "2025-07-17T00:38:47.82Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/44/86dab7022f650324958ef1f985406843b138ac4298e041c238d9f023678e/climate_ref-0.6.3-py3-none-any.whl", hash = "sha256:dc0fe158a1d5fdea2f0ebc5213eda6acb45baf078ae0ea272f7ac1bc9c7da8a8", size = 85189, upload-time = "2025-07-17T00:38:46.671Z" },
 ]
 
 [package.optional-dependencies]
@@ -366,16 +362,12 @@ dependencies = [
 [[package]]
 name = "climate-ref-esmvaltool"
 version = "0.6.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-esmvaltool#e8e6649536d14e36a345af057721f1a4ad9fc6f6" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "pooch" },
     { name = "ruamel-yaml" },
     { name = "xarray" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/00/b6b647d963382b887ad3ebee1e7a06b0122c3a9b9c8cbe5da8221bf82ae7/climate_ref_esmvaltool-0.6.3.tar.gz", hash = "sha256:ec5a531871c3e31a3b7efd5674b408b2a16bc934d421741678a66957a47e2625", size = 133953, upload-time = "2025-07-17T00:38:53.519Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/3d/1bf5bcf60b5b102766612fe4d66078f72119b9030475bb35b8f10e8ab935/climate_ref_esmvaltool-0.6.3-py3-none-any.whl", hash = "sha256:8356044a652f404af5cf1ccb428505e05bb53319024e20caf7925b20639c3f85", size = 133226, upload-time = "2025-07-17T00:38:52.638Z" },
 ]
 
 [[package]]
@@ -392,27 +384,19 @@ dependencies = [
 [[package]]
 name = "climate-ref-ilamb"
 version = "0.6.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-ilamb#e8e6649536d14e36a345af057721f1a4ad9fc6f6" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "ilamb3" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/6c/da3cb3a3a16c1c0adbd5d994742158ca13ca0917b2e3eff10588b511a295/climate_ref_ilamb-0.6.3.tar.gz", hash = "sha256:eaaa02db542f6b6c7fd1798f70f28752c430bf106416f0d47d24ce16c98c4231", size = 13308, upload-time = "2025-07-17T00:38:55.569Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/75/e2f0e4321bf99f0119ddc68458155fb43b265602b7e471c5c95e9234f04a/climate_ref_ilamb-0.6.3-py3-none-any.whl", hash = "sha256:81087aed99d0c76bc2f3751e84781260c2c7082fbaed5539cf7b37065bd8ba6d", size = 13916, upload-time = "2025-07-17T00:38:54.161Z" },
-]
 
 [[package]]
 name = "climate-ref-pmp"
 version = "0.6.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-pmp#e8e6649536d14e36a345af057721f1a4ad9fc6f6" }
 dependencies = [
     { name = "climate-ref-core" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/30/80/147a935b738007e606542e03df3729311490de586fa6bb703db5fa120257/climate_ref_pmp-0.6.3.tar.gz", hash = "sha256:475edacaf0632d25ffbd555034f82fbdaf51aea51ff3dd718d6a45e20b2336b5", size = 88130, upload-time = "2025-07-17T00:38:57.371Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/c2/61578c5cbf3d0ef5dc3782bb1839b797b0463ec1418bb1bf22b1f0a2cff5/climate_ref_pmp-0.6.3-py3-none-any.whl", hash = "sha256:b59facedcccaa489c7a98f4d375b1da47037e3368180ed501cc366636e61aa3a", size = 90190, upload-time = "2025-07-17T00:38:56.507Z" },
 ]
 
 [[package]]
@@ -1145,7 +1129,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [
@@ -2739,7 +2723,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "climate-ref", extras = ["aft-providers", "postgres"], specifier = ">=0.6.3" },
+    { name = "climate-ref", extras = ["aft-providers", "postgres"], git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "lz4", specifier = "==4.4.4" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },

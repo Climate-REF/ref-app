@@ -79,6 +79,20 @@ export type CollectionExecutionGroupWritable = {
     total_count?: number | null;
 };
 
+export type CollectionExecutionReadable = {
+    data: Array<Execution>;
+    total_count?: number | null;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionExecutionWritable = {
+    data: Array<Execution>;
+    total_count?: number | null;
+};
+
 export type Dataset = {
     id: number;
     slug: string;
@@ -141,6 +155,11 @@ export type ExecutionOutput = {
     url: string;
 };
 
+export type Facet = {
+    key: string;
+    values: Array<string>;
+};
+
 export type GroupBy = {
     source_type: string;
     group_by: Array<string> | null;
@@ -158,6 +177,47 @@ export type HttpValidationError = {
  */
 export type MetricDimensions = {
     [key: string]: unknown;
+};
+
+/**
+ * A flattened representation of a diagnostic value
+ *
+ * This includes the dimensions and the value of the diagnostic
+ */
+export type MetricValue = {
+    dimensions: {
+        [key: string]: string;
+    };
+    value: number | number;
+    attributes?: {
+        [key: string]: string | number | number;
+    } | null;
+    execution_group_id: number;
+    execution_id: number;
+};
+
+export type MetricValueCollection = {
+    data: Array<MetricValue>;
+    count: number;
+    facets: Array<Facet>;
+};
+
+/**
+ * A comparison of metric values for a specific source against an ensemble.
+ */
+export type MetricValueComparison = {
+    source: MetricValueCollection;
+    ensemble: MetricValueCollection;
+};
+
+/**
+ * Summary of the dimensions used in a metric value collection.
+ */
+export type MetricValueFacetSummary = {
+    dimensions: {
+        [key: string]: Array<string>;
+    };
+    count: number;
 };
 
 /**
@@ -296,6 +356,22 @@ export type DiagnosticsListResponses = {
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
 
+export type DiagnosticsFacetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/diagnostics/facets';
+};
+
+export type DiagnosticsFacetsResponses = {
+    /**
+     * Successful Response
+     */
+    200: MetricValueFacetSummary;
+};
+
+export type DiagnosticsFacetsResponse = DiagnosticsFacetsResponses[keyof DiagnosticsFacetsResponses];
+
 export type DiagnosticsGetData = {
     body?: never;
     path: {
@@ -331,7 +407,7 @@ export type DiagnosticsListExecutionGroupsData = {
         diagnostic_slug: string;
     };
     query?: never;
-    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/executions';
+    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups';
 };
 
 export type DiagnosticsListExecutionGroupsErrors = {
@@ -351,6 +427,67 @@ export type DiagnosticsListExecutionGroupsResponses = {
 };
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
+
+export type DiagnosticsComparisonData = {
+    body?: never;
+    path: {
+        provider_slug: string;
+        diagnostic_slug: string;
+    };
+    query: {
+        /**
+         * JSON string for source filters
+         */
+        source_filters: string;
+    };
+    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/comparison';
+};
+
+export type DiagnosticsComparisonErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsComparisonError = DiagnosticsComparisonErrors[keyof DiagnosticsComparisonErrors];
+
+export type DiagnosticsComparisonResponses = {
+    /**
+     * Successful Response
+     */
+    200: MetricValueComparison;
+};
+
+export type DiagnosticsComparisonResponse = DiagnosticsComparisonResponses[keyof DiagnosticsComparisonResponses];
+
+export type DiagnosticsListExecutionsData = {
+    body?: never;
+    path: {
+        provider_slug: string;
+        diagnostic_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/executions';
+};
+
+export type DiagnosticsListExecutionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsListExecutionsError = DiagnosticsListExecutionsErrors[keyof DiagnosticsListExecutionsErrors];
+
+export type DiagnosticsListExecutionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionExecutionReadable;
+};
+
+export type DiagnosticsListExecutionsResponse = DiagnosticsListExecutionsResponses[keyof DiagnosticsListExecutionsResponses];
 
 export type DiagnosticsListMetricValuesData = {
     body?: never;
