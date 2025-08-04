@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Route } from "@/routes/_app/explorer";
+import { Route } from "@/routes/_app/explorer/sources";
 
 interface Props {
   options: string[];
@@ -30,7 +30,7 @@ export function SourceSelect({ options }: Props) {
   const handleSelect = (currentValue: string) => {
     const newSourceId = currentValue === sourceId ? undefined : currentValue;
     navigate({
-      search: (prev: any) => ({ ...prev, sourceId: newSourceId }),
+      search: { sourceId: newSourceId },
       replace: true,
     });
     setOpen(false);

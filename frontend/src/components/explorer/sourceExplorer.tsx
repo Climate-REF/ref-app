@@ -3,7 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { diagnosticsFacetsOptions } from "@/client/@tanstack/react-query.gen";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Route } from "@/routes/_app/explorer";
+import { Route } from "@/routes/_app/explorer/sources";
 import { SourceExplorerContent } from "./sourceExplorerContent";
 import { SourceSelect } from "./sourceSelect.tsx";
 
