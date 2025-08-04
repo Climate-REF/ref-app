@@ -1,9 +1,18 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ErrorComponent } from "@tanstack/react-router";
+import { ErrorComponent, useNavigate } from "@tanstack/react-router";
+import { MoreHorizontal } from "lucide-react";
 import * as React from "react";
 import { Suspense } from "react";
 import { diagnosticsComparison } from "@/client";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +31,8 @@ export const ComparisonChartCard = ({
   metricUnits,
   sourceFilters,
   otherFilters,
+  clipMin,
+  clipMax,
 }: {
   providerSlug: string;
   diagnosticSlug: string;
@@ -31,7 +42,10 @@ export const ComparisonChartCard = ({
   metricUnits: string;
   sourceFilters: Record<string, string>;
   otherFilters?: Record<string, string>;
+  clipMin?: number;
+  clipMax?: number;
 }) => {
+  const navigate = useNavigate();
   const {
     data: { data },
     error,
@@ -62,10 +76,45 @@ export const ComparisonChartCard = ({
   if (!data) {
     return <div>No data</div>;
   }
+
+  const navigateToFiltered = () => {
+    const allFilters = { ...sourceFilters, ...otherFilters };
+    navigate({
+      to: "/diagnostics/$providerSlug/$diagnosticSlug/values",
+      params: { providerSlug, diagnosticSlug },
+      search: allFilters,
+    });
+  };
+
+  const navigateToUnfiltered = () => {
+    navigate({
+      to: "/diagnostics/$providerSlug/$diagnosticSlug/values",
+      params: { providerSlug, diagnosticSlug },
+      search: otherFilters,
+    });
+  };
+
   return (
     <Card className={cn("w-full", className)}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-start justify-between">
         <CardTitle>{title}</CardTitle>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={navigateToFiltered}>
+              View data for {Object.values(sourceFilters)[0]}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={navigateToUnfiltered}>
+              View all data for diagnostic
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
       <CardContent>
         {data ? (
@@ -74,11 +123,14 @@ export const ComparisonChartCard = ({
               data={data}
               metricName={metricName}
               metricUnits={metricUnits}
+              clipMin={clipMin}
+              clipMax={clipMax}
             />
           </Suspense>
         ) : (
           <div className="h-48">
-            <span className="mx-auto">No comparison data available.</span></div>
+            <span className="mx-auto">No comparison data available.</span>
+          </div>
         )}
       </CardContent>
     </Card>

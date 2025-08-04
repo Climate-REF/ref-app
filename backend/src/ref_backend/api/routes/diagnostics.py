@@ -231,6 +231,7 @@ async def list_metric_values(
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
+    request: Request,
     format: str | None = None,
 ) -> MetricValueCollection | StreamingResponse:
     """
@@ -244,6 +245,16 @@ async def list_metric_values(
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
     )
+
+    # Apply general filters from query parameters
+    query_params = request.query_params
+    for key, value in query_params.items():
+        if key == "format":
+            continue
+        if hasattr(models.ScalarMetricValue, key):
+            metric_values_query = metric_values_query.filter(
+                getattr(models.ScalarMetricValue, key) == value
+            )
 
     if format == "csv":
         metric_values = metric_values_query.all()

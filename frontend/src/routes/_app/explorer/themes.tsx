@@ -1,8 +1,8 @@
-import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 const themesSchema = z.object({
   theme: z

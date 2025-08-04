@@ -29,7 +29,11 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
           {Object.entries(selectors).map(([sourceType, values]) => (
             <div className="flex gap-2" key={sourceType}>
               {values.map(([key, value]) => (
-                <SourceTypeBadge sourceType={sourceType} key={key} title={`${sourceType}:${key}`}>
+                <SourceTypeBadge
+                  sourceType={sourceType}
+                  key={key}
+                  title={`${sourceType}:${key}`}
+                >
                   {value}
                 </SourceTypeBadge>
               ))}
@@ -70,23 +74,42 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
     accessorFn: (row) => row.latest_execution?.dataset_count,
   },
   {
-    header: () => <span title="New or changed inputs detected; re-run recommended.">Dirty</span>,
+    header: () => (
+      <span title="New or changed inputs detected; re-run recommended.">
+        Dirty
+      </span>
+    ),
     accessorKey: "dirty",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant="destructive" title="Group requires re-run due to changed inputs.">Yes</Badge>
+        <Badge
+          variant="destructive"
+          title="Group requires re-run due to changed inputs."
+        >
+          Yes
+        </Badge>
       ) : (
-        <Badge variant="outline" title="No changes detected since last run.">No</Badge>
+        <Badge variant="outline" title="No changes detected since last run.">
+          No
+        </Badge>
       ),
   },
   {
-    header: () => <span title="Whether the latest execution completed without errors.">Successful</span>,
+    header: () => (
+      <span title="Whether the latest execution completed without errors.">
+        Successful
+      </span>
+    ),
     accessorKey: "latest_execution.successful",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant="outline" title="Latest execution succeeded.">Yes</Badge>
+        <Badge variant="outline" title="Latest execution succeeded.">
+          Yes
+        </Badge>
       ) : (
-        <Badge variant="destructive" title="Latest execution failed.">No</Badge>
+        <Badge variant="destructive" title="Latest execution failed.">
+          No
+        </Badge>
       ),
   },
   {

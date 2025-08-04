@@ -1,8 +1,8 @@
-import { SourceExplorer } from "@/components/explorer/sourceExplorer.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { SourceExplorer } from "@/components/explorer/sourceExplorer.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 const sourcesSchema = z.object({
   sourceId: z.string().optional(),

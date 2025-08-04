@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import { createFileRoute } from "@tanstack/react-router";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 const Diagnostics = () => {
   return (
@@ -7,16 +7,16 @@ const Diagnostics = () => {
       <CardContent className="space-y-4 pt-6">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Browse diagnostics across providers, or jump directly from a theme or
-            source. Open a diagnostic to see execution groups, runs, files, and
-            metric values.
+            Browse diagnostics across providers, or jump directly from a theme
+            or source. Open a diagnostic to see execution groups, runs, files,
+            and metric values.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-md border p-4">
               <h3 className="font-medium">Search</h3>
               <p className="text-sm text-muted-foreground">
-                Use the Diagnostics page to search by provider, slug, or keyword.
-                Coming soon: inline search here.
+                Use the Diagnostics page to search by provider, slug, or
+                keyword. Coming soon: inline search here.
               </p>
             </div>
             <div className="rounded-md border p-4">

@@ -46,9 +46,7 @@ function ChartContainer({
   ...props
 }: React.ComponentProps<"div"> & {
   config: ChartConfig;
-  children: React.ComponentProps<
-    typeof ResponsiveContainer
-  >["children"];
+  children: React.ComponentProps<typeof ResponsiveContainer>["children"];
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
@@ -65,9 +63,7 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <ResponsiveContainer>
-          {children}
-        </ResponsiveContainer>
+        <ResponsiveContainer>{children}</ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   );

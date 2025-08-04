@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 
-
 type ExplorerChart = {
   provider: string;
   diagnostic: string;
@@ -26,6 +25,8 @@ type ExplorerChart = {
    * Optional per-chart source filter override (defaults to { source_id } of the component)
    */
   sourceFiltersOverride?: Record<string, string>;
+  clipMin?: number;
+  clipMax?: number;
 };
 
 type ExplorerCard = {
@@ -45,6 +46,9 @@ const cards: ExplorerCard[] = [
         diagnostic: "equilibrium-climate-sensitivity",
         title: "ECS (K)",
         metricUnits: "K",
+        clipMin: -3,
+        clipMax: 10,
+        otherFilters: { metric: "ecs" },
       },
       {
         provider: "esmvaltool",
@@ -63,14 +67,17 @@ const cards: ExplorerCard[] = [
       {
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
-        title: "ECS (K)",
-        metricUnits: "K",
+        title: "NAM Bias (K)",
+        // metricUnits: "K",
+        otherFilters: { method: "cbf", statistic: "bias" },
       },
+
       {
-        provider: "esmvaltool",
-        diagnostic: "transient-climate-response",
-        title: "TCR (K)",
-        metricUnits: "K",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-sam",
+        title: "SAM  Bias (K)",
+        // metricUnits: "K",
+        otherFilters: { method: "cbf", statistic: "bias" },
       },
     ],
   },
@@ -100,8 +107,12 @@ export const SourceExplorerContent = ({ sourceId }: { sourceId: string }) => {
                     metricName={chart.title}
                     metricUnits={chart.metricUnits ?? "unitless"}
                     title={chart.title}
-                    sourceFilters={chart.sourceFiltersOverride ?? { source_id: sourceId }}
+                    sourceFilters={
+                      chart.sourceFiltersOverride ?? { source_id: sourceId }
+                    }
                     otherFilters={chart.otherFilters}
+                    clipMin={chart.clipMin}
+                    clipMax={chart.clipMax}
                   />
                 </Suspense>
               ))}

@@ -36,22 +36,41 @@ export const columns: ColumnDef<Execution>[] = [
     accessorFn: (row) => row.successful,
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant="outline" title="Execution succeeded.">Success</Badge>
+        <Badge variant="outline" title="Execution succeeded.">
+          Success
+        </Badge>
       ) : (
-        <Badge variant="destructive" title="Execution failed.">Failed</Badge>
+        <Badge variant="destructive" title="Execution failed.">
+          Failed
+        </Badge>
       ),
   },
   {
     id: "latest",
-    header: () => <span title="Indicates the most recent or currently selected execution.">Latest/Selected</span>,
+    header: () => (
+      <span title="Indicates the most recent or currently selected execution.">
+        Latest/Selected
+      </span>
+    ),
     cell: (cell) => {
       const rowIndex = cell.row.index;
       const { executionId } = Route.useSearch();
       if (executionId && cell.row.original.id.toString() === executionId) {
-        return <Badge variant="default" title="This execution is currently selected.">Selected</Badge>;
+        return (
+          <Badge
+            variant="default"
+            title="This execution is currently selected."
+          >
+            Selected
+          </Badge>
+        );
       }
       if (rowIndex === 0) {
-        return <Badge variant="outline" title="This is the most recent execution.">Latest</Badge>;
+        return (
+          <Badge variant="outline" title="This is the most recent execution.">
+            Latest
+          </Badge>
+        );
       }
     },
   },
@@ -96,7 +115,8 @@ function ExecutionsTable({ results }: ResultListTableProps) {
       <CardHeader>
         <CardTitle>History of recent diagnostic executions</CardTitle>
         <CardDescription>
-          Latest is the most recent run. Selected indicates the execution currently in view for files, values, and logs.
+          Latest is the most recent run. Selected indicates the execution
+          currently in view for files, values, and logs.
         </CardDescription>
       </CardHeader>
       <CardContent>

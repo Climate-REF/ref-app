@@ -1,5 +1,6 @@
 import * as d3 from "d3-array";
 import {
+  Bar,
   CartesianGrid,
   ComposedChart,
   ResponsiveContainer,
@@ -7,7 +8,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Bar,
 } from "recharts";
 import type { MetricValueComparison } from "@/client/types.gen";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
@@ -17,36 +17,52 @@ interface ComparisonChartProps {
   metricName: string;
   metricUnits: string;
   valueFormatter?: (v: number) => string;
+  clipMin?: number;
+  clipMax?: number;
 }
 
-
-export const EmptyComparisonChart = ()  => {
-    return (<div className="">No data available for comparison.</div>)
-}
+export const EmptyComparisonChart = () => {
+  return <div className="">No data available for comparison.</div>;
+};
 
 export const ComparisonChart = ({
   data,
   metricName,
   metricUnits,
   valueFormatter,
+  clipMin,
+  clipMax,
 }: ComparisonChartProps) => {
   // Guard against missing arrays
-  const ensembleArray = Array.isArray(data.ensemble?.data)
+  const rawEnsembleArray = Array.isArray(data.ensemble?.data)
     ? (data.ensemble.data as Array<{ value: number }>)
     : [];
-  const sourceArray = Array.isArray(data.source?.data)
+  const rawSourceArray = Array.isArray(data.source?.data)
     ? (data.source.data as Array<{ value: number }>)
     : [];
 
-  if (!ensembleArray.length || !sourceArray.length) {
-    return <EmptyComparisonChart /> ;
+  if (!rawEnsembleArray.length || !rawSourceArray.length) {
+    return <EmptyComparisonChart />;
   }
 
-  // Ensure numeric values only and sort for quantiles
-  const ensembleValues = ensembleArray
+  // Filter out non-numeric values
+  const allEnsembleValues = rawEnsembleArray
     .map((d) => Number(d.value))
-    .filter((v) => Number.isFinite(v))
+    .filter((v) => Number.isFinite(v));
+  const sourceValues = rawSourceArray
+    .map((d) => Number(d.value))
+    .filter((v) => Number.isFinite(v));
+
+  // Apply clipping if specified
+  const ensembleValues = allEnsembleValues
+    .filter(
+      (v) =>
+        (clipMin === undefined || v >= clipMin) &&
+        (clipMax === undefined || v <= clipMax),
+    )
     .sort((a, b) => a - b);
+
+  const ensembleOutliers = allEnsembleValues.length - ensembleValues.length;
 
   // If still no valid values, show an informative message
   if (!ensembleValues.length) {
@@ -60,23 +76,18 @@ export const ComparisonChart = ({
   const median = d3.median(ensembleValues)!;
   const q3 = d3.quantile(ensembleValues, 0.75)!;
 
-  const sourceValue = Number(sourceArray[0]?.value);
-
-  // Adapt data structure to reuse existing BoxWhiskerShape via <Bar shape=.../>
-  // We create a single category with one "group" keyed as "ensemble"
-  // Prepare source stats (support multiple values): median with min–max
-  const sourceValues = sourceArray
-    .map((d) => Number(d.value))
-    .filter((v) => Number.isFinite(v))
-    .sort((a, b) => a - b);
+  const sourceValue = Number(sourceValues[0]);
 
   const sourceMin = sourceValues.length ? sourceValues[0] : undefined;
-  const sourceMax = sourceValues.length ? sourceValues[sourceValues.length - 1] : undefined;
+  const sourceMax = sourceValues.length
+    ? sourceValues[sourceValues.length - 1]
+    : undefined;
   const sourceMedian = sourceValues.length
-    ? (sourceValues.length % 2 === 0
-        ? (sourceValues[sourceValues.length - 1 - sourceValues.length / 2 + 1] +
-           sourceValues[sourceValues.length / 2 - 1]) / 2
-        : sourceValues[Math.floor(sourceValues.length / 2)])
+    ? sourceValues.length % 2 === 0
+      ? (sourceValues[sourceValues.length - 1 - sourceValues.length / 2 + 1] +
+          sourceValues[sourceValues.length / 2 - 1]) /
+        2
+      : sourceValues[Math.floor(sourceValues.length / 2)]
     : undefined;
 
   // Build data in a shape compatible with BoxWhiskerShape (via GroupedBoxWhiskerChart convention)
@@ -107,6 +118,9 @@ export const ComparisonChart = ({
         max: sourceMax,
         median: sourceMedian,
       },
+      __outliers: {
+        ensemble: ensembleOutliers,
+      },
     },
   ] as Array<{
     name: string;
@@ -128,15 +142,20 @@ export const ComparisonChart = ({
       max?: number;
       median?: number;
     };
+    __outliers: {
+      ensemble: number;
+    };
   }>;
 
   // Provide a default formatter (1 decimal place) if none is supplied
-  const fmt = valueFormatter ?? ((v: number) => (Number.isFinite(v) ? v.toFixed(1) : String(v)));
+  const fmt =
+    valueFormatter ??
+    ((v: number) => (Number.isFinite(v) ? v.toFixed(1) : String(v)));
 
   // Reusable Y domain in data units for both YAxis and BoxWhiskerShape
   const yDomainData: [number, number] = (() => {
-    const finite = [min, q1, median, q3, max, sourceValue].filter(
-      (v) => Number.isFinite(v),
+    const finite = [min, q1, median, q3, max, sourceValue].filter((v) =>
+      Number.isFinite(v),
     ) as number[];
     if (!finite.length) return [0, 1];
     const dMin = Math.min(...finite);
@@ -150,7 +169,6 @@ export const ComparisonChart = ({
 
   return (
     <div className="w-full h-full">
-
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart
           data={chartData}
@@ -197,10 +215,26 @@ export const ComparisonChart = ({
               if (!active || !payload || payload.length === 0) return null;
               const datum: any = (payload[0] as any).payload ?? {};
               const box = datum?.groups?.ensemble as
-                | { min: number; lowerQuartile: number; median: number; upperQuartile: number; max: number; values: number[] }
+                | {
+                    min: number;
+                    lowerQuartile: number;
+                    median: number;
+                    upperQuartile: number;
+                    max: number;
+                    values: number[];
+                  }
                 | undefined;
               const sourceStats = datum?.__sourceStats as
-                | { id: string; min?: number; max?: number; median?: number; values?: number[] }
+                | {
+                    id: string;
+                    min?: number;
+                    max?: number;
+                    median?: number;
+                    values?: number[];
+                  }
+                | undefined;
+              const outliers = datum?.__outliers as
+                | { ensemble: number; source: number }
                 | undefined;
 
               const renderKV = (k: string, v: string) => (
@@ -225,20 +259,29 @@ export const ComparisonChart = ({
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                       {renderKV(
                         "Min",
-                        Number.isFinite(sourceStats?.min ?? NaN) ? fmt(Number(sourceStats!.min)) : "—",
+                        Number.isFinite(sourceStats?.min ?? Number.NaN)
+                          ? fmt(Number(sourceStats?.min))
+                          : "—",
                       )}
-                                      {renderKV(
+                      {renderKV(
                         "Median",
-                        Number.isFinite(sourceStats?.median ?? NaN) ? fmt(Number(sourceStats!.median)) : "—",
+                        Number.isFinite(sourceStats?.median ?? Number.NaN)
+                          ? fmt(Number(sourceStats?.median))
+                          : "—",
                       )}
                       {renderKV(
                         "Max",
-                        Number.isFinite(sourceStats?.max ?? NaN) ? fmt(Number(sourceStats!.max)) : "—",
+                        Number.isFinite(sourceStats?.max ?? Number.NaN)
+                          ? fmt(Number(sourceStats?.max))
+                          : "—",
                       )}
-      
                       {renderKV(
                         "Count",
-                        String(Array.isArray(sourceStats?.values) ? sourceStats!.values!.length : 0),
+                        String(
+                          (Array.isArray(sourceStats?.values)
+                            ? sourceStats?.values?.length
+                            : 0) + (outliers?.source ?? 0),
+                        ),
                       )}
                     </div>
                   </div>
@@ -250,11 +293,31 @@ export const ComparisonChart = ({
                     <div className="mb-1 font-semibold">Ensemble</div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                       {renderKV("Min", box ? fmt(Number(box.min)) : "—")}
-                      {renderKV("Q1", box ? fmt(Number(box.lowerQuartile)) : "—")}
+                      {renderKV(
+                        "Q1",
+                        box ? fmt(Number(box.lowerQuartile)) : "—",
+                      )}
                       {renderKV("Median", box ? fmt(Number(box.median)) : "—")}
-                      {renderKV("Q3", box ? fmt(Number(box.upperQuartile)) : "—")}
+                      {renderKV(
+                        "Q3",
+                        box ? fmt(Number(box.upperQuartile)) : "—",
+                      )}
                       {renderKV("Max", box ? fmt(Number(box.max)) : "—")}
-                      {renderKV("Count", box ? String(Array.isArray(box.values) ? box.values.length : 0) : "0")}
+                      {renderKV(
+                        "Count",
+                        String(
+                          (box
+                            ? Array.isArray(box.values)
+                              ? box.values.length
+                              : 0
+                            : 0) + (outliers?.ensemble ?? 0),
+                        ),
+                      )}
+                      {outliers?.ensemble ? (
+                        <div className="col-span-2 mt-1 text-muted-foreground">
+                          ({outliers.ensemble} outliers clipped)
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -263,8 +326,6 @@ export const ComparisonChart = ({
           />
 
           {/* Render ensemble distribution using the shared BoxWhiskerShape */}
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {/* @ts-ignore - Recharts dataKey as function is acceptable */}
           <Bar
             dataKey={(d: any) => d.groups.ensemble.median}
             fill="#93C5FD"

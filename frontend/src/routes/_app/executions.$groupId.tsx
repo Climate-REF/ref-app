@@ -105,13 +105,20 @@ const ExecutionInfo = () => {
               },
               {
                 label: "Execution Group Key",
-                value: <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">{data?.key}</span>,
+                value: (
+                  <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">
+                    {data?.key}
+                  </span>
+                ),
                 className: "col-span-2",
               },
               {
                 label: "Status",
                 value: (
-                  <Badge className="mt-1" title="Whether the selected execution completed without errors.">
+                  <Badge
+                    className="mt-1"
+                    title="Whether the selected execution completed without errors."
+                  >
                     {execution.successful ? "Success" : "Failed"}
                   </Badge>
                 ),
@@ -160,7 +167,8 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Datasets</CardTitle>
                   <CardDescription>
-                    All datasets used in this execution. Click a dataset to view metadata and provenance.
+                    All datasets used in this execution. Click a dataset to view
+                    metadata and provenance.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -177,7 +185,8 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Executions</CardTitle>
                   <CardDescription>
-                    History of runs for this execution group. Select a row to bring its files, values, and logs into view.
+                    History of runs for this execution group. Select a row to
+                    bring its files, values, and logs into view.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -191,7 +200,8 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Files</CardTitle>
                   <CardDescription>
-                    Outputs created by the current execution. Click a file to preview or download.
+                    Outputs created by the current execution. Click a file to
+                    preview or download.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -205,7 +215,8 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Metric Values</CardTitle>
                   <CardDescription>
-                    Scalar metrics from the current execution. Use facets to filter and Export to download as CSV.
+                    Scalar metrics from the current execution. Use facets to
+                    filter and Export to download as CSV.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -242,7 +253,8 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Logs</CardTitle>
                   <CardDescription>
-                    Runtime logs from the selected execution. Use your browser search (Ctrl/Cmd+F) to find warnings or errors.
+                    Runtime logs from the selected execution. Use your browser
+                    search (Ctrl/Cmd+F) to find warnings or errors.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

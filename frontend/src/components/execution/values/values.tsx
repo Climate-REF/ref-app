@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { useValuesProcessor, type Filter } from "@/hooks/useValuesProcessor";
+import { type Filter, useValuesProcessor } from "@/hooks/useValuesProcessor";
 import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
 import type { Facet, MetricValue } from "./types";
 import ValuesDataTable from "./valuesDataTable.tsx";
