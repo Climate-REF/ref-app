@@ -174,6 +174,7 @@ async def metric_values(
         models.MetricValue.execution_id == execution.id
     )
 
+    # Return metric values as a CSV file
     if format == "csv":
         metric_values = metric_values_query.all()
 

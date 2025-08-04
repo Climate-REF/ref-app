@@ -71,7 +71,7 @@ const DiagnosticInfo = () => {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Groupings</p>
               <div className="flex flex-col gap-2">
-                {data.group_by.map((groups) => (
+                {data.group_by.map((groups: GroupBy) => (
                   <GroupByItem key={groups.source_type} {...groups} />
                 ))}
               </div>

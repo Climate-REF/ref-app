@@ -301,3 +301,33 @@ class MetricValueCollection(BaseModel):
                 for facet_key, facet_values in facets.items()
             ],
         )
+
+
+class MetricValueComparison(BaseModel):
+    """
+    A comparison of metric values for a specific source against an ensemble.
+    """
+
+    source: MetricValueCollection
+    """
+    Metric values for the specified source_id.
+    """
+    ensemble: MetricValueCollection
+    """
+    Metric values for all other source_ids in the execution group.
+    """
+
+
+class MetricValueFacetSummary(BaseModel):
+    """
+    Summary of the dimensions used in a metric value collection.
+    """
+
+    dimensions: dict[str, list[str]]
+    """
+    Dimensions and their unique values for the current filter
+    """
+    count: int
+    """
+    Number of metric values with the current filter
+    """
