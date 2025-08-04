@@ -160,7 +160,7 @@ export const EnsembleChart = ({
 
               return (
                 <div
-                  className="rounded-md border bg-white p-2 text-xs shadow-md"
+                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-md"
                   style={{ borderColor: "hsl(var(--border))" }}
                 >
                   <div className="mb-2 font-medium">{label}</div>

@@ -20,10 +20,10 @@ export const DiagnosticFigureGalleryCardSkeleton = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="h-6 w-3/4 bg-gray-200 animate-pulse" />
+        <div className="h-6 w-3/4 bg-gray-200 dark:bg-muted animate-pulse" />
       </CardHeader>
       <CardContent>
-        <div className="h-64 bg-gray-200 animate-pulse" />
+        <div className="h-64 bg-gray-200 dark:bg-muted animate-pulse" />
       </CardContent>
     </Card>
   );

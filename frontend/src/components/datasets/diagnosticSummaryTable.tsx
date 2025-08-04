@@ -26,6 +26,12 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     accessorKey: "description",
     header: "Description",
     enableSorting: false,
+    cell: ({ getValue }) => {
+      const val = String(getValue() ?? "");
+      return (
+        <span className="text-foreground/80 dark:text-foreground/70">{val}</span>
+      );
+    },
   },
   {
     id: "has_metric_values",
@@ -42,7 +48,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     cell: (cell) =>
       cell.getValue() ? (
         <span
-          className="inline-flex items-center gap-1 text-emerald-600"
+          className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
           title="This diagnostic has scalar metric values available."
         >
           ● Available
@@ -67,7 +73,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
       const total = (cell.row.original as any).execution_group_count ?? 0;
       const allSuccessful = total > 0 && successful === total;
       const className = allSuccessful
-        ? "text-emerald-600 font-medium"
+        ? "text-emerald-600 dark:text-emerald-400 font-medium"
         : "text-muted-foreground";
       return (
         <span
@@ -90,7 +96,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
           diagnosticSlug: cell.row.original.slug,
         }}
       >
-        <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
+        <SquareArrowOutUpRight className="text-blue-500 hover:text-blue-300 dark:text-blue-400 dark:hover:text-blue-300" />
       </Link>
     ),
   }),

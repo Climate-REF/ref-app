@@ -150,7 +150,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         aria-label="Open execution group detail"
         title="Open execution group detail"
       >
-        <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
+        <SquareArrowOutUpRight className="text-blue-500 hover:text-blue-300 dark:text-blue-400 dark:hover:text-blue-300" />
       </Link>
     ),
   }),

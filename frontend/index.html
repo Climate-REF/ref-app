@@ -10,6 +10,26 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rapid Evaluation Framework</title>
+    <script>
+      // Prevent initial theme flash by setting html.dark before React mounts
+      (function () {
+        try {
+          const storageKey = "theme";
+          const getStored = () => {
+            try { return localStorage.getItem(storageKey); } catch { return null; }
+          };
+          const mql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+          const systemPrefersDark = () => mql && mql.matches;
+          const stored = getStored();
+          const shouldDark = stored ? stored === "dark" : systemPrefersDark();
+          if (shouldDark) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
