@@ -29,7 +29,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
           {Object.entries(selectors).map(([sourceType, values]) => (
             <div className="flex gap-2" key={sourceType}>
               {values.map(([key, value]) => (
-                <SourceTypeBadge sourceType={sourceType} key={key}>
+                <SourceTypeBadge sourceType={sourceType} key={key} title={`${sourceType}:${key}`}>
                   {value}
                 </SourceTypeBadge>
               ))}
@@ -49,30 +49,44 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   },
   {
     accessorKey: "key",
-    header: "Key",
+    header: () => (
+      <span title="Unique identifier summarizing the selectors and parameters for this group.">
+        Key
+      </span>
+    ),
+    cell: ({ getValue }) => (
+      <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">
+        {String(getValue() ?? "")}
+      </span>
+    ),
   },
   {
-    header: "Datasets",
+    id: "dataset_count",
+    header: () => (
+      <span title="Number of datasets used in the latest execution in this group.">
+        Datasets
+      </span>
+    ),
     accessorFn: (row) => row.latest_execution?.dataset_count,
   },
   {
-    header: "Dirty",
+    header: () => <span title="New or changed inputs detected; re-run recommended.">Dirty</span>,
     accessorKey: "dirty",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant="destructive">Yes</Badge>
+        <Badge variant="destructive" title="Group requires re-run due to changed inputs.">Yes</Badge>
       ) : (
-        <Badge variant="outline">No</Badge>
+        <Badge variant="outline" title="No changes detected since last run.">No</Badge>
       ),
   },
   {
-    header: "Successful",
+    header: () => <span title="Whether the latest execution completed without errors.">Successful</span>,
     accessorKey: "latest_execution.successful",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge variant="outline">Yes</Badge>
+        <Badge variant="outline" title="Latest execution succeeded.">Yes</Badge>
       ) : (
-        <Badge variant="destructive">No</Badge>
+        <Badge variant="destructive" title="Latest execution failed.">No</Badge>
       ),
   },
   {
@@ -86,6 +100,8 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
       <Link
         to="/executions/$groupId"
         params={{ groupId: cell.row.original.id.toString() }}
+        aria-label="Open execution group detail"
+        title="Open execution group detail"
       >
         <SquareArrowOutUpRight className="hover:text-blue-300 text-blue-500" />
       </Link>

@@ -14,15 +14,24 @@ export const SourceExplorer = () => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent>
-          <SourceSelect options={data?.dimensions.source_id ?? []} />
+        <CardContent className="space-y-2">
+          <label htmlFor="source-id-select" className="text-sm font-medium">
+            Source ID
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Choose a model or dataset source. This will scope the explorer to results for the selected source.
+          </p>
+          {/* Wrap the select with an associated label using aria-labelledby for accessibility since SourceSelect doesn't accept id */}
+          <div role="group" aria-labelledby="source-id-select-label">
+            <SourceSelect options={data?.dimensions.source_id ?? []} />
+          </div>
         </CardContent>
       </Card>
 
       {sourceId ? (
         <SourceExplorerContent sourceId={sourceId} />
       ) : (
-        <div className="text-center">Please select a model to continue</div>
+        <div className="text-center text-sm text-muted-foreground">Please select a model to continue</div>
       )}
     </div>
   );

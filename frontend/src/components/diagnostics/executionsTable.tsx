@@ -19,21 +19,39 @@ const columnHelper = createColumnHelper<Execution>();
 export const columns: ColumnDef<Execution>[] = [
   {
     accessorKey: "dataset_hash",
-    header: "Dataset Hash",
+    header: () => (
+      <span title="Signature of dataset inputs used for this execution.">
+        Dataset Hash
+      </span>
+    ),
+    cell: ({ getValue }) => (
+      <span title="Unique signature of dataset inputs used for this execution.">
+        {String(getValue() ?? "")}
+      </span>
+    ),
   },
   {
-    accessorKey: "successful",
+    id: "status",
+    header: "Status",
+    accessorFn: (row) => row.successful,
+    cell: (cell) =>
+      cell.getValue() ? (
+        <Badge variant="outline" title="Execution succeeded.">Success</Badge>
+      ) : (
+        <Badge variant="destructive" title="Execution failed.">Failed</Badge>
+      ),
   },
   {
     id: "latest",
+    header: () => <span title="Indicates the most recent or currently selected execution.">Latest/Selected</span>,
     cell: (cell) => {
       const rowIndex = cell.row.index;
       const { executionId } = Route.useSearch();
       if (executionId && cell.row.original.id.toString() === executionId) {
-        return <Badge variant="default">Selected</Badge>;
+        return <Badge variant="default" title="This execution is currently selected.">Selected</Badge>;
       }
       if (rowIndex === 0) {
-        return <Badge variant="outline">Latest</Badge>;
+        return <Badge variant="outline" title="This is the most recent execution.">Latest</Badge>;
       }
     },
   },
@@ -47,8 +65,10 @@ export const columns: ColumnDef<Execution>[] = [
     cell: (context) => {
       const navigate = useNavigate({ from: Route.fullPath });
       return (
-        <SquareArrowOutUpRight
-          className="hover:text-blue-300 text-blue-500"
+        <button
+          type="button"
+          aria-label="Open execution in context"
+          title="Open execution in context"
           onClick={() => {
             return navigate({
               search: (prev) => ({
@@ -57,7 +77,10 @@ export const columns: ColumnDef<Execution>[] = [
               }),
             });
           }}
-        />
+          className="inline-flex items-center text-blue-500 hover:text-blue-300"
+        >
+          <SquareArrowOutUpRight className="pointer-events-none" />
+        </button>
       );
     },
   }),
@@ -73,7 +96,7 @@ function ExecutionsTable({ results }: ResultListTableProps) {
       <CardHeader>
         <CardTitle>History of recent diagnostic executions</CardTitle>
         <CardDescription>
-          Only the latest results are used in the data explorer
+          Latest is the most recent run. Selected indicates the execution currently in view for files, values, and logs.
         </CardDescription>
       </CardHeader>
       <CardContent>

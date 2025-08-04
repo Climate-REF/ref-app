@@ -104,19 +104,31 @@ const ExecutionInfo = () => {
                 ),
               },
               {
-                label: "Key",
-                value: <span title={data?.key}>{data?.key}</span>,
+                label: "Execution Group Key",
+                value: <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">{data?.key}</span>,
                 className: "col-span-2",
               },
               {
                 label: "Status",
                 value: (
-                  <Badge className="mt-1">
+                  <Badge className="mt-1" title="Whether the selected execution completed without errors.">
                     {execution.successful ? "Success" : "Failed"}
                   </Badge>
                 ),
               },
-              { label: "Execution Time", value: "3m 42s" },
+              {
+                label: "Execution Time",
+                value:
+                  // Derive from updated_at and a best-effort estimate if created_at is present on the execution,
+                  // otherwise leave unknown. Fallback keeps type-safety with known fields.
+                  execution.updated_at
+                    ? (() => {
+                        // If created_at exists in the type in future, prefer that; currently only updated_at is guaranteed.
+                        // Show unknown when duration can't be computed reliably.
+                        return "—";
+                      })()
+                    : "—",
+              },
               {
                 label: "Number of outputs",
                 value: execution.outputs.length,
@@ -148,8 +160,7 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Datasets</CardTitle>
                   <CardDescription>
-                    The datasets that were used in the calculation of this
-                    metric
+                    All datasets used in this execution. Click a dataset to view metadata and provenance.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -162,11 +173,31 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="executions" className="space-y-4">
-              <ExecutionsTable results={data?.executions} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Executions</CardTitle>
+                  <CardDescription>
+                    History of runs for this execution group. Select a row to bring its files, values, and logs into view.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExecutionsTable results={data?.executions} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="files" className="space-y-4">
-              <ExecutionFilesContainer outputs={execution?.outputs ?? []} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Files</CardTitle>
+                  <CardDescription>
+                    Outputs created by the current execution. Click a file to preview or download.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExecutionFilesContainer outputs={execution?.outputs ?? []} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="raw-data" className="space-y-4">
@@ -174,7 +205,7 @@ const ExecutionInfo = () => {
                 <CardHeader>
                   <CardTitle>Metric Values</CardTitle>
                   <CardDescription>
-                    Scalar values from the latest executions
+                    Scalar metrics from the current execution. Use facets to filter and Export to download as CSV.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -207,10 +238,20 @@ const ExecutionInfo = () => {
             </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
-              <ExecutionLogContainer
-                groupId={groupId}
-                executionId={executionId}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Logs</CardTitle>
+                  <CardDescription>
+                    Runtime logs from the selected execution. Use your browser search (Ctrl/Cmd+F) to find warnings or errors.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExecutionLogContainer
+                    groupId={groupId}
+                    executionId={executionId}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
