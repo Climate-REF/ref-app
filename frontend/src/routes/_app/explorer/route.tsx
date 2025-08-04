@@ -50,7 +50,7 @@ const ExplorerLayout = () => {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      
+
       <Outlet />
     </div>
   );

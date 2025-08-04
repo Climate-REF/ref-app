@@ -29,7 +29,9 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     cell: ({ getValue }) => {
       const val = String(getValue() ?? "");
       return (
-        <span className="text-foreground/80 dark:text-foreground/70">{val}</span>
+        <span className="text-foreground/80 dark:text-foreground/70">
+          {val}
+        </span>
       );
     },
   },
