@@ -1,39 +1,67 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+  ExplorerCard,
+  ExplorerThemeLayout,
+} from "./_components/explorerThemeLayout";
+
+const cards: ExplorerCard[] = [
+  {
+    title: "Modes of Variability",
+    description:
+      "Key metrics for large-scale atmospheric circulation patterns.",
+    charts: [
+      {
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-nam",
+        title: "NAM Bias",
+        otherFilters: {
+          method: "cbf",
+        },
+        xAxis: "statistic",
+      },
+      {
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-sam",
+        title: "SAM Bias",
+        otherFilters: {
+          method: "cbf",
+          statistic: "bias",
+        },
+      },
+      {
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-nao",
+        title: "NAO Bias",
+        otherFilters: {
+          method: "cbf",
+          statistic: "bias",
+        },
+      },
+      {
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-pna",
+        title: "PNA Bias",
+        otherFilters: {
+          method: "cbf",
+          statistic: "bias",
+        },
+      },
+    ],
+  },
+  {
+    title: "Cloud & Radiation",
+    description:
+      "Cloud properties and their effect on the Earth's energy balance.",
+    charts: [
+      {
+        provider: "esmvaltool",
+        diagnostic: "cloud-radiative-effects",
+        title: "Cloud Radiative Effects",
+        otherFilters: { statistic: "bias" },
+      },
+    ],
+  },
+];
 
 export function AtmosphereTheme() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Atmosphere</CardTitle>
-        <CardDescription>
-          The atmosphere theme is a dark theme with a blue and purple color
-          palette.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Theme Name</p>
-            <p className="font-medium">Atmosphere</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Color Palette</p>
-            <p className="font-medium">Blue and Purple</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Description</p>
-            <p className="font-medium">
-              A dark theme with a blue and purple color palette.
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return <ExplorerThemeLayout cards={cards} />;
 }

@@ -1,39 +1,62 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+  ExplorerCard,
+  ExplorerThemeLayout,
+} from "./_components/explorerThemeLayout";
+
+const cards: ExplorerCard[] = [
+  {
+    title: "Climate Sensitivity",
+    description: "Fundamental metrics of the global climate response to CO2.",
+    charts: [
+      {
+        provider: "esmvaltool",
+        diagnostic: "equilibrium-climate-sensitivity",
+        title: "ECS",
+        metricUnits: "",
+        xAxis: "metric",
+        clipMax: 10,
+      },
+      {
+        provider: "esmvaltool",
+        diagnostic: "transient-climate-response",
+        title: "TCR",
+        metricUnits: "K",
+      },
+      {
+        provider: "esmvaltool",
+        diagnostic: "transient-climate-response-emissions",
+        title: "TCRE",
+        metricUnits: "K/EgC",
+      },
+      {
+        provider: "esmvaltool",
+        diagnostic: "zero-emission-commitment",
+        title: "ZEC",
+        metricUnits: "K",
+      },
+    ],
+  },
+  {
+    title: "El Niño-Southern Oscillation",
+    description:
+      "Characteristics of the primary driver of interannual climate variability.",
+    charts: [
+      {
+        provider: "esmvaltool",
+        diagnostic: "enso-basic-climatology",
+        title: "ENSO Basic Climatology",
+        xAxis: "metric",
+      },
+      {
+        provider: "pmp",
+        diagnostic: "enso_tel",
+        title: "ENSO Teleconnections",
+        xAxis: "metric",
+      },
+    ],
+  },
+];
 
 export function EarthSystemTheme() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Earth System</CardTitle>
-        <CardDescription>
-          The atmosphere theme is a dark theme with a blue and purple color
-          palette.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Theme Name</p>
-            <p className="font-medium">Atmosphere</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Color Palette</p>
-            <p className="font-medium">Blue and Purple</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Description</p>
-            <p className="font-medium">
-              A dark theme with a blue and purple color palette.
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return <ExplorerThemeLayout cards={cards} />;
 }

@@ -1,6 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { AtmosphereTheme } from "@/components/explorer/theme/atmosphere.tsx";
-import { EarthSystemTheme } from "@/components/explorer/theme/earthSystem.tsx";
+import { AtmosphereTheme } from "@/components/explorer/theme/atmosphere";
+import { EarthSystemTheme } from "@/components/explorer/theme/earthSystem";
+import { ImpactAndAdaptationTheme } from "@/components/explorer/theme/impactAndAdaptation";
+import { LandTheme } from "@/components/explorer/theme/land";
+import { SeaTheme } from "@/components/explorer/theme/sea";
 import { Button } from "@/components/ui/button.tsx";
 import { Route } from "@/routes/_app/explorer/themes.tsx";
 
@@ -17,18 +20,18 @@ const themes = [
   },
   {
     name: "impact-and-adaptation",
-    title: "Impact And Adaptation",
-    element: <>Test</>,
+    title: "Impact and Adaptation",
+    element: <ImpactAndAdaptationTheme />,
   },
   {
     name: "land",
     title: "Land and Land Ice",
-    element: <>Test</>,
+    element: <LandTheme />,
   },
   {
     name: "sea",
     title: "Sea and Sea Ice",
-    element: <>Test Sea</>,
+    element: <SeaTheme />,
   },
 ];
 
