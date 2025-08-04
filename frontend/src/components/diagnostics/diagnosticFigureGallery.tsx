@@ -41,7 +41,7 @@ export function DiagnosticFigureGallery({
       </div>
       {figures.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {figures.map((figure) => (
+          {figures.slice(0, 10).map((figure) => (
             <Figure key={figure.id} {...figure} />
           ))}
         </div>
