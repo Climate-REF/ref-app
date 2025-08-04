@@ -522,6 +522,11 @@ export type ExecutionsListRecentExecutionGroupsData = {
     path?: never;
     query?: {
         limit?: number;
+        offset?: number;
+        diagnostic_name_contains?: string | null;
+        provider_name_contains?: string | null;
+        dirty?: boolean | null;
+        successful?: boolean | null;
     };
     url: '/api/v1/executions/';
 };

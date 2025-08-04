@@ -7,8 +7,9 @@ const cards: ExplorerCard[] = [
     {
     title: "Warming Levels",
     description: "Climate conditions at different global warming levels, relevant to policy targets.",
-    charts: [
+    content: [
       {
+        type: "ensemble-chart",
         provider: "esmvaltool",
         diagnostic: "climate-at-global-warming-levels",
         title: "Global Mean Temperature Change at Warming Levels",

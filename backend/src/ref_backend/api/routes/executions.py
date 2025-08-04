@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import func
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -28,20 +29,63 @@ router = APIRouter(prefix="/executions", tags=["executions"])
 
 @router.get("/")
 async def list_recent_execution_groups(
-    app_context: AppContextDep, limit: int = 10
+    app_context: AppContextDep,
+    limit: int = 10,
+    offset: int = 0,
+    diagnostic_name_contains: str | None = None,
+    provider_name_contains: str | None = None,
+    dirty: bool | None = None,
+    successful: bool | None = None,
 ) -> Collection[ExecutionGroup]:
     """
     List the most recent execution groups
     """
+    query = app_context.session.query(models.ExecutionGroup).join(
+        models.ExecutionGroup.diagnostic
+    )
+
+    if diagnostic_name_contains:
+        query = query.filter(
+            models.Diagnostic.name.ilike(f"%{diagnostic_name_contains}%")
+        )
+    if provider_name_contains:
+        query = query.join(models.Diagnostic.provider).filter(
+            models.Provider.name.ilike(f"%{provider_name_contains}%")
+        )
+    if dirty is not None:
+        query = query.filter(models.ExecutionGroup.dirty == dirty)
+    if successful is not None:
+        # Subquery to get the ID of the latest execution for each group
+        latest_execution_subquery = (
+            app_context.session.query(
+                models.Execution.execution_group_id,
+                func.max(models.Execution.id).label("max_id"),
+            )
+            .group_by(models.Execution.execution_group_id)
+            .subquery()
+        )
+
+        query = query.join(
+            latest_execution_subquery,
+            models.ExecutionGroup.id == latest_execution_subquery.c.execution_group_id,
+        ).join(
+            models.Execution,
+            models.Execution.id == latest_execution_subquery.c.max_id,
+        )
+
+        query = query.filter(models.Execution.successful == successful)
+
+    total_count = query.count()
     execution_groups = (
-        app_context.session.query(models.ExecutionGroup)
-        .order_by(models.ExecutionGroup.updated_at.desc())
+        query.order_by(models.ExecutionGroup.updated_at.desc())
         .limit(limit)
+        .offset(offset)
         .all()
     )
 
     return Collection(
-        data=[ExecutionGroup.build(m, app_context) for m in execution_groups]
+        total_count=total_count,
+        data=[ExecutionGroup.build(m, app_context) for m in execution_groups],
     )
 
 

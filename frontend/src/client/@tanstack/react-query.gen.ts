@@ -2,7 +2,7 @@
 
 import { type Options, datasetsList, datasetsGet, datasetsExecutions, diagnosticsList, diagnosticsFacets, diagnosticsGet, diagnosticsListExecutionGroups, diagnosticsComparison, diagnosticsListExecutions, diagnosticsListMetricValues, executionsListRecentExecutionGroups, executionsGet, executionsExecution, executionsExecutionDatasets, executionsExecutionLogs, executionsMetricBundle, executionsMetricValues, executionsExecutionArchive, resultsGetResult, utilsHealthCheck } from '../sdk.gen';
 import { queryOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { DatasetsListData, DatasetsListError, DatasetsListResponse, DatasetsGetData, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DiagnosticsListData, DiagnosticsFacetsData, DiagnosticsGetData, DiagnosticsListExecutionGroupsData, DiagnosticsComparisonData, DiagnosticsListExecutionsData, DiagnosticsListMetricValuesData, ExecutionsListRecentExecutionGroupsData, ExecutionsGetData, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionLogsData, ExecutionsMetricBundleData, ExecutionsMetricValuesData, ExecutionsExecutionArchiveData, ResultsGetResultData, UtilsHealthCheckData } from '../types.gen';
+import type { DatasetsListData, DatasetsListError, DatasetsListResponse, DatasetsGetData, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DiagnosticsListData, DiagnosticsFacetsData, DiagnosticsGetData, DiagnosticsListExecutionGroupsData, DiagnosticsComparisonData, DiagnosticsListExecutionsData, DiagnosticsListMetricValuesData, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsGetData, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionLogsData, ExecutionsMetricBundleData, ExecutionsMetricValuesData, ExecutionsExecutionArchiveData, ResultsGetResultData, UtilsHealthCheckData } from '../types.gen';
 import { client as _heyApiClient } from '../client.gen';
 
 export type QueryKey<TOptions extends Options> = [
@@ -301,6 +301,32 @@ export const executionsListRecentExecutionGroupsOptions = (options?: Options<Exe
             return data;
         },
         queryKey: executionsListRecentExecutionGroupsQueryKey(options)
+    });
+};
+
+export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Options<ExecutionsListRecentExecutionGroupsData>): QueryKey<Options<ExecutionsListRecentExecutionGroupsData>> => createQueryKey('executionsListRecentExecutionGroups', options, true);
+
+export const executionsListRecentExecutionGroupsInfiniteOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => {
+    return infiniteQueryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, InfiniteData<ExecutionsListRecentExecutionGroupsResponse>, QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>, number | Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await executionsListRecentExecutionGroups({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: executionsListRecentExecutionGroupsInfiniteQueryKey(options)
     });
 };
 

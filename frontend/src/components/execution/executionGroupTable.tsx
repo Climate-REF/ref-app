@@ -6,6 +6,7 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
+import { cn } from "@/lib/tanstack-query-ext.ts";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
   Card,
@@ -14,6 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -25,17 +32,18 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
       const selectors = cell.row.original.selectors;
 
       return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pr-2">
           {Object.entries(selectors).map(([sourceType, values]) => (
-            <div className="flex gap-2" key={sourceType}>
+            <div className="flex gap-2 flex-wrap" key={sourceType}>
               {values.map(([key, value]) => (
-                <SourceTypeBadge
-                  sourceType={sourceType}
-                  key={key}
-                  title={`${sourceType}:${key}`}
-                >
-                  {value}
-                </SourceTypeBadge>
+                <span className="inline-flex max-w-[260px] truncate" title={`${sourceType}:${key} = ${value}`}>
+                  <SourceTypeBadge
+                    sourceType={sourceType}
+                    key={key}
+                  >
+                    {value}
+                  </SourceTypeBadge>
+                </span>
               ))}
             </div>
           ))}
@@ -46,10 +54,26 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   {
     accessorKey: "diagnostic.name",
     header: "Diagnostic",
+    cell: ({ getValue }) => {
+      const val = String(getValue() ?? "");
+      return (
+        <span className="block truncate max-w-[240px]" title={val}>
+          {val}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "diagnostic.provider.name",
     header: "Provider",
+    cell: ({ getValue }) => {
+      const val = String(getValue() ?? "");
+      return (
+        <span className="block truncate max-w-[180px]" title={val}>
+          {val}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "key",
@@ -58,11 +82,20 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         Key
       </span>
     ),
-    cell: ({ getValue }) => (
-      <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">
-        {String(getValue() ?? "")}
-      </span>
-    ),
+    size: 280,
+    minSize: 220,
+    maxSize: 420,
+    cell: ({ getValue }) => {
+      const val = String(getValue() ?? "");
+      return (
+        <span
+          className="truncate block pr-2 max-w-[320px]"
+          title={val}
+        >
+          {val}
+        </span>
+      );
+    },
   },
   {
     id: "dataset_count",

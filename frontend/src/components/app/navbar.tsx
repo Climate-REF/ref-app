@@ -33,6 +33,7 @@ export function Navbar() {
       </Link>
       <NavigationMenuList>
         <NavItem title="Diagnostics" to={"/diagnostics"} />
+        <NavItem title="Executions" to={"/executions"} />
         <NavItem title="Data Explorer" to={"/explorer"} />
         <NavItem title="Datasets" to={"/datasets"} />
       </NavigationMenuList>
