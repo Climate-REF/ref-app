@@ -1,12 +1,19 @@
 import { BarChart, Download, Table } from "lucide-react";
-import { useState } from "react";
+import * as React from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useValuesProcessor, type Filter } from "@/hooks/useValuesProcessor";
 import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
 import type { Facet, MetricValue } from "./types";
 import ValuesDataTable from "./valuesDataTable.tsx";
-import { ValuesFigure } from "./valuesFigure.tsx";
+
+const ValuesFigure = React.lazy(() =>
+  import("./valuesFigure.tsx").then((module) => ({
+    default: module.ValuesFigure,
+  })),
+);
 
 type ValuesProps = {
   values: MetricValue[];
@@ -88,13 +95,19 @@ export function Values(props: ValuesProps) {
             />
           )}
           {viewType === "bar" && (
-            <ValuesFigure
-              defaultGroupby="source_id"
-              defaultXAxis="statistic"
-              values={finalDisplayedValues}
-              facets={props.facets}
-              loading={props.loading}
-            />
+            <Suspense
+              fallback={
+                <Skeleton className="w-full h-[500px] rounded-md border" />
+              }
+            >
+              <ValuesFigure
+                defaultGroupby="source_id"
+                defaultXAxis="statistic"
+                values={finalDisplayedValues}
+                facets={props.facets}
+                loading={props.loading}
+              />
+            </Suspense>
           )}
         </div>
       </CardContent>

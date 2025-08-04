@@ -1,11 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ErrorComponent } from "@tanstack/react-router";
+import * as React from "react";
+import { Suspense } from "react";
 import { diagnosticsComparison } from "@/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import { ComparisonChart } from "./comparisonChart";
+const ComparisonChart = React.lazy(() =>
+  import("./comparisonChart.tsx").then((module) => ({
+    default: module.ComparisonChart,
+  })),
+);
 
 export const ComparisonChartCard = ({
   providerSlug,
@@ -63,11 +69,13 @@ export const ComparisonChartCard = ({
       </CardHeader>
       <CardContent>
         {data ? (
-          <ComparisonChart
-            data={data}
-            metricName={metricName}
-            metricUnits={metricUnits}
-          />
+          <Suspense fallback={<ComparisonChartCardSkeleton />}>
+            <ComparisonChart
+              data={data}
+              metricName={metricName}
+              metricUnits={metricUnits}
+            />
+          </Suspense>
         ) : (
           <div className="h-48">
             <span className="mx-auto">No comparison data available.</span></div>

@@ -1,4 +1,3 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ExecutionGroup } from "@/client";
 import {
@@ -38,19 +37,9 @@ export const Route = createFileRoute("/_app/datasets/$slug")({
 });
 
 function DatasetPage() {
-  const { slug } = Route.useParams();
-  const { data: datasetData } = useSuspenseQuery(
-    datasetsGetOptions({ path: { slug: slug } }),
-  );
-  const ds = datasetData;
-
-  const { data: executionsData } = useSuspenseQuery(
-    datasetsExecutionsOptions({
-      path: { dataset_id: ds.id },
-    }),
-  );
-
-  const exs = (executionsData?.data as unknown as ExecutionGroup[]) ?? [];
+  const { dataset, executions } = Route.useLoaderData();
+  const ds = dataset;
+  const exs = (executions?.data as unknown as ExecutionGroup[]) ?? [];
 
   return (
     <div className="container mx-auto p-4">
@@ -93,4 +82,3 @@ function DatasetPage() {
   );
 }
 
-export default DatasetPage;
