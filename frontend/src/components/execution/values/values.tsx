@@ -2,7 +2,7 @@ import { BarChart, Download, Table } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { useValuesProcessor } from "@/hooks/useValuesProcessor";
+import { useValuesProcessor, type Filter } from "@/hooks/useValuesProcessor";
 import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
 import type { Facet, MetricValue } from "./types";
 import ValuesDataTable from "./valuesDataTable.tsx";
@@ -13,6 +13,8 @@ type ValuesProps = {
   facets: Facet[];
   loading: boolean;
   onDownload?: () => void;
+  initialFilters?: Filter[];
+  onFiltersChange?: (filters: Filter[]) => void;
 };
 
 type ViewType = "bar" | "table";
@@ -31,6 +33,8 @@ export function Values(props: ValuesProps) {
   } = useValuesProcessor({
     initialValues: props.values,
     loading: props.loading,
+    initialFilters: props.initialFilters,
+    onFiltersChange: props.onFiltersChange,
   });
 
   return (

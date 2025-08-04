@@ -14,22 +14,18 @@ import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.t
 
 interface ComparisonChartProps {
   data: MetricValueComparison;
-  title: string;
   metricName: string;
   metricUnits: string;
-  /**
-   * Optional value formatter used for:
-   * - Tooltip values
-   * - Y-axis tick labels
-   * - Box title (Q1/Q3/Median)
-   * Defaults to fixed 1 decimal place.
-   */
   valueFormatter?: (v: number) => string;
+}
+
+
+export const EmptyComparisonChart = ()  => {
+    return (<div className="">No data available for comparison.</div>)
 }
 
 export const ComparisonChart = ({
   data,
-  title,
   metricName,
   metricUnits,
   valueFormatter,
@@ -43,7 +39,7 @@ export const ComparisonChart = ({
     : [];
 
   if (!ensembleArray.length || !sourceArray.length) {
-    return <div>No data available for comparison.</div>;
+    return <EmptyComparisonChart /> ;
   }
 
   // Ensure numeric values only and sort for quantiles
@@ -154,12 +150,7 @@ export const ComparisonChart = ({
 
   return (
     <div className="w-full h-full">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <div className="text-xs text-muted-foreground">
-          {metricName} ({metricUnits})
-        </div>
-      </div>
+
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart
           data={chartData}
@@ -236,7 +227,7 @@ export const ComparisonChart = ({
                         "Min",
                         Number.isFinite(sourceStats?.min ?? NaN) ? fmt(Number(sourceStats!.min)) : "—",
                       )}
-                      {renderKV(
+                                      {renderKV(
                         "Median",
                         Number.isFinite(sourceStats?.median ?? NaN) ? fmt(Number(sourceStats!.median)) : "—",
                       )}

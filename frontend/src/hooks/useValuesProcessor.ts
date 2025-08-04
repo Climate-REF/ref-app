@@ -14,15 +14,30 @@ export interface Filter {
 interface UseValuesProcessorProps {
   initialValues: MetricValue[];
   loading: boolean;
+  initialFilters?: Filter[];
+  onFiltersChange?: (filters: Filter[]) => void;
 }
 
 export function useValuesProcessor({
   initialValues,
   loading,
+  initialFilters,
+  onFiltersChange,
 }: UseValuesProcessorProps) {
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [filters, setInternalFilters] = useState<Filter[]>(
+    initialFilters || [],
+  );
   const [excludedRowIds, setExcludedRowIds] = useState<Set<string>>(new Set());
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const setFilters = (newFilters: SetStateAction<Filter[]>) => {
+    setInternalFilters(newFilters);
+    if (onFiltersChange) {
+      const resolvedFilters =
+        typeof newFilters === "function" ? newFilters(filters) : newFilters;
+      onFiltersChange(resolvedFilters);
+    }
+  };
 
   const handleExcludeRowIds = (excluded: SetStateAction<Set<string>>) => {
     // Reset the row selection when excluding rows

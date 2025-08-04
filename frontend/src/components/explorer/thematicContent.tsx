@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { AtmosphereTheme } from "@/components/explorer/theme/atmosphere.tsx";
 import { EarthSystemTheme } from "@/components/explorer/theme/earthSystem.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -42,6 +42,7 @@ export function ThematicContent() {
           <Link
             key={item.name}
             to={Route.fullPath}
+            // @ts-expect-error Incorrect type for search
             search={{ theme: item.name }}
           >
             <Button

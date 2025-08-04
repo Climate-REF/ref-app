@@ -65,12 +65,12 @@ export const ComparisonChartCard = ({
         {data ? (
           <ComparisonChart
             data={data}
-            title={title}
             metricName={metricName}
             metricUnits={metricUnits}
           />
         ) : (
-          <div>No comparison data available.</div>
+          <div className="h-48">
+            <span className="mx-auto">No comparison data available.</span></div>
         )}
       </CardContent>
     </Card>
