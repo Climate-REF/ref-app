@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import cast
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import func
+from sqlalchemy import and_, exists, func, select
+from sqlalchemy.orm import aliased
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
+from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
@@ -36,13 +38,21 @@ async def list_recent_execution_groups(  # noqa: PLR0913
     provider_name_contains: str | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
+    source_id: str | None = None,
 ) -> Collection[ExecutionGroup]:
     """
     List the most recent execution groups
+
+    Supports filtering by:
+    - diagnostic_name_contains
+    - provider_name_contains
+    - dirty
+    - successful (filters by latest execution success)
+    - source_id (filters groups that include an execution whose datasets include a CMIP6 dataset with this source_id)
     """
-    query = app_context.session.query(models.ExecutionGroup).join(
-        models.ExecutionGroup.diagnostic
-    )
+    session = app_context.session
+
+    query = session.query(models.ExecutionGroup).join(models.ExecutionGroup.diagnostic)
 
     if diagnostic_name_contains:
         query = query.filter(
@@ -54,28 +64,47 @@ async def list_recent_execution_groups(  # noqa: PLR0913
         )
     if dirty is not None:
         query = query.filter(models.ExecutionGroup.dirty == dirty)
+
+    # Filter by latest execution successful flag (joins to a subquery of latest executions)
     if successful is not None:
-        # Subquery to get the ID of the latest execution for each group
         latest_execution_subquery = (
-            app_context.session.query(
-                models.Execution.execution_group_id,
+            session.query(
+                models.Execution.execution_group_id.label("egid"),
                 func.max(models.Execution.id).label("max_id"),
             )
             .group_by(models.Execution.execution_group_id)
             .subquery()
         )
 
-        query = query.join(
-            latest_execution_subquery,
-            models.ExecutionGroup.id == latest_execution_subquery.c.execution_group_id,
-        ).join(
-            models.Execution,
-            models.Execution.id == latest_execution_subquery.c.max_id,
+        query = (
+            query.join(
+                latest_execution_subquery,
+                models.ExecutionGroup.id == latest_execution_subquery.c.egid,
+            )
+            .join(
+                models.Execution,
+                models.Execution.id == latest_execution_subquery.c.max_id,
+            )
+            .filter(models.Execution.successful == successful)
         )
 
-        query = query.filter(models.Execution.successful == successful)
+    # Filter by source_id using a correlated EXISTS to avoid DISTINCT across joins
+    if source_id and CMIP6Dataset is not None:
+        EG = aliased(models.ExecutionGroup)
+        E = aliased(models.Execution)
+        DS = aliased(CMIP6Dataset)
+
+        # Build a SQLAlchemy Core selectable for EXISTS (required by typing/runtime)
+        exists_select = (
+            select(E.id)
+            .join(EG, E.execution_group_id == EG.id)
+            .join(DS, E.datasets)
+            .where(and_(EG.id == models.ExecutionGroup.id, DS.source_id == source_id))
+        )
+        query = query.filter(exists(exists_select))
 
     total_count = query.count()
+
     execution_groups = (
         query.order_by(models.ExecutionGroup.updated_at.desc())
         .limit(limit)
@@ -109,12 +138,14 @@ async def _get_execution(
             execution_id
         )
     else:
-        group: models.ExecutionGroup = session.query(models.ExecutionGroup).get(
-            group_id
+        # Fetch only the latest execution for the group without loading the full collection
+        execution = (
+            session.query(models.Execution)
+            .filter(models.Execution.execution_group_id == int(group_id))
+            .order_by(models.Execution.id.desc())
+            .limit(1)
+            .one_or_none()
         )
-        if not group or len(group.executions) == 0:
-            raise HTTPException(status_code=404, detail="Result not found")
-        execution = group.executions[-1]
 
     if not execution or not execution.execution_group_id == int(group_id):
         raise HTTPException(status_code=404, detail="Result not found")

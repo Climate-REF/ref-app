@@ -86,28 +86,17 @@ const cards: ExplorerCard[] = [
   },
 ];
 
-export const SourceExplorerContent = ({ sourceId }: { sourceId: string }) => {
-  // Compute simple source metrics using execution groups API with source filter
+const SourceExecutionsCard = ({ sourceId }: { sourceId: string }) => {
   const { data } = useSuspenseQuery(
     executionsListRecentExecutionGroupsOptions({
       query: {
-        // Use name_contains to match selectors containing the source id in their key/value
-        // Backends often expose more specific filters; adjust when dedicated filters are available
-        diagnostic_name_contains: undefined,
-        provider_name_contains: undefined,
-        limit: 1_000, // fetch enough to compute simple counts
+        source_id: sourceId,
+        limit: 1000,
       },
     }),
   );
 
-  const groups = data?.data ?? [];
-  // Count all groups whose selectors contain this sourceId
-  const sourceGroups = groups.filter((g) => {
-    // selectors is a mapping of sourceType -> array of [key, value]
-    return Object.values(g.selectors || {}).some((pairs) =>
-      pairs.some(([, value]) => String(value).includes(sourceId)),
-    );
-  });
+  const sourceGroups = data?.data ?? [];
 
   const executionCount = sourceGroups.length;
   // Failing metrics = groups where latest_execution.successful === false
@@ -117,50 +106,57 @@ export const SourceExplorerContent = ({ sourceId }: { sourceId: string }) => {
   }, 0);
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {/* Source metrics header card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Executions including "{sourceId}"</CardTitle>
-          <CardDescription>
-            Recent execution groups whose selectors include this source.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-rows gap-4">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="flex flex-col rounded-md border p-4">
-                <span className="text-xs text-muted-foreground">
-                  Executions
-                </span>
-                <span className="text-2xl font-semibold">{executionCount}</span>
-              </div>
-              <div className="flex flex-col rounded-md border p-4">
-                <span className="text-xs text-muted-foreground">Failing</span>
-                <span className="text-2xl font-semibold">{failingCount}</span>
-              </div>
-              <div className="flex flex-col rounded-md border p-4">
-                <span className="text-xs text-muted-foreground">Passing</span>
-                <span className="text-2xl font-semibold">
-                  {Math.max(executionCount - failingCount, 0)}
-                </span>
-              </div>
-              <div className="flex flex-col rounded-md border p-4">
-                <span className="text-xs text-muted-foreground">
-                  Failure Rate
-                </span>
-                <span className="text-2xl font-semibold">
-                  {executionCount > 0
-                    ? Math.round((failingCount / executionCount) * 100)
-                    : 0}
-                  %
-                </span>
-              </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Executions including "{sourceId}"</CardTitle>
+        <CardDescription>
+          Recent execution groups whose selectors include this source.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-rows gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="flex flex-col rounded-md border p-4">
+              <span className="text-xs text-muted-foreground">Executions</span>
+              <span className="text-2xl font-semibold">{executionCount}</span>
             </div>
-            <ExecutionGroupTable executionGroups={sourceGroups} />
+            <div className="flex flex-col rounded-md border p-4">
+              <span className="text-xs text-muted-foreground">Failing</span>
+              <span className="text-2xl font-semibold">{failingCount}</span>
+            </div>
+            <div className="flex flex-col rounded-md border p-4">
+              <span className="text-xs text-muted-foreground">Passing</span>
+              <span className="text-2xl font-semibold">
+                {Math.max(executionCount - failingCount, 0)}
+              </span>
+            </div>
+            <div className="flex flex-col rounded-md border p-4">
+              <span className="text-xs text-muted-foreground">
+                Failure Rate
+              </span>
+              <span className="text-2xl font-semibold">
+                {executionCount > 0
+                  ? Math.round((failingCount / executionCount) * 100)
+                  : 0}
+                %
+              </span>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <ExecutionGroupTable executionGroups={sourceGroups} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const SourceExplorerContent = ({ sourceId }: { sourceId: string }) => {
+  // Compute simple source metrics using execution groups API with source filter
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      <Suspense fallback={<ComparisonChartCardSkeleton />}>
+        <SourceExecutionsCard sourceId={sourceId} />
+      </Suspense>
 
       {cards.map((card) => (
         <Card key={card.title}>

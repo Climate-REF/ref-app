@@ -138,6 +138,13 @@ export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false
 /**
  * List Recent Execution Groups
  * List the most recent execution groups
+ *
+ * Supports filtering by:
+ * - diagnostic_name_contains
+ * - provider_name_contains
+ * - dirty
+ * - successful (filters by latest execution success)
+ * - source_id (filters groups that include an execution whose datasets include a CMIP6 dataset with this source_id)
  */
 export const executionsListRecentExecutionGroups = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsListRecentExecutionGroupsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, ThrowOnError>({

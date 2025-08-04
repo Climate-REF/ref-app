@@ -114,6 +114,8 @@ export type DiagnosticSummary = {
     has_metric_values: boolean;
     execution_count: number;
     successful_execution_count: number;
+    execution_group_count: number;
+    successful_execution_group_count: number;
     group_by: Array<GroupBy>;
 };
 
@@ -530,6 +532,7 @@ export type ExecutionsListRecentExecutionGroupsData = {
         provider_name_contains?: string | null;
         dirty?: boolean | null;
         successful?: boolean | null;
+        source_id?: string | null;
     };
     url: '/api/v1/executions/';
 };
