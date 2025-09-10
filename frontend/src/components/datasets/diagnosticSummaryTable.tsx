@@ -29,7 +29,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     cell: ({ getValue }) => {
       const val = String(getValue() ?? "");
       return (
-        <span className="text-foreground/80 dark:text-foreground/70">
+        <span className="text-foreground/80 dark:text-foreground/70 max-w[500px]">
           {val}
         </span>
       );
@@ -72,7 +72,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     enableSorting: true,
     cell: (cell) => {
       const successful = cell.getValue<number>();
-      const total = (cell.row.original as any).execution_group_count ?? 0;
+      const total = cell.row.original.execution_group_count ?? 0;
       const allSuccessful = total > 0 && successful === total;
       const className = allSuccessful
         ? "text-emerald-600 dark:text-emerald-400 font-medium"

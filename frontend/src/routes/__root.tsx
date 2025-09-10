@@ -2,17 +2,42 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { ErrorBoundary } from "@/components/app/errorBoundary";
+import { ErrorFallback } from "@/components/app/errorFallback";
 import { Navbar } from "@/components/app/navbar.tsx";
 
 function AppLayout() {
   return (
-    <>
+    <ErrorBoundary
+      fallback={
+        <div className="min-h-screen">
+          <Navbar />
+          <ErrorFallback
+            title="Application Error"
+            description="The application encountered an unexpected error. Please refresh the page to continue."
+          />
+        </div>
+      }
+      onError={(error, errorInfo) => {
+        // Log to console in development
+        if (import.meta.env.DEV) {
+          console.error("Root ErrorBoundary caught error:", error, errorInfo);
+        }
+
+        // In production, you might want to send this to an error reporting service
+        // Example: Sentry.captureException(error, { contexts: { errorInfo } });
+      }}
+    >
       <Navbar />
-      <Outlet />
+      <ErrorBoundary
+        fallback={<ErrorFallback title="Page Error" showHomeButton={true} />}
+      >
+        <Outlet />
+      </ErrorBoundary>
 
       <ReactQueryDevtools initialIsOpen={false} />
       <TanStackRouterDevtools />
-    </>
+    </ErrorBoundary>
   );
 }
 

@@ -108,7 +108,16 @@ function ExecutionsListPage() {
         <CardHeader>
           <CardTitle>Execution Groups</CardTitle>
           <CardDescription>
-            <p>
+            <p className="max-w-1/2">
+              We group all executions for different versions of datasets
+              together into an execution group. Each execution group has a
+              unique identifier consisting of the unique keys used to group the
+              datasets together. For example if a diagnostic's data requirements
+              grouped CMIP6 datasets by <code>source_id</code> and{" "}
+              <code>experiment_id</code>, then an example execution group would
+              be <code>cmip6_historical_ACCESS-ESM1-5</code>.
+            </p>
+            <p className="mt-2">
               Browse the list of execution groups. Use the filters to narrow
               down your search.
             </p>

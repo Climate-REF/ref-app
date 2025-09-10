@@ -29,8 +29,8 @@ const themes = [
     element: <LandTheme />,
   },
   {
-    name: "sea",
-    title: "Sea and Sea Ice",
+    name: "ocean",
+    title: "Ocean and Sea Ice",
     element: <SeaTheme />,
   },
 ];

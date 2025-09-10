@@ -11,7 +11,7 @@ const themesSchema = z.object({
       "earth-system",
       "impact-and-adaptation",
       "land",
-      "sea",
+      "ocean",
     ])
     .default("atmosphere"),
 });

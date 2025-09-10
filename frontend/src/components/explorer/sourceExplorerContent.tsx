@@ -13,6 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { ErrorBoundary } from "../app/errorBoundary";
+import { ComponentErrorFallback } from "../app/errorFallback";
 
 type ExplorerChart = {
   provider: string;
@@ -87,7 +89,7 @@ const cards: ExplorerCard[] = [
 ];
 
 const SourceExecutionsCard = ({ sourceId }: { sourceId: string }) => {
-  const { data } = useSuspenseQuery(
+  const { data, error } = useSuspenseQuery(
     executionsListRecentExecutionGroupsOptions({
       query: {
         source_id: sourceId,
@@ -95,6 +97,10 @@ const SourceExecutionsCard = ({ sourceId }: { sourceId: string }) => {
       },
     }),
   );
+
+  if (error) {
+    return <div>Error loading executions: {String(error)}</div>;
+  }
 
   const sourceGroups = data?.data ?? [];
 
@@ -173,19 +179,21 @@ export const SourceExplorerContent = ({ sourceId }: { sourceId: string }) => {
                   key={`${card.title}:${chart.diagnostic}`}
                   fallback={<ComparisonChartCardSkeleton />}
                 >
-                  <ComparisonChartCard
-                    providerSlug={chart.provider}
-                    diagnosticSlug={chart.diagnostic}
-                    metricName={chart.title}
-                    metricUnits={chart.metricUnits ?? "unitless"}
-                    title={chart.title}
-                    sourceFilters={
-                      chart.sourceFiltersOverride ?? { source_id: sourceId }
-                    }
-                    otherFilters={chart.otherFilters}
-                    clipMin={chart.clipMin}
-                    clipMax={chart.clipMax}
-                  />
+                  <ErrorBoundary fallback={<ComponentErrorFallback />}>
+                    <ComparisonChartCard
+                      providerSlug={chart.provider}
+                      diagnosticSlug={chart.diagnostic}
+                      metricName={chart.title}
+                      metricUnits={chart.metricUnits ?? "unitless"}
+                      title={chart.title}
+                      sourceFilters={
+                        chart.sourceFiltersOverride ?? { source_id: sourceId }
+                      }
+                      otherFilters={chart.otherFilters}
+                      clipMin={chart.clipMin}
+                      clipMax={chart.clipMax}
+                    />
+                  </ErrorBoundary>
                 </Suspense>
               ))}
             </div>

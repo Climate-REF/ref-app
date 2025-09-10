@@ -1,58 +1,62 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
+import type { DiagnosticSummary } from "@/client/types.gen";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
+import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
+import { ViewToggle } from "@/components/diagnostics/viewToggle";
 
 const Diagnostics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
-  const [globalFilter, setGlobalFilter] = useState("");
-
-  const diagnostics = data.data;
-
-  const filteredDiagnostics = useMemo(() => {
-    if (!globalFilter) {
-      return diagnostics;
-    }
-    return diagnostics.filter(
-      (diagnostic) =>
-        diagnostic.name.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        diagnostic.slug.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        diagnostic.provider.name
-          .toLowerCase()
-          .includes(globalFilter.toLowerCase()),
-    );
-  }, [diagnostics, globalFilter]);
+  const [view, setView] = useState<"cards" | "table">("cards");
+  const [filteredDiagnostics, setFilteredDiagnostics] = useState<
+    DiagnosticSummary[]
+  >(data.data);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Diagnostic List</CardTitle>
-        <CardDescription>
-          Search and view available diagnostics. Click on a row for more
-          details.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <Input
-            placeholder="Search diagnostics..."
-            value={globalFilter}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
-          />
+    <div className="container mx-auto py-10">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Diagnostics</h1>
+            <p className="text-muted-foreground">
+              Browse available diagnostic tools and analyses
+            </p>
+          </div>
+          <ViewToggle view={view} onViewChange={setView} />
         </div>
+      </div>
+
+      <div className="mb-6">
+        <DiagnosticsFilter
+          diagnostics={data.data}
+          onFilterChange={setFilteredDiagnostics}
+        />
+      </div>
+
+      {view === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredDiagnostics.map((diagnostic) => (
+            <DiagnosticCard
+              key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
+              diagnostic={diagnostic}
+            />
+          ))}
+        </div>
+      ) : (
         <DiagnosticSummaryTable summaries={filteredDiagnostics} />
-      </CardContent>
-    </Card>
+      )}
+
+      {filteredDiagnostics.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            No diagnostics found matching your filters.
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 
