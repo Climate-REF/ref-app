@@ -1,7 +1,7 @@
 import csv
 import io
 import json
-from typing import cast
+from collections.abc import Generator
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import and_, not_, text
@@ -57,9 +57,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
 
     diagnostics = diagnostics_query.all()
 
-    return Collection(
-        data=[DiagnosticSummary.build(m, app_context) for m in diagnostics]
-    )
+    return Collection(data=[DiagnosticSummary.build(m, app_context) for m in diagnostics])
 
 
 @router.get("/facets", name="facets")
@@ -89,9 +87,7 @@ async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}")
-async def get(
-    app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
-) -> DiagnosticSummary:
+async def get(app_context: AppContextDep, provider_slug: str, diagnostic_slug: str) -> DiagnosticSummary:
     """
     Fetch a result using the slug
     """
@@ -115,9 +111,7 @@ async def list_execution_groups(
         .all()
     )
 
-    return Collection(
-        data=[ExecutionGroup.build(e, app_context) for e in execution_groups]
-    )
+    return Collection(data=[ExecutionGroup.build(e, app_context) for e in execution_groups])
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/comparison")
@@ -150,9 +144,7 @@ async def comparison(
         if not isinstance(source_filter_dict, dict):
             raise ValueError("source_filters must be a JSON object")
     except (json.JSONDecodeError, ValueError) as e:
-        raise HTTPException(
-            status_code=400, detail=f"Invalid source_filters: {e}"
-        ) from e
+        raise HTTPException(status_code=400, detail=f"Invalid source_filters: {e}") from e
 
     # Apply general filters from query parameters
     query_params = request.query_params
@@ -160,16 +152,12 @@ async def comparison(
         if key == "source_filters":
             continue
         if key in models.ScalarMetricValue._cv_dimensions:
-            metric_values_query = metric_values_query.filter(
-                getattr(models.ScalarMetricValue, key) == value
-            )
+            metric_values_query = metric_values_query.filter(getattr(models.ScalarMetricValue, key) == value)
 
     source_filter_clauses = []
     for key, value in source_filter_dict.items():
         if key not in models.ScalarMetricValue._cv_dimensions:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid filter key in source_filters: {key}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid filter key in source_filters: {key}")
         source_filter_clauses.append(getattr(models.ScalarMetricValue, key) == value)
 
     if not source_filter_clauses:
@@ -181,12 +169,8 @@ async def comparison(
     ensemble_values = metric_values_query.filter(not_(source_conditions)).all()
 
     return MetricValueComparison(
-        source=MetricValueCollection.build(
-            cast(list[models.MetricValue], source_values)
-        ),
-        ensemble=MetricValueCollection.build(
-            cast(list[models.MetricValue], ensemble_values)
-        ),
+        source=MetricValueCollection.build(source_values),
+        ensemble=MetricValueCollection.build(ensemble_values),
     )
 
 
@@ -217,9 +201,7 @@ async def list_executions(
     query_params = request.query_params
     for key, value in query_params.items():
         if hasattr(CMIP6Dataset, key):
-            executions_query = executions_query.filter(
-                getattr(CMIP6Dataset, key) == value
-            )
+            executions_query = executions_query.filter(getattr(CMIP6Dataset, key) == value)
 
     executions = executions_query.all()
 
@@ -252,14 +234,12 @@ async def list_metric_values(
         if key == "format":
             continue
         if hasattr(models.ScalarMetricValue, key):
-            metric_values_query = metric_values_query.filter(
-                getattr(models.ScalarMetricValue, key) == value
-            )
+            metric_values_query = metric_values_query.filter(getattr(models.ScalarMetricValue, key) == value)
 
     if format == "csv":
         metric_values = metric_values_query.all()
 
-        def generate_csv():
+        def generate_csv() -> Generator[str]:
             output = io.StringIO()
             writer = csv.writer(output)
 
@@ -287,6 +267,4 @@ async def list_metric_values(
             },
         )
     else:
-        return MetricValueCollection.build(
-            cast(list[models.MetricValue], metric_values_query.all())
-        )
+        return MetricValueCollection.build(metric_values_query.all())

@@ -20,8 +20,8 @@ class Collection(BaseModel, Generic[T]):
     data: list[T]
     total_count: int | None = None
 
-    @computed_field
     @property
+    @computed_field
     def count(self) -> int:
         """
         Number of data items present
@@ -107,37 +107,25 @@ class DiagnosticSummary(BaseModel):
     """
 
     @staticmethod
-    def build(
-        diagnostic: models.Diagnostic, app_context: "AppContext"
-    ) -> "DiagnosticSummary":
+    def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
         concrete_diagnostic = app_context.provider_registry.get_metric(
             diagnostic.provider.slug, diagnostic.slug
         )
         data_requirements = sorted(
             list(concrete_diagnostic.data_requirements),
-            key=lambda dr: (
-                dr[0].source_type.value
-                if isinstance(dr, tuple)
-                else dr.source_type.value
-            ),  # type: ignore[attr-defined]
+            key=lambda dr: (dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value),  # type: ignore
         )
         group_by_summary: list[GroupBy] = []
         for dr in data_requirements:
             if isinstance(dr, tuple):
-                _dr = dr[
-                    0
-                ]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
+                _dr = dr[0]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
             else:
                 _dr = dr
             # Normalize group_by to list[str] | None
-            gb = (
-                list(_dr.group_by)
-                if getattr(_dr, "group_by", None) is not None
-                else None
-            )  # type: ignore[attr-defined]
+            gb = list(_dr.group_by) if getattr(_dr, "group_by", None) is not None else None
             group_by_summary.append(
                 GroupBy(
-                    source_type=_dr.source_type.value,  # type: ignore[attr-defined]
+                    source_type=_dr.source_type.value,
                     group_by=gb,
                 )
             )
@@ -234,9 +222,7 @@ class ExecutionOutput(BaseModel):
     url: str
 
     @staticmethod
-    def build(
-        output: models.ExecutionOutput, app_context: "AppContext"
-    ) -> "ExecutionOutput":
+    def build(output: models.ExecutionOutput, app_context: "AppContext") -> "ExecutionOutput":
         return ExecutionOutput(
             id=output.id,
             execution_id=output.execution_id,
@@ -263,9 +249,7 @@ class ExecutionGroup(BaseModel):
     updated_at: datetime
 
     @staticmethod
-    def build(
-        execution_group: models.ExecutionGroup, app_context: "AppContext"
-    ) -> "ExecutionGroup":
+    def build(execution_group: models.ExecutionGroup, app_context: "AppContext") -> "ExecutionGroup":
         latest_execution = None
         if len(execution_group.executions):
             latest_execution = execution_group.executions[-1]
@@ -274,12 +258,8 @@ class ExecutionGroup(BaseModel):
             id=execution_group.id,
             key=execution_group.key,
             dirty=execution_group.dirty,
-            executions=[
-                Execution.build(r, app_context) for r in execution_group.executions
-            ],
-            latest_execution=Execution.build(latest_execution, app_context)
-            if latest_execution
-            else None,
+            executions=[Execution.build(r, app_context) for r in execution_group.executions],
+            latest_execution=Execution.build(latest_execution, app_context) if latest_execution else None,
             selectors=execution_group.selectors,
             diagnostic=DiagnosticSummary.build(execution_group.diagnostic, app_context),
             created_at=execution_group.created_at,
@@ -330,12 +310,13 @@ class Dataset(BaseModel):
     dataset_type: str
     metadata: CMIP6DatasetMetadata | None
 
-    @computed_field
     @property
+    @computed_field
     def more_info_url(self) -> str | None:
         if "cmip6" in self.dataset_type:
             # Use the WDC service to look up the dataset
             return f"https://www.wdc-climate.de/ui/cmip6?input={self.slug}"
+        return None
 
     @staticmethod
     def build(dataset: models.Dataset) -> "Dataset":
@@ -379,7 +360,7 @@ class MetricValueCollection(BaseModel):
     facets: list[Facet]
 
     @staticmethod
-    def build(values: list[models.MetricValue]) -> "MetricValueCollection":
+    def build(values: list[models.ScalarMetricValue]) -> "MetricValueCollection":
         # TODO: Query this using SQL
         facets: dict[str, set[str]] = {}
         for v in values:
@@ -402,8 +383,7 @@ class MetricValueCollection(BaseModel):
             ],
             count=len(values),
             facets=[
-                Facet(key=facet_key, values=list(facet_values))
-                for facet_key, facet_values in facets.items()
+                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
             ],
         )
 

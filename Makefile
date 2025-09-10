@@ -35,3 +35,17 @@ dev-frontend: # Start the frontend
 .PHONY: generate-client
 generate-client: # Generate the frontend client SDK
 	bash scripts/generate-client-sdk.sh
+
+.PHONY: setup
+setup: ## Setup the backend and frontend
+	$(MAKE) -C backend virtual-environment
+
+	@echo "==> Installing frontend dependencies"
+	cd frontend && npm install
+
+	@echo "==> Installing pre-commit hooks"
+	uvx pre-commit install --config .pre-commit-config.yaml
+
+# Consistent alias with python-only projects
+.PHONY: virtual-environment
+virtual-environment: setup ## Install backend and frontend dependencies

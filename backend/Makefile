@@ -37,3 +37,7 @@ test: ## Run pytest
 	uv run \
 	pytest src tests
 #	-r a -v --doctest-modules --cov=src --cov-report=term
+
+.PHONY: mypy
+mypy: ## Run mypy type checker
+	uv run mypy src

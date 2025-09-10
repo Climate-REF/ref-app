@@ -14,9 +14,7 @@ def get_diagnostic_metrics(
     client: TestClient, settings, provider_slug: str, diagnostic_slug: str
 ) -> list[str]:
     """Helper to get available metrics for a diagnostic."""
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
-    )
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values")
     assert r.status_code == 200
     facets = r.json()["facets"]
     metric_facet = next((f for f in facets if f["key"] == "metric"), None)
@@ -32,9 +30,7 @@ def test_diagnostic_comparison(client: TestClient, settings):
 
     # These values are chosen based on the test data
     source_id = "ACCESS-ESM1-5"
-    metrics = get_diagnostic_metrics(client, settings, provider_slug, diagnostic_slug)[
-        :2
-    ]
+    metrics = get_diagnostic_metrics(client, settings, provider_slug, diagnostic_slug)[:2]
     assert len(metrics) > 0
 
     query_params = "&".join([f"metrics={m}" for m in metrics])

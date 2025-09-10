@@ -11,9 +11,7 @@ router = APIRouter(prefix="/results", tags=["results"])
 
 
 @router.get("/{result_id}")
-async def get_result(
-    session: SessionDep, config: REFConfigDep, result_id: int
-) -> StreamingResponse:
+async def get_result(session: SessionDep, config: REFConfigDep, result_id: int) -> StreamingResponse:
     """
     Fetch a result
     """
@@ -21,9 +19,7 @@ async def get_result(
     if result is None:
         raise HTTPException(status_code=404, detail="Result not found")
 
-    file_path = (
-        config.paths.results / result.execution.output_fragment / result.filename
-    )
+    file_path = config.paths.results / result.execution.output_fragment / result.filename
     mime_type, encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():

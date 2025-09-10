@@ -4,12 +4,12 @@ import mimetypes
 import os
 import tarfile
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import cast
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import and_, exists, func, select
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import Session, aliased
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -48,16 +48,15 @@ async def list_recent_execution_groups(  # noqa: PLR0913
     - provider_name_contains
     - dirty
     - successful (filters by latest execution success)
-    - source_id (filters groups that include an execution whose datasets include a CMIP6 dataset with this source_id)
+    - source_id (filters groups that include an execution whose datasets
+        include a CMIP6 dataset with this source_id)
     """
     session = app_context.session
 
     query = session.query(models.ExecutionGroup).join(models.ExecutionGroup.diagnostic)
 
     if diagnostic_name_contains:
-        query = query.filter(
-            models.Diagnostic.name.ilike(f"%{diagnostic_name_contains}%")
-        )
+        query = query.filter(models.Diagnostic.name.ilike(f"%{diagnostic_name_contains}%"))
     if provider_name_contains:
         query = query.join(models.Diagnostic.provider).filter(
             models.Provider.name.ilike(f"%{provider_name_contains}%")
@@ -106,10 +105,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913
     total_count = query.count()
 
     execution_groups = (
-        query.order_by(models.ExecutionGroup.updated_at.desc())
-        .limit(limit)
-        .offset(offset)
-        .all()
+        query.order_by(models.ExecutionGroup.updated_at.desc()).limit(limit).offset(offset).all()
     )
 
     return Collection(
@@ -130,13 +126,9 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     return ExecutionGroup.build(execution_group, app_context)
 
 
-async def _get_execution(
-    group_id: str, execution_id: str | None, session
-) -> models.Execution:
+async def _get_execution(group_id: str, execution_id: str | None, session: Session) -> models.Execution:
     if execution_id is not None:
-        execution: models.Execution | None = session.query(models.Execution).get(
-            execution_id
-        )
+        execution: models.Execution | None = session.query(models.Execution).get(execution_id)
     else:
         # Fetch only the latest execution for the group without loading the full collection
         execution = (
@@ -191,11 +183,7 @@ async def execution_logs(
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    file_path = (
-        app_context.ref_config.paths.results
-        / execution.output_fragment
-        / EXECUTION_LOG_FILENAME
-    )
+    file_path = app_context.ref_config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
     mime_type, encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
@@ -204,9 +192,7 @@ async def execution_logs(
     return StreamingResponse(
         file_iterator(str(file_path)),
         media_type=mime_type,
-        headers={
-            "Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"
-        },
+        headers={"Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"},
     )
 
 
@@ -221,11 +207,7 @@ async def metric_bundle(
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    file_path = (
-        app_context.ref_config.paths.results
-        / execution.output_fragment
-        / "diagnostic.json"
-    )
+    file_path = app_context.ref_config.paths.results / execution.output_fragment / "diagnostic.json"
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Metrics bundle not found")
@@ -253,7 +235,7 @@ async def metric_values(
     if format == "csv":
         metric_values = metric_values_query.all()
 
-        def generate_csv():
+        def generate_csv() -> Generator[str]:
             output = io.StringIO()
             writer = csv.writer(output)
 
@@ -281,9 +263,7 @@ async def metric_values(
             },
         )
     else:
-        return MetricValueCollection.build(
-            cast(list[models.MetricValue], metric_values_query.all())
-        )
+        return MetricValueCollection.build(metric_values_query.all())
 
 
 @router.get("/{group_id}/archive")
@@ -307,7 +287,7 @@ async def execution_archive(
     # No experimentation has been done to find the best chunk size
     CHUNK_SIZE = 128 * 1024  # 128 KB chunks
 
-    def generate_archive():
+    def generate_archive() -> Generator[bytes]:
         with tempfile.NamedTemporaryFile(delete=True) as temp_tar:
             # Open the tar file in write mode with gzip compression
             with tarfile.open(temp_tar.name, mode="w:gz") as tar:
@@ -326,7 +306,5 @@ async def execution_archive(
     return StreamingResponse(
         generate_archive(),
         media_type="application/x-gzip",
-        headers={
-            "Content-Disposition": f"attachment; filename=execution_{execution.id}.tar.gz"
-        },
+        headers={"Content-Disposition": f"attachment; filename=execution_{execution.id}.tar.gz"},
     )

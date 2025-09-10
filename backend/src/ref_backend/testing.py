@@ -10,7 +10,7 @@ EXAMPLE_DIR = Path(__file__).parents[2] / "tests" / "test-data" / "example"
 
 
 @functools.lru_cache
-def test_settings():
+def test_settings() -> Settings:
     """Settings to use the decimated test data included in the git repo."""
     return Settings(REF_CONFIGURATION=str(EXAMPLE_DIR))
 
@@ -27,7 +27,7 @@ def test_ref_config() -> Config:
 
     config.paths.results = EXAMPLE_DIR / "results"
     config.paths.dimensions_cv = Path(
-        importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml"
+        str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
     )
     config.db.database_url = "sqlite:///" + str(EXAMPLE_DIR / "db" / "climate_ref.db")
 

@@ -1,0 +1,93 @@
+# Unified pre-commit config for frontend and backend
+# See https://pre-commit.com for more information
+ci:
+  autofix_prs: false
+  autoupdate_schedule: quarterly
+  autoupdate_branch: pre-commit-autoupdate
+
+# Combine excludes from both subprojects, and keep path scoping in hooks below
+exclude: |
+  (?x)^(
+      backend/tests/test-data/.*|
+      backend/.venv/.*|
+      backend/venv/.*|
+      frontend/dist/.*|
+      frontend/node_modules/.*|
+      frontend/public/.*|
+      frontend/src/client/.*|
+      .*\.gen\.ts$
+  )$
+
+repos:
+  # Shared general-purpose checks across the repo
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+        files: ^backend/
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+        args: [--unsafe]
+      - id: debug-statements
+        files: ^backend/
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  # Backend: Ruff (lint + format)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.7
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # Backend: mypy and check that no forbidden files are present
+  - repo: local
+    hooks:
+      - id: backend-forbidden-files
+        name: backend forbidden files
+        entry: found Copier update rejection files; review them and remove them
+        language: fail
+        files: "\\.rej$"
+
+      - id: mypy
+        name: mypy (backend)
+        entry: make -C backend mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+        files: ^backend/
+
+  # Frontend: Biome format + lint
+  - repo: local
+    hooks:
+      - id: biome-format
+        name: Biome format (write)
+        entry: bash -lc "cd frontend && npx --yes @biomejs/biome check --write"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|md|css)$
+        pass_filenames: true
+      - id: biome-lint
+        name: Biome lint
+        entry: bash -lc "cd frontend && npx --yes @biomejs/biome check"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: true
+
+      # Frontend: TypeScript typecheck
+      - id: typescript-typecheck
+        name: TypeScript typecheck
+        entry: bash -lc "cd frontend && npx --yes tsc --noEmit"
+        language: system
+        pass_filenames: false
+        files: ^frontend/

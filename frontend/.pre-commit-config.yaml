@@ -1,0 +1,53 @@
+# See https://pre-commit.com for more information
+ci:
+  autofix_prs: false
+  autoupdate_schedule: quarterly
+  autoupdate_branch: pre-commit-autoupdate
+
+exclude: |
+  (?x)^(
+      dist/.*|
+      node_modules/.*|
+      public/.*|
+      src/client/.*|
+      .*\.gen\.ts$
+  )$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+        args: [--unsafe]
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  # Use Biome for formatting and linting
+  - repo: local
+    hooks:
+      - id: biome-format
+        name: Biome format (write)
+        entry: bash -lc "npx --yes @biomejs/biome check --write"
+        language: system
+        files: "\\.(ts|tsx|js|jsx|json|md|css)$"
+        pass_filenames: true
+      - id: biome-lint
+        name: Biome lint
+        entry: bash -lc "npx --yes @biomejs/biome check"
+        language: system
+        files: "\\.(ts|tsx|js|jsx)$"
+        pass_filenames: true
+
+      # TypeScript typecheck
+      - id: typescript-typecheck
+        name: TypeScript typecheck
+        entry: bash -lc "npx --yes tsc --noEmit"
+        language: system
+        pass_filenames: false
