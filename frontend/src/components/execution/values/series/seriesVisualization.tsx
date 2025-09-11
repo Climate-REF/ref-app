@@ -832,7 +832,7 @@ export function SeriesVisualization({
 
                           return aPriority - bPriority;
                         })
-                        .map((seriesKey, index) => {
+                        .map((seriesKey) => {
                           const isHidden = hiddenSeries.has(seriesKey);
                           const isHovered = hoveredSeries === seriesKey;
                           const isOtherHovered =
