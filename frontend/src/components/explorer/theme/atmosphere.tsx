@@ -12,6 +12,7 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
         title: "NAM Bias",
+        description: "Northern Annular Mode (NAM) Bias",
         otherFilters: {
           method: "cbf",
           statistic: "bias",
@@ -23,6 +24,7 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-sam",
         title: "SAM Bias",
+        description: "Southern Annular Mode (SAM) Bias",
         otherFilters: {
           method: "cbf",
           statistic: "bias",

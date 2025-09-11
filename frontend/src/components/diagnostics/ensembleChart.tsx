@@ -1,4 +1,5 @@
 import * as d3 from "d3-array";
+import { useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -10,6 +11,7 @@ import {
 } from "recharts";
 import type { MetricValue } from "@/client/types.gen";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
+import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 interface EnsembleChartProps {
   data: MetricValue[];
@@ -23,11 +25,16 @@ interface EnsembleChartProps {
 
 export const EmptyEnsembleChart = () => {
   return (
-    <div className="text-center text-sm text-muted-foreground">
+    <div className="flex items-center justify-center h-full text-center text-sm text-muted-foreground">
       No data available for this chart.
     </div>
   );
 };
+
+const chartHeight = 320;
+const marginTop = 24;
+const marginBottom = 10;
+const chartInnerHeight = chartHeight - marginTop - marginBottom;
 
 export const EnsembleChart = ({
   data,
@@ -38,10 +45,13 @@ export const EnsembleChart = ({
   clipMin,
   clipMax,
 }: EnsembleChartProps) => {
+  const [highlightedPoint, setHighlightedPoint] = useState<MetricValue | null>(
+    null,
+  );
   // Group data by the specified xAxis dimension
   const groupedData = Object.groupBy(
     data,
-    (d: MetricValue) => d.dimensions[xAxis] ?? metricName
+    (d: MetricValue) => d.dimensions[xAxis] ?? metricName,
   );
 
   const chartData = Object.entries(groupedData).map(
@@ -55,7 +65,7 @@ export const EnsembleChart = ({
         .filter(
           (v: number) =>
             (clipMin === undefined || v >= clipMin) &&
-            (clipMax === undefined || v <= clipMax)
+            (clipMax === undefined || v <= clipMax),
         )
         .sort((a: number, b: number) => a - b);
 
@@ -91,13 +101,13 @@ export const EnsembleChart = ({
         },
         __rawData: values ?? [],
       };
-    }
+    },
   );
 
   const yDomainData: [number, number] = (() => {
     const allFiniteValues = chartData
       .flatMap((d) =>
-        d.groups.ensemble ? [d.groups.ensemble.min, d.groups.ensemble.max] : []
+        d.groups.ensemble ? [d.groups.ensemble.min, d.groups.ensemble.max] : [],
       )
       .filter((v) => Number.isFinite(v)) as number[];
     if (allFiniteValues.length === 0) return [0, 1];
@@ -110,16 +120,14 @@ export const EnsembleChart = ({
     return [minVal, maxVal];
   })();
 
-  const fmt =
-    valueFormatter ??
-    ((v: number) => (Number.isFinite(v) ? v.toFixed(1) : String(v)));
+  const fmt = valueFormatter ?? createScaledTickFormatter(yDomainData);
 
   return (
     <div className="w-full h-full">
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
           data={chartData}
-          margin={{ top: 24, right: 24, left: 12, bottom: 16 }}
+          margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
@@ -137,7 +145,7 @@ export const EnsembleChart = ({
               value: metricUnits,
               angle: -90,
               position: "insideLeft",
-              offset: 8,
+              offset: 0,
               className: "fill-muted-foreground",
             }}
             domain={[
@@ -148,7 +156,13 @@ export const EnsembleChart = ({
           <Tooltip
             cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
             content={({ active, payload, label, coordinate }) => {
-              if (!active || !payload || payload.length === 0) return null;
+              if (!active || !payload || payload.length === 0) {
+                // Clear highlight when tooltip is not active
+                if (highlightedPoint) {
+                  setHighlightedPoint(null);
+                }
+                return null;
+              }
               const datum: any = (payload[0] as any).payload ?? {};
               const box = datum?.groups?.ensemble;
               const outliers = datum?.__outliers;
@@ -165,18 +179,21 @@ export const EnsembleChart = ({
               let closestDataPoint: MetricValue | null = null;
               if (coordinate && rawData.length > 0) {
                 const mouseY = coordinate.y ?? 0;
-                let minDistance = Infinity;
+                let minDistance = Number.POSITIVE_INFINITY;
+
+                // Use the actual domain that Recharts calculates (with padding)
+                const actualYMin = yDomainData[0] ?? 0;
+                const actualYMax = yDomainData[1] ?? 1;
+
+                // Chart dimensions accounting for margins
 
                 for (const dataPoint of rawData) {
                   const value = Number(dataPoint.value);
                   if (Number.isFinite(value)) {
-                    // Convert value to pixel position (approximate)
-                    const chartHeight = 320 - 40; // Chart height minus margins
-                    const [yMin, yMax] = yDomainData;
-                    const valueY =
-                      chartHeight -
-                      ((value - yMin) / (yMax - yMin)) * chartHeight +
-                      24; // Add top margin
+                    // Convert value to pixel position using the same scale as Recharts
+                    const normalizedValue =
+                      (value - actualYMin) / (actualYMax - actualYMin);
+                    const valueY = chartInnerHeight * (1 - normalizedValue);
 
                     const distance = Math.abs(mouseY - valueY);
                     if (distance < minDistance) {
@@ -187,10 +204,29 @@ export const EnsembleChart = ({
                 }
               }
 
+              // Update highlighted point
+              if (closestDataPoint !== highlightedPoint) {
+                setHighlightedPoint(closestDataPoint);
+              }
+
+              // Calculate tooltip position to avoid clipping
+              const tooltipHeight = 300; // Approximate tooltip height
+              const mouseY = coordinate?.y ?? 0;
+
+              // If tooltip would extend below chart, position it above the mouse
+              const shouldPositionAbove =
+                mouseY + tooltipHeight > chartHeight - marginBottom;
+
               return (
                 <div
-                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-md w-[300px]"
-                  style={{ borderColor: "hsl(var(--border))" }}
+                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg w-[300px] z-[9999]"
+                  style={{
+                    borderColor: "hsl(var(--border))",
+                    transform: shouldPositionAbove
+                      ? "translateY(-20%)"
+                      : "translateY(10px)",
+                    marginTop: "-10px",
+                  }}
                 >
                   <div className="mb-2 font-medium">{label}</div>
 
@@ -203,19 +239,20 @@ export const EnsembleChart = ({
                       {renderKV("Min", box ? fmt(Number(box.min)) : "—")}
                       {renderKV(
                         "Q1",
-                        box ? fmt(Number(box.lowerQuartile)) : "—"
+                        box ? fmt(Number(box.lowerQuartile)) : "—",
                       )}
                       {renderKV("Median", box ? fmt(Number(box.median)) : "—")}
                       {renderKV(
                         "Q3",
-                        box ? fmt(Number(box.upperQuartile)) : "—"
+                        box ? fmt(Number(box.upperQuartile)) : "—",
                       )}
                       {renderKV("Max", box ? fmt(Number(box.max)) : "—")}
                       {renderKV(
                         "Count",
                         String(
-                          (box?.values?.length ?? 0) + (outliers?.ensemble ?? 0)
-                        )
+                          (box?.values?.length ?? 0) +
+                            (outliers?.ensemble ?? 0),
+                        ),
                       )}
                       {outliers?.ensemble ? (
                         <div className="col-span-2 mt-1 text-muted-foreground">
@@ -235,7 +272,7 @@ export const EnsembleChart = ({
                         <div className="grid grid-cols-2 gap-x-4">
                           {renderKV(
                             "Value",
-                            fmt(Number(closestDataPoint.value))
+                            fmt(Number(closestDataPoint.value)),
                           )}
                           {renderKV("Units", metricUnits)}
                         </div>
@@ -257,7 +294,7 @@ export const EnsembleChart = ({
                                     {value}
                                   </span>
                                 </div>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -269,11 +306,17 @@ export const EnsembleChart = ({
             }}
           />
           <Bar
-            dataKey={(d) => d.groups.ensemble?.median}
+            dataKey={(d) => d?.groups?.ensemble?.median}
             fill="#93C5FD"
             stroke="#3B82F6"
             isAnimationActive={false}
-            shape={<BoxWhiskerShape prefix="ensemble" yDomain={yDomainData} />}
+            shape={
+              <BoxWhiskerShape
+                prefix="ensemble"
+                yDomain={yDomainData}
+                highlightedPoint={highlightedPoint}
+              />
+            }
           />
         </ComposedChart>
       </ResponsiveContainer>

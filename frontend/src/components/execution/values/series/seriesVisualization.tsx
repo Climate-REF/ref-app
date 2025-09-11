@@ -20,7 +20,7 @@ import {
 import { CustomSeriesToolTip } from "../customSeriesToolTip";
 import type { SeriesValue } from "../types";
 import { SeriesLegendSidebar } from "./seriesLegendSidebar";
-import { getDimensionHashIndex } from "./utils";
+import { createScaledTickFormatter, getDimensionHashIndex } from "./utils";
 
 interface SeriesVisualizationProps {
   seriesValues: SeriesValue[];
@@ -161,7 +161,7 @@ export function SeriesVisualization({
       series: SeriesValue,
       groupBy: string,
       hue: string,
-      style: string
+      style: string,
     ): string => {
       const parts: string[] = [];
 
@@ -193,7 +193,7 @@ export function SeriesVisualization({
 
       return parts.join(" | ") || "Series";
     },
-    []
+    [],
   );
 
   // Create main label for legend display (based on hue dimension)
@@ -214,7 +214,7 @@ export function SeriesVisualization({
 
       return parts.join(" | ") || "Series";
     },
-    []
+    [],
   );
 
   // Create sublabel for legend display (based on style dimension)
@@ -225,7 +225,7 @@ export function SeriesVisualization({
       }
       return null;
     },
-    []
+    [],
   );
 
   // Detect if a series is a reference line based on source_id
@@ -242,7 +242,7 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension
+          styleDimension,
         );
         return key === seriesKey;
       });
@@ -254,7 +254,7 @@ export function SeriesVisualization({
       groupByDimension,
       hueDimension,
       styleDimension,
-    ]
+    ],
   );
 
   // Categorize series for the legend based on the selected groupBy dimension
@@ -266,7 +266,7 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension
+          styleDimension,
         );
         return key === seriesKey;
       });
@@ -288,7 +288,7 @@ export function SeriesVisualization({
 
       return "Other";
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
   );
 
   // Initialize hidden series state - hide all non-reference series by default
@@ -303,7 +303,7 @@ export function SeriesVisualization({
             series,
             groupByDimension,
             hueDimension,
-            styleDimension
+            styleDimension,
           );
           hiddenSet.add(seriesKey);
         }
@@ -346,8 +346,8 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension
-            )
+              styleDimension,
+            ),
           )
           .filter((seriesKey) => {
             const matchingSeries = group.series.find((series) => {
@@ -355,7 +355,7 @@ export function SeriesVisualization({
                 series,
                 groupByDimension,
                 hueDimension,
-                styleDimension
+                styleDimension,
               );
               return key === seriesKey;
             });
@@ -384,7 +384,7 @@ export function SeriesVisualization({
       hueDimension,
       styleDimension,
       categorizeSeries,
-    ]
+    ],
   );
 
   // Handle series hover (memoized)
@@ -418,7 +418,7 @@ export function SeriesVisualization({
 
       // Find the maximum length of all series to create a unified index
       const maxLength = Math.max(
-        ...group.series.map((s) => s.values?.length || 0)
+        ...group.series.map((s) => s.values?.length || 0),
       );
       const chartData: ChartData[] = [];
 
@@ -434,7 +434,7 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension
+              styleDimension,
             );
             dataPoint[seriesKey] = series.values[i];
           }
@@ -445,7 +445,7 @@ export function SeriesVisualization({
 
       return chartData;
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
   );
 
   // Get unique series keys for a group to create lines
@@ -457,13 +457,13 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension
+          styleDimension,
         );
         keys.add(key);
       });
       return Array.from(keys);
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
   );
 
   // Memoize expensive color calculations
@@ -473,7 +473,7 @@ export function SeriesVisualization({
         getDimensionHashIndex(seriesKey, hueDimension, COLORS.length)
       ];
     },
-    [hueDimension]
+    [hueDimension],
   );
 
   // Memoize line style calculations
@@ -483,7 +483,7 @@ export function SeriesVisualization({
         getDimensionHashIndex(seriesKey, styleDimension, LINE_STYLES.length)
       ];
     },
-    [styleDimension]
+    [styleDimension],
   );
 
   // Memoize stroke width calculations
@@ -497,7 +497,7 @@ export function SeriesVisualization({
       }
       return 4;
     },
-    [isReferenceSeriesKey, hiddenSeries]
+    [isReferenceSeriesKey, hiddenSeries],
   );
 
   // Smart tick formatting function based on data range
@@ -510,43 +510,9 @@ export function SeriesVisualization({
         .map((d) => d[indexName])
         .filter((v) => typeof v === "number") as number[];
 
-      if (values.length === 0) return (value: string | number) => String(value);
-
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const range = max - min;
-
-      // Determine appropriate formatting based on range and magnitude
-      return (value: string | number): string => {
-        const numValue = Number(value);
-
-        // Handle very large numbers (scientific notation)
-        if (
-          Math.abs(numValue) >= 1e6 ||
-          (range > 0 && Math.abs(numValue) >= 1e4)
-        ) {
-          return numValue.toExponential(1);
-        }
-
-        // Handle very small numbers (scientific notation)
-        if (Math.abs(numValue) < 1e-3 && numValue !== 0) {
-          return numValue.toExponential(1);
-        }
-
-        // Handle decimal precision based on range
-        if (range < 1) {
-          return numValue.toFixed(3);
-        }
-        if (range < 10) {
-          return numValue.toFixed(2);
-        }
-        if (range < 100) {
-          return numValue.toFixed(1);
-        }
-        return numValue.toFixed(0);
-      };
+      return createScaledTickFormatter(values);
     },
-    []
+    [],
   );
 
   // Calculate appropriate tick count based on chart width and data range
@@ -568,7 +534,7 @@ export function SeriesVisualization({
       if (range < 1000) return 5;
       return 4;
     },
-    []
+    [],
   );
 
   if (seriesValues.length === 0) {
@@ -726,7 +692,7 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension
+              styleDimension,
             );
             return key === seriesKey;
           });
@@ -844,7 +810,7 @@ export function SeriesVisualization({
                           const getPriority = (
                             isHidden: boolean,
                             isReference: boolean,
-                            isHovered: boolean
+                            isHovered: boolean,
                           ) => {
                             if (isHovered) return 4; // Highest priority - always on top
                             if (!isHidden && !isReference) return 3; // Regular visible lines
@@ -856,12 +822,12 @@ export function SeriesVisualization({
                           const aPriority = getPriority(
                             aIsHidden,
                             aIsReference,
-                            aIsHovered
+                            aIsHovered,
                           );
                           const bPriority = getPriority(
                             bIsHidden,
                             bIsReference,
-                            bIsHovered
+                            bIsHovered,
                           );
 
                           return aPriority - bPriority;
@@ -874,7 +840,7 @@ export function SeriesVisualization({
                             hoveredSeries !== seriesKey;
                           const isReference = isReferenceSeriesKey(
                             seriesKey,
-                            group
+                            group,
                           );
 
                           // Determine stroke color: gray for hidden/unselected lines, original color for visible lines

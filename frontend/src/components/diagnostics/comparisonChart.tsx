@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import type { MetricValueComparison } from "@/client/types.gen";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
+import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 interface ComparisonChartProps {
   data: MetricValueComparison;
@@ -148,9 +149,7 @@ export const ComparisonChart = ({
   }>;
 
   // Provide a default formatter (1 decimal place) if none is supplied
-  const fmt =
-    valueFormatter ??
-    ((v: number) => (Number.isFinite(v) ? v.toFixed(1) : String(v)));
+  const fmt = valueFormatter ?? createScaledTickFormatter([min, max]);
 
   // Reusable Y domain in data units for both YAxis and BoxWhiskerShape
   const yDomainData: [number, number] = (() => {

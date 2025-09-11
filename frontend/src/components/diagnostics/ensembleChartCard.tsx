@@ -4,6 +4,7 @@ import type { MetricValue } from "@/client/types.gen.ts";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
@@ -15,6 +16,7 @@ interface EnsembleChartCardProps {
   metricName: string;
   metricUnits: string;
   title: string;
+  description?: string;
   xAxis?: string;
   otherFilters?: Record<string, string>;
   clipMin?: number;
@@ -41,6 +43,7 @@ export function EnsembleChartCard(props: EnsembleChartCardProps) {
     metricName,
     metricUnits,
     title,
+    description,
     xAxis,
     otherFilters,
     clipMin,
@@ -51,7 +54,7 @@ export function EnsembleChartCard(props: EnsembleChartCardProps) {
     diagnosticsListMetricValuesOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
       query: { ...otherFilters },
-    }),
+    })
   );
 
   // @ts-expect-error TODO: Fix the type error
@@ -59,11 +62,12 @@ export function EnsembleChartCard(props: EnsembleChartCardProps) {
 
   if (values.length === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
         </CardHeader>
-        <CardContent>
+        <CardContent className="h-full">
           <EmptyEnsembleChart />
         </CardContent>
       </Card>
@@ -74,8 +78,9 @@ export function EnsembleChartCard(props: EnsembleChartCardProps) {
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-visible">
         <EnsembleChart
           data={values}
           metricName={metricName}

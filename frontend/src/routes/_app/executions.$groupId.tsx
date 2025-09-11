@@ -34,21 +34,21 @@ const ExecutionInfo = () => {
   const { data } = useSuspenseQuery(
     executionsGetOptions({
       path: { group_id: groupId },
-    })
+    }),
   );
 
   const { data: execution } = useSuspenseQuery(
     executionsExecutionOptions({
       path: { group_id: groupId },
       query: { execution_id: executionId },
-    })
+    }),
   );
 
   const metricValues = useQuery(
     executionsMetricValuesOptions({
       path: { group_id: groupId },
       query: { execution_id: executionId },
-    })
+    }),
   );
 
   return (
@@ -100,7 +100,7 @@ const ExecutionInfo = () => {
                 label: "Date",
                 value: format(
                   new Date(execution.updated_at as string),
-                  "yyyy-MM-dd HH:mm"
+                  "yyyy-MM-dd HH:mm",
                 ),
               },
               {

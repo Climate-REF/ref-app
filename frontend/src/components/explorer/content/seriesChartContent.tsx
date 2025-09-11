@@ -1,5 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
+import { SeriesVisualization } from "@/components/execution/values/series/seriesVisualization";
+import type {
+  MetricValueCollection,
+  SeriesValue,
+} from "@/components/execution/values/types";
+import { isSeriesValue } from "@/components/execution/values/types";
 import {
   Card,
   CardContent,
@@ -7,20 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { SeriesVisualization } from "@/components/execution/values/series/seriesVisualization";
-import { Info } from "lucide-react";
 import type { ExplorerCardContent } from "../types";
-import type {
-  MetricValueCollection,
-  SeriesValue,
-} from "@/components/execution/values/types";
-import { isSeriesValue } from "@/components/execution/values/types";
 
 interface SeriesChartContentProps {
   contentItem: Extract<ExplorerCardContent, { type: "series-chart" }>;
@@ -36,13 +36,13 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
         diagnostic_slug: contentItem.diagnostic,
       },
       query: { ...contentItem.otherFilters },
-    })
+    }),
   );
 
   // Extract series values from the data
   const collection = data as MetricValueCollection;
   const seriesValues = (collection?.data ?? []).filter(
-    isSeriesValue
+    isSeriesValue,
   ) as SeriesValue[];
 
   // Create the template for this content item

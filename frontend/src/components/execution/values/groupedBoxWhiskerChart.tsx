@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { BoxWhiskerShape } from "./boxWhiskerShape.tsx";
+import { createScaledTickFormatter } from "./series/utils.ts";
 import type {
   BoxPlot,
   GroupedRawDataEntry,
@@ -161,6 +162,9 @@ export const GroupedBoxWhiskerChart = ({
     );
   }
 
+  // Smart tick formatter based on data range
+  const tickFormatter = createScaledTickFormatter(yDomain);
+
   return (
     <div style={{ width, height }} className={className}>
       <ResponsiveContainer className="h-[200px] w-full">
@@ -173,7 +177,11 @@ export const GroupedBoxWhiskerChart = ({
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" />
-          <YAxis domain={yDomain} allowDataOverflow={true} />
+          <YAxis
+            domain={yDomain}
+            allowDataOverflow={true}
+            tickFormatter={tickFormatter}
+          />
           {/*<Tooltip*/}
           {/*  content={<CustomGroupedTooltip groupMeta={groupMeta} />}*/}
           {/*  cursor={{ fill: "rgba(206, 206, 206, 0.2)" }}*/}

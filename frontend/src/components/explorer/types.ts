@@ -4,6 +4,7 @@ export type ExplorerCardContent =
       provider: string;
       diagnostic: string;
       title: string;
+      description?: string;
       metricUnits?: string;
       otherFilters?: Record<string, string>;
       xAxis?: string;

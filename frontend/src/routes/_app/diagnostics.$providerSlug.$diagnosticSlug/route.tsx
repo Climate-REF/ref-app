@@ -95,7 +95,7 @@ const DiagnosticInfoLayout = () => {
 };
 
 export const Route = createFileRoute(
-  "/_app/diagnostics/$providerSlug/$diagnosticSlug"
+  "/_app/diagnostics/$providerSlug/$diagnosticSlug",
 )({
   component: DiagnosticInfoLayout,
   loader: ({ context: { queryClient }, params }) => {
@@ -105,7 +105,7 @@ export const Route = createFileRoute(
           provider_slug: params.providerSlug,
           diagnostic_slug: params.diagnosticSlug,
         },
-      })
+      }),
     );
   },
 });

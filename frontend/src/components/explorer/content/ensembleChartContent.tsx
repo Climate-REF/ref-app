@@ -1,15 +1,15 @@
+import { Info } from "lucide-react";
 import { Suspense } from "react";
 import {
   EnsembleChartCard,
   EnsembleChartCardSkeleton,
 } from "@/components/diagnostics/ensembleChartCard";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { Info } from "lucide-react";
 import type { ExplorerCardContent } from "../types";
 
 interface EnsembleChartContentProps {
@@ -21,12 +21,15 @@ export function EnsembleChartContent({
 }: EnsembleChartContentProps) {
   const spanClass = contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
 
+  console.log(contentItem);
+
   // Create the template for this content item
   const contentTemplate = {
     type: contentItem.type,
     provider: contentItem.provider,
     diagnostic: contentItem.diagnostic,
     title: contentItem.title,
+    description: contentItem.description,
     metricUnits: contentItem.metricUnits,
     xAxis: contentItem.xAxis,
     ...(contentItem.otherFilters && {
@@ -50,6 +53,7 @@ export function EnsembleChartContent({
           metricName={contentItem.title}
           metricUnits={contentItem.metricUnits ?? "unitless"}
           title={contentItem.title}
+          description={contentItem.description}
           xAxis={contentItem.xAxis}
           otherFilters={contentItem.otherFilters}
           clipMin={contentItem.clipMin}
@@ -65,9 +69,7 @@ export function EnsembleChartContent({
         <TooltipContent side="left" className="max-w-md">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">
-                Ensemble Chart Configuration
-              </p>
+              <p className="text-sm font-medium">Series Chart Configuration</p>
               <CopyButton
                 text={JSON.stringify(contentTemplate, null, 2)}
                 label="Copy"

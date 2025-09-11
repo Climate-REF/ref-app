@@ -1,3 +1,11 @@
+import { Info } from "lucide-react";
+import { EnsembleChart } from "@/components/diagnostics/ensembleChart";
+import { SeriesVisualization } from "@/components/execution/values/series/seriesVisualization";
+import type {
+  MetricValue,
+  SeriesValue,
+} from "@/components/execution/values/types";
+import { isSeriesValue } from "@/components/execution/values/types";
 import {
   Card,
   CardContent,
@@ -5,24 +13,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { Info } from "lucide-react";
 import type {
-  ExplorerCard as ExplorerCardType,
   ExplorerCardContent,
+  ExplorerCard as ExplorerCardType,
 } from "./types";
-import type {
-  MetricValue,
-  SeriesValue,
-} from "@/components/execution/values/types";
-import { EnsembleChart } from "@/components/diagnostics/ensembleChart";
-import { SeriesVisualization } from "@/components/execution/values/series/seriesVisualization";
-import { isSeriesValue } from "@/components/execution/values/types";
 
 interface ExplorerCardPreviewProps {
   card: ExplorerCardType;
@@ -91,7 +91,7 @@ function ContentPreview({
           <CardHeader>
             <CardTitle>{contentItem.title}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-visible">
             {scalarData.length > 0 ? (
               <EnsembleChart
                 data={scalarData}
@@ -261,66 +261,13 @@ export function ExplorerCardPreview({
   card,
   availableData,
 }: ExplorerCardPreviewProps) {
+  // For simplicity, just preview the first content item
+  const contentItem = card.content[0];
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <CardTitle>{card.title}</CardTitle>
-            {card.description ? (
-              <CardDescription>{card.description}</CardDescription>
-            ) : null}
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                <Info className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-md">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Card Configuration</p>
-                  <CopyButton
-                    text={JSON.stringify(
-                      {
-                        title: card.title,
-                        description: card.description,
-                        content: card.content,
-                      },
-                      null,
-                      2
-                    )}
-                    label="Copy"
-                  />
-                </div>
-                <pre className="text-xs bg-gray-800 text-green-400 p-2 rounded overflow-x-auto">
-                  {JSON.stringify(
-                    {
-                      title: card.title,
-                      description: card.description,
-                      content: card.content,
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {card.content.map((contentItem) => (
-            <ContentPreview
-              key={`${card.title}:${contentItem.diagnostic}`}
-              contentItem={contentItem}
-              availableData={availableData}
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <ContentPreview
+      key={`${card.title}:${contentItem.diagnostic}`}
+      contentItem={contentItem}
+      availableData={availableData}
+    />
   );
 }

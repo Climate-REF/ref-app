@@ -1,15 +1,15 @@
+import { Info } from "lucide-react";
 import { Suspense } from "react";
 import {
   DiagnosticFigureGalleryCard,
   DiagnosticFigureGalleryCardSkeleton,
 } from "@/components/diagnostics/diagnosticFigureGalleryCard";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { Info } from "lucide-react";
 import type { ExplorerCardContent } from "../types";
 
 interface FigureGalleryContentProps {

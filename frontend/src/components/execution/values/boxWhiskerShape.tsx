@@ -1,10 +1,12 @@
 import { scaleLinear } from "d3-scale";
 import { Cross } from "recharts";
+import type { MetricValue } from "@/client/types.gen";
 import type { ProcessedGroupedDataEntry } from "./types";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
   yDomain: [number, number];
+  highlightedPoint?: MetricValue | null;
 
   // Standard Recharts props provided to shapes
   x?: number;
@@ -22,6 +24,7 @@ interface BoxWhiskerShapeProps {
 export function BoxWhiskerShape({
   prefix,
   yDomain,
+  highlightedPoint,
   ...props
 }: BoxWhiskerShapeProps) {
   const {
@@ -73,25 +76,39 @@ export function BoxWhiskerShape({
       typeof color === "string" && color.startsWith("#")
         ? darkenHex(color, 30)
         : color;
-    return values.map((v: number) => (
-      <Cross
-        key={v}
-        strokeWidth={strokeWidth}
-        stroke={crossColor}
-        x={whiskerX}
-        y={scale(v)}
-        left={whiskerX - crossWidth / 2}
-        // @ts-ignore
-        top={scale(v) - crossWidth / 2}
-        height={crossWidth} // Cross height
-        width={crossWidth} // Cross width
-        style={{
-          transform: "rotate(45deg)",
-          transformOrigin: "center",
-          transformBox: "fill-box",
-        }}
-      />
-    ));
+
+    // Get the highlighted value if it exists and matches this group
+    const highlightedValue = highlightedPoint
+      ? Number(highlightedPoint.value)
+      : null;
+
+    return values.map((v: number) => {
+      const isHighlighted =
+        highlightedValue !== null && Math.abs(v - highlightedValue) < 0.0001;
+      const crossSize = isHighlighted ? crossWidth * 1.5 : crossWidth;
+      const crossStroke = isHighlighted ? "#EF4444" : crossColor;
+      const crossStrokeWidth = isHighlighted ? strokeWidth * 2 : strokeWidth;
+
+      return (
+        <Cross
+          key={v}
+          strokeWidth={crossStrokeWidth}
+          stroke={crossStroke}
+          x={whiskerX}
+          y={scale(v)}
+          left={whiskerX - crossSize / 2}
+          // @ts-ignore
+          top={scale(v) - crossSize / 2}
+          height={crossSize} // Cross height
+          width={crossSize} // Cross width
+          style={{
+            transform: "rotate(45deg)",
+            transformOrigin: "center",
+            transformBox: "fill-box",
+          }}
+        />
+      );
+    });
   }
 
   if (values.length < 5) {

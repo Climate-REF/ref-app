@@ -120,7 +120,12 @@ function ExecutionsTable({ results }: ResultListTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <DataTable data={results} columns={columns} />
+        <DataTable
+          data={results.sort((a, b) =>
+            b.updated_at.localeCompare(a.updated_at)
+          )}
+          columns={columns}
+        />
       </CardContent>
     </Card>
   );

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { SquareArrowOutUpRight } from "lucide-react";
+import { SquareArrowOutUpRight, AlertTriangle } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
@@ -14,6 +14,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -100,23 +105,23 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   {
     header: () => (
       <span title="New or changed inputs detected; re-run recommended.">
-        Dirty
+        <AlertTriangle className="h-4 w-4 text-orange-500" />
       </span>
     ),
     accessorKey: "dirty",
     cell: (cell) =>
       cell.getValue() ? (
-        <Badge
-          variant="destructive"
-          title="Group requires re-run due to changed inputs."
-        >
-          Yes
-        </Badge>
-      ) : (
-        <Badge variant="outline" title="No changes detected since last run.">
-          No
-        </Badge>
-      ),
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>The current execution is dirty</p>
+          </TooltipContent>
+        </Tooltip>
+      ) : null,
   },
   {
     header: () => (
@@ -183,7 +188,7 @@ function ExecutionGroupTableWithQuery({
   const { data, isLoading } = useSuspenseQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
-    }),
+    })
   );
 
   return (

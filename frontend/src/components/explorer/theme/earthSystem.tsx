@@ -14,6 +14,17 @@ const cards: ExplorerCard[] = [
         metricUnits: "",
         xAxis: "metric",
         clipMax: 10,
+        otherFilters: { metric: "ecs" },
+      },
+      {
+        type: "ensemble-chart",
+        provider: "esmvaltool",
+        diagnostic: "equilibrium-climate-sensitivity",
+        title: "Lambda",
+        metricUnits: "",
+        xAxis: "metric",
+        clipMax: 10,
+        otherFilters: { metric: "lambda" },
       },
       {
         type: "ensemble-chart",

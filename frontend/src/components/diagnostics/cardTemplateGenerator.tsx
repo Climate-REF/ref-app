@@ -2,15 +2,14 @@ import { Copy, Download, Eye, EyeOff } from "lucide-react";
 import { useCallback, useState } from "react";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
 import type {
-  ExplorerCardContent,
-  ExplorerCard as ExplorerCardType,
-} from "@/components/explorer/types";
-import { ExplorerCardPreview } from "@/components/explorer/explorerCardPreview";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import type {
   MetricValue,
   SeriesValue,
 } from "@/components/execution/values/types";
+import { ExplorerCardPreview } from "@/components/explorer/explorerCardPreview";
+import type {
+  ExplorerCardContent,
+  ExplorerCard as ExplorerCardType,
+} from "@/components/explorer/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 
 interface CardTemplateGeneratorProps {
@@ -97,7 +97,7 @@ export function CardTemplateGenerator({
 
   // Series-specific state
   const [seriesGroupBy, setSeriesGroupBy] = useState(
-    seriesParams?.groupBy || ""
+    seriesParams?.groupBy || "",
   );
   const [seriesHue, setSeriesHue] = useState(seriesParams?.hue || "");
   const [seriesStyle, setSeriesStyle] = useState(seriesParams?.style || "");
@@ -107,7 +107,7 @@ export function CardTemplateGenerator({
     const selectedFilters = Object.fromEntries(
       includeFilters
         .map((key) => [key, currentFilters[key]])
-        .filter(([, value]) => value)
+        .filter(([, value]) => value),
     );
 
     const baseContent = {
@@ -331,7 +331,7 @@ export function CardTemplateGenerator({
                       value={clipMin || ""}
                       onChange={(e) =>
                         setClipMin(
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Optional"
@@ -345,7 +345,7 @@ export function CardTemplateGenerator({
                       value={clipMax || ""}
                       onChange={(e) =>
                         setClipMax(
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Optional"
@@ -463,7 +463,7 @@ export function CardTemplateGenerator({
                               setIncludeFilters((prev) => [...prev, key]);
                             } else {
                               setIncludeFilters((prev) =>
-                                prev.filter((k) => k !== key)
+                                prev.filter((k) => k !== key),
                               );
                             }
                           }}
