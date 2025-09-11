@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { type Filter, useValuesProcessor } from "@/hooks/useValuesProcessor";
 import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
-import { SeriesVisualization } from "./seriesVisualization.tsx";
+import { SeriesVisualization } from "./series/seriesVisualization.tsx";
 import type { Facet, MetricValue, SeriesValue } from "./types";
 import { isScalarValue, isSeriesValue } from "./types";
 import ValuesDataTable from "./valuesDataTable.tsx";
@@ -14,7 +14,7 @@ import ValuesDataTable from "./valuesDataTable.tsx";
 const ValuesFigure = React.lazy(() =>
   import("./valuesFigure.tsx").then((module) => ({
     default: module.ValuesFigure,
-  })),
+  }))
 );
 
 type ValuesProps = {
@@ -43,7 +43,7 @@ type ViewType = "bar" | "table" | "series";
 
 export function Values(props: ValuesProps) {
   const [viewType, setViewType] = useState<ViewType>(
-    props.initialViewType || "table",
+    props.initialViewType || "table"
   );
 
   // Handle view type changes and sync with URL

@@ -1,5 +1,110 @@
-# Assessment Fast Track Rapid Evaluation Framework
+# About Climate REF
 
-testing
+## Overview
 
-[GitHub](https://github.com/Climate-REF/climate-ref)
+The CMIP Rapid Evaluation Framework (Climate REF) is an automated system for evaluating Earth system models participating in the Coupled Model Intercomparison Project Phase 7 (CMIP7).
+This framework provides standardized diagnostics and performance metrics to facilitate timely assessment of model simulations against observational datasets.
+The currently deployed version of the Climate REF uses CMIP6 datasets, but will be updated to include CMIP7 results when they are available.
+
+## Background and Motivation
+
+The evaluation of Earth system models has become increasingly complex as models incorporate more processes and produce larger volumes of output data.
+Traditional evaluation approaches, which often rely on manual processing and analysis, can introduce significant delays between model data submission and the availability of evaluation results.
+These delays can impede the iterative model development process and limit the community's ability to identify and address systematic biases across the multi-model ensemble.
+
+Climate REF addresses these challenges through automation of the evaluation workflow, enabling systematic and reproducible assessment of model performance across a comprehensive suite of diagnostics.
+This brings together 3 different model benchmarking packages into a common framework.
+
+## Technical Capabilities
+
+### Diagnostic Coverage
+
+The CMIP Model Benchmarking Task Team developed an initial set of key diagnostics that the REF could target through community consulation.
+The framework implements diagnostics that cover key components of the Earth system:
+
+- **Atmosphere**: Temperature, precipitation, circulation indices, cloud properties, and radiation balance
+- **Ocean**: Temperature and salinity profiles, mixed layer depth, meridional overturning circulation, and sea ice extent
+- **Land**: Surface temperature, soil moisture, vegetation indices, and terrestrial carbon stocks
+- **Biogeochemistry**: Carbon cycle diagnostics, primary productivity, and nutrient distributions
+
+### Evaluation Methodology
+
+Climate REF isn't responsible for any new diagnostics. The aim is to bring the established model benchmarking and evaluation packages into to a common framework.
+The Climate REF provides a systematic way of executing these diangostics packages and interpreting their outputs.
+
+These evaluation techniques include:
+
+- Root mean square error (RMSE) and bias calculations against observational datasets
+- Taylor diagram statistics for pattern correlation and variability assessment
+- Trend analysis for historical simulations
+- Process-oriented diagnostics following published methodologies
+- Multi-model ensemble statistics and inter-model spread quantification
+
+## Implementation and Design
+
+### Interoperability
+
+Climate REF adheres to CMIP data standards and conventions:
+
+- Full support for CF-compliant NetCDF formats
+- CMOR-compliant variable naming and metadata
+- Integration with ESGF search and data access protocols
+- Output compatibility with standard analysis packages
+
+The REF will monitor ESGF (Earth System Grid Federation) data nodes for new CMIP7 submissions and initiates processing automatically.
+
+### Reproducibility
+
+All results generated are archived for future reference.
+We track the datasets that where used to generate any values.
+
+- Transparent handling of observational uncertainties (WIP)
+- Archived configuration files for result reproduction
+- Provenance generation
+
+## Project Development
+
+Climate REF was developed through collaboration between multiple institutions involved in CMIP7 planning and implementation.
+The framework design benefited from extensive community input, including feedback from modeling centers, diagnostic developers, and the CMIP Panel.
+Development priorities were guided by the requirements outlined in the CMIP7 protocol and lessons learned from previous CMIP phases.
+
+The accelerated timeline for CMIP7 necessitated rapid development while maintaining scientific rigor.
+The development team implemented agile methodologies to deliver core functionality within the required timeframe, with ongoing refinements based on user feedback.
+
+## Access and Usage
+
+Climate REF provides multiple interfaces for accessing evaluation results:
+
+[**Data Explorer**](/data-explorer)
+Interactive interface for querying and visualizing model evaluation results. Users can select specific models, variables, and experiments for detailed analysis.
+
+[**Diagnostic Browser**](/diagnostics)
+Pre-computed evaluation metrics organized by model component and diagnostic type. Results include statistical summaries, spatial maps, and time series comparisons.
+
+---
+
+## Additional Information
+
+### Documentation
+
+Comprehensive documentation is available at [climate-ref.readthedocs.io](https://climate-ref.readthedocs.io/en/latest/), including:
+
+- Technical specifications
+- Diagnostic descriptions and equations
+- API documentation for programmatic access
+- Example workflows and use cases
+
+### Source Code
+
+Climate REF is developed as open-source software. The codebase is available at [github.com/Climate-REF/climate-ref](https://github.com/Climate-REF/climate-ref) under an open license.
+Community contributions are welcome through the standard pull request process.
+
+### CMIP7 Context
+
+For information about the broader CMIP7 Rapid Evaluation Framework initiative, see the official [WCRP-CMIP documentation](https://wcrp-cmip.org/cmip-phases/cmip7/rapid-evaluation-framework/).
+
+### Acknowledgments
+
+Climate REF development is supported by the Department of Energy and ESA. We acknowledge the modeling groups participating in CMIP7 and the observational data providers whose datasets enable model evaluation.
+
+<img src="/logos/funders.png" alt="Funding organizations" className="block" />
