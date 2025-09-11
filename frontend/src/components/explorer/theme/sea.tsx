@@ -1,5 +1,5 @@
-import { ExplorerThemeLayout } from "./_components/explorerThemeLayout";
 import type { ExplorerCard } from "@/components/explorer/types";
+import { ExplorerThemeLayout } from "./_components/explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {

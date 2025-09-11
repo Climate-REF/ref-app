@@ -1,11 +1,11 @@
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { ExplorerCard } from "@/components/explorer/theme/_components/explorerCard";
 import type { ExplorerCard as ExplorerCardType } from "@/components/explorer/types";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 // Re-export types for backward compatibility
 export type {
-  ExplorerCardContent,
   ExplorerCard as ExplorerCardType,
+  ExplorerCardContent,
 } from "@/components/explorer/types";
 
 interface ExplorerThemeLayoutProps {

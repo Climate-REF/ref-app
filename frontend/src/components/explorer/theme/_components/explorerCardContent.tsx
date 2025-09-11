@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { Suspense } from "react";
 import {
   DiagnosticFigureGalleryCard,
@@ -7,13 +8,12 @@ import {
   EnsembleChartCard,
   EnsembleChartCardSkeleton,
 } from "@/components/diagnostics/ensembleChartCard";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { Info } from "lucide-react";
 import type { ExplorerCardContent as ExplorerCardContentType } from "../../types";
 
 interface ExplorerCardContentProps {

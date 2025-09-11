@@ -2,7 +2,7 @@
 export function getDimensionHashIndex(
   seriesKey: string,
   dimension: string,
-  arrayLength: number
+  arrayLength: number,
 ): number {
   if (dimension && dimension !== "none") {
     const dimensionValue = seriesKey

@@ -14,7 +14,7 @@ import ValuesDataTable from "./valuesDataTable.tsx";
 const ValuesFigure = React.lazy(() =>
   import("./valuesFigure.tsx").then((module) => ({
     default: module.ValuesFigure,
-  }))
+  })),
 );
 
 type ValuesProps = {
@@ -43,7 +43,7 @@ type ViewType = "bar" | "table" | "series";
 
 export function Values(props: ValuesProps) {
   const [viewType, setViewType] = useState<ViewType>(
-    props.initialViewType || "table"
+    props.initialViewType || "table",
   );
 
   // Handle view type changes and sync with URL

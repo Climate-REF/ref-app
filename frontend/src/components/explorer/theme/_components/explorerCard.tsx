@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -5,13 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copyButton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CopyButton } from "@/components/ui/copyButton";
-import { Info } from "lucide-react";
 import type { ExplorerCard as ExplorerCardType } from "../../types";
 import { ExplorerCardContent } from "./explorerCardContent";
 
@@ -48,7 +48,7 @@ export function ExplorerCard({ card }: ExplorerCardProps) {
                         content: card.content,
                       },
                       null,
-                      2
+                      2,
                     )}
                     label="Copy"
                   />
@@ -61,7 +61,7 @@ export function ExplorerCard({ card }: ExplorerCardProps) {
                       content: card.content,
                     },
                     null,
-                    2
+                    2,
                   )}
                 </pre>
               </div>

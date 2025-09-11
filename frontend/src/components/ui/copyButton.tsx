@@ -1,6 +1,6 @@
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, Check } from "lucide-react";
 
 interface CopyButtonProps {
   text: string;
