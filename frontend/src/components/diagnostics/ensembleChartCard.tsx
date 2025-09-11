@@ -54,7 +54,7 @@ export function EnsembleChartCard(props: EnsembleChartCardProps) {
     diagnosticsListMetricValuesOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
       query: { ...otherFilters },
-    })
+    }),
   );
 
   // @ts-expect-error TODO: Fix the type error

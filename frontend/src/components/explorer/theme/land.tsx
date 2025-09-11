@@ -28,13 +28,6 @@ const cards: ExplorerCard[] = [
         title: "Soil Carbon",
         metricUnits: "kgC/m^2",
       },
-      {
-        type: "ensemble-chart",
-        provider: "ilamb",
-        diagnostic: "burntFractionAll-GFED",
-        title: "Burnt Area Fraction",
-        metricUnits: "%",
-      },
     ],
   },
   {

@@ -9,7 +9,7 @@ export type {
 // Type guard functions
 export function isSeriesValue(
   // @ts-ignore
-  value: MetricValue | SeriesValue
+  value: MetricValue | SeriesValue,
   // @ts-ignore
 ): value is SeriesValue {
   return "values" in value && "index" in value && "index_name" in value;
@@ -17,7 +17,7 @@ export function isSeriesValue(
 
 export function isScalarValue(
   // @ts-ignore
-  value: MetricValue | SeriesValue
+  value: MetricValue | SeriesValue,
   // @ts-ignore
 ): value is MetricValue {
   return "value" in value && !("values" in value);

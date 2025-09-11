@@ -97,7 +97,7 @@ export function CardTemplateGenerator({
 
   // Series-specific state
   const [seriesGroupBy, setSeriesGroupBy] = useState(
-    seriesParams?.groupBy || ""
+    seriesParams?.groupBy || "",
   );
   const [seriesHue, setSeriesHue] = useState(seriesParams?.hue || "");
   const [seriesStyle, setSeriesStyle] = useState(seriesParams?.style || "");
@@ -107,7 +107,7 @@ export function CardTemplateGenerator({
     const selectedFilters = Object.fromEntries(
       includeFilters
         .map((key) => [key, currentFilters[key]])
-        .filter(([, value]) => value)
+        .filter(([, value]) => value),
     );
 
     const baseContent = {
@@ -331,7 +331,7 @@ export function CardTemplateGenerator({
                       value={clipMin || ""}
                       onChange={(e) =>
                         setClipMin(
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Optional"
@@ -345,7 +345,7 @@ export function CardTemplateGenerator({
                       value={clipMax || ""}
                       onChange={(e) =>
                         setClipMax(
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Optional"
@@ -463,7 +463,7 @@ export function CardTemplateGenerator({
                               setIncludeFilters((prev) => [...prev, key]);
                             } else {
                               setIncludeFilters((prev) =>
-                                prev.filter((k) => k !== key)
+                                prev.filter((k) => k !== key),
                               );
                             }
                           }}

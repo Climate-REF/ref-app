@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { SquareArrowOutUpRight, AlertTriangle } from "lucide-react";
+import { AlertTriangle, SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
@@ -188,7 +188,7 @@ function ExecutionGroupTableWithQuery({
   const { data, isLoading } = useSuspenseQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
-    })
+    }),
   );
 
   return (

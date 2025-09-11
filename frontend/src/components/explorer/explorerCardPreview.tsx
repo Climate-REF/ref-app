@@ -82,7 +82,7 @@ function ContentPreview({
   if (contentItem.type === "ensemble-chart") {
     // Filter data for ensemble chart (scalar values only)
     const scalarData = availableData.filter(
-      (item): item is MetricValue => !isSeriesValue(item)
+      (item): item is MetricValue => !isSeriesValue(item),
     );
 
     return (
