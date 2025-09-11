@@ -18,6 +18,21 @@ export type ExplorerCardContent =
       title: string;
       description?: string;
       span?: 1 | 2;
+    }
+  | {
+      type: "series-chart";
+      provider: string;
+      diagnostic: string;
+      title: string;
+      description?: string;
+      metricUnits?: string;
+      otherFilters?: Record<string, string>;
+      seriesConfig?: {
+        groupBy?: string;
+        hue?: string;
+        style?: string;
+      };
+      span?: 1 | 2;
     };
 
 export type ExplorerCard = {

@@ -22,7 +22,7 @@ const valuesSearchSchema = z
 
 const filterNonEmptyValues = (search: Record<string, string | undefined>) => {
   return Object.entries(search).filter(
-    ([, v]) => v !== undefined && v !== null && String(v).length > 0,
+    ([, v]) => v !== undefined && v !== null && String(v).length > 0
   );
 };
 
@@ -38,7 +38,7 @@ export const ValuesTab = () => {
         diagnostic_slug: diagnosticSlug,
       },
       query: Object.fromEntries(filterNonEmptyValues(search)),
-    }),
+    })
   );
 
   // Extract available dimensions from the data for the card template generator
@@ -61,12 +61,12 @@ export const ValuesTab = () => {
       Object.entries(search).filter(
         ([key, value]) =>
           value !== undefined &&
-          !["view", "groupBy", "hue", "style"].includes(key),
-      ),
+          !["view", "groupBy", "hue", "style"].includes(key)
+      )
     );
     // Ensure all values are strings, not undefined
     return Object.fromEntries(
-      Object.entries(filtered).filter(([, value]) => value !== undefined),
+      Object.entries(filtered).filter(([, value]) => value !== undefined)
     ) as Record<string, string>;
   }, [search]);
 
@@ -80,7 +80,7 @@ export const ValuesTab = () => {
           .filter(
             ([key, value]) =>
               value !== undefined &&
-              !["view", "groupBy", "hue", "style"].includes(key),
+              !["view", "groupBy", "hue", "style"].includes(key)
           )
           .map(([facetKey, value]) => ({
             id: crypto.randomUUID(),
@@ -99,7 +99,7 @@ export const ValuesTab = () => {
 
           // Preserve existing parameters
           const existingParams = Object.fromEntries(
-            Object.entries(search).filter(([key]) => !["view"].includes(key)),
+            Object.entries(search).filter(([key]) => !["view"].includes(key))
           );
 
           console.log("existingParams:", existingParams);
@@ -115,7 +115,7 @@ export const ValuesTab = () => {
           const filterParams =
             newFilters.length > 0
               ? Object.fromEntries(
-                  newFilters.map((filter) => [filter.facetKey, filter.value]),
+                  newFilters.map((filter) => [filter.facetKey, filter.value])
                 )
               : {};
 
@@ -136,8 +136,8 @@ export const ValuesTab = () => {
           // Preserve existing filter parameters
           const filterParams = Object.fromEntries(
             Object.entries(search).filter(
-              ([key]) => !["groupBy", "hue", "style"].includes(key),
-            ),
+              ([key]) => !["groupBy", "hue", "style"].includes(key)
+            )
           );
 
           navigate({
@@ -188,6 +188,11 @@ export const ValuesTab = () => {
             style: search.style,
           }}
           availableDimensions={availableDimensions}
+          availableData={(metricValues as MetricValueCollection)?.data ?? []}
+          currentTab="values"
+          currentViewType={
+            search.view as "table" | "bar" | "series" | undefined
+          }
         />
       </div>
     </div>
@@ -195,7 +200,7 @@ export const ValuesTab = () => {
 };
 
 export const Route = createFileRoute(
-  "/_app/diagnostics/$providerSlug/$diagnosticSlug/values",
+  "/_app/diagnostics/$providerSlug/$diagnosticSlug/values"
 )({
   component: ValuesTab,
   validateSearch: zodValidator(valuesSearchSchema),

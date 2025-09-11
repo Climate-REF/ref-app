@@ -1,7 +1,16 @@
 import { Copy, Download, Eye, EyeOff } from "lucide-react";
 import { useCallback, useState } from "react";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
-import type { ExplorerCardContent } from "@/components/explorer/theme/_components/explorerThemeLayout";
+import type {
+  ExplorerCardContent,
+  ExplorerCard as ExplorerCardType,
+} from "@/components/explorer/types";
+import { ExplorerCardPreview } from "@/components/explorer/explorerCardPreview";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import type {
+  MetricValue,
+  SeriesValue,
+} from "@/components/execution/values/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,21 +42,22 @@ interface CardTemplateGeneratorProps {
   };
   // Available dimensions for series configuration
   availableDimensions?: string[];
+  // Available data from the current diagnostic page
+  availableData?: (MetricValue | SeriesValue)[];
+  // Current tab context to determine default card type
+  currentTab?: "values" | "series" | "figures";
+  // Current view type within the values tab
+  currentViewType?: "table" | "bar" | "series";
 }
 
 type CardType = "ensemble-chart" | "figure-gallery" | "series-chart";
 
-interface CardTemplate {
-  type: CardType;
-  title: string;
-  description?: string;
-  content: ExplorerCardContent & {
-    // Extended properties for series charts
-    seriesConfig?: {
-      groupBy?: string;
-      hue?: string;
-      style?: string;
-    };
+interface CardTemplate extends ExplorerCardType {
+  // Extended properties for series charts
+  seriesConfig?: {
+    groupBy?: string;
+    hue?: string;
+    style?: string;
   };
 }
 
@@ -57,12 +67,25 @@ export function CardTemplateGenerator({
   currentFilters = {},
   seriesParams,
   availableDimensions = [],
+  availableData = [],
+  currentTab,
+  currentViewType,
 }: CardTemplateGeneratorProps) {
   const { toast } = useToast();
   const [isVisible, setIsVisible] = useState(true); // Start visible for testing
 
-  // Form state
-  const [cardType, setCardType] = useState<CardType>("ensemble-chart");
+  // Form state - set default based on current tab and view context
+  const getDefaultCardType = (): CardType => {
+    if (currentTab === "figures") return "figure-gallery";
+    if (currentTab === "values") {
+      if (currentViewType === "series") return "series-chart";
+      if (currentViewType === "bar") return "ensemble-chart";
+      return "ensemble-chart"; // Default for table view
+    }
+    return "ensemble-chart"; // Default fallback
+  };
+
+  const [cardType, setCardType] = useState<CardType>(getDefaultCardType());
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [metricUnits, setMetricUnits] = useState("");
@@ -74,17 +97,17 @@ export function CardTemplateGenerator({
 
   // Series-specific state
   const [seriesGroupBy, setSeriesGroupBy] = useState(
-    seriesParams?.groupBy || "",
+    seriesParams?.groupBy || ""
   );
   const [seriesHue, setSeriesHue] = useState(seriesParams?.hue || "");
   const [seriesStyle, setSeriesStyle] = useState(seriesParams?.style || "");
 
   // Generate the card template
-  const generateTemplate = useCallback((): CardTemplate => {
+  const generateTemplate = useCallback((): ExplorerCardType => {
     const selectedFilters = Object.fromEntries(
       includeFilters
         .map((key) => [key, currentFilters[key]])
-        .filter(([, value]) => value),
+        .filter(([, value]) => value)
     );
 
     const baseContent = {
@@ -94,13 +117,7 @@ export function CardTemplateGenerator({
       span,
     };
 
-    let content: ExplorerCardContent & {
-      seriesConfig?: {
-        groupBy?: string;
-        hue?: string;
-        style?: string;
-      };
-    };
+    let content: ExplorerCardContent;
 
     switch (cardType) {
       case "ensemble-chart":
@@ -127,29 +144,28 @@ export function CardTemplateGenerator({
 
       case "series-chart":
         content = {
-          type: "ensemble-chart", // Use ensemble-chart as base, but with series config
+          type: "series-chart",
           ...baseContent,
+          ...(description && { description }),
           metricUnits: metricUnits || "unitless",
-          xAxis,
-          ...(clipMin !== undefined && { clipMin }),
-          ...(clipMax !== undefined && { clipMax }),
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
           }),
           seriesConfig: {
-            ...(seriesGroupBy && { groupBy: seriesGroupBy }),
-            ...(seriesHue && { hue: seriesHue }),
-            ...(seriesStyle && { style: seriesStyle }),
+            ...(seriesGroupBy &&
+              seriesGroupBy !== "none" && { groupBy: seriesGroupBy }),
+            ...(seriesHue && seriesHue !== "none" && { hue: seriesHue }),
+            ...(seriesStyle &&
+              seriesStyle !== "none" && { style: seriesStyle }),
           },
         };
         break;
     }
 
     return {
-      type: cardType,
       title,
       description,
-      content,
+      content: [content],
     };
   }, [
     cardType,
@@ -238,7 +254,7 @@ export function CardTemplateGenerator({
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Form Column */}
           <div className="space-y-4">
             {/* Card Type Selection */}
@@ -315,7 +331,7 @@ export function CardTemplateGenerator({
                       value={clipMin || ""}
                       onChange={(e) =>
                         setClipMin(
-                          e.target.value ? Number(e.target.value) : undefined,
+                          e.target.value ? Number(e.target.value) : undefined
                         )
                       }
                       placeholder="Optional"
@@ -329,7 +345,7 @@ export function CardTemplateGenerator({
                       value={clipMax || ""}
                       onChange={(e) =>
                         setClipMax(
-                          e.target.value ? Number(e.target.value) : undefined,
+                          e.target.value ? Number(e.target.value) : undefined
                         )
                       }
                       placeholder="Optional"
@@ -360,7 +376,7 @@ export function CardTemplateGenerator({
                         <SelectValue placeholder="Select dimension" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {availableDimensions.map((dim) => (
                           <SelectItem key={dim} value={dim}>
                             {dim}
@@ -379,7 +395,7 @@ export function CardTemplateGenerator({
                         <SelectValue placeholder="Select dimension" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {availableDimensions.map((dim) => (
                           <SelectItem key={dim} value={dim}>
                             {dim}
@@ -398,7 +414,7 @@ export function CardTemplateGenerator({
                         <SelectValue placeholder="Select dimension" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {availableDimensions.map((dim) => (
                           <SelectItem key={dim} value={dim}>
                             {dim}
@@ -447,7 +463,7 @@ export function CardTemplateGenerator({
                               setIncludeFilters((prev) => [...prev, key]);
                             } else {
                               setIncludeFilters((prev) =>
-                                prev.filter((k) => k !== key),
+                                prev.filter((k) => k !== key)
                               );
                             }
                           }}
@@ -526,7 +542,7 @@ export function CardTemplateGenerator({
           </div>
 
           {/* Preview Column */}
-          <div className="space-y-4">
+          <div className="space-y-4 col-span-2">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Live Preview</Label>
               <p className="text-xs text-muted-foreground">
@@ -534,88 +550,14 @@ export function CardTemplateGenerator({
               </p>
             </div>
 
-            <div className="border rounded-lg p-4 bg-gray-50 min-h-[400px]">
+            <div className="border rounded-lg p-4 bg-white min-h-[400px]">
               {title ? (
-                <div className="space-y-2">
-                  {cardType === "ensemble-chart" && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{title}</CardTitle>
-                        {description && (
-                          <p className="text-sm text-muted-foreground">
-                            {description}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-                          <div className="text-center text-sm text-gray-500">
-                            <p>Ensemble Chart Preview</p>
-                            <p className="text-xs mt-1">
-                              Units: {metricUnits || "unitless"} | X-Axis:{" "}
-                              {xAxis} | Filters: {includeFilters.length} applied
-                            </p>
-                            {(clipMin !== undefined ||
-                              clipMax !== undefined) && (
-                              <p className="text-xs mt-1">
-                                Clipping: {clipMin ?? "none"} to{" "}
-                                {clipMax ?? "none"}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {cardType === "figure-gallery" && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{title}</CardTitle>
-                        {description && (
-                          <p className="text-sm text-muted-foreground">
-                            {description}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-                          <div className="text-center text-sm text-gray-500">
-                            <p>Figure Gallery Preview</p>
-                            <p className="text-xs mt-1">
-                              Will show diagnostic plots and figures
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {cardType === "series-chart" && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{title}</CardTitle>
-                        {description && (
-                          <p className="text-sm text-muted-foreground">
-                            {description}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-                          <div className="text-center text-sm text-gray-500">
-                            <p>Series Chart Preview</p>
-                            <p className="text-xs mt-1">
-                              Group: {seriesGroupBy || "none"} | Color:{" "}
-                              {seriesHue || "none"} | Style:{" "}
-                              {seriesStyle || "none"}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                <TooltipProvider>
+                  <ExplorerCardPreview
+                    card={generateTemplate()}
+                    availableData={availableData}
+                  />
+                </TooltipProvider>
               ) : (
                 <div className="h-64 flex items-center justify-center text-gray-400">
                   <div className="text-center">

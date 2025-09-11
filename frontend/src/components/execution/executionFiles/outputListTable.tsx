@@ -11,13 +11,17 @@ import {
 } from "@/components/ui/card.tsx";
 
 export const columns: ColumnDef<ExecutionOutput>[] = [
-  {
-    accessorKey: "short_name",
-    header: "Short Name",
-  },
+  // {
+  //   accessorKey: "short_name",
+  //   header: "Short Name",
+  // },
   {
     accessorKey: "filename",
     header: "Filename",
+  },
+  {
+    accessorKey: "output_type",
+    header: "Type",
   },
   {
     id: "updated_at",

@@ -37,6 +37,8 @@ interface SeriesVisualizationProps {
     hue?: string;
     style?: string;
   }) => void;
+  // Hide the groupBy/hue/style controls for explorer cards
+  hideControls?: boolean;
 }
 
 interface GroupedSeries {
@@ -82,6 +84,7 @@ export function SeriesVisualization({
   initialHue,
   initialStyle,
   onParamsChange,
+  hideControls = false,
 }: SeriesVisualizationProps) {
   // Get all available dimensions for grouping
   const availableDimensions = useMemo(() => {
@@ -158,7 +161,7 @@ export function SeriesVisualization({
       series: SeriesValue,
       groupBy: string,
       hue: string,
-      style: string,
+      style: string
     ): string => {
       const parts: string[] = [];
 
@@ -190,7 +193,7 @@ export function SeriesVisualization({
 
       return parts.join(" | ") || "Series";
     },
-    [],
+    []
   );
 
   // Create main label for legend display (based on hue dimension)
@@ -211,7 +214,7 @@ export function SeriesVisualization({
 
       return parts.join(" | ") || "Series";
     },
-    [],
+    []
   );
 
   // Create sublabel for legend display (based on style dimension)
@@ -222,7 +225,7 @@ export function SeriesVisualization({
       }
       return null;
     },
-    [],
+    []
   );
 
   // Detect if a series is a reference line based on source_id
@@ -239,7 +242,7 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension,
+          styleDimension
         );
         return key === seriesKey;
       });
@@ -251,7 +254,7 @@ export function SeriesVisualization({
       groupByDimension,
       hueDimension,
       styleDimension,
-    ],
+    ]
   );
 
   // Categorize series for the legend based on the selected groupBy dimension
@@ -263,7 +266,7 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension,
+          styleDimension
         );
         return key === seriesKey;
       });
@@ -285,7 +288,7 @@ export function SeriesVisualization({
 
       return "Other";
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
   );
 
   // Initialize hidden series state - hide all non-reference series by default
@@ -300,7 +303,7 @@ export function SeriesVisualization({
             series,
             groupByDimension,
             hueDimension,
-            styleDimension,
+            styleDimension
           );
           hiddenSet.add(seriesKey);
         }
@@ -343,8 +346,8 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension,
-            ),
+              styleDimension
+            )
           )
           .filter((seriesKey) => {
             const matchingSeries = group.series.find((series) => {
@@ -352,7 +355,7 @@ export function SeriesVisualization({
                 series,
                 groupByDimension,
                 hueDimension,
-                styleDimension,
+                styleDimension
               );
               return key === seriesKey;
             });
@@ -381,7 +384,7 @@ export function SeriesVisualization({
       hueDimension,
       styleDimension,
       categorizeSeries,
-    ],
+    ]
   );
 
   // Handle series hover (memoized)
@@ -415,7 +418,7 @@ export function SeriesVisualization({
 
       // Find the maximum length of all series to create a unified index
       const maxLength = Math.max(
-        ...group.series.map((s) => s.values?.length || 0),
+        ...group.series.map((s) => s.values?.length || 0)
       );
       const chartData: ChartData[] = [];
 
@@ -431,7 +434,7 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension,
+              styleDimension
             );
             dataPoint[seriesKey] = series.values[i];
           }
@@ -442,7 +445,7 @@ export function SeriesVisualization({
 
       return chartData;
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
   );
 
   // Get unique series keys for a group to create lines
@@ -454,13 +457,13 @@ export function SeriesVisualization({
           series,
           groupByDimension,
           hueDimension,
-          styleDimension,
+          styleDimension
         );
         keys.add(key);
       });
       return Array.from(keys);
     },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
+    [createSeriesKey, groupByDimension, hueDimension, styleDimension]
   );
 
   // Memoize expensive color calculations
@@ -470,7 +473,7 @@ export function SeriesVisualization({
         getDimensionHashIndex(seriesKey, hueDimension, COLORS.length)
       ];
     },
-    [hueDimension],
+    [hueDimension]
   );
 
   // Memoize line style calculations
@@ -480,7 +483,7 @@ export function SeriesVisualization({
         getDimensionHashIndex(seriesKey, styleDimension, LINE_STYLES.length)
       ];
     },
-    [styleDimension],
+    [styleDimension]
   );
 
   // Memoize stroke width calculations
@@ -494,7 +497,7 @@ export function SeriesVisualization({
       }
       return 4;
     },
-    [isReferenceSeriesKey, hiddenSeries],
+    [isReferenceSeriesKey, hiddenSeries]
   );
 
   // Smart tick formatting function based on data range
@@ -543,7 +546,7 @@ export function SeriesVisualization({
         return numValue.toFixed(0);
       };
     },
-    [],
+    []
   );
 
   // Calculate appropriate tick count based on chart width and data range
@@ -565,7 +568,7 @@ export function SeriesVisualization({
       if (range < 1000) return 5;
       return 4;
     },
-    [],
+    []
   );
 
   if (seriesValues.length === 0) {
@@ -601,102 +604,107 @@ export function SeriesVisualization({
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Group:
-              </span>
-              <Select
-                value={groupByDimension}
-                onValueChange={setGroupByDimension}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableDimensions.map((dim) => (
-                    <SelectItem key={dim} value={dim}>
-                      {dim}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Controls - only show if not hidden */}
+      {!hideControls && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Group:
+                </span>
+                <Select
+                  value={groupByDimension}
+                  onValueChange={setGroupByDimension}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {availableDimensions.map((dim) => (
+                      <SelectItem key={dim} value={dim}>
+                        {dim}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Color:
-              </span>
-              <Select value={hueDimension} onValueChange={setHueDimension}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableDimensions.map((dim) => (
-                    <SelectItem key={dim} value={dim}>
-                      {dim}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Color:
+                </span>
+                <Select value={hueDimension} onValueChange={setHueDimension}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {availableDimensions.map((dim) => (
+                      <SelectItem key={dim} value={dim}>
+                        {dim}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Style:
-              </span>
-              <Select value={styleDimension} onValueChange={setStyleDimension}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableDimensions.map((dim) => (
-                    <SelectItem key={dim} value={dim}>
-                      {dim}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Style:
+                </span>
+                <Select
+                  value={styleDimension}
+                  onValueChange={setStyleDimension}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {availableDimensions.map((dim) => (
+                      <SelectItem key={dim} value={dim}>
+                        {dim}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Summary of current configuration */}
-            <div className="flex-1 min-w-0">
-              <div className="text-xs text-muted-foreground">
-                {groupByDimension !== "none" && (
-                  <span>
-                    Groups by <strong>{groupByDimension}</strong>
-                  </span>
-                )}
-                {hueDimension !== "none" && (
-                  <span>
-                    {groupByDimension !== "none" ? ", " : ""}Colors by{" "}
-                    <strong>{hueDimension}</strong>
-                  </span>
-                )}
-                {styleDimension !== "none" && (
-                  <span>
-                    {groupByDimension !== "none" || hueDimension !== "none"
-                      ? ", "
-                      : ""}
-                    Styles by <strong>{styleDimension}</strong>
-                  </span>
-                )}
-                {groupByDimension === "none" &&
-                  hueDimension === "none" &&
-                  styleDimension === "none" && (
-                    <span>Using default grouping and styling</span>
+              {/* Summary of current configuration */}
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-muted-foreground">
+                  {groupByDimension !== "none" && (
+                    <span>
+                      Groups by <strong>{groupByDimension}</strong>
+                    </span>
                   )}
+                  {hueDimension !== "none" && (
+                    <span>
+                      {groupByDimension !== "none" ? ", " : ""}Colors by{" "}
+                      <strong>{hueDimension}</strong>
+                    </span>
+                  )}
+                  {styleDimension !== "none" && (
+                    <span>
+                      {groupByDimension !== "none" || hueDimension !== "none"
+                        ? ", "
+                        : ""}
+                      Styles by <strong>{styleDimension}</strong>
+                    </span>
+                  )}
+                  {groupByDimension === "none" &&
+                    hueDimension === "none" &&
+                    styleDimension === "none" && (
+                      <span>Using default grouping and styling</span>
+                    )}
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts with Sidebar */}
       {groupedByIndex.map((group) => {
@@ -718,7 +726,7 @@ export function SeriesVisualization({
               series,
               groupByDimension,
               hueDimension,
-              styleDimension,
+              styleDimension
             );
             return key === seriesKey;
           });
@@ -729,7 +737,7 @@ export function SeriesVisualization({
               label: seriesKey,
               sublabel: null,
               color: getSeriesColor(seriesKey, index),
-              strokeDasharray: getSeriesStyle(seriesKey, index).strokeDasharray,
+              strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
               isReference: false,
               category: "Other",
             };
@@ -743,7 +751,7 @@ export function SeriesVisualization({
             label: mainLabel,
             sublabel: subLabel,
             color: getSeriesColor(seriesKey, index),
-            strokeDasharray: getSeriesStyle(seriesKey, index).strokeDasharray,
+            strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
             isReference: isReferenceSeriesKey(seriesKey, group),
             category: categorizeSeries(seriesKey, group),
           };
@@ -836,7 +844,7 @@ export function SeriesVisualization({
                           const getPriority = (
                             isHidden: boolean,
                             isReference: boolean,
-                            isHovered: boolean,
+                            isHovered: boolean
                           ) => {
                             if (isHovered) return 4; // Highest priority - always on top
                             if (!isHidden && !isReference) return 3; // Regular visible lines
@@ -848,12 +856,12 @@ export function SeriesVisualization({
                           const aPriority = getPriority(
                             aIsHidden,
                             aIsReference,
-                            aIsHovered,
+                            aIsHovered
                           );
                           const bPriority = getPriority(
                             bIsHidden,
                             bIsReference,
-                            bIsHovered,
+                            bIsHovered
                           );
 
                           return aPriority - bPriority;
@@ -866,7 +874,7 @@ export function SeriesVisualization({
                             hoveredSeries !== seriesKey;
                           const isReference = isReferenceSeriesKey(
                             seriesKey,
-                            group,
+                            group
                           );
 
                           // Determine stroke color: gray for hidden/unselected lines, original color for visible lines
@@ -904,7 +912,7 @@ export function SeriesVisualization({
                               dot={false} // Disable dots for better performance
                               activeDot={{ r: 4 }}
                               name={seriesKey}
-                              {...getSeriesStyle(seriesKey, index)}
+                              {...getSeriesStyle(seriesKey)}
                               onClick={() => toggleSeries(seriesKey)}
                               onMouseEnter={() => handleSeriesHover(seriesKey)}
                               onMouseLeave={() => handleSeriesHover(null)}

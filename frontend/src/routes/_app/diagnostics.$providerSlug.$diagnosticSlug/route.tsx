@@ -56,9 +56,12 @@ const DiagnosticInfoLayout = () => {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                Number of execution groups
+                Execution groups (successful/total)
               </p>
-              <p className="font-medium">{data.execution_groups.length}</p>
+              <p className="font-medium">
+                {data.successful_execution_group_count}/
+                {data.execution_group_count}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -92,7 +95,7 @@ const DiagnosticInfoLayout = () => {
 };
 
 export const Route = createFileRoute(
-  "/_app/diagnostics/$providerSlug/$diagnosticSlug",
+  "/_app/diagnostics/$providerSlug/$diagnosticSlug"
 )({
   component: DiagnosticInfoLayout,
   loader: ({ context: { queryClient }, params }) => {
@@ -102,7 +105,7 @@ export const Route = createFileRoute(
           provider_slug: params.providerSlug,
           diagnostic_slug: params.diagnosticSlug,
         },
-      }),
+      })
     );
   },
 });

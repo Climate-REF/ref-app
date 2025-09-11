@@ -78,7 +78,7 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
             <span className="text-muted-foreground">Total Executions:</span>
             <span className="text-foreground">
               {diagnostic.successful_execution_count}/
-              {diagnostic.execution_count}
+              {diagnostic.execution_group_count}
             </span>
           </div>
         </div>

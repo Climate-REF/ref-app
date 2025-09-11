@@ -41,7 +41,7 @@ export const EnsembleChart = ({
   // Group data by the specified xAxis dimension
   const groupedData = Object.groupBy(
     data,
-    (d: MetricValue) => d.dimensions[xAxis] ?? metricName,
+    (d: MetricValue) => d.dimensions[xAxis] ?? metricName
   );
 
   const chartData = Object.entries(groupedData).map(
@@ -55,7 +55,7 @@ export const EnsembleChart = ({
         .filter(
           (v: number) =>
             (clipMin === undefined || v >= clipMin) &&
-            (clipMax === undefined || v <= clipMax),
+            (clipMax === undefined || v <= clipMax)
         )
         .sort((a: number, b: number) => a - b);
 
@@ -64,6 +64,7 @@ export const EnsembleChart = ({
           name: groupName,
           groups: { ensemble: null },
           __outliers: { ensemble: 0 },
+          __rawData: values ?? [],
         };
       }
 
@@ -88,14 +89,15 @@ export const EnsembleChart = ({
         __outliers: {
           ensemble: allValues.length - filteredValues.length,
         },
+        __rawData: values ?? [],
       };
-    },
+    }
   );
 
   const yDomainData: [number, number] = (() => {
     const allFiniteValues = chartData
       .flatMap((d) =>
-        d.groups.ensemble ? [d.groups.ensemble.min, d.groups.ensemble.max] : [],
+        d.groups.ensemble ? [d.groups.ensemble.min, d.groups.ensemble.max] : []
       )
       .filter((v) => Number.isFinite(v)) as number[];
     if (allFiniteValues.length === 0) return [0, 1];
@@ -145,11 +147,12 @@ export const EnsembleChart = ({
           />
           <Tooltip
             cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
-            content={({ active, payload, label }) => {
+            content={({ active, payload, label, coordinate }) => {
               if (!active || !payload || payload.length === 0) return null;
               const datum: any = (payload[0] as any).payload ?? {};
               const box = datum?.groups?.ensemble;
               const outliers = datum?.__outliers;
+              const rawData: MetricValue[] = datum?.__rawData ?? [];
 
               const renderKV = (k: string, v: string) => (
                 <div key={k} className="contents">
@@ -158,32 +161,61 @@ export const EnsembleChart = ({
                 </div>
               );
 
+              // Find closest data point to mouse position
+              let closestDataPoint: MetricValue | null = null;
+              if (coordinate && rawData.length > 0) {
+                const mouseY = coordinate.y ?? 0;
+                let minDistance = Infinity;
+
+                for (const dataPoint of rawData) {
+                  const value = Number(dataPoint.value);
+                  if (Number.isFinite(value)) {
+                    // Convert value to pixel position (approximate)
+                    const chartHeight = 320 - 40; // Chart height minus margins
+                    const [yMin, yMax] = yDomainData;
+                    const valueY =
+                      chartHeight -
+                      ((value - yMin) / (yMax - yMin)) * chartHeight +
+                      24; // Add top margin
+
+                    const distance = Math.abs(mouseY - valueY);
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      closestDataPoint = dataPoint;
+                    }
+                  }
+                }
+              }
+
               return (
                 <div
-                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-md"
+                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-md w-[300px]"
                   style={{ borderColor: "hsl(var(--border))" }}
                 >
                   <div className="mb-2 font-medium">{label}</div>
-                  <div>
-                    <div className="mb-1 font-semibold">Ensemble</div>
+
+                  {/* Ensemble Statistics */}
+                  <div className="mb-3">
+                    <div className="mb-1 font-semibold">
+                      Ensemble Statistics
+                    </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                       {renderKV("Min", box ? fmt(Number(box.min)) : "—")}
                       {renderKV(
                         "Q1",
-                        box ? fmt(Number(box.lowerQuartile)) : "—",
+                        box ? fmt(Number(box.lowerQuartile)) : "—"
                       )}
                       {renderKV("Median", box ? fmt(Number(box.median)) : "—")}
                       {renderKV(
                         "Q3",
-                        box ? fmt(Number(box.upperQuartile)) : "—",
+                        box ? fmt(Number(box.upperQuartile)) : "—"
                       )}
                       {renderKV("Max", box ? fmt(Number(box.max)) : "—")}
                       {renderKV(
                         "Count",
                         String(
-                          (box?.values?.length ?? 0) +
-                            (outliers?.ensemble ?? 0),
-                        ),
+                          (box?.values?.length ?? 0) + (outliers?.ensemble ?? 0)
+                        )
                       )}
                       {outliers?.ensemble ? (
                         <div className="col-span-2 mt-1 text-muted-foreground">
@@ -192,12 +224,52 @@ export const EnsembleChart = ({
                       ) : null}
                     </div>
                   </div>
+
+                  {/* Closest Data Point */}
+                  {closestDataPoint && (
+                    <div>
+                      <div className="mb-1 font-semibold">
+                        Closest Data Point
+                      </div>
+                      <div className="space-y-1">
+                        <div className="grid grid-cols-2 gap-x-4">
+                          {renderKV(
+                            "Value",
+                            fmt(Number(closestDataPoint.value))
+                          )}
+                          {renderKV("Units", metricUnits)}
+                        </div>
+                        <div className="mt-2">
+                          <div className="text-muted-foreground text-xs mb-1">
+                            Dimensions:
+                          </div>
+                          <div className="grid grid-cols-1 gap-y-1 text-xs">
+                            {Object.entries(closestDataPoint.dimensions).map(
+                              ([key, value]) => (
+                                <div
+                                  key={key}
+                                  className="grid grid-cols-2 gap-x-2"
+                                >
+                                  <span className="text-muted-foreground truncate">
+                                    {key}:
+                                  </span>
+                                  <span className="truncate" title={value}>
+                                    {value}
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             }}
           />
           <Bar
-            dataKey={(d: any) => d.groups.ensemble?.median}
+            dataKey={(d) => d.groups.ensemble?.median}
             fill="#93C5FD"
             stroke="#3B82F6"
             isAnimationActive={false}
