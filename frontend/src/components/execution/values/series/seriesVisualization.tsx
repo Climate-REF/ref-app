@@ -850,7 +850,7 @@ export function SeriesVisualization({
                           } else if (isHidden && !isHovered) {
                             strokeColor = "#9CA3AF"; // Gray color for hidden lines
                           } else {
-                            strokeColor = getSeriesColor(seriesKey, index); // Original color for visible lines
+                            strokeColor = getSeriesColor(seriesKey); // Original color for visible lines
                           }
 
                           // Determine opacity
