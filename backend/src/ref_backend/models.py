@@ -20,8 +20,8 @@ class Collection(BaseModel, Generic[T]):
     data: list[T]
     total_count: int | None = None
 
-    @property
     @computed_field
+    @property
     def count(self) -> int:
         """
         Number of data items present
@@ -321,8 +321,8 @@ class Dataset(BaseModel):
     dataset_type: str
     metadata: CMIP6DatasetMetadata | None
 
-    @property
     @computed_field
+    @property
     def more_info_url(self) -> str | None:
         if "cmip6" in self.dataset_type:
             # Use the WDC service to look up the dataset

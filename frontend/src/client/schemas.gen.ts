@@ -99,10 +99,16 @@ export const Collection_Dataset_Schema = {
                 }
             ],
             title: 'Total Count'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[Dataset]'
 } as const;
 
@@ -125,10 +131,16 @@ export const Collection_DiagnosticSummary_Schema = {
                 }
             ],
             title: 'Total Count'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[DiagnosticSummary]'
 } as const;
 
@@ -151,10 +163,16 @@ export const Collection_ExecutionGroup_Schema = {
                 }
             ],
             title: 'Total Count'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[ExecutionGroup]'
 } as const;
 
@@ -177,10 +195,16 @@ export const Collection_Execution_Schema = {
                 }
             ],
             title: 'Total Count'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count',
+            description: 'Number of data items present',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['data'],
+    required: ['data', 'count'],
     title: 'Collection[Execution]'
 } as const;
 
@@ -207,10 +231,22 @@ export const DatasetSchema = {
                     type: 'null'
                 }
             ]
+        },
+        more_info_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'More Info Url',
+            readOnly: true
         }
     },
     type: 'object',
-    required: ['id', 'slug', 'dataset_type', 'metadata'],
+    required: ['id', 'slug', 'dataset_type', 'metadata', 'more_info_url'],
     title: 'Dataset'
 } as const;
 

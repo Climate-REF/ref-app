@@ -37,22 +37,58 @@ export type Cmip6DatasetMetadata = {
     variant_label: string;
 };
 
-export type CollectionDataset = {
+export type CollectionDatasetReadable = {
+    data: Array<Dataset>;
+    total_count?: number | null;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionDatasetWritable = {
     data: Array<Dataset>;
     total_count?: number | null;
 };
 
-export type CollectionDiagnosticSummary = {
+export type CollectionDiagnosticSummaryReadable = {
+    data: Array<DiagnosticSummary>;
+    total_count?: number | null;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionDiagnosticSummaryWritable = {
     data: Array<DiagnosticSummary>;
     total_count?: number | null;
 };
 
-export type CollectionExecutionGroup = {
+export type CollectionExecutionGroupReadable = {
+    data: Array<ExecutionGroup>;
+    total_count?: number | null;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionExecutionGroupWritable = {
     data: Array<ExecutionGroup>;
     total_count?: number | null;
 };
 
-export type CollectionExecution = {
+export type CollectionExecutionReadable = {
+    data: Array<Execution>;
+    total_count?: number | null;
+    /**
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+export type CollectionExecutionWritable = {
     data: Array<Execution>;
     total_count?: number | null;
 };
@@ -267,7 +303,7 @@ export type DatasetsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDataset;
+    200: CollectionDatasetReadable;
 };
 
 export type DatasetsListResponse = DatasetsListResponses[keyof DatasetsListResponses];
@@ -324,7 +360,7 @@ export type DatasetsExecutionsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroup;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type DatasetsExecutionsResponse = DatasetsExecutionsResponses[keyof DatasetsExecutionsResponses];
@@ -340,7 +376,7 @@ export type DiagnosticsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDiagnosticSummary;
+    200: CollectionDiagnosticSummaryReadable;
 };
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
@@ -412,7 +448,7 @@ export type DiagnosticsListExecutionGroupsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroup;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
@@ -477,7 +513,7 @@ export type DiagnosticsListExecutionsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecution;
+    200: CollectionExecutionReadable;
 };
 
 export type DiagnosticsListExecutionsResponse = DiagnosticsListExecutionsResponses[keyof DiagnosticsListExecutionsResponses];
@@ -542,7 +578,7 @@ export type ExecutionsListRecentExecutionGroupsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroup;
+    200: CollectionExecutionGroupReadable;
 };
 
 export type ExecutionsListRecentExecutionGroupsResponse = ExecutionsListRecentExecutionGroupsResponses[keyof ExecutionsListRecentExecutionGroupsResponses];
@@ -627,7 +663,7 @@ export type ExecutionsExecutionDatasetsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDataset;
+    200: CollectionDatasetReadable;
 };
 
 export type ExecutionsExecutionDatasetsResponse = ExecutionsExecutionDatasetsResponses[keyof ExecutionsExecutionDatasetsResponses];

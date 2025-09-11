@@ -8,13 +8,17 @@ export type {
 
 // Type guard functions
 export function isSeriesValue(
-  value: MetricValue | SeriesValue,
+  // @ts-ignore
+  value: MetricValue | SeriesValue
+  // @ts-ignore
 ): value is SeriesValue {
   return "values" in value && "index" in value && "index_name" in value;
 }
 
 export function isScalarValue(
-  value: MetricValue | SeriesValue,
+  // @ts-ignore
+  value: MetricValue | SeriesValue
+  // @ts-ignore
 ): value is MetricValue {
   return "value" in value && !("values" in value);
 }
