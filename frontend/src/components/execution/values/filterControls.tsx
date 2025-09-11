@@ -26,9 +26,9 @@ export function FilterControls({
   excludedRowIds,
   setExcludedRowIds,
 }: FilterControlsProps) {
-  const availableFacets = facets.filter(
-    (facet) => !filters.some((filter) => filter.facetKey === facet.key),
-  );
+  const availableFacets = facets
+    .filter((facet) => !filters.some((filter) => filter.facetKey === facet.key))
+    .sort((a, b) => a.key.localeCompare(b.key));
 
   return (
     <div className="flex flex-col gap-2">

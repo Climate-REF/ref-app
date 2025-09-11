@@ -64,7 +64,7 @@ export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: 
 
 /**
  * Facets
- * Query the unique dimensions and metrics for all diagnostics
+ * Query the unique dimensions and metrics for all diagnostics (both scalar and series)
  */
 export const diagnosticsFacets = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsFacetsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<DiagnosticsFacetsResponse, unknown, ThrowOnError>({
@@ -101,6 +101,7 @@ export const diagnosticsListExecutionGroups = <ThrowOnError extends boolean = fa
  *
  * - `source_filters`: A JSON string representing a dictionary of filters to apply to
  * the source data. For example: `{"source_id": "MIROC6", "experiment_id": "ssp585"}`
+ * - `type`: Type of metric values to compare - 'scalar' (default), 'series', or 'all'
  * - Other query parameters are treated as filters to be applied to all data before
  * being split into source and ensemble.
  */
@@ -126,7 +127,10 @@ export const diagnosticsListExecutions = <ThrowOnError extends boolean = false>(
 
 /**
  * List Metric Values
- * Get all the diagnostic values for a given diagnostic
+ * Get all the diagnostic values for a given diagnostic (both scalar and series)
+ *
+ * - `type`: Filter by metric value type - 'scalar', 'series', or 'all' (default)
+ * - `format`: Return format - 'json' (default) or 'csv'
  */
 export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListMetricValuesData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<unknown, DiagnosticsListMetricValuesError, ThrowOnError>({
@@ -144,7 +148,8 @@ export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false
  * - provider_name_contains
  * - dirty
  * - successful (filters by latest execution success)
- * - source_id (filters groups that include an execution whose datasets include a CMIP6 dataset with this source_id)
+ * - source_id (filters groups that include an execution whose datasets
+ * include a CMIP6 dataset with this source_id)
  */
 export const executionsListRecentExecutionGroups = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsListRecentExecutionGroupsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, ThrowOnError>({
@@ -212,7 +217,10 @@ export const executionsMetricBundle = <ThrowOnError extends boolean = false>(opt
 
 /**
  * Metric Values
- * Fetch a result using the slug
+ * Fetch metric values for a specific execution (both scalar and series)
+ *
+ * - `type`: Filter by metric value type - 'scalar', 'series', or 'all' (default)
+ * - `format`: Return format - 'json' (default) or 'csv'
  */
 export const executionsMetricValues = <ThrowOnError extends boolean = false>(options: Options<ExecutionsMetricValuesData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<unknown, ExecutionsMetricValuesError, ThrowOnError>({

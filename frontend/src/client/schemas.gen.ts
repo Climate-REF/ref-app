@@ -99,16 +99,10 @@ export const Collection_Dataset_Schema = {
                 }
             ],
             title: 'Total Count'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count',
-            description: 'Number of data items present',
-            readOnly: true
         }
     },
     type: 'object',
-    required: ['data', 'count'],
+    required: ['data'],
     title: 'Collection[Dataset]'
 } as const;
 
@@ -131,16 +125,10 @@ export const Collection_DiagnosticSummary_Schema = {
                 }
             ],
             title: 'Total Count'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count',
-            description: 'Number of data items present',
-            readOnly: true
         }
     },
     type: 'object',
-    required: ['data', 'count'],
+    required: ['data'],
     title: 'Collection[DiagnosticSummary]'
 } as const;
 
@@ -163,16 +151,10 @@ export const Collection_ExecutionGroup_Schema = {
                 }
             ],
             title: 'Total Count'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count',
-            description: 'Number of data items present',
-            readOnly: true
         }
     },
     type: 'object',
-    required: ['data', 'count'],
+    required: ['data'],
     title: 'Collection[ExecutionGroup]'
 } as const;
 
@@ -195,16 +177,10 @@ export const Collection_Execution_Schema = {
                 }
             ],
             title: 'Total Count'
-        },
-        count: {
-            type: 'integer',
-            title: 'Count',
-            description: 'Number of data items present',
-            readOnly: true
         }
     },
     type: 'object',
-    required: ['data', 'count'],
+    required: ['data'],
     title: 'Collection[Execution]'
 } as const;
 
@@ -231,22 +207,10 @@ export const DatasetSchema = {
                     type: 'null'
                 }
             ]
-        },
-        more_info_url: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'More Info Url',
-            readOnly: true
         }
     },
     type: 'object',
-    required: ['id', 'slug', 'dataset_type', 'metadata', 'more_info_url'],
+    required: ['id', 'slug', 'dataset_type', 'metadata'],
     title: 'Dataset'
 } as const;
 
@@ -604,7 +568,7 @@ export const MetricValueSchema = {
     type: 'object',
     required: ['dimensions', 'value', 'execution_group_id', 'execution_id'],
     title: 'MetricValue',
-    description: `A flattened representation of a diagnostic value
+    description: `A flattened representation of a scalar diagnostic value
 
 This includes the dimensions and the value of the diagnostic`
 } as const;
@@ -613,7 +577,14 @@ export const MetricValueCollectionSchema = {
     properties: {
         data: {
             items: {
-                '$ref': '#/components/schemas/MetricValue'
+                anyOf: [
+                    {
+                        '$ref': '#/components/schemas/MetricValue'
+                    },
+                    {
+                        '$ref': '#/components/schemas/SeriesValue'
+                    }
+                ]
             },
             type: 'array',
             title: 'Data'
@@ -628,10 +599,17 @@ export const MetricValueCollectionSchema = {
             },
             type: 'array',
             title: 'Facets'
+        },
+        types: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Types'
         }
     },
     type: 'object',
-    required: ['data', 'count', 'facets'],
+    required: ['data', 'count', 'facets', 'types'],
     title: 'MetricValueCollection'
 } as const;
 
@@ -699,6 +677,92 @@ export const ResultOutputTypeSchema = {
     description: `Types of supported outputs
 
 These map to the categories of output in the CMEC output bundle`
+} as const;
+
+export const SeriesValueSchema = {
+    properties: {
+        dimensions: {
+            additionalProperties: {
+                type: 'string'
+            },
+            type: 'object',
+            title: 'Dimensions'
+        },
+        values: {
+            items: {
+                type: 'number'
+            },
+            type: 'array',
+            title: 'Values'
+        },
+        index: {
+            anyOf: [
+                {
+                    items: {
+                        anyOf: [
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'number'
+                            }
+                        ]
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Index'
+        },
+        index_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Index Name'
+        },
+        attributes: {
+            anyOf: [
+                {
+                    additionalProperties: {
+                        anyOf: [
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'number'
+                            }
+                        ]
+                    },
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Attributes'
+        },
+        execution_group_id: {
+            type: 'integer',
+            title: 'Execution Group Id'
+        },
+        execution_id: {
+            type: 'integer',
+            title: 'Execution Id'
+        }
+    },
+    type: 'object',
+    required: ['dimensions', 'values', 'execution_group_id', 'execution_id'],
+    title: 'SeriesValue',
+    description: `A flattened representation of a series diagnostic value
+
+This includes the dimensions, values array, index array, and index name`
 } as const;
 
 export const ValidationErrorSchema = {

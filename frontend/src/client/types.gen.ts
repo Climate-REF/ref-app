@@ -37,58 +37,22 @@ export type Cmip6DatasetMetadata = {
     variant_label: string;
 };
 
-export type CollectionDatasetReadable = {
-    data: Array<Dataset>;
-    total_count?: number | null;
-    /**
-     * Number of data items present
-     */
-    readonly count: number;
-};
-
-export type CollectionDatasetWritable = {
+export type CollectionDataset = {
     data: Array<Dataset>;
     total_count?: number | null;
 };
 
-export type CollectionDiagnosticSummaryReadable = {
-    data: Array<DiagnosticSummary>;
-    total_count?: number | null;
-    /**
-     * Number of data items present
-     */
-    readonly count: number;
-};
-
-export type CollectionDiagnosticSummaryWritable = {
+export type CollectionDiagnosticSummary = {
     data: Array<DiagnosticSummary>;
     total_count?: number | null;
 };
 
-export type CollectionExecutionGroupReadable = {
-    data: Array<ExecutionGroup>;
-    total_count?: number | null;
-    /**
-     * Number of data items present
-     */
-    readonly count: number;
-};
-
-export type CollectionExecutionGroupWritable = {
+export type CollectionExecutionGroup = {
     data: Array<ExecutionGroup>;
     total_count?: number | null;
 };
 
-export type CollectionExecutionReadable = {
-    data: Array<Execution>;
-    total_count?: number | null;
-    /**
-     * Number of data items present
-     */
-    readonly count: number;
-};
-
-export type CollectionExecutionWritable = {
+export type CollectionExecution = {
     data: Array<Execution>;
     total_count?: number | null;
 };
@@ -185,7 +149,7 @@ export type MetricDimensions = {
 };
 
 /**
- * A flattened representation of a diagnostic value
+ * A flattened representation of a scalar diagnostic value
  *
  * This includes the dimensions and the value of the diagnostic
  */
@@ -202,9 +166,10 @@ export type MetricValue = {
 };
 
 export type MetricValueCollection = {
-    data: Array<MetricValue>;
+    data: Array<MetricValue | SeriesValue>;
     count: number;
     facets: Array<Facet>;
+    types: Array<string>;
 };
 
 /**
@@ -241,6 +206,25 @@ export type ProviderSummary = {
  * These map to the categories of output in the CMEC output bundle
  */
 export type ResultOutputType = 'plot' | 'data' | 'html';
+
+/**
+ * A flattened representation of a series diagnostic value
+ *
+ * This includes the dimensions, values array, index array, and index name
+ */
+export type SeriesValue = {
+    dimensions: {
+        [key: string]: string;
+    };
+    values: Array<number>;
+    index?: Array<string | number> | null;
+    index_name?: string | null;
+    attributes?: {
+        [key: string]: string | number;
+    } | null;
+    execution_group_id: number;
+    execution_id: number;
+};
 
 export type ValidationError = {
     loc: Array<string | number>;
@@ -283,7 +267,7 @@ export type DatasetsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDatasetReadable;
+    200: CollectionDataset;
 };
 
 export type DatasetsListResponse = DatasetsListResponses[keyof DatasetsListResponses];
@@ -340,7 +324,7 @@ export type DatasetsExecutionsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroupReadable;
+    200: CollectionExecutionGroup;
 };
 
 export type DatasetsExecutionsResponse = DatasetsExecutionsResponses[keyof DatasetsExecutionsResponses];
@@ -356,7 +340,7 @@ export type DiagnosticsListResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDiagnosticSummaryReadable;
+    200: CollectionDiagnosticSummary;
 };
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
@@ -428,7 +412,7 @@ export type DiagnosticsListExecutionGroupsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroupReadable;
+    200: CollectionExecutionGroup;
 };
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
@@ -444,6 +428,10 @@ export type DiagnosticsComparisonData = {
          * JSON string for source filters
          */
         source_filters: string;
+        /**
+         * Type of metric values to compare: 'scalar', 'series', or 'all'
+         */
+        type?: string;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/comparison';
 };
@@ -489,7 +477,7 @@ export type DiagnosticsListExecutionsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionReadable;
+    200: CollectionExecution;
 };
 
 export type DiagnosticsListExecutionsResponse = DiagnosticsListExecutionsResponses[keyof DiagnosticsListExecutionsResponses];
@@ -502,6 +490,10 @@ export type DiagnosticsListMetricValuesData = {
     };
     query?: {
         format?: string | null;
+        /**
+         * Type of metric values to return: 'scalar', 'series', or 'all'
+         */
+        type?: string;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
@@ -550,7 +542,7 @@ export type ExecutionsListRecentExecutionGroupsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionExecutionGroupReadable;
+    200: CollectionExecutionGroup;
 };
 
 export type ExecutionsListRecentExecutionGroupsResponse = ExecutionsListRecentExecutionGroupsResponses[keyof ExecutionsListRecentExecutionGroupsResponses];
@@ -635,7 +627,7 @@ export type ExecutionsExecutionDatasetsResponses = {
     /**
      * Successful Response
      */
-    200: CollectionDatasetReadable;
+    200: CollectionDataset;
 };
 
 export type ExecutionsExecutionDatasetsResponse = ExecutionsExecutionDatasetsResponses[keyof ExecutionsExecutionDatasetsResponses];
@@ -704,6 +696,10 @@ export type ExecutionsMetricValuesData = {
     query?: {
         execution_id?: string | null;
         format?: string | null;
+        /**
+         * Type of metric values to return: 'scalar', 'series', or 'all'
+         */
+        type?: string;
     };
     url: '/api/v1/executions/{group_id}/values';
 };

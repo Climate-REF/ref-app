@@ -7,7 +7,7 @@ import tempfile
 from collections.abc import Generator
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.orm import Session, aliased
 from starlette.responses import StreamingResponse
@@ -221,36 +221,75 @@ async def metric_values(
     group_id: str,
     execution_id: str | None = None,
     format: str | None = None,
+    type: str = Query("all", description="Type of metric values to return: 'scalar', 'series', or 'all'"),
 ) -> MetricValueCollection | StreamingResponse:
     """
-    Fetch a result using the slug
+    Fetch metric values for a specific execution (both scalar and series)
+
+    - `type`: Filter by metric value type - 'scalar', 'series', or 'all' (default)
+    - `format`: Return format - 'json' (default) or 'csv'
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    metric_values_query = app_context.session.query(models.ScalarMetricValue).filter(
-        models.MetricValue.execution_id == execution.id
-    )
+    # Build queries for scalar and series values
+    scalar_values = []
+    series_values = []
+
+    if type in ("scalar", "all"):
+        scalar_query = app_context.session.query(models.ScalarMetricValue).filter(
+            models.ScalarMetricValue.execution_id == execution.id
+        )
+        scalar_values = scalar_query.all()
+
+    if type in ("series", "all"):
+        series_query = app_context.session.query(models.SeriesMetricValue).filter(
+            models.SeriesMetricValue.execution_id == execution.id
+        )
+        series_values = series_query.all()
 
     # Return metric values as a CSV file
     if format == "csv":
-        metric_values = metric_values_query.all()
 
         def generate_csv() -> Generator[str]:
             output = io.StringIO()
             writer = csv.writer(output)
 
-            if not metric_values:
+            if not scalar_values and not series_values:
                 yield ""
                 return
 
-            # Use the dimensions from the first metric value to build the header
-            dimensions = sorted(metric_values[0].dimensions.keys())
-            header = [*dimensions, "value"]
-            writer.writerow(header)
+            # For CSV, we'll handle scalar and series differently
+            # Scalar values: dimensions + value
+            # Series values: dimensions + values (flattened) + index info
 
-            for mv in metric_values:
-                row = [mv.dimensions.get(d) for d in dimensions] + [mv.value]
-                writer.writerow(row)
+            if scalar_values:
+                # Write scalar values
+                dimensions = sorted(scalar_values[0].dimensions.keys())
+                header = [*dimensions, "value", "type"]
+                writer.writerow(header)
+
+                for mv in scalar_values:
+                    row = [mv.dimensions.get(d) for d in dimensions] + [mv.value, "scalar"]
+                    writer.writerow(row)
+
+            if series_values:
+                # Write series values (flattened)
+                for sv in series_values:
+                    dimensions = sorted(sv.dimensions.keys())
+                    if not scalar_values:  # Write header if not already written
+                        header = [*dimensions, "value", "index", "index_name", "type"]
+                        writer.writerow(header)
+
+                    # Flatten series into multiple rows
+                    for i, value in enumerate(sv.values):
+                        index_value = sv.index[i] if sv.index and i < len(sv.index) else i
+                        row = [sv.dimensions.get(d) for d in dimensions] + [
+                            value,
+                            index_value,
+                            sv.index_name or "index",
+                            "series",
+                        ]
+                        writer.writerow(row)
 
             output.seek(0)
             yield output.read()
@@ -263,7 +302,7 @@ async def metric_values(
             },
         )
     else:
-        return MetricValueCollection.build(metric_values_query.all())
+        return MetricValueCollection.build(scalar_values=scalar_values, series_values=series_values)
 
 
 @router.get("/{group_id}/archive")

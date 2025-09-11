@@ -9,7 +9,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { Eye, MoreHorizontal } from "lucide-react";
+import { Download, Eye, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
@@ -32,6 +32,7 @@ interface DataTableProps {
   loading: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: OnChangeFn<RowSelectionState>;
+  onDownload?: () => void;
 }
 
 function ValuesDataTable({
@@ -40,6 +41,7 @@ function ValuesDataTable({
   loading,
   rowSelection,
   setRowSelection,
+  onDownload,
 }: DataTableProps) {
   const columns: ColumnDef<ProcessedMetricValue>[] = useMemo(() => {
     const indexColumns: ColumnDef<ProcessedMetricValue>[] = facets.map(
@@ -138,6 +140,18 @@ function ValuesDataTable({
     return <div className="text-center p-4">Loading table data...</div>;
   }
 
-  return <InnerDataTable table={table} loading={loading} />;
+  return (
+    <div className="space-y-4">
+      {onDownload && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={onDownload}>
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
+        </div>
+      )}
+      <InnerDataTable table={table} loading={loading} />
+    </div>
+  );
 }
 export default ValuesDataTable;

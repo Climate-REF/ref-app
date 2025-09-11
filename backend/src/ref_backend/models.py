@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from pydantic import BaseModel, computed_field
 from sqlalchemy import func
@@ -83,7 +83,7 @@ class DiagnosticSummary(BaseModel):
     """
     has_metric_values: bool
     """
-    Whether any scalar metric values exist in the database for this diagnostic
+    Whether any scalar or series metric values exist in the database for this diagnostic
     """
     execution_count: int
     """
@@ -130,8 +130,8 @@ class DiagnosticSummary(BaseModel):
                 )
             )
 
-        # Efficient existence check for scalar metric values for this diagnostic
-        has_metric_values = (
+        # Efficient existence check for both scalar and series metric values for this diagnostic
+        has_scalar_values = (
             app_context.session.query(models.ScalarMetricValue)
             .join(models.Execution)
             .join(models.ExecutionGroup)
@@ -139,6 +139,17 @@ class DiagnosticSummary(BaseModel):
             .first()
             is not None
         )
+
+        has_series_values = (
+            app_context.session.query(models.SeriesMetricValue)
+            .join(models.Execution)
+            .join(models.ExecutionGroup)
+            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+            .first()
+            is not None
+        )
+
+        has_metric_values = has_scalar_values or has_series_values
 
         # Execution counts for this diagnostic
         execution_count = (
@@ -340,11 +351,27 @@ class Dataset(BaseModel):
 
 class MetricValue(ScalarMetricValue):
     """
-    A flattened representation of a diagnostic value
+    A flattened representation of a scalar diagnostic value
 
     This includes the dimensions and the value of the diagnostic
     """
 
+    execution_group_id: int
+    execution_id: int
+
+
+class SeriesValue(BaseModel):
+    """
+    A flattened representation of a series diagnostic value
+
+    This includes the dimensions, values array, index array, and index name
+    """
+
+    dimensions: dict[str, str]
+    values: list[float]
+    index: list[Union[str, float]] | None = None
+    index_name: str | None = None
+    attributes: dict[str, Union[str, float]] | None = None
     execution_group_id: int
     execution_id: int
 
@@ -355,36 +382,70 @@ class Facet(BaseModel):
 
 
 class MetricValueCollection(BaseModel):
-    data: list[MetricValue]
+    data: list[Union[MetricValue, SeriesValue]]
     count: int
     facets: list[Facet]
+    types: list[str]  # List of types present: 'scalar', 'series', or both
 
     @staticmethod
-    def build(values: list[models.ScalarMetricValue]) -> "MetricValueCollection":
+    def build(
+        scalar_values: list[models.ScalarMetricValue] | None = None,
+        series_values: list[models.SeriesMetricValue] | None = None,
+    ) -> "MetricValueCollection":
+        """Build a MetricValueCollection from scalar and/or series values"""
+        scalar_values = scalar_values or []
+        series_values = series_values or []
+
         # TODO: Query this using SQL
         facets: dict[str, set[str]] = {}
-        for v in values:
+        all_data = []
+        types_present = set()
+
+        # Process scalar values
+        for v in scalar_values:
             for key, value in v.dimensions.items():
                 if key in facets:
                     facets[key].add(value)
                 else:
                     facets[key] = {value}
-        return MetricValueCollection(
-            data=[
+            all_data.append(
                 MetricValue(
                     dimensions=v.dimensions,
                     attributes=v.attributes,
-                    # v.value is expected to exist and be numeric in climate_ref MetricValue
                     value=float(v.value),
                     execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
                 )
-                for v in values
-            ],
-            count=len(values),
+            )
+            types_present.add("scalar")
+
+        # Process series values
+        for v in series_values:
+            for key, value in v.dimensions.items():
+                if key in facets:
+                    facets[key].add(value)
+                else:
+                    facets[key] = {value}
+            all_data.append(
+                SeriesValue(
+                    dimensions=v.dimensions,
+                    attributes=v.attributes,
+                    values=v.values or [],
+                    index=v.index,
+                    index_name=v.index_name,
+                    execution_group_id=v.execution.execution_group_id,
+                    execution_id=v.execution_id,
+                )
+            )
+            types_present.add("series")
+
+        return MetricValueCollection(
+            data=all_data,
+            count=len(all_data),
             facets=[
                 Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
             ],
+            types=sorted(list(types_present)),
         )
 
 
