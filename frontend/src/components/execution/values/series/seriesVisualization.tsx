@@ -685,7 +685,7 @@ export function SeriesVisualization({
         const tickCount = getTickCount(chartData, group.indexName);
 
         // Create legend items for the sidebar using three-tier system
-        const legendItems = seriesKeys.map((seriesKey, index) => {
+        const legendItems = seriesKeys.map((seriesKey) => {
           // Find the series that matches this key
           const matchingSeries = group.series.find((series) => {
             const key = createSeriesKey(
@@ -702,7 +702,7 @@ export function SeriesVisualization({
               key: seriesKey,
               label: seriesKey,
               sublabel: null,
-              color: getSeriesColor(seriesKey, index),
+              color: getSeriesColor(seriesKey),
               strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
               isReference: false,
               category: "Other",
@@ -716,7 +716,7 @@ export function SeriesVisualization({
             key: seriesKey,
             label: mainLabel,
             sublabel: subLabel,
-            color: getSeriesColor(seriesKey, index),
+            color: getSeriesColor(seriesKey),
             strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
             isReference: isReferenceSeriesKey(seriesKey, group),
             category: categorizeSeries(seriesKey, group),
