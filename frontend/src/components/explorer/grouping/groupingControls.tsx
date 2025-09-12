@@ -21,6 +21,7 @@ interface GroupingControlsProps {
   availableDimensions: AvailableDimensions;
   onChange: (config: ChartGroupingConfig) => void;
   className?: string;
+  showStyle?: boolean;
 }
 
 export function GroupingControls({

@@ -127,7 +127,11 @@ export const ValuesTab = () => {
         }}
         onSeriesParamsChange={(seriesParams) => {
           // Update current grouping config state
-          setCurrentGroupingConfig(seriesParams);
+          setCurrentGroupingConfig({
+            groupBy: seriesParams.groupBy,
+            hue: seriesParams.hue,
+            style: seriesParams.style,
+          });
 
           // Preserve existing filter parameters
           const filterParams = Object.fromEntries(
@@ -143,7 +147,11 @@ export const ValuesTab = () => {
         }}
         onCurrentGroupingChange={(groupingConfig) => {
           // Update current grouping config state for card generator sync
-          setCurrentGroupingConfig(groupingConfig);
+          setCurrentGroupingConfig({
+            groupBy: groupingConfig.groupBy,
+            hue: groupingConfig.hue,
+            style: groupingConfig.style,
+          });
         }}
         onDownload={async () => {
           const response = await diagnosticsListMetricValues({

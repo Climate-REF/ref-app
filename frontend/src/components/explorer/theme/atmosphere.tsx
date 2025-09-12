@@ -19,8 +19,8 @@ const cards: ExplorerCard[] = [
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "season",
+          hue: "season",
         },
       },
       {
@@ -35,8 +35,8 @@ const cards: ExplorerCard[] = [
           domain: "atm-20c-plev-s",
         },
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "season",
+          hue: "season",
         },
       },
       {
@@ -50,8 +50,8 @@ const cards: ExplorerCard[] = [
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "season",
+          hue: "season",
         },
       },
       {
@@ -65,7 +65,7 @@ const cards: ExplorerCard[] = [
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
-          groupBy: "metric",
+          groupBy: "season",
           hue: "metric",
         },
       },
@@ -79,6 +79,7 @@ const cards: ExplorerCard[] = [
       {
         type: "box-whisker-chart",
         provider: "esmvaltool",
+        description: "Not sure",
         diagnostic: "cloud-radiative-effects",
         title: "Cloud Radiative Effects",
         otherFilters: { statistic: "bias" },
@@ -96,6 +97,7 @@ const cards: ExplorerCard[] = [
       {
         type: "figure-gallery",
         provider: "esmvaltool",
+        description: "Examples of a figure gallery",
         diagnostic: "global-mean-timeseries",
         title: "Global Mean Temperature Timeseries",
         span: 2,
