@@ -112,6 +112,8 @@ export type DiagnosticSummary = {
     description: string;
     execution_groups: Array<number>;
     has_metric_values: boolean;
+    has_scalar_values: boolean;
+    has_series_values: boolean;
     execution_count: number;
     successful_execution_count: number;
     execution_group_count: number;
@@ -209,7 +211,7 @@ export type MetricValueCollection = {
 };
 
 /**
- * A comparison of metric values for a specific source against an ensemble.
+ * A comparison of metric values for a specific source against n ensemble.
  */
 export type MetricValueComparison = {
     source: MetricValueCollection;

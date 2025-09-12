@@ -4,6 +4,9 @@ Main entry point for the FastAPI application
 
 import dotenv
 
+from climate_ref.config import Config as RefConfig
+from climate_ref.database import Database
+from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
 from ref_backend.core.config import get_settings
 from ref_backend.testing import test_ref_config, test_settings
@@ -26,15 +29,15 @@ app = build_app(settings, ref_config)
 
 
 # Override dependencies to use the pre-initialized singletons
-def get_singleton_config():
+def get_singleton_config() -> RefConfig:
     return ref_config
 
 
-def get_singleton_database():
+def get_singleton_database() -> Database:
     return database
 
 
-def get_singleton_provider_registry():
+def get_singleton_provider_registry() -> ProviderRegistry:
     return provider_registry
 
 

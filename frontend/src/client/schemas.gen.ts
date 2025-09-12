@@ -282,6 +282,14 @@ export const DiagnosticSummarySchema = {
             type: 'boolean',
             title: 'Has Metric Values'
         },
+        has_scalar_values: {
+            type: 'boolean',
+            title: 'Has Scalar Values'
+        },
+        has_series_values: {
+            type: 'boolean',
+            title: 'Has Series Values'
+        },
         execution_count: {
             type: 'integer',
             title: 'Execution Count'
@@ -307,7 +315,7 @@ export const DiagnosticSummarySchema = {
         }
     },
     type: 'object',
-    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'has_metric_values', 'execution_count', 'successful_execution_count', 'execution_group_count', 'successful_execution_group_count', 'group_by'],
+    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'has_metric_values', 'has_scalar_values', 'has_series_values', 'execution_count', 'successful_execution_count', 'execution_group_count', 'successful_execution_group_count', 'group_by'],
     title: 'DiagnosticSummary',
     description: 'A unique provider'
 } as const;
@@ -661,7 +669,7 @@ export const MetricValueComparisonSchema = {
     type: 'object',
     required: ['source', 'ensemble'],
     title: 'MetricValueComparison',
-    description: 'A comparison of metric values for a specific source against an ensemble.'
+    description: 'A comparison of metric values for a specific source against n ensemble.'
 } as const;
 
 export const MetricValueFacetSummarySchema = {

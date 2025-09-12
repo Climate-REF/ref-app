@@ -87,6 +87,14 @@ class DiagnosticSummary(BaseModel):
     """
     Whether any scalar or series metric values exist in the database for this diagnostic
     """
+    has_scalar_values: bool
+    """
+    Whether any scalar metric values exist in the database for this diagnostic
+    """
+    has_series_values: bool
+    """
+    Whether any series metric values exist in the database for this diagnostic
+    """
     execution_count: int
     """
     Total number of executions across all execution groups for this diagnostic
@@ -214,6 +222,8 @@ class DiagnosticSummary(BaseModel):
             description=concrete_diagnostic.__doc__ or "",
             execution_groups=[e.id for e in diagnostic.execution_groups],
             has_metric_values=has_metric_values,
+            has_scalar_values=has_scalar_values,
+            has_series_values=has_series_values,
             execution_count=execution_count,
             successful_execution_count=successful_execution_count,
             execution_group_count=execution_group_count,
