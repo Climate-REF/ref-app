@@ -37,6 +37,12 @@ type ValuesProps = {
     hue?: string;
     style?: string;
   }) => void;
+  // Callback to expose current grouping configuration
+  onCurrentGroupingChange?: (config: {
+    groupBy?: string;
+    hue?: string;
+    style?: string;
+  }) => void;
 };
 
 type ViewType = "bar" | "table" | "series";
@@ -147,10 +153,10 @@ export function Values(props: ValuesProps) {
             >
               <ValuesFigure
                 defaultGroupby="source_id"
-                defaultXAxis="statistic"
                 values={finalDisplayedValues}
                 facets={props.facets}
                 loading={props.loading}
+                onGroupingChange={props.onCurrentGroupingChange}
               />
             </Suspense>
           )}

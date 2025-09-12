@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from loguru import logger
+
 from climate_ref.config import Config
 from climate_ref.database import Database, _get_database_revision
 from climate_ref.provider_registry import ProviderRegistry
@@ -10,12 +12,16 @@ def get_ref_config(settings: Settings) -> Config:
     """
     Get the REF configuration object
     """
-    return Config.load(Path(settings.REF_CONFIGURATION) / "ref.toml")
+    config_fname = Path(settings.REF_CONFIGURATION) / "ref.toml"
+    if not config_fname.exists():
+        raise FileNotFoundError(f"REF configuration file not found: {config_fname}")
+    logger.info(f"Loading REF configuration from {config_fname}")
+    return Config.load(config_fname)
 
 
 def get_database(ref_config: Config) -> Database:
     """
-    Get a new database connection using the default config
+    Get a database connection using the default config
     """
     database = Database.from_config(ref_config, run_migrations=False)
     with database._engine.connect() as connection:

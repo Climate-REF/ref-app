@@ -1,16 +1,19 @@
+import type { ChartGroupingConfig } from "./grouping";
+
 export type ExplorerCardContent =
   | {
-      type: "ensemble-chart";
+      type: "box-whisker-chart";
       provider: string;
       diagnostic: string;
       title: string;
       description?: string;
       metricUnits?: string;
       otherFilters?: Record<string, string>;
-      xAxis?: string;
       clipMin?: number;
       clipMax?: number;
       span?: 1 | 2;
+      /** Unified grouping configuration */
+      groupingConfig?: ChartGroupingConfig;
     }
   | {
       type: "figure-gallery";
@@ -28,12 +31,9 @@ export type ExplorerCardContent =
       description?: string;
       metricUnits?: string;
       otherFilters?: Record<string, string>;
-      seriesConfig?: {
-        groupBy?: string;
-        hue?: string;
-        style?: string;
-      };
       span?: 1 | 2;
+      /** Unified grouping configuration */
+      groupingConfig?: ChartGroupingConfig;
     };
 
 export type ExplorerCard = {

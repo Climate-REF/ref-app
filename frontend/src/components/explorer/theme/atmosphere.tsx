@@ -8,7 +8,7 @@ const cards: ExplorerCard[] = [
       "Key metrics for large-scale atmospheric circulation patterns.",
     content: [
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
         title: "NAM Bias",
@@ -20,7 +20,7 @@ const cards: ExplorerCard[] = [
         },
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-sam",
         title: "SAM Bias",
@@ -32,7 +32,7 @@ const cards: ExplorerCard[] = [
         },
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nao",
         title: "NAO Bias",
@@ -43,7 +43,7 @@ const cards: ExplorerCard[] = [
         },
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pna",
         title: "PNA Bias",
@@ -61,7 +61,7 @@ const cards: ExplorerCard[] = [
       "Cloud properties and their effect on the Earth's energy balance.",
     content: [
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "esmvaltool",
         diagnostic: "cloud-radiative-effects",
         title: "Cloud Radiative Effects",

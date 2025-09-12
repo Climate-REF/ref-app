@@ -27,7 +27,8 @@ def sanitize_float_value(value: float | Any) -> float | Any:
             return None
         if math.isinf(value):
             return None
-    logger.warning(f"Non-float value encountered during sanitization: {value}")
+    else:
+        logger.warning(f"Non-float value encountered during sanitization: {value}")
     return value
 
 

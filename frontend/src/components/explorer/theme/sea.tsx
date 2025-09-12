@@ -8,28 +8,28 @@ const cards: ExplorerCard[] = [
       "Key indicators of ocean health, circulation, and heat content.",
     content: [
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "amoc-rapid",
         title: "AMOC Strength",
         metricUnits: "Sv",
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "ohc-noaa",
         title: "Ocean Heat Content Anomaly",
         metricUnits: "J",
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "so-woa2023-surface",
         title: "Sea Surface Salinity",
         metricUnits: "psu",
       },
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "thetao-woa2023-surface",
         title: "Sea Surface Temperature",
@@ -42,12 +42,15 @@ const cards: ExplorerCard[] = [
     description: "The state of Earth's sea ice.",
     content: [
       {
-        type: "ensemble-chart",
+        type: "box-whisker-chart",
         provider: "esmvaltool",
         diagnostic: "sea-ice-area-basic",
         title: "Sea Ice Area",
         metricUnits: "km^2",
-        xAxis: "region",
+        groupingConfig: {
+          groupBy: "region",
+          hue: "season",
+        },
       },
     ],
   },

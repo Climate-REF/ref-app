@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListMetricValues } from "@/client";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
@@ -41,20 +41,6 @@ export const ValuesTab = () => {
     }),
   );
 
-  // Extract available dimensions from the data for the card template generator
-  const availableDimensions = useMemo(() => {
-    const collection = metricValues as MetricValueCollection;
-    if (!collection?.data) return [];
-
-    const dimensions = new Set<string>();
-    collection.data.forEach((item) => {
-      if (item.dimensions) {
-        Object.keys(item.dimensions).forEach((dim) => dimensions.add(dim));
-      }
-    });
-    return Array.from(dimensions).sort();
-  }, [metricValues]);
-
   // Extract current filters (excluding view and series params)
   const currentFilters = useMemo(() => {
     const filtered = Object.fromEntries(
@@ -69,6 +55,13 @@ export const ValuesTab = () => {
       Object.entries(filtered).filter(([, value]) => value !== undefined),
     ) as Record<string, string>;
   }, [search]);
+
+  // State to track current grouping configuration from the main chart
+  const [currentGroupingConfig, setCurrentGroupingConfig] = useState({
+    groupBy: search.groupBy,
+    hue: search.hue,
+    style: search.style,
+  });
 
   return (
     <div className="space-y-4">
@@ -133,6 +126,9 @@ export const ValuesTab = () => {
           });
         }}
         onSeriesParamsChange={(seriesParams) => {
+          // Update current grouping config state
+          setCurrentGroupingConfig(seriesParams);
+
           // Preserve existing filter parameters
           const filterParams = Object.fromEntries(
             Object.entries(search).filter(
@@ -144,6 +140,10 @@ export const ValuesTab = () => {
             search: { ...filterParams, ...seriesParams },
             replace: true,
           });
+        }}
+        onCurrentGroupingChange={(groupingConfig) => {
+          // Update current grouping config state for card generator sync
+          setCurrentGroupingConfig(groupingConfig);
         }}
         onDownload={async () => {
           const response = await diagnosticsListMetricValues({
@@ -184,12 +184,7 @@ export const ValuesTab = () => {
           providerSlug={providerSlug}
           diagnosticSlug={diagnosticSlug}
           currentFilters={currentFilters}
-          seriesParams={{
-            groupBy: search.groupBy,
-            hue: search.hue,
-            style: search.style,
-          }}
-          availableDimensions={availableDimensions}
+          currentGroupingConfig={currentGroupingConfig}
           availableData={(metricValues as MetricValueCollection)?.data ?? []}
           currentTab="values"
           currentViewType={

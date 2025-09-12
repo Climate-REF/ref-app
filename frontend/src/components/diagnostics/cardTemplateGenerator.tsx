@@ -1,10 +1,16 @@
 import { Copy, Download, Eye, EyeOff } from "lucide-react";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
 import type {
   MetricValue,
   SeriesValue,
 } from "@/components/execution/values/types";
+import type { ChartGroupingConfig } from "@/components/explorer/grouping";
+import {
+  extractAvailableDimensions,
+  GroupingControls,
+  initializeGroupingConfig,
+} from "@/components/explorer/grouping";
 import type { ExplorerCardContent as ExplorerCardContentType } from "@/components/explorer/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,15 +41,9 @@ interface CardTemplateGeneratorProps {
   diagnosticSlug: string;
   // Current filter state from the diagnostic page
   currentFilters?: Record<string, string>;
-  // Current series visualization parameters
-  seriesParams?: {
-    groupBy?: string;
-    hue?: string;
-    style?: string;
-  };
-  // Available dimensions for series configuration
-  availableDimensions?: string[];
-  // Available data from the current diagnostic page
+  // Current grouping configuration from the diagnostic page
+  currentGroupingConfig?: ChartGroupingConfig;
+  // Available data from the current diagnostic page (used to extract dimensions)
   availableData?: (MetricValue | SeriesValue)[];
   // Current tab context to determine default card type
   currentTab?: "values" | "series" | "figures";
@@ -51,16 +51,7 @@ interface CardTemplateGeneratorProps {
   currentViewType?: "table" | "bar" | "series";
 }
 
-type CardType = "ensemble-chart" | "figure-gallery" | "series-chart";
-
-// interface CardTemplate extends ExplorerCardType {
-//   // Extended properties for series charts
-//   seriesConfig?: {
-//     groupBy?: string;
-//     hue?: string;
-//     style?: string;
-//   };
-// }
+type CardType = "box-whisker-chart" | "figure-gallery" | "series-chart";
 
 /// Preview component for the generated card template
 const PreviewExplorerCard = ({
@@ -81,41 +72,71 @@ export function CardTemplateGenerator({
   providerSlug,
   diagnosticSlug,
   currentFilters = {},
-  seriesParams,
-  availableDimensions = [],
+  currentGroupingConfig,
+  availableData = [],
   currentTab,
   currentViewType,
 }: CardTemplateGeneratorProps) {
   const { toast } = useToast();
   const [isVisible, setIsVisible] = useState(true); // Start visible for testing
 
+  // Extract available dimensions from the data
+  const availableDimensions = useMemo(() => {
+    if (availableData.length === 0)
+      return {
+        dimensions: [],
+        defaultGroupBy: "none",
+        defaultHue: "none",
+        defaultStyle: "none",
+      };
+    return extractAvailableDimensions(availableData);
+  }, [availableData]);
+
   // Form state - set default based on current tab and view context
   const getDefaultCardType = (): CardType => {
     if (currentTab === "figures") return "figure-gallery";
     if (currentTab === "values") {
       if (currentViewType === "series") return "series-chart";
-      if (currentViewType === "bar") return "ensemble-chart";
-      return "ensemble-chart"; // Default for table view
+      if (currentViewType === "bar") return "box-whisker-chart";
+      return "box-whisker-chart"; // Default for table view
     }
-    return "ensemble-chart"; // Default fallback
+    return "box-whisker-chart"; // Default fallback
   };
 
   const [cardType, setCardType] = useState<CardType>(getDefaultCardType());
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [metricUnits, setMetricUnits] = useState("");
-  const [xAxis, setXAxis] = useState("metric");
   const [clipMin, setClipMin] = useState<number | undefined>();
   const [clipMax, setClipMax] = useState<number | undefined>();
   const [span, setSpan] = useState<1 | 2>(1);
   const [includeFilters, setIncludeFilters] = useState<string[]>([]);
 
-  // Series-specific state
-  const [seriesGroupBy, setSeriesGroupBy] = useState(
-    seriesParams?.groupBy || "",
+  // Unified grouping configuration state
+  const [groupingConfig, setGroupingConfig] = useState<ChartGroupingConfig>(
+    () => {
+      return initializeGroupingConfig(
+        availableDimensions,
+        currentGroupingConfig,
+      );
+    },
   );
-  const [seriesHue, setSeriesHue] = useState(seriesParams?.hue || "");
-  const [seriesStyle, setSeriesStyle] = useState(seriesParams?.style || "");
+
+  // Sync card generator grouping with main chart grouping changes
+  useEffect(() => {
+    if (currentGroupingConfig) {
+      const syncedConfig = initializeGroupingConfig(
+        availableDimensions,
+        currentGroupingConfig,
+      );
+      setGroupingConfig(syncedConfig);
+    }
+  }, [currentGroupingConfig, availableDimensions]);
+
+  // Handle grouping configuration changes
+  const handleGroupingChange = useCallback((newConfig: ChartGroupingConfig) => {
+    setGroupingConfig(newConfig);
+  }, []);
 
   // Generate the card template
   const generateTemplate = useCallback((): ExplorerCardContentType => {
@@ -136,17 +157,29 @@ export function CardTemplateGenerator({
     let content: ExplorerCardContentType;
 
     switch (cardType) {
-      case "ensemble-chart":
+      case "box-whisker-chart":
         content = {
-          type: "ensemble-chart",
+          type: "box-whisker-chart",
           ...baseContent,
           metricUnits: metricUnits || "unitless",
-          xAxis,
           ...(clipMin !== undefined && { clipMin }),
           ...(clipMax !== undefined && { clipMax }),
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
           }),
+          // Use unified grouping configuration
+          groupingConfig: {
+            ...(groupingConfig.groupBy &&
+              groupingConfig.groupBy !== "none" && {
+                groupBy: groupingConfig.groupBy,
+              }),
+            ...(groupingConfig.hue &&
+              groupingConfig.hue !== "none" && { hue: groupingConfig.hue }),
+            ...(groupingConfig.style &&
+              groupingConfig.style !== "none" && {
+                style: groupingConfig.style,
+              }),
+          },
         };
         break;
 
@@ -165,12 +198,18 @@ export function CardTemplateGenerator({
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
           }),
-          seriesConfig: {
-            ...(seriesGroupBy &&
-              seriesGroupBy !== "none" && { groupBy: seriesGroupBy }),
-            ...(seriesHue && seriesHue !== "none" && { hue: seriesHue }),
-            ...(seriesStyle &&
-              seriesStyle !== "none" && { style: seriesStyle }),
+          // Use unified grouping configuration
+          groupingConfig: {
+            ...(groupingConfig.groupBy &&
+              groupingConfig.groupBy !== "none" && {
+                groupBy: groupingConfig.groupBy,
+              }),
+            ...(groupingConfig.hue &&
+              groupingConfig.hue !== "none" && { hue: groupingConfig.hue }),
+            ...(groupingConfig.style &&
+              groupingConfig.style !== "none" && {
+                style: groupingConfig.style,
+              }),
           },
         };
         break;
@@ -182,7 +221,6 @@ export function CardTemplateGenerator({
     title,
     description,
     metricUnits,
-    xAxis,
     clipMin,
     clipMax,
     span,
@@ -190,9 +228,7 @@ export function CardTemplateGenerator({
     currentFilters,
     providerSlug,
     diagnosticSlug,
-    seriesGroupBy,
-    seriesHue,
-    seriesStyle,
+    groupingConfig,
   ]);
 
   // Copy template to clipboard
@@ -278,7 +314,9 @@ export function CardTemplateGenerator({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ensemble-chart">Ensemble Chart</SelectItem>
+                  <SelectItem value="box-whisker-chart">
+                    Box and Whisker Chart
+                  </SelectItem>
                   <SelectItem value="figure-gallery">Figure Gallery</SelectItem>
                   <SelectItem value="series-chart">Series Chart</SelectItem>
                 </SelectContent>
@@ -310,7 +348,8 @@ export function CardTemplateGenerator({
             </div>
 
             {/* Chart-specific options */}
-            {(cardType === "ensemble-chart" || cardType === "series-chart") && (
+            {(cardType === "box-whisker-chart" ||
+              cardType === "series-chart") && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="metricUnits">Metric Units</Label>
@@ -319,16 +358,6 @@ export function CardTemplateGenerator({
                     value={metricUnits}
                     onChange={(e) => setMetricUnits(e.target.value)}
                     placeholder="e.g., K, mm/day, unitless"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="xAxis">X-Axis</Label>
-                  <Input
-                    id="xAxis"
-                    value={xAxis}
-                    onChange={(e) => setXAxis(e.target.value)}
-                    placeholder="metric"
                   />
                 </div>
 
@@ -362,78 +391,24 @@ export function CardTemplateGenerator({
                     />
                   </div>
                 </div>
-              </>
-            )}
 
-            {/* Series-specific options */}
-            {cardType === "series-chart" && availableDimensions.length > 0 && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">
-                    Series Configuration
-                  </Label>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="seriesGroupBy" className="text-xs">
-                      Group By
-                    </Label>
-                    <Select
-                      value={seriesGroupBy}
-                      onValueChange={setSeriesGroupBy}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select dimension" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {availableDimensions.map((dim) => (
-                          <SelectItem key={dim} value={dim}>
-                            {dim}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="seriesHue" className="text-xs">
-                      Color By
-                    </Label>
-                    <Select value={seriesHue} onValueChange={setSeriesHue}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select dimension" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {availableDimensions.map((dim) => (
-                          <SelectItem key={dim} value={dim}>
-                            {dim}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="seriesStyle" className="text-xs">
-                      Style By
-                    </Label>
-                    <Select value={seriesStyle} onValueChange={setSeriesStyle}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select dimension" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {availableDimensions.map((dim) => (
-                          <SelectItem key={dim} value={dim}>
-                            {dim}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                {/* Unified Grouping Configuration */}
+                {availableDimensions.dimensions.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">
+                        Chart Configuration
+                      </Label>
+                      <GroupingControls
+                        config={groupingConfig}
+                        availableDimensions={availableDimensions}
+                        onChange={handleGroupingChange}
+                        className="border-0 shadow-none p-0"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 

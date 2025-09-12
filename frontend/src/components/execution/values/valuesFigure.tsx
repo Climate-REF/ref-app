@@ -1,20 +1,24 @@
-import { Axis3D, Download, Group } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import type {
-  Facet,
-  GroupedRawDataEntry,
-  MetricValue,
-} from "@/components/execution/values/types";
+import { Download } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import {
+  EmptyEnsembleChart,
+  EnsembleChart,
+} from "@/components/diagnostics/ensembleChart";
+import type { Facet, MetricValue } from "@/components/execution/values/types";
+import type { ChartGroupingConfig } from "@/components/explorer/grouping";
+import {
+  extractAvailableDimensions,
+  GroupingControls,
+  initializeGroupingConfig,
+} from "@/components/explorer/grouping";
 import { Button } from "@/components/ui/button.tsx";
-import { FacetSelect } from "./facetSelect";
-import { GroupedBoxWhiskerChart } from "./groupedBoxWhiskerChart";
 
 interface ValuesFigureProps {
   values: MetricValue[];
   facets: Facet[];
   defaultGroupby: string;
-  defaultXAxis: string;
   loading?: boolean; // Add loading as an optional prop
+  onGroupingChange?: (config: ChartGroupingConfig) => void;
 }
 
 const getValidDefault = (
@@ -40,117 +44,84 @@ export function ValuesFigure({
   values,
   facets,
   defaultGroupby,
-  defaultXAxis,
   loading, // Destructure loading
+  onGroupingChange,
 }: ValuesFigureProps) {
-  // Use dynamic defaults based on available facets
-
-  const [groupby, setGroupby] = useState(() =>
-    getValidDefault(facets, defaultGroupby, [
-      "source_id",
-      "model",
-      "experiment",
-    ]),
+  // Extract available dimensions from the metric values
+  const availableDimensions = useMemo(
+    () => extractAvailableDimensions(values),
+    [values],
   );
-  const [xaxis, setXAxis] = useState(() =>
-    getValidDefault(facets, defaultXAxis, [
+
+  // Initialize grouping configuration with defaults based on facets
+  const initialGroupingConfig = useMemo(() => {
+    const validDefaultGroupBy = getValidDefault(facets, defaultGroupby, [
       "statistic",
       "metric",
       "variable",
       "region",
-    ]),
+    ]);
+    const validDefaultHue = getValidDefault(facets, defaultGroupby, [
+      "source_id",
+      "model",
+      "experiment",
+    ]);
+
+    return initializeGroupingConfig(availableDimensions, {
+      groupBy: validDefaultGroupBy,
+      hue: validDefaultHue,
+      style: "none",
+    });
+  }, [availableDimensions, facets, defaultGroupby]);
+
+  // State for grouping configuration
+  const [groupingConfig, setGroupingConfig] = useState<ChartGroupingConfig>(
+    initialGroupingConfig,
   );
 
-  // Update state when facets change and current selection becomes invalid
-  useEffect(() => {
-    const currentGroupbyValid = facets.some((f) => f.key === groupby);
-    const currentXAxisValid = facets.some((f) => f.key === xaxis);
-
-    if (!currentGroupbyValid) {
-      const newGroupby = getValidDefault(facets, defaultGroupby, [
-        "source_id",
-        "model",
-        "experiment",
-      ]);
-      setGroupby(newGroupby);
-    }
-
-    if (!currentXAxisValid) {
-      const newXAxis = getValidDefault(facets, defaultXAxis, [
-        "statistic",
-        "variable",
-        "region",
-      ]);
-      setXAxis(newXAxis);
-    }
-  }, [facets, groupby, xaxis, defaultGroupby, defaultXAxis]);
-
-  const chartData = useMemo(() => {
-    const xFacet = facets.find((f) => f.key === xaxis);
-    const groupbyFacet = facets.find((f) => f.key === groupby);
-
-    if (xFacet === undefined || groupbyFacet === undefined) {
-      return [];
-    }
-
-    const chartData: GroupedRawDataEntry[] = xFacet.values.map((x) => {
-      const matches = values
-        .filter(
-          (value) =>
-            value.dimensions[xFacet.key] === x &&
-            value.dimensions[groupbyFacet.key] !== undefined,
-        )
-        .map((value) => ({
-          value: value.value as number,
-          dimension: value.dimensions[groupbyFacet.key],
-        }));
-
-      const groups = Object.entries(
-        Object.groupBy(matches, (m) => m.dimension),
-      ).map(([key, values]) => ({
-        label: key,
-        values: values?.map((v) => v.value) ?? [],
-      }));
-
-      return {
-        name: x,
-        groups,
-      };
-    });
-
-    return chartData;
-  }, [groupby, xaxis, values, facets]);
+  // Handle grouping configuration changes
+  const handleGroupingChange = useCallback(
+    (newConfig: ChartGroupingConfig) => {
+      setGroupingConfig(newConfig);
+      // Notify parent component of the change
+      if (onGroupingChange) {
+        onGroupingChange(newConfig);
+      }
+    },
+    [onGroupingChange],
+  );
 
   if (loading) {
     return <div className="text-center p-4">Loading chart data...</div>;
   }
 
+  if (values.length === 0) {
+    return <EmptyEnsembleChart />;
+  }
+
   return (
     <>
       {facets.length ? (
-        <div className="flex items-center justify-end space-x-2">
-          <FacetSelect
-            facetValues={facets.map((facet) => facet.key)}
-            value={xaxis}
-            onValueChange={setXAxis}
-          >
-            <Axis3D />X Axis
-          </FacetSelect>
-          <FacetSelect
-            facetValues={facets.map((facet) => facet.key)}
-            value={groupby}
-            onValueChange={setGroupby}
-          >
-            <Group />
-            Group by
-          </FacetSelect>
-          <Button variant={"outline"} size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
+        <div className="space-y-4">
+          <GroupingControls
+            config={groupingConfig}
+            availableDimensions={availableDimensions}
+            onChange={handleGroupingChange}
+          />
+          <div className="flex items-center justify-end">
+            <Button variant={"outline"} size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </div>
         </div>
       ) : null}
-      <GroupedBoxWhiskerChart data={chartData} />
+      <EnsembleChart
+        data={values}
+        metricName="Values"
+        metricUnits="unitless"
+        groupingConfig={groupingConfig}
+      />
     </>
   );
 }

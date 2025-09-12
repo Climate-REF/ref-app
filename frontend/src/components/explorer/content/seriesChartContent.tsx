@@ -46,9 +46,9 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
   return (
     <SeriesVisualization
       seriesValues={seriesValues}
-      initialGroupBy={contentItem.seriesConfig?.groupBy}
-      initialHue={contentItem.seriesConfig?.hue}
-      initialStyle={contentItem.seriesConfig?.style}
+      initialGroupBy={contentItem.groupingConfig?.groupBy}
+      initialHue={contentItem.groupingConfig?.hue}
+      initialStyle={contentItem.groupingConfig?.style}
       maxSeriesLimit={100} // Limit for performance in preview
       maxLegendItems={10}
       enableZoom={false} // Disable zoom in preview

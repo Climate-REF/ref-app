@@ -18,7 +18,7 @@ interface ExplorerCardContentProps {
 }
 
 function ExplorerCardContentInner({ contentItem }: ExplorerCardContentProps) {
-  if (contentItem.type === "ensemble-chart") {
+  if (contentItem.type === "box-whisker-chart") {
     return <EnsembleChartContent contentItem={contentItem} />;
   }
 

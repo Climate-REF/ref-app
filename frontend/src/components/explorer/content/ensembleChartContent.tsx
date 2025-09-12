@@ -8,7 +8,7 @@ import type { MetricValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
 
 interface EnsembleChartContentProps {
-  contentItem: Extract<ExplorerCardContent, { type: "ensemble-chart" }>;
+  contentItem: Extract<ExplorerCardContent, { type: "box-whisker-chart" }>;
 }
 
 export function EnsembleChartContent({
@@ -36,9 +36,9 @@ export function EnsembleChartContent({
       data={values}
       metricName={contentItem.title}
       metricUnits={contentItem.metricUnits ?? "unitless"}
-      xAxis={contentItem.xAxis}
       clipMin={contentItem.clipMin}
       clipMax={contentItem.clipMax}
+      groupingConfig={contentItem.groupingConfig}
     />
   );
 }

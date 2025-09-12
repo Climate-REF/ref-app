@@ -15,11 +15,32 @@ dotenv.load_dotenv(override=True)
 settings = get_settings()
 
 from ref_backend.builder import build_app  # noqa: E402
-from ref_backend.core.ref import get_ref_config  # noqa: E402
+from ref_backend.core.ref import get_database, get_provider_registry, get_ref_config  # noqa: E402
 
+# Initialize singletons at application startup
 ref_config = get_ref_config(settings)
+database = get_database(ref_config)
+provider_registry = get_provider_registry(ref_config)
 
 app = build_app(settings, ref_config)
+
+
+# Override dependencies to use the pre-initialized singletons
+def get_singleton_config():
+    return ref_config
+
+
+def get_singleton_database():
+    return database
+
+
+def get_singleton_provider_registry():
+    return provider_registry
+
+
+app.dependency_overrides[deps._ref_config_dependency] = get_singleton_config
+app.dependency_overrides[deps._get_database_dependency] = get_singleton_database
+app.dependency_overrides[deps._provider_registry_dependency] = get_singleton_provider_registry
 
 if settings.USE_TEST_DATA:
     print("Using test data for the application.")

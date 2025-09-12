@@ -84,8 +84,11 @@ function ValuesDataTable({
       ...indexColumns,
       {
         id: "value",
-        header: "Value",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={"Value"} />
+        ),
         accessorFn: (cell) => (cell.value as number).toPrecision(3),
+        enableSorting: true,
       },
       {
         id: "info",

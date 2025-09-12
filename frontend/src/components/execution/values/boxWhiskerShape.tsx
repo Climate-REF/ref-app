@@ -21,6 +21,21 @@ interface BoxWhiskerShapeProps {
   background?: { height: number };
 }
 
+// Slightly darken a hex color for better contrast
+function darkenHex(hex: string, amount = 40) {
+  if (!hex || !hex.startsWith("#")) return hex;
+  const full =
+    hex.length === 4
+      ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+      : hex;
+  const clamp = (v: number) => Math.max(0, Math.min(255, v));
+  const r = clamp(Number.parseInt(full.slice(1, 3), 16) - amount);
+  const g = clamp(Number.parseInt(full.slice(3, 5), 16) - amount);
+  const b = clamp(Number.parseInt(full.slice(5, 7), 16) - amount);
+  const toHex = (v: number) => v.toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 export function BoxWhiskerShape({
   prefix,
   yDomain,
@@ -59,21 +74,6 @@ export function BoxWhiskerShape({
   const whiskerX = x + width / 2; // Center X for vertical lines
   const crossWidth = 10; // Center X for cross lines
   const boxX = x; // Box starts at the calculated x
-
-  // Slightly darken a hex color for better contrast
-  function darkenHex(hex: string, amount = 40) {
-    if (!hex || !hex.startsWith("#")) return hex;
-    const full =
-      hex.length === 4
-        ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
-        : hex;
-    const clamp = (v: number) => Math.max(0, Math.min(255, v));
-    const r = clamp(Number.parseInt(full.slice(1, 3), 16) - amount);
-    const g = clamp(Number.parseInt(full.slice(3, 5), 16) - amount);
-    const b = clamp(Number.parseInt(full.slice(5, 7), 16) - amount);
-    const toHex = (v: number) => v.toString(16).padStart(2, "0");
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
 
   function scatterValues(color: string, strokeWidth = 1) {
     const crossColor =
