@@ -13,6 +13,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "gpp-fluxnet2015",
         title: "Gross Primary Production",
         metricUnits: "kgC/m^2/s",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -20,6 +24,11 @@ const cards: ExplorerCard[] = [
         diagnostic: "nbp-hoffman",
         title: "Net Biome Production",
         metricUnits: "PgC/yr",
+        clipMax: 2000,
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -27,6 +36,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "csoil-hwsd2",
         title: "Soil Carbon",
         metricUnits: "kgC/m^2",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },
@@ -41,6 +54,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "snc-esacci",
         title: "Snow Cover Extent",
         metricUnits: "%",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -48,6 +65,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "mrsos-wangmao",
         title: "Surface Soil Moisture",
         metricUnits: "kg/m^2",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -55,6 +76,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "mrro-lora",
         title: "Total Runoff",
         metricUnits: "kg/m^2/s",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -62,6 +87,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "lai-avh15c1",
         title: "Leaf Area Index",
         metricUnits: "1",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },

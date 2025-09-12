@@ -18,6 +18,10 @@ const cards: ExplorerCard[] = [
           statistic: "bias",
           domain: "atm-20c-plev-n",
         },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -30,6 +34,10 @@ const cards: ExplorerCard[] = [
           statistic: "bias",
           domain: "atm-20c-plev-s",
         },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -41,6 +49,10 @@ const cards: ExplorerCard[] = [
           statistic: "bias",
           domain: "atm-20c-plev-n",
         },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -51,6 +63,10 @@ const cards: ExplorerCard[] = [
           method: "cbf",
           statistic: "bias",
           domain: "atm-20c-plev-n",
+        },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
         },
       },
     ],
@@ -66,6 +82,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "cloud-radiative-effects",
         title: "Cloud Radiative Effects",
         otherFilters: { statistic: "bias" },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },

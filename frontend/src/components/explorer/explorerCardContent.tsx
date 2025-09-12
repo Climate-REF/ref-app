@@ -50,6 +50,8 @@ export const ExplorerCardContentSkeleton = () => {
 export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
   const spanClass = contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
 
+  console.log("Rendering ExplorerCardContent:", contentItem);
+
   return (
     <div className={`${spanClass} relative group`}>
       <Card>

@@ -13,20 +13,22 @@ const cards: ExplorerCard[] = [
         diagnostic: "amoc-rapid",
         title: "AMOC Strength",
         metricUnits: "Sv",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
-      {
-        type: "box-whisker-chart",
-        provider: "ilamb",
-        diagnostic: "ohc-noaa",
-        title: "Ocean Heat Content Anomaly",
-        metricUnits: "J",
-      },
+
       {
         type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "so-woa2023-surface",
         title: "Sea Surface Salinity",
         metricUnits: "psu",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -34,6 +36,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "thetao-woa2023-surface",
         title: "Sea Surface Temperature",
         metricUnits: "K",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },
@@ -48,8 +54,8 @@ const cards: ExplorerCard[] = [
         title: "Sea Ice Area",
         metricUnits: "km^2",
         groupingConfig: {
-          groupBy: "region",
-          hue: "season",
+          groupBy: "metric",
+          hue: "metric",
         },
       },
     ],

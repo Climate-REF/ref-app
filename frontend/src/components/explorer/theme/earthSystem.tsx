@@ -14,7 +14,10 @@ const cards: ExplorerCard[] = [
         metricUnits: "",
         clipMax: 10,
         otherFilters: { metric: "ecs" },
-        groupingConfig: { groupBy: "metric" },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -24,7 +27,10 @@ const cards: ExplorerCard[] = [
         metricUnits: "",
         clipMax: 10,
         otherFilters: { metric: "lambda" },
-        groupingConfig: { groupBy: "metric" },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -32,6 +38,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "transient-climate-response",
         title: "TCR",
         metricUnits: "K",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -39,6 +49,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "transient-climate-response-emissions",
         title: "TCRE",
         metricUnits: "K/EgC",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
       {
         type: "box-whisker-chart",
@@ -46,6 +60,10 @@ const cards: ExplorerCard[] = [
         diagnostic: "zero-emission-commitment",
         title: "ZEC",
         metricUnits: "K",
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },
@@ -59,7 +77,10 @@ const cards: ExplorerCard[] = [
         provider: "esmvaltool",
         diagnostic: "enso-basic-climatology",
         title: "ENSO Basic Climatology",
-        groupingConfig: { groupBy: "metric" },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
         otherFilters: { region: "global" },
       },
       {
@@ -67,7 +88,10 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "enso_tel",
         title: "ENSO Teleconnections",
-        groupingConfig: { groupBy: "metric" },
+        groupingConfig: {
+          groupBy: "metric",
+          hue: "metric",
+        },
       },
     ],
   },

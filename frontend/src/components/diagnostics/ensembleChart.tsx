@@ -91,6 +91,13 @@ export const EnsembleChart = ({
     (d: MetricValue) => d.dimensions[groupByDimension] ?? metricName,
   );
 
+  console.log(
+    "Primary grouped data:",
+    primaryGroupedData,
+    groupingConfig,
+    groupByDimension,
+  );
+
   const chartData = Object.entries(primaryGroupedData).map(
     ([groupName, values]: [string, MetricValue[] | undefined]) => {
       if (!values || values.length === 0) {
