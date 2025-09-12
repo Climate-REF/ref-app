@@ -1,15 +1,11 @@
 import { Copy, Download, Eye, EyeOff } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
 import type {
   MetricValue,
   SeriesValue,
 } from "@/components/execution/values/types";
-import { ExplorerCardPreview } from "@/components/explorer/explorerCardPreview";
-import type {
-  ExplorerCardContent,
-  ExplorerCard as ExplorerCardType,
-} from "@/components/explorer/types";
+import type { ExplorerCardContent as ExplorerCardContentType } from "@/components/explorer/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +24,11 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { ErrorFallback } from "../app/errorFallback";
+import {
+  ExplorerCardContent,
+  ExplorerCardContentSkeleton,
+} from "../explorer/explorerCardContent";
 
 interface CardTemplateGeneratorProps {
   providerSlug: string;
@@ -61,13 +62,27 @@ type CardType = "ensemble-chart" | "figure-gallery" | "series-chart";
 //   };
 // }
 
+/// Preview component for the generated card template
+const PreviewExplorerCard = ({
+  contentItem,
+}: {
+  contentItem: ExplorerCardContentType;
+}) => {
+  return (
+    <ErrorBoundary fallback={<ErrorFallback />}>
+      <Suspense fallback={<ExplorerCardContentSkeleton />}>
+        <ExplorerCardContent contentItem={contentItem} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
+
 export function CardTemplateGenerator({
   providerSlug,
   diagnosticSlug,
   currentFilters = {},
   seriesParams,
   availableDimensions = [],
-  availableData = [],
   currentTab,
   currentViewType,
 }: CardTemplateGeneratorProps) {
@@ -103,7 +118,7 @@ export function CardTemplateGenerator({
   const [seriesStyle, setSeriesStyle] = useState(seriesParams?.style || "");
 
   // Generate the card template
-  const generateTemplate = useCallback((): ExplorerCardType => {
+  const generateTemplate = useCallback((): ExplorerCardContentType => {
     const selectedFilters = Object.fromEntries(
       includeFilters
         .map((key) => [key, currentFilters[key]])
@@ -114,10 +129,11 @@ export function CardTemplateGenerator({
       provider: providerSlug,
       diagnostic: diagnosticSlug,
       title,
+      description,
       span,
     };
 
-    let content: ExplorerCardContent;
+    let content: ExplorerCardContentType;
 
     switch (cardType) {
       case "ensemble-chart":
@@ -138,7 +154,6 @@ export function CardTemplateGenerator({
         content = {
           type: "figure-gallery",
           ...baseContent,
-          ...(description && { description }),
         };
         break;
 
@@ -146,7 +161,6 @@ export function CardTemplateGenerator({
         content = {
           type: "series-chart",
           ...baseContent,
-          ...(description && { description }),
           metricUnits: metricUnits || "unitless",
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
@@ -162,11 +176,7 @@ export function CardTemplateGenerator({
         break;
     }
 
-    return {
-      title,
-      description,
-      content: [content],
-    };
+    return content;
   }, [
     cardType,
     title,
@@ -553,10 +563,7 @@ export function CardTemplateGenerator({
             <div className="border rounded-lg p-4 bg-white min-h-[400px]">
               {title ? (
                 <TooltipProvider>
-                  <ExplorerCardPreview
-                    card={generateTemplate()}
-                    availableData={availableData}
-                  />
+                  <PreviewExplorerCard contentItem={generateTemplate()} />
                 </TooltipProvider>
               ) : (
                 <div className="h-64 flex items-center justify-center text-gray-400">

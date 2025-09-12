@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -6,19 +6,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CopyButton } from "@/components/ui/copyButton";
+import { ErrorBoundary, ErrorFallback } from "../app";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ExplorerCardContent } from "./explorerCardContent";
+  ExplorerCardContent,
+  ExplorerCardContentSkeleton,
+} from "./explorerCardContent";
 import type { ExplorerCard as ExplorerCardType } from "./types";
+
+// import { ExplorerTooltip } from "./explorerTooltip";
 
 interface ExplorerCardProps {
   card: ExplorerCardType;
 }
 
+// The ExplorerCard component renders a card with a header and content area.
+// Each card may contain multiple content items, which are rendered using the ExplorerCardContent component.
 export function ExplorerCard({ card }: ExplorerCardProps) {
   return (
     <Card>
@@ -30,52 +32,30 @@ export function ExplorerCard({ card }: ExplorerCardProps) {
               <CardDescription>{card.description}</CardDescription>
             )}
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                <Info className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-md">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Card Configuration</p>
-                  <CopyButton
-                    text={JSON.stringify(
-                      {
-                        title: card.title,
-                        description: card.description,
-                        content: card.content,
-                      },
-                      null,
-                      2,
-                    )}
-                    label="Copy"
-                  />
-                </div>
-                <pre className="text-xs bg-gray-800 text-green-400 p-2 rounded overflow-x-auto">
-                  {JSON.stringify(
-                    {
-                      title: card.title,
-                      description: card.description,
-                      content: card.content,
-                    },
-                    null,
-                    2,
-                  )}
-                </pre>
-              </div>
-            </TooltipContent>
-          </Tooltip>
+
+          {/* Not working properly with TooltipProvider
+          <div>
+            <ExplorerTooltip
+              contentItem={{
+                title: card.title,
+                description: card.description,
+                content: card.content,
+              }}
+            />
+          </div> */}
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {card.content.map((contentItem) => (
-            <ExplorerCardContent
+            <ErrorBoundary
               key={`${card.title}:${contentItem.diagnostic}`}
-              contentItem={contentItem}
-            />
+              fallback={<ErrorFallback />}
+            >
+              <Suspense fallback={<ExplorerCardContentSkeleton />}>
+                <ExplorerCardContent contentItem={contentItem} />
+              </Suspense>
+            </ErrorBoundary>
           ))}
         </div>
       </CardContent>

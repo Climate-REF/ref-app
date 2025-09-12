@@ -844,7 +844,7 @@ export function SeriesVisualization({
                           );
 
                           // Determine stroke color: gray for hidden/unselected lines, original color for visible lines
-                          let strokeColor;
+                          let strokeColor: string;
                           if (isReference) {
                             strokeColor = "#000000"; // Red color for reference lines
                           } else if (isHidden && !isHovered) {

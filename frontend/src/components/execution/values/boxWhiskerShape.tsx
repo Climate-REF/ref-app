@@ -37,7 +37,11 @@ export function BoxWhiskerShape({
   } = props;
 
   // Ensure we have the necessary data and the scale function
-  if (!payload || payload.groups[prefix] === undefined) {
+  if (
+    !payload ||
+    payload.groups[prefix] === undefined ||
+    payload.groups[prefix] === null
+  ) {
     return null; // Don't render if data or scale is missing
   }
 

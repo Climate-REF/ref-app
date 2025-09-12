@@ -1,4 +1,4 @@
-import { ExplorerCard } from "@/components/explorer/theme/_components/explorerCard";
+import { ExplorerCard } from "@/components/explorer/explorerCard";
 import type { ExplorerCard as ExplorerCardType } from "@/components/explorer/types";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 

@@ -1,4 +1,13 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:venv",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "makefile.configureOnOpen": false,
+    "biome.configurationPath": "frontend/biome.json",
+    "biome.lsp.bin": "frontend/node_modules/.bin/biome",
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    }
 }

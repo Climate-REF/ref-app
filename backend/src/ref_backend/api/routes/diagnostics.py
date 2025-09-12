@@ -10,6 +10,7 @@ from starlette.responses import StreamingResponse
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from ref_backend.api.deps import AppContextDep
+from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
@@ -130,7 +131,7 @@ async def list_execution_groups(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/comparison")
-async def comparison(
+async def comparison(  # noqa: PLR0912, PLR0913
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -160,7 +161,7 @@ async def comparison(
     scalar_query = None
     series_query = None
 
-    if type in ("scalar", "all"):
+    if type in {"scalar", "all"}:
         scalar_query = (
             app_context.session.query(models.ScalarMetricValue)
             .join(models.Execution)
@@ -168,7 +169,7 @@ async def comparison(
             .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
         )
 
-    if type in ("series", "all"):
+    if type in {"series", "all"}:
         series_query = (
             app_context.session.query(models.SeriesMetricValue)
             .join(models.Execution)
@@ -179,7 +180,7 @@ async def comparison(
     # Apply general filters from query parameters
     query_params = request.query_params
     for key, value in query_params.items():
-        if key in ("source_filters", "type"):
+        if key in {"source_filters", "type"}:
             continue
 
         if scalar_query and key in models.ScalarMetricValue._cv_dimensions:
@@ -263,7 +264,7 @@ async def list_executions(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=None)
-async def list_metric_values(
+async def list_metric_values(  # noqa: PLR0913
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -283,7 +284,7 @@ async def list_metric_values(
     scalar_query = None
     series_query = None
 
-    if type in ("scalar", "all"):
+    if type in {"scalar", "all"}:
         scalar_query = (
             app_context.session.query(models.ScalarMetricValue)
             .join(models.Execution)
@@ -291,7 +292,7 @@ async def list_metric_values(
             .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
         )
 
-    if type in ("series", "all"):
+    if type in {"series", "all"}:
         series_query = (
             app_context.session.query(models.SeriesMetricValue)
             .join(models.Execution)
@@ -302,7 +303,7 @@ async def list_metric_values(
     # Apply general filters from query parameters
     query_params = request.query_params
     for key, value in query_params.items():
-        if key in ("format", "type"):
+        if key in {"format", "type"}:
             continue
 
         if scalar_query and hasattr(models.ScalarMetricValue, key):
@@ -334,7 +335,10 @@ async def list_metric_values(
                 writer.writerow(header)
 
                 for mv in scalar_values:
-                    row = [mv.dimensions.get(d) for d in dimensions] + [mv.value, "scalar"]
+                    row = [mv.dimensions.get(d) for d in dimensions] + [
+                        sanitize_float_value(mv.value),
+                        "scalar",
+                    ]
                     writer.writerow(row)
 
             if series_values:
@@ -349,7 +353,7 @@ async def list_metric_values(
                     for i, value in enumerate(sv.values):
                         index_value = sv.index[i] if sv.index and i < len(sv.index) else i
                         row = [sv.dimensions.get(d) for d in dimensions] + [
-                            value,
+                            sanitize_float_value(value),
                             index_value,
                             sv.index_name or "index",
                             "series",

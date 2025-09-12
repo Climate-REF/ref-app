@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
@@ -8,6 +9,7 @@ from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.execution import ResultOutputType
 from climate_ref_core.metric_values import ScalarMetricValue
+from ref_backend.core.json_utils import sanitize_float_list, sanitize_float_value
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
@@ -20,7 +22,7 @@ class Collection(BaseModel, Generic[T]):
     data: list[T]
     total_count: int | None = None
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def count(self) -> int:
         """
@@ -118,14 +120,14 @@ class DiagnosticSummary(BaseModel):
         group_by_summary: list[GroupBy] = []
         for dr in data_requirements:
             if isinstance(dr, tuple):
-                _dr = dr[0]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
+                dr_ = dr[0]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
             else:
-                _dr = dr
+                dr_ = dr
             # Normalize group_by to list[str] | None
-            gb = list(_dr.group_by) if getattr(_dr, "group_by", None) is not None else None
+            gb = list(dr_.group_by) if getattr(dr_, "group_by", None) is not None else None  # pyright: ignore
             group_by_summary.append(
                 GroupBy(
-                    source_type=_dr.source_type.value,
+                    source_type=dr_.source_type.value,  # pyright: ignore
                     group_by=gb,
                 )
             )
@@ -321,7 +323,7 @@ class Dataset(BaseModel):
     dataset_type: str
     metadata: CMIP6DatasetMetadata | None
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def more_info_url(self) -> str | None:
         if "cmip6" in self.dataset_type:
@@ -382,7 +384,7 @@ class Facet(BaseModel):
 
 
 class MetricValueCollection(BaseModel):
-    data: list[Union[MetricValue, SeriesValue]]
+    data: Sequence[MetricValue | SeriesValue]
     count: int
     facets: list[Facet]
     types: list[str]  # List of types present: 'scalar', 'series', or both
@@ -398,7 +400,7 @@ class MetricValueCollection(BaseModel):
 
         # TODO: Query this using SQL
         facets: dict[str, set[str]] = {}
-        all_data = []
+        all_data: list[MetricValue | SeriesValue] = []
         types_present = set()
 
         # Process scalar values
@@ -412,7 +414,7 @@ class MetricValueCollection(BaseModel):
                 MetricValue(
                     dimensions=v.dimensions,
                     attributes=v.attributes,
-                    value=float(v.value),
+                    value=sanitize_float_value(float(v.value)),
                     execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
                 )
@@ -420,21 +422,21 @@ class MetricValueCollection(BaseModel):
             types_present.add("scalar")
 
         # Process series values
-        for v in series_values:
-            for key, value in v.dimensions.items():
+        for series in series_values:
+            for key, value in series.dimensions.items():
                 if key in facets:
                     facets[key].add(value)
                 else:
                     facets[key] = {value}
             all_data.append(
                 SeriesValue(
-                    dimensions=v.dimensions,
-                    attributes=v.attributes,
-                    values=v.values or [],
-                    index=v.index,
-                    index_name=v.index_name,
-                    execution_group_id=v.execution.execution_group_id,
-                    execution_id=v.execution_id,
+                    dimensions=series.dimensions,
+                    attributes=series.attributes,
+                    values=sanitize_float_list(series.values or []),
+                    index=series.index,
+                    index_name=series.index_name,
+                    execution_group_id=series.execution.execution_group_id,
+                    execution_id=series.execution_id,
                 )
             )
             types_present.add("series")
@@ -451,7 +453,7 @@ class MetricValueCollection(BaseModel):
 
 class MetricValueComparison(BaseModel):
     """
-    A comparison of metric values for a specific source against an ensemble.
+    A comparison of metric values for a specific source against n ensemble.
     """
 
     source: MetricValueCollection

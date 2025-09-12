@@ -1,5 +1,5 @@
 import { Axis3D, Download, Group } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   Facet,
   GroupedRawDataEntry,
@@ -17,6 +17,25 @@ interface ValuesFigureProps {
   loading?: boolean; // Add loading as an optional prop
 }
 
+const getValidDefault = (
+  facets: Facet[],
+  preferredDefault: string,
+  fallbacks: string[] = [],
+) => {
+  // Check if preferred default exists in facets
+  if (facets.some((f) => f.key === preferredDefault)) {
+    return preferredDefault;
+  }
+  // Try each fallback in order
+  for (const fallback of fallbacks) {
+    if (facets.some((f) => f.key === fallback)) {
+      return fallback;
+    }
+  }
+  // Return first available facet or empty string if no facets
+  return facets.length > 0 ? facets[0].key : "";
+};
+
 export function ValuesFigure({
   values,
   facets,
@@ -24,8 +43,47 @@ export function ValuesFigure({
   defaultXAxis,
   loading, // Destructure loading
 }: ValuesFigureProps) {
-  const [groupby, setGroupby] = useState(defaultGroupby);
-  const [xaxis, setXAxis] = useState(defaultXAxis);
+  // Use dynamic defaults based on available facets
+
+  const [groupby, setGroupby] = useState(() =>
+    getValidDefault(facets, defaultGroupby, [
+      "source_id",
+      "model",
+      "experiment",
+    ]),
+  );
+  const [xaxis, setXAxis] = useState(() =>
+    getValidDefault(facets, defaultXAxis, [
+      "statistic",
+      "metric",
+      "variable",
+      "region",
+    ]),
+  );
+
+  // Update state when facets change and current selection becomes invalid
+  useEffect(() => {
+    const currentGroupbyValid = facets.some((f) => f.key === groupby);
+    const currentXAxisValid = facets.some((f) => f.key === xaxis);
+
+    if (!currentGroupbyValid) {
+      const newGroupby = getValidDefault(facets, defaultGroupby, [
+        "source_id",
+        "model",
+        "experiment",
+      ]);
+      setGroupby(newGroupby);
+    }
+
+    if (!currentXAxisValid) {
+      const newXAxis = getValidDefault(facets, defaultXAxis, [
+        "statistic",
+        "variable",
+        "region",
+      ]);
+      setXAxis(newXAxis);
+    }
+  }, [facets, groupby, xaxis, defaultGroupby, defaultXAxis]);
 
   const chartData = useMemo(() => {
     const xFacet = facets.find((f) => f.key === xaxis);

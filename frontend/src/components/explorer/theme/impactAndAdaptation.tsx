@@ -1,5 +1,5 @@
 import type { ExplorerCard } from "@/components/explorer/types";
-import { ExplorerThemeLayout } from "./_components/explorerThemeLayout";
+import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {
@@ -10,7 +10,7 @@ const cards: ExplorerCard[] = [
       {
         type: "ensemble-chart",
         provider: "esmvaltool",
-        diagnostic: "climate-at-global-warming-levels",
+        diagnostic: "climate-at-global-warming-leve",
         title: "Global Mean Temperature Change at Warming Levels",
         metricUnits: "K",
         xAxis: "warming_level",
