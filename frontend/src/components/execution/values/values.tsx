@@ -1,6 +1,6 @@
 import { BarChart, Table, TrendingUp } from "lucide-react";
 import * as React from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -63,8 +63,14 @@ export function Values(props: ValuesProps) {
   };
 
   // Separate scalar and series values
-  const scalarValues = props.values.filter(isScalarValue);
-  const seriesValues = props.values.filter(isSeriesValue);
+  const scalarValues = useMemo(
+    () => props.values.filter(isScalarValue),
+    [props.values],
+  );
+  const seriesValues = useMemo(
+    () => props.values.filter(isSeriesValue),
+    [props.values],
+  );
   const hasSeriesData = seriesValues.length > 0;
 
   const {

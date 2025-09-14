@@ -333,58 +333,98 @@ export function SeriesVisualization({
     });
   }, []);
 
-  // Toggle entire group visibility (memoized)
-  const toggleGroup = useCallback(
-    (category: string, group: GroupedSeries) => {
-      setHiddenSeries((prev) => {
-        const newSet = new Set(prev);
+  // Memoized toggle group functions for each group
+  const toggleGroupCache = useMemo(
+    () => new Map<string, (category: string) => void>(),
+    [],
+  );
 
-        // Find all series keys in this category
-        const categorySeriesKeys = group.series
-          .map((series) =>
-            createSeriesKey(
-              series,
-              groupByDimension,
-              hueDimension,
-              styleDimension,
-            ),
-          )
-          .filter((seriesKey) => {
-            const matchingSeries = group.series.find((series) => {
-              const key = createSeriesKey(
+  // Function to get toggle group function for a group (with caching)
+  const getToggleGroup = useCallback(
+    (group: GroupedSeries) => {
+      const cacheKey = `${group.indexType}-${groupByDimension}-${hueDimension}-${styleDimension}`;
+
+      if (toggleGroupCache.has(cacheKey)) {
+        return toggleGroupCache.get(cacheKey)!;
+      }
+
+      const toggleFn = (category: string) => {
+        setHiddenSeries((prev) => {
+          const newSet = new Set(prev);
+
+          // Find all series keys in this category
+          const categorySeriesKeys = group.series
+            .map((series) =>
+              createSeriesKey(
                 series,
                 groupByDimension,
                 hueDimension,
                 styleDimension,
+              ),
+            )
+            .filter((seriesKey) => {
+              const matchingSeries = group.series.find((series) => {
+                const key = createSeriesKey(
+                  series,
+                  groupByDimension,
+                  hueDimension,
+                  styleDimension,
+                );
+                return key === seriesKey;
+              });
+              return (
+                matchingSeries &&
+                categorizeSeries(seriesKey, group) === category
               );
-              return key === seriesKey;
             });
-            return (
-              matchingSeries && categorizeSeries(seriesKey, group) === category
-            );
-          });
 
-        // Check if all series in this category are currently hidden
-        const allHidden = categorySeriesKeys.every((key) => newSet.has(key));
+          // Check if all series in this category are currently hidden
+          const allHidden = categorySeriesKeys.every((key) => newSet.has(key));
 
-        if (allHidden) {
-          // Show all series in this category
-          categorySeriesKeys.forEach((key) => newSet.delete(key));
-        } else {
-          // Hide all series in this category
-          categorySeriesKeys.forEach((key) => newSet.add(key));
-        }
+          if (allHidden) {
+            // Show all series in this category
+            categorySeriesKeys.forEach((key) => newSet.delete(key));
+          } else {
+            // Hide all series in this category
+            categorySeriesKeys.forEach((key) => newSet.add(key));
+          }
 
-        return newSet;
-      });
+          return newSet;
+        });
+      };
+
+      toggleGroupCache.set(cacheKey, toggleFn);
+      return toggleFn;
     },
     [
+      toggleGroupCache,
       createSeriesKey,
       groupByDimension,
       hueDimension,
       styleDimension,
       categorizeSeries,
     ],
+  );
+
+  // Memoized brush onChange handler
+  const brushOnChange = useCallback(
+    (group: GroupedSeries, chartData: ChartData[]) => (brushData: any) => {
+      if (
+        brushData &&
+        brushData.startIndex !== undefined &&
+        brushData.endIndex !== undefined
+      ) {
+        const startValue = chartData[brushData.startIndex]?.[group.indexName];
+        const endValue = chartData[brushData.endIndex]?.[group.indexName];
+        if (typeof startValue === "number" && typeof endValue === "number") {
+          setZoomDomain((prev) => ({
+            ...prev,
+            [group.indexType]: [startValue, endValue],
+          }));
+        }
+      }
+    },
+    [],
   );
 
   // Handle series hover (memoized)
@@ -537,6 +577,77 @@ export function SeriesVisualization({
     [],
   );
 
+  // Memoized legend items for each group
+  const legendItemsCache = useMemo(() => {
+    const cache = new Map<string, any[]>();
+    return cache;
+  }, []);
+
+  // Function to get legend items for a group (with caching)
+  const getLegendItems = useCallback(
+    (group: GroupedSeries, seriesKeys: string[]) => {
+      const cacheKey = `${group.indexType}-${seriesKeys.join(",")}-${groupByDimension}-${hueDimension}-${styleDimension}`;
+
+      if (legendItemsCache.has(cacheKey)) {
+        return legendItemsCache.get(cacheKey)!;
+      }
+
+      const items = seriesKeys.map((seriesKey) => {
+        // Find the series that matches this key
+        const matchingSeries = group.series.find((series) => {
+          const key = createSeriesKey(
+            series,
+            groupByDimension,
+            hueDimension,
+            styleDimension,
+          );
+          return key === seriesKey;
+        });
+
+        if (!matchingSeries) {
+          return {
+            key: seriesKey,
+            label: seriesKey,
+            sublabel: null,
+            color: getSeriesColor(seriesKey),
+            strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
+            isReference: false,
+            category: "Other",
+          };
+        }
+
+        const mainLabel = createMainLabel(matchingSeries, hueDimension);
+        const subLabel = createSubLabel(matchingSeries, styleDimension);
+
+        return {
+          key: seriesKey,
+          label: mainLabel,
+          sublabel: subLabel,
+          color: getSeriesColor(seriesKey),
+          strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
+          isReference: isReferenceSeriesKey(seriesKey, group),
+          category: categorizeSeries(seriesKey, group),
+        };
+      });
+
+      legendItemsCache.set(cacheKey, items);
+      return items;
+    },
+    [
+      legendItemsCache,
+      createSeriesKey,
+      groupByDimension,
+      hueDimension,
+      styleDimension,
+      createMainLabel,
+      createSubLabel,
+      getSeriesColor,
+      getSeriesStyle,
+      isReferenceSeriesKey,
+      categorizeSeries,
+    ],
+  );
+
   if (seriesValues.length === 0) {
     return (
       <div className="text-center text-gray-500 py-8">
@@ -685,43 +796,7 @@ export function SeriesVisualization({
         const tickCount = getTickCount(chartData, group.indexName);
 
         // Create legend items for the sidebar using three-tier system
-        const legendItems = seriesKeys.map((seriesKey) => {
-          // Find the series that matches this key
-          const matchingSeries = group.series.find((series) => {
-            const key = createSeriesKey(
-              series,
-              groupByDimension,
-              hueDimension,
-              styleDimension,
-            );
-            return key === seriesKey;
-          });
-
-          if (!matchingSeries) {
-            return {
-              key: seriesKey,
-              label: seriesKey,
-              sublabel: null,
-              color: getSeriesColor(seriesKey),
-              strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
-              isReference: false,
-              category: "Other",
-            };
-          }
-
-          const mainLabel = createMainLabel(matchingSeries, hueDimension);
-          const subLabel = createSubLabel(matchingSeries, styleDimension);
-
-          return {
-            key: seriesKey,
-            label: mainLabel,
-            sublabel: subLabel,
-            color: getSeriesColor(seriesKey),
-            strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
-            isReference: isReferenceSeriesKey(seriesKey, group),
-            category: categorizeSeries(seriesKey, group),
-          };
-        });
+        const legendItems = getLegendItems(group, seriesKeys);
 
         return (
           <Card key={group.indexType}>
@@ -795,6 +870,7 @@ export function SeriesVisualization({
                           />
                         }
                         cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
+                        key={group.indexType} // Add key to prevent tooltip reuse issues
                       />
                       {/* Sort series keys for proper rendering order: hidden -> visible -> reference -> hovered */}
                       {seriesKeys
@@ -892,31 +968,7 @@ export function SeriesVisualization({
                           dataKey={group.indexName}
                           height={30}
                           stroke="#8884d8"
-                          onChange={(brushData) => {
-                            if (
-                              brushData &&
-                              brushData.startIndex !== undefined &&
-                              brushData.endIndex !== undefined
-                            ) {
-                              const startValue =
-                                chartData[brushData.startIndex]?.[
-                                  group.indexName
-                                ];
-                              const endValue =
-                                chartData[brushData.endIndex]?.[
-                                  group.indexName
-                                ];
-                              if (
-                                typeof startValue === "number" &&
-                                typeof endValue === "number"
-                              ) {
-                                setZoomDomain((prev) => ({
-                                  ...prev,
-                                  [group.indexType]: [startValue, endValue],
-                                }));
-                              }
-                            }
-                          }}
+                          onChange={brushOnChange(group, chartData)}
                         />
                       )}
                     </LineChart>
@@ -928,7 +980,7 @@ export function SeriesVisualization({
                   legendItems={legendItems}
                   hiddenSeries={hiddenSeries}
                   onToggleSeries={toggleSeries}
-                  onToggleGroup={(category) => toggleGroup(category, group)}
+                  onToggleGroup={getToggleGroup(group)}
                   onHoverSeries={handleSeriesHover}
                   hoveredSeries={hoveredSeries}
                   maxVisibleGroups={maxVisibleGroups}

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListMetricValues } from "@/client";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
@@ -86,73 +86,93 @@ export const ValuesTab = () => {
           hue: search.hue,
           style: search.style,
         }}
-        onViewTypeChange={(viewType) => {
-          console.log("onViewTypeChange called with:", viewType);
-          console.log("current search:", search);
+        onViewTypeChange={useCallback(
+          (viewType: "table" | "bar" | "series") => {
+            console.log("onViewTypeChange called with:", viewType);
+            console.log("current search:", search);
 
-          // Preserve existing parameters
-          const existingParams = Object.fromEntries(
-            Object.entries(search).filter(([key]) => !["view"].includes(key)),
-          );
+            // Preserve existing parameters
+            const existingParams = Object.fromEntries(
+              Object.entries(search).filter(([key]) => !["view"].includes(key)),
+            );
 
-          console.log("existingParams:", existingParams);
-          const newSearch = { ...existingParams, view: viewType };
-          console.log("newSearch:", newSearch);
+            console.log("existingParams:", existingParams);
+            const newSearch = { ...existingParams, view: viewType };
+            console.log("newSearch:", newSearch);
 
-          navigate({
-            search: newSearch,
-            replace: true,
-          });
-        }}
-        onFiltersChange={(newFilters) => {
-          const filterParams =
-            newFilters.length > 0
-              ? Object.fromEntries(
-                  newFilters.map((filter) => [filter.facetKey, filter.value]),
-                )
-              : {};
+            navigate({
+              search: newSearch,
+              replace: true,
+            });
+          },
+          [search, navigate],
+        )}
+        onFiltersChange={useCallback(
+          (newFilters: Array<{ facetKey: string; value: string }>) => {
+            const filterParams =
+              newFilters.length > 0
+                ? Object.fromEntries(
+                    newFilters.map((filter) => [filter.facetKey, filter.value]),
+                  )
+                : {};
 
-          // Preserve view type and series visualization parameters
-          const otherParams = {
-            ...(search.view && { view: search.view }),
-            ...(search.groupBy && { groupBy: search.groupBy }),
-            ...(search.hue && { hue: search.hue }),
-            ...(search.style && { style: search.style }),
-          };
+            // Preserve view type and series visualization parameters
+            const otherParams = {
+              ...(search.view && { view: search.view }),
+              ...(search.groupBy && { groupBy: search.groupBy }),
+              ...(search.hue && { hue: search.hue }),
+              ...(search.style && { style: search.style }),
+            };
 
-          navigate({
-            search: { ...filterParams, ...otherParams },
-            replace: true,
-          });
-        }}
-        onSeriesParamsChange={(seriesParams) => {
-          // Update current grouping config state
-          setCurrentGroupingConfig({
-            groupBy: seriesParams.groupBy,
-            hue: seriesParams.hue,
-            style: seriesParams.style,
-          });
+            navigate({
+              search: { ...filterParams, ...otherParams },
+              replace: true,
+            });
+          },
+          [search, navigate],
+        )}
+        onSeriesParamsChange={useCallback(
+          (seriesParams: {
+            groupBy?: string;
+            hue?: string;
+            style?: string;
+          }) => {
+            // Update current grouping config state
+            setCurrentGroupingConfig({
+              groupBy: seriesParams.groupBy,
+              hue: seriesParams.hue,
+              style: seriesParams.style,
+            });
 
-          // Preserve existing filter parameters
-          const filterParams = Object.fromEntries(
-            Object.entries(search).filter(
-              ([key]) => !["groupBy", "hue", "style"].includes(key),
-            ),
-          );
+            // Preserve existing filter parameters
+            const filterParams = Object.fromEntries(
+              Object.entries(search).filter(
+                ([key]) => !["groupBy", "hue", "style"].includes(key),
+              ),
+            );
 
-          navigate({
-            search: { ...filterParams, ...seriesParams },
-            replace: true,
-          });
-        }}
-        onCurrentGroupingChange={(groupingConfig) => {
-          // Update current grouping config state for card generator sync
-          setCurrentGroupingConfig({
-            groupBy: groupingConfig.groupBy,
-            hue: groupingConfig.hue,
-            style: groupingConfig.style,
-          });
-        }}
+            navigate({
+              search: { ...filterParams, ...seriesParams },
+              replace: true,
+            });
+          },
+          [search, navigate],
+        )}
+        onCurrentGroupingChange={useCallback(
+          (groupingConfig: {
+            groupBy?: string;
+            hue?: string;
+            style?: string;
+          }) => {
+            // Update current grouping config state for card generator sync
+            setCurrentGroupingConfig({
+              groupBy: groupingConfig.groupBy,
+              hue: groupingConfig.hue,
+              style: groupingConfig.style,
+            });
+          },
+          [],
+        )}
         onDownload={async () => {
           const response = await diagnosticsListMetricValues({
             path: {
