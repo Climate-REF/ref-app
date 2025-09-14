@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       "/api": {
@@ -19,7 +19,12 @@ export default defineConfig({
   plugins: [
     mdx(/* jsxImportSource: …, otherOptions… */),
     TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
-    react(),
+    react({
+      jsxImportSource:
+        mode === "development"
+          ? "@welldone-software/why-did-you-render"
+          : "react",
+    }),
     tailwindcss(),
   ],
   resolve: {
@@ -27,4 +32,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
