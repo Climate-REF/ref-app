@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen";
-import { DiagnosticFigureGallery } from "@/components/diagnostics/diagnosticFigureGallery";
+import { FigureGallery } from "@/components/diagnostics/figureGallery";
 import type { ExplorerCardContent } from "../types";
 
 interface FigureGalleryContentProps {
@@ -21,5 +21,5 @@ export function FigureGalleryContent({
 
   const executions = data.data.flatMap((group) => group.executions);
 
-  return <DiagnosticFigureGallery executions={executions} />;
+  return <FigureGallery executions={executions} />;
 }

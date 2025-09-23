@@ -1,15 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DiagnosticFigureGallery } from "@/components/diagnostics/diagnosticFigureGallery";
+import { FigureGallery } from "@/components/diagnostics/figureGallery";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Figures tab as nested route
 export const Figures = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
   return (
     <div className="space-y-4">
-      <DiagnosticFigureGallery
-        providerSlug={providerSlug}
-        diagnosticSlug={diagnosticSlug}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Figures Gallery</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FigureGallery
+            providerSlug={providerSlug}
+            diagnosticSlug={diagnosticSlug}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };
