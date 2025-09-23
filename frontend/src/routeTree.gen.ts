@@ -29,6 +29,7 @@ import { Route as AppDiagnosticsProviderSlugDiagnosticSlugRouteImport } from './
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugIndexImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/index'
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugValuesImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/values'
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugGroupsImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/groups'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/figures'
 
 // Create/Update Routes
 
@@ -143,6 +144,13 @@ const AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute =
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
 
+const AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute =
+  AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport.update({
+    id: '/figures',
+    path: '/figures',
+    getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -252,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
       parentRoute: typeof AppRouteImport
     }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
+      path: '/figures'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/figures'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
+    }
     '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': {
       id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
       path: '/groups'
@@ -296,6 +311,7 @@ const AppExplorerRouteRouteWithChildren =
   AppExplorerRouteRoute._addFileChildren(AppExplorerRouteRouteChildren)
 
 interface AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteChildren {
+  AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
   AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
   AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute
   AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
@@ -303,6 +319,8 @@ interface AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteChildren {
 
 const AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteChildren: AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteChildren =
   {
+    AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute:
+      AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute,
     AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute:
       AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute,
     AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute:
@@ -369,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/executions': typeof AppExecutionsIndexRoute
   '/explorer/': typeof AppExplorerIndexRoute
   '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
+  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
   '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
   '/diagnostics/$providerSlug/$diagnosticSlug/values': typeof AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute
   '/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
@@ -388,6 +407,7 @@ export interface FileRoutesByTo {
   '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
   '/explorer': typeof AppExplorerIndexRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
   '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
   '/diagnostics/$providerSlug/$diagnosticSlug/values': typeof AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute
   '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
@@ -410,6 +430,7 @@ export interface FileRoutesById {
   '/_app/executions/': typeof AppExecutionsIndexRoute
   '/_app/explorer/': typeof AppExplorerIndexRoute
   '/_app/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
   '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
   '/_app/diagnostics/$providerSlug/$diagnosticSlug/values': typeof AppDiagnosticsProviderSlugDiagnosticSlugValuesRoute
   '/_app/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
@@ -433,6 +454,7 @@ export interface FileRouteTypes {
     | '/executions'
     | '/explorer/'
     | '/diagnostics/$providerSlug/$diagnosticSlug'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
     | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
     | '/diagnostics/$providerSlug/$diagnosticSlug/values'
     | '/diagnostics/$providerSlug/$diagnosticSlug/'
@@ -451,6 +473,7 @@ export interface FileRouteTypes {
     | '/diagnostics'
     | '/executions'
     | '/explorer'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
     | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
     | '/diagnostics/$providerSlug/$diagnosticSlug/values'
     | '/diagnostics/$providerSlug/$diagnosticSlug'
@@ -471,6 +494,7 @@ export interface FileRouteTypes {
     | '/_app/executions/'
     | '/_app/explorer/'
     | '/_app/diagnostics/$providerSlug/$diagnosticSlug'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
     | '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
     | '/_app/diagnostics/$providerSlug/$diagnosticSlug/values'
     | '/_app/diagnostics/$providerSlug/$diagnosticSlug/'
@@ -579,10 +603,15 @@ export const routeTree = rootRoute
       "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/route.tsx",
       "parent": "/_app",
       "children": [
+        "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures",
         "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups",
         "/_app/diagnostics/$providerSlug/$diagnosticSlug/values",
         "/_app/diagnostics/$providerSlug/$diagnosticSlug/"
       ]
+    },
+    "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures": {
+      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/figures.tsx",
+      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
     },
     "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups": {
       "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/groups.tsx",

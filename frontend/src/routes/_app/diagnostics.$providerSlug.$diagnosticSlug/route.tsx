@@ -86,6 +86,14 @@ const DiagnosticInfoLayout = () => {
               Metric Values
             </Link>
           </TabsTrigger>
+          <TabsTrigger value="figures" asChild>
+            <Link
+              to="/diagnostics/$providerSlug/$diagnosticSlug/figures"
+              params={{ providerSlug, diagnosticSlug }}
+            >
+              Figures
+            </Link>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
