@@ -24,41 +24,21 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
             <CardTitle className="text-lg font-semibold">
               {diagnostic.name}
             </CardTitle>
-            <CardDescription className="mt-1">
-              Provider: {diagnostic.provider.name}
-            </CardDescription>
+            <Badge variant="secondary">{diagnostic.provider.slug}</Badge>
           </div>
-          <Badge variant="secondary" className="ml-2">
-            {diagnostic.provider.slug}
-          </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1">
-        {diagnostic.description && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            {diagnostic.description}
-          </p>
-        )}
+      <CardContent className="flex-1 flex flex-col justify-evenly">
+        <div>
+          {diagnostic.description && (
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+              {diagnostic.description}
+            </p>
+          )}
+        </div>
 
         <div className="space-y-3">
-          {/* Execution Status */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Execution Groups:</span>
-            <span
-              className={
-                diagnostic.successful_execution_group_count ===
-                  diagnostic.execution_group_count &&
-                diagnostic.execution_group_count > 0
-                  ? "text-emerald-600 dark:text-emerald-400 font-medium"
-                  : "text-muted-foreground"
-              }
-            >
-              {diagnostic.successful_execution_group_count}/
-              {diagnostic.execution_group_count}
-            </span>
-          </div>
-
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>
@@ -86,10 +66,9 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
               </span>
             )}
           </div>
-
           {/* Total Executions */}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Total Executions:</span>
+            <span className="text-muted-foreground">Executions:</span>
             <span className="text-foreground">
               {diagnostic.successful_execution_count}/
               {diagnostic.execution_group_count}

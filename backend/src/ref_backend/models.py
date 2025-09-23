@@ -438,6 +438,7 @@ class MetricValueCollection(BaseModel):
                     facets[key].add(value)
                 else:
                     facets[key] = {value}
+
             all_data.append(
                 SeriesValue(
                     dimensions=series.dimensions,
