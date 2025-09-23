@@ -490,3 +490,48 @@ class MetricValueFacetSummary(BaseModel):
     """
     Number of metric values with the current filter
     """
+
+
+class ExecutionStats(BaseModel):
+    """
+    Statistics for execution groups and their success rates.
+    """
+
+    total_execution_groups: int
+    """
+    Total number of execution groups in the database.
+    """
+    successful_execution_groups: int
+    """
+    Number of execution groups whose latest execution was successful.
+    """
+    failed_execution_groups: int
+    """
+    Number of execution groups whose latest execution was not successful.
+    """
+    scalar_value_count: int
+    """
+    Number of scalar metric values available.
+    """
+    series_value_count: int
+    """
+    Number of series metric values available.
+    """
+    total_datasets: int
+    """
+    Total number of datasets tracked in the database.
+    """
+    total_files: int
+    """
+    Total number of files tracked across all datasets.
+    """
+
+    @computed_field  # type: ignore
+    @property
+    def success_rate_percentage(self) -> float:
+        """
+        Success rate as a percentage (0-100).
+        """
+        if self.total_execution_groups == 0:
+            return 0.0
+        return round((self.successful_execution_groups / self.total_execution_groups) * 100, 1)

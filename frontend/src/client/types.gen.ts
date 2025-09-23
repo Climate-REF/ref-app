@@ -162,6 +162,36 @@ export type ExecutionOutput = {
     url: string;
 };
 
+/**
+ * Statistics for execution groups and their success rates.
+ */
+export type ExecutionStatsReadable = {
+    total_execution_groups: number;
+    successful_execution_groups: number;
+    failed_execution_groups: number;
+    scalar_value_count: number;
+    series_value_count: number;
+    total_datasets: number;
+    total_files: number;
+    /**
+     * Success rate as a percentage (0-100).
+     */
+    readonly success_rate_percentage: number;
+};
+
+/**
+ * Statistics for execution groups and their success rates.
+ */
+export type ExecutionStatsWritable = {
+    total_execution_groups: number;
+    successful_execution_groups: number;
+    failed_execution_groups: number;
+    scalar_value_count: number;
+    series_value_count: number;
+    total_datasets: number;
+    total_files: number;
+};
+
 export type Facet = {
     key: string;
     values: Array<string>;
@@ -551,6 +581,22 @@ export type DiagnosticsListMetricValuesResponses = {
      */
     200: unknown;
 };
+
+export type ExecutionsGetExecutionStatisticsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/executions/statistics';
+};
+
+export type ExecutionsGetExecutionStatisticsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ExecutionStatsReadable;
+};
+
+export type ExecutionsGetExecutionStatisticsResponse = ExecutionsGetExecutionStatisticsResponses[keyof ExecutionsGetExecutionStatisticsResponses];
 
 export type ExecutionsListRecentExecutionGroupsData = {
     body?: never;

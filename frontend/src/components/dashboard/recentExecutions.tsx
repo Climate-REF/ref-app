@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -26,12 +27,14 @@ function ExecutionStatusBadge({ successful }: { successful: boolean }) {
 
 export function RecentExecutions({ executions }: RecentExecutionsProps) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Recent Executions</CardTitle>
-        <CardDescription>Latest evaluations across all groups</CardDescription>
+        <CardTitle>Recent Execution Groups</CardTitle>
+        <CardDescription>
+          Latest evaluations across all diagnostics
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="space-y-4">
           {executions.map((execution) => (
             <div
@@ -72,12 +75,14 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
             </div>
           ))}
         </div>
-        <div className="mt-4 flex justify-end">
+      </CardContent>
+      <CardFooter>
+        <div className="ml-auto">
           <Button variant="outline" asChild>
             <Link to="/executions">View All Executions</Link>
           </Button>
         </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

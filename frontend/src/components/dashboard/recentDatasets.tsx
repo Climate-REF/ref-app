@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -16,7 +17,7 @@ interface RecentDatasetsProps {
 
 export function RecentDatasets({ datasets }: RecentDatasetsProps) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Recent Datasets</CardTitle>
         <CardDescription>
@@ -48,12 +49,15 @@ export function RecentDatasets({ datasets }: RecentDatasetsProps) {
             </div>
           ))}
         </div>
-        <div className="mt-4 flex justify-end">
+      </CardContent>
+
+      <CardFooter>
+        <div className="ml-auto">
           <Button variant="outline" asChild>
             <Link to="/datasets">View All Datasets</Link>
           </Button>
         </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

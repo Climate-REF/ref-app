@@ -484,6 +484,49 @@ export const ExecutionOutputSchema = {
     title: 'ExecutionOutput'
 } as const;
 
+export const ExecutionStatsSchema = {
+    properties: {
+        total_execution_groups: {
+            type: 'integer',
+            title: 'Total Execution Groups'
+        },
+        successful_execution_groups: {
+            type: 'integer',
+            title: 'Successful Execution Groups'
+        },
+        failed_execution_groups: {
+            type: 'integer',
+            title: 'Failed Execution Groups'
+        },
+        scalar_value_count: {
+            type: 'integer',
+            title: 'Scalar Value Count'
+        },
+        series_value_count: {
+            type: 'integer',
+            title: 'Series Value Count'
+        },
+        total_datasets: {
+            type: 'integer',
+            title: 'Total Datasets'
+        },
+        total_files: {
+            type: 'integer',
+            title: 'Total Files'
+        },
+        success_rate_percentage: {
+            type: 'number',
+            title: 'Success Rate Percentage',
+            description: 'Success rate as a percentage (0-100).',
+            readOnly: true
+        }
+    },
+    type: 'object',
+    required: ['total_execution_groups', 'successful_execution_groups', 'failed_execution_groups', 'scalar_value_count', 'series_value_count', 'total_datasets', 'total_files', 'success_rate_percentage'],
+    title: 'ExecutionStats',
+    description: 'Statistics for execution groups and their success rates.'
+} as const;
+
 export const FacetSchema = {
     properties: {
         key: {

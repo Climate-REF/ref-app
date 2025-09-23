@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, aliased
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
@@ -23,10 +23,69 @@ from ref_backend.models import (
     Dataset,
     Execution,
     ExecutionGroup,
+    ExecutionStats,
     MetricValueCollection,
 )
 
 router = APIRouter(prefix="/executions", tags=["executions"])
+
+
+@router.get("/statistics")
+async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
+    """
+    Get execution statistics for the dashboard.
+
+    Returns counts of total, successful, and failed execution groups,
+    plus recent activity count.
+    """
+    session = app_context.session
+
+    # Total execution groups
+    total_execution_groups = session.query(models.ExecutionGroup).count()
+
+    # Successful execution groups (latest execution is successful)
+    latest_execution_subquery = (
+        session.query(
+            models.Execution.execution_group_id.label("egid"),
+            func.max(models.Execution.id).label("max_id"),
+        )
+        .group_by(models.Execution.execution_group_id)
+        .subquery()
+    )
+
+    successful_execution_groups = (
+        session.query(models.ExecutionGroup)
+        .join(
+            latest_execution_subquery,
+            models.ExecutionGroup.id == latest_execution_subquery.c.egid,
+        )
+        .join(
+            models.Execution,
+            models.Execution.id == latest_execution_subquery.c.max_id,
+        )
+        .filter(models.Execution.successful)
+        .count()
+    )
+
+    # Failed execution groups (total - successful)
+    failed_execution_groups = total_execution_groups - successful_execution_groups
+
+    # Recent activity (last 50 execution groups by updated_at)
+    scalar_value_count = session.query(models.ScalarMetricValue).count()
+    series_value_count = session.query(models.SeriesMetricValue).count()
+
+    total_datasets = session.query(models.Dataset).count()
+    total_files = session.query(DatasetFile).count()
+
+    return ExecutionStats(
+        total_execution_groups=total_execution_groups,
+        successful_execution_groups=successful_execution_groups,
+        failed_execution_groups=failed_execution_groups,
+        scalar_value_count=scalar_value_count,
+        series_value_count=series_value_count,
+        total_datasets=total_datasets,
+        total_files=total_files,
+    )
 
 
 @router.get("/")
