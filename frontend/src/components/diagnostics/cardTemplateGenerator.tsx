@@ -78,7 +78,7 @@ export function CardTemplateGenerator({
   currentViewType,
 }: CardTemplateGeneratorProps) {
   const { toast } = useToast();
-  const [isVisible, setIsVisible] = useState(true); // Start visible for testing
+  const [isVisible, setIsVisible] = useState(false);
 
   // Extract available dimensions from the data
   const availableDimensions = useMemo(() => {

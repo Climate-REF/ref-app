@@ -201,11 +201,11 @@ export const ValuesTab = () => {
       />
 
       {/* Card Template Generator - Inline for visibility */}
-      <div className="mt-4 p-4 border rounded-lg bg-red-50 border-red-200">
+      <div className="mt-4 p-4 border rounded-lg bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800">
         <h3 className="text-lg font-semibold mb-2">
           Generate Card Template - For MBTT
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-muted-foreground mb-4">
           Create a template for this diagnostic to include in the data explorer.
         </p>
         <CardTemplateGenerator

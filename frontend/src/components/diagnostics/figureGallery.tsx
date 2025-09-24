@@ -199,7 +199,7 @@ export function FigureGallery({
           <div
             className="absolute top-0 left-0 w-full"
             style={{
-              transform: `translateY(${items[0].start ?? 0}px)`,
+              transform: `translateY(${items[0]?.start ?? 0}px)`,
             }}
           >
             {items.map((virtualRow) => (

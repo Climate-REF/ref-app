@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import type { GroupBy } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
 import {
   Card,
@@ -106,6 +107,8 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
 )({
   component: DiagnosticInfoLayout,
+  pendingComponent: DiagnosticInfoSkeleton,
+  pendingMs: 200,
   loader: ({ context: { queryClient }, params }) => {
     return queryClient.ensureQueryData(
       diagnosticsGetOptions({
