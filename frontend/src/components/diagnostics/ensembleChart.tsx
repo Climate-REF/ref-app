@@ -19,6 +19,7 @@ import {
   extractAvailableDimensions,
   initializeGroupingConfig,
 } from "@/components/explorer/grouping";
+import useMousePositionAndWidth from "@/hooks/useMousePosition";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 // Color palette for different groups
@@ -80,6 +81,7 @@ export const EnsembleChart = ({
   groupingConfig,
   showZeroLine,
 }: EnsembleChartProps) => {
+  const { mousePosition, windowSize } = useMousePositionAndWidth();
   const [highlightedPoint, setHighlightedPoint] = useState<{
     groupName: string;
     point: MetricValue;
@@ -329,12 +331,26 @@ export const EnsembleChart = ({
                   point: closestDataPoint,
                 });
               }
+              if (coordinate === undefined) {
+                return null;
+              }
+
+              let side = "right";
+
+              if (mousePosition.x > windowSize.width / 2 + 20) {
+                // If mouse is on the right half of the screen, show tooltip on the left
+                side = "left";
+              }
 
               return (
                 <div
                   className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg min-w-[300px]"
                   style={{
                     borderColor: "hsl(var(--border))",
+                    transform:
+                      side === "right"
+                        ? "translate(20px, -20%)"
+                        : "translate(-320px, -20%)",
                   }}
                 >
                   <div className="mb-2 font-medium">{label}</div>
