@@ -69,7 +69,7 @@ const DiagnosticInfoLayout = () => {
       </Card>
 
       {/* Tabs driven by parent route with tab in search to avoid undefined child routes in manifest */}
-      <Tabs defaultValue="values" className="space-y-4">
+      <Tabs defaultValue="figures" className="space-y-4">
         <TabsList>
           <TabsTrigger value="groups" asChild>
             <Link
