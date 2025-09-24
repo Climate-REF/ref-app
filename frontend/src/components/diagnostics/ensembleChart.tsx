@@ -48,7 +48,7 @@ interface EnsembleChartProps {
   showZeroLine?: boolean;
 }
 
-interface MetricValueGroup {
+interface GroupStatistics {
   min: number;
   lowerQuartile: number;
   median: number;
@@ -80,9 +80,10 @@ export const EnsembleChart = ({
   groupingConfig,
   showZeroLine,
 }: EnsembleChartProps) => {
-  const [highlightedPoint, setHighlightedPoint] = useState<MetricValue | null>(
-    null,
-  );
+  const [highlightedPoint, setHighlightedPoint] = useState<{
+    groupName: string;
+    point: MetricValue;
+  } | null>(null);
 
   // Extract available dimensions and initialize grouping config
   const availableDimensions = useMemo(
@@ -102,13 +103,6 @@ export const EnsembleChart = ({
   const primaryGroupedData = Object.groupBy(
     data,
     (d: MetricValue) => d.dimensions[groupByDimension] ?? metricName,
-  );
-
-  console.log(
-    "Primary grouped data:",
-    primaryGroupedData,
-    groupingConfig,
-    groupByDimension,
   );
 
   const chartData = Object.entries(primaryGroupedData).map(
@@ -134,7 +128,7 @@ export const EnsembleChart = ({
         subGroups = { ensemble: values };
       }
 
-      const groups: { [key: string]: MetricValueGroup | null } = {};
+      const groups: { [key: string]: GroupStatistics | null } = {};
       const outliers: { [key: string]: number } = {};
       const allRawData: MetricValue[] = [];
 
@@ -274,6 +268,10 @@ export const EnsembleChart = ({
           )}
           <Tooltip
             cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
+            allowEscapeViewBox={{ x: true, y: true }}
+            wrapperStyle={{ zIndex: 1000 }}
+            animationDuration={500}
+            offset={20}
             content={({ active, payload, label, coordinate }) => {
               if (!active || !payload || payload.length === 0) {
                 // Clear highlight when tooltip is not active
@@ -283,14 +281,19 @@ export const EnsembleChart = ({
                 return null;
               }
               const datum = payload[0].payload ?? {};
-              const box = datum?.groups?.ensemble;
+
+              const groupName = datum?.name;
+              const groupStats = datum?.groups[
+                groupName
+              ] as GroupStatistics | null;
+
               const outliers = datum?.__outliers;
               const rawData: MetricValue[] = datum?.__rawData ?? [];
 
               const renderKV = (k: string, v: string) => (
                 <div key={k} className="contents">
                   <div className="text-muted-foreground">{k}</div>
-                  <div className="text-right">{v}</div>
+                  <div className="text-left">{v}</div>
                 </div>
               );
 
@@ -300,18 +303,12 @@ export const EnsembleChart = ({
                 const mouseY = coordinate.y ?? 0;
                 let minDistance = Number.POSITIVE_INFINITY;
 
-                // Use the actual domain that Recharts calculates (with padding)
-                const actualYMin = yDomain[0] ?? 0;
-                const actualYMax = yDomain[1] ?? 1;
-
                 // Chart dimensions accounting for margins
                 for (const dataPoint of rawData) {
                   const value = Number(dataPoint.value);
                   if (Number.isFinite(value)) {
                     // Convert value to pixel position using the same scale as Recharts
-                    const normalizedValue =
-                      (value - actualYMin) / (actualYMax - actualYMin);
-                    const valueY = chartInnerHeight * (1 - normalizedValue);
+                    const valueY = scale(value);
 
                     const distance = Math.abs(mouseY - valueY);
                     if (distance < minDistance) {
@@ -323,52 +320,57 @@ export const EnsembleChart = ({
               }
 
               // Update highlighted point
-              if (closestDataPoint !== highlightedPoint) {
-                setHighlightedPoint(closestDataPoint);
+              if (
+                closestDataPoint !== highlightedPoint?.point &&
+                closestDataPoint !== null
+              ) {
+                setHighlightedPoint({
+                  groupName: groupName,
+                  point: closestDataPoint,
+                });
               }
-
-              // Calculate tooltip position to avoid clipping
-              const tooltipHeight = 300; // Approximate tooltip height
-              const mouseY = coordinate?.y ?? 0;
-
-              // If tooltip would extend below chart, position it above the mouse
-              const shouldPositionAbove =
-                mouseY + tooltipHeight > chartHeight - marginBottom;
 
               return (
                 <div
-                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg w-[300px] z-[9999]"
+                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg min-w-[300px]"
                   style={{
                     borderColor: "hsl(var(--border))",
-                    transform: shouldPositionAbove
-                      ? "translateY(-20%)"
-                      : "translateY(10px)",
-                    marginTop: "-10px",
                   }}
                 >
                   <div className="mb-2 font-medium">{label}</div>
 
                   {/* Ensemble Statistics */}
                   <div className="mb-3">
-                    <div className="mb-1 font-semibold">
-                      Ensemble Statistics
-                    </div>
+                    <div className="mb-1 font-semibold">Statistics</div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                      {renderKV("Min", box ? fmt(Number(box.min)) : "—")}
+                      {renderKV(
+                        "Min",
+                        groupStats ? fmt(Number(groupStats.min)) : "—",
+                      )}
                       {renderKV(
                         "Q1",
-                        box ? fmt(Number(box.lowerQuartile)) : "—",
+                        groupStats
+                          ? fmt(Number(groupStats.lowerQuartile))
+                          : "—",
                       )}
-                      {renderKV("Median", box ? fmt(Number(box.median)) : "—")}
+                      {renderKV(
+                        "Median",
+                        groupStats ? fmt(Number(groupStats.median)) : "—",
+                      )}
                       {renderKV(
                         "Q3",
-                        box ? fmt(Number(box.upperQuartile)) : "—",
+                        groupStats
+                          ? fmt(Number(groupStats.upperQuartile))
+                          : "—",
                       )}
-                      {renderKV("Max", box ? fmt(Number(box.max)) : "—")}
+                      {renderKV(
+                        "Max",
+                        groupStats ? fmt(Number(groupStats.max)) : "—",
+                      )}
                       {renderKV(
                         "Count",
                         String(
-                          (box?.values?.length ?? 0) +
+                          (groupStats?.values?.length ?? 0) +
                             (outliers?.ensemble ?? 0),
                         ),
                       )}
@@ -395,9 +397,7 @@ export const EnsembleChart = ({
                           {renderKV("Units", metricUnits)}
                         </div>
                         <div className="mt-2">
-                          <div className="text-muted-foreground text-xs mb-1">
-                            Dimensions:
-                          </div>
+                          <div className="font-semibold mb-1">Dimensions:</div>
                           <div className="grid grid-cols-1 gap-y-1 text-xs">
                             {Object.entries(closestDataPoint.dimensions).map(
                               ([key, value]) => (
@@ -408,7 +408,10 @@ export const EnsembleChart = ({
                                   <span className="text-muted-foreground truncate">
                                     {key}:
                                   </span>
-                                  <span className="truncate" title={value}>
+                                  <span
+                                    className="truncate max-w-[150px]"
+                                    title={value}
+                                  >
                                     {value}
                                   </span>
                                 </div>
@@ -439,7 +442,11 @@ export const EnsembleChart = ({
                 <BoxWhiskerShape
                   prefix={groupName}
                   scale={scale}
-                  highlightedPoint={highlightedPoint}
+                  highlightedPoint={
+                    highlightedPoint?.groupName === groupName
+                      ? highlightedPoint?.point
+                      : null
+                  }
                   background={{ height: chartInnerHeight }}
                 />
               }

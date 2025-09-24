@@ -97,7 +97,7 @@ export function BoxWhiskerShape({
 
       return (
         <Cross
-          key={v}
+          key={v + Math.random()}
           strokeWidth={crossStrokeWidth}
           stroke={crossStroke}
           x={whiskerX}

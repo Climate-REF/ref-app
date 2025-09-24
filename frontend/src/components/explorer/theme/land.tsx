@@ -13,6 +13,7 @@ const cards: ExplorerCard[] = [
         diagnostic: "gpp-fluxnet2015",
         title: "Gross Primary Production",
         metricUnits: "kgC/m^2/s",
+        otherFilters: { region: "global" },
         groupingConfig: {
           groupBy: "metric",
           hue: "metric",
