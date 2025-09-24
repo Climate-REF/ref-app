@@ -68,10 +68,8 @@ export function useTheme() {
       return () => mql.removeEventListener("change", handler);
     } catch {
       // Safari fallback
-      // @ts-ignore - older Safari
       mql.addListener?.(handler);
       return () => {
-        // @ts-ignore - older Safari
         mql.removeListener?.(handler);
       };
     }

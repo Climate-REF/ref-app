@@ -1,3 +1,5 @@
+import type { MetricValue, SeriesValue } from "../../../client/types.gen";
+
 // Re-export types from the generated API client
 export type {
   Facet,
@@ -8,17 +10,13 @@ export type {
 
 // Type guard functions
 export function isSeriesValue(
-  // @ts-ignore
   value: MetricValue | SeriesValue,
-  // @ts-ignore
 ): value is SeriesValue {
   return "values" in value && "index" in value && "index_name" in value;
 }
 
 export function isScalarValue(
-  // @ts-ignore
   value: MetricValue | SeriesValue,
-  // @ts-ignore
 ): value is MetricValue {
   return "value" in value && !("values" in value);
 }

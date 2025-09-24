@@ -1,11 +1,11 @@
-import { scaleLinear } from "d3-scale";
+import type { ScaleLinear } from "d3-scale";
 import { Cross } from "recharts";
 import type { MetricValue } from "@/client/types.gen";
 import type { ProcessedGroupedDataEntry } from "./types";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
-  yDomain: [number, number];
+  scale: ScaleLinear<number, number>;
   highlightedPoint?: MetricValue | null;
 
   // Standard Recharts props provided to shapes
@@ -38,7 +38,7 @@ function darkenHex(hex: string, amount = 40) {
 
 export function BoxWhiskerShape({
   prefix,
-  yDomain,
+  scale,
   highlightedPoint,
   ...props
 }: BoxWhiskerShapeProps) {
@@ -64,7 +64,6 @@ export function BoxWhiskerShape({
     payload.groups[prefix];
 
   // Calculate pixel coordinates for each value
-  const scale = scaleLinear(yDomain, [props.background?.height, 0]);
   const yMin = scale(min) as number;
   const yQ1 = scale(lowerQuartile) as number;
   const yMedian = scale(median) as number;
@@ -93,16 +92,18 @@ export function BoxWhiskerShape({
       const crossStroke = isHighlighted ? "#EF4444" : crossColor;
       const crossStrokeWidth = isHighlighted ? strokeWidth * 2 : strokeWidth;
 
+      const scaleV = scale(v);
+      if (scaleV === undefined || !Number.isFinite(scaleV)) return null; // Skip non-finite values
+
       return (
         <Cross
           key={v}
           strokeWidth={crossStrokeWidth}
           stroke={crossStroke}
           x={whiskerX}
-          y={scale(v)}
+          y={scaleV}
           left={whiskerX - crossSize / 2}
-          // @ts-ignore
-          top={scale(v) - crossSize / 2}
+          top={scaleV - crossSize / 2}
           height={crossSize} // Cross height
           width={crossSize} // Cross width
           style={{

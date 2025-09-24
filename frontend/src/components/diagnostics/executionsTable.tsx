@@ -1,5 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
-import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
+import {
+  type CellContext,
+  type ColumnDef,
+  createColumnHelper,
+} from "@tanstack/react-table";
 import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Execution } from "@/client";
@@ -15,6 +19,52 @@ import {
 import { Route } from "@/routes/_app/executions.$groupId.tsx";
 
 const columnHelper = createColumnHelper<Execution>();
+
+function OpenCell({
+  row: {
+    original: { id },
+  },
+}: CellContext<Execution, unknown>) {
+  const navigate = useNavigate({ from: Route.fullPath });
+  return (
+    <button
+      type="button"
+      aria-label="Open execution in context"
+      title="Open execution in context"
+      onClick={() => {
+        return navigate({
+          search: (prev) => ({
+            ...prev,
+            resultId: id.toString(),
+          }),
+        });
+      }}
+      className="inline-flex items-center text-blue-500 hover:text-blue-300"
+    >
+      <SquareArrowOutUpRight className="pointer-events-none" />
+    </button>
+  );
+}
+
+function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
+  const rowIndex = row.index;
+  const { executionId } = Route.useSearch();
+  if (executionId && row.original.id.toString() === executionId) {
+    return (
+      <Badge variant="default" title="This execution is currently selected.">
+        Selected
+      </Badge>
+    );
+  }
+  if (rowIndex === 0) {
+    return (
+      <Badge variant="outline" title="This is the most recent execution.">
+        Latest
+      </Badge>
+    );
+  }
+  return null;
+}
 
 export const columns: ColumnDef<Execution>[] = [
   {
@@ -52,27 +102,7 @@ export const columns: ColumnDef<Execution>[] = [
         Latest/Selected
       </span>
     ),
-    cell: (cell) => {
-      const rowIndex = cell.row.index;
-      const { executionId } = Route.useSearch();
-      if (executionId && cell.row.original.id.toString() === executionId) {
-        return (
-          <Badge
-            variant="default"
-            title="This execution is currently selected."
-          >
-            Selected
-          </Badge>
-        );
-      }
-      if (rowIndex === 0) {
-        return (
-          <Badge variant="outline" title="This is the most recent execution.">
-            Latest
-          </Badge>
-        );
-      }
-    },
+    cell: (context) => <LatestSelectedCell {...context} />,
   },
   {
     id: "updated_at",
@@ -81,27 +111,7 @@ export const columns: ColumnDef<Execution>[] = [
   },
   columnHelper.display({
     id: "open",
-    cell: (context) => {
-      const navigate = useNavigate({ from: Route.fullPath });
-      return (
-        <button
-          type="button"
-          aria-label="Open execution in context"
-          title="Open execution in context"
-          onClick={() => {
-            return navigate({
-              search: (prev) => ({
-                ...prev,
-                resultId: context.row.original.id.toString(),
-              }),
-            });
-          }}
-          className="inline-flex items-center text-blue-500 hover:text-blue-300"
-        >
-          <SquareArrowOutUpRight className="pointer-events-none" />
-        </button>
-      );
-    },
+    cell: (context) => <OpenCell {...context} />,
   }),
 ];
 

@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   ComposedChart,
   Legend,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,6 +44,17 @@ interface EnsembleChartProps {
   clipMax?: number;
   /** Unified grouping configuration */
   groupingConfig?: ChartGroupingConfig;
+  /** When true, draw a red reference line at y=0 */
+  showZeroLine?: boolean;
+}
+
+interface MetricValueGroup {
+  min: number;
+  lowerQuartile: number;
+  median: number;
+  upperQuartile: number;
+  max: number;
+  values: number[];
 }
 
 export const EmptyEnsembleChart = () => {
@@ -66,6 +78,7 @@ export const EnsembleChart = ({
   clipMin,
   clipMax,
   groupingConfig,
+  showZeroLine,
 }: EnsembleChartProps) => {
   const [highlightedPoint, setHighlightedPoint] = useState<MetricValue | null>(
     null,
@@ -121,7 +134,7 @@ export const EnsembleChart = ({
         subGroups = { ensemble: values };
       }
 
-      const groups: { [key: string]: any } = {};
+      const groups: { [key: string]: MetricValueGroup | null } = {};
       const outliers: { [key: string]: number } = {};
       const allRawData: MetricValue[] = [];
 
@@ -181,29 +194,42 @@ export const EnsembleChart = ({
     return Array.from(names).sort();
   }, [chartData]);
 
-  const yDomain: [number, number] = useMemo(() => {
+  const scale = useMemo(() => {
     const allFiniteValues = chartData
       .flatMap((d) =>
         Object.values(d.groups)
           .filter((group) => group !== null)
-          .flatMap((group: any) => [group.min, group.max]),
+          .flatMap((group) => [group.min, group.max]),
       )
       .filter((v) => Number.isFinite(v)) as number[];
-    if (allFiniteValues.length === 0) return [0, 1];
-    const minVal = Math.min(...allFiniteValues);
-    const maxVal = Math.max(...allFiniteValues);
+
+    // Find the global min and max
+    let minVal: number;
+    let maxVal: number;
+
+    if (allFiniteValues.length === 0) {
+      minVal = 0;
+      maxVal = 1;
+    } else {
+      minVal = Math.min(...allFiniteValues);
+      maxVal = Math.max(...allFiniteValues);
+    }
+
+    // If all values are identical, add some padding to ensure a range
     if (minVal === maxVal) {
       const pad = Math.max(1, Math.abs(minVal) * 0.1);
-      return [minVal - pad, maxVal + pad];
+      minVal -= pad;
+      maxVal += pad;
     }
+    // Add some padding to the domain
     const range = maxVal - minVal;
     const padding = range * 0.05;
 
     return scaleLinear()
       .domain([minVal - padding, maxVal + padding])
-      .nice()
-      .domain() as [number, number];
+      .nice();
   }, [chartData]);
+  const yDomain = scale.domain() as [number, number];
 
   // Get color for a group
   const getGroupColor = (_groupName: string, index: number) => {
@@ -238,8 +264,12 @@ export const EnsembleChart = ({
               offset: 0,
               className: "fill-muted-foreground",
             }}
+            scale={scale}
             domain={yDomain}
           />
+          {showZeroLine && yDomain[0] <= 0 && yDomain[1] >= 0 && (
+            <ReferenceLine y={0} stroke="#ef4444" strokeWidth={1.5} />
+          )}
           <Tooltip
             cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
             content={({ active, payload, label, coordinate }) => {
@@ -250,7 +280,7 @@ export const EnsembleChart = ({
                 }
                 return null;
               }
-              const datum: any = (payload[0] as any).payload ?? {};
+              const datum = payload[0].payload ?? {};
               const box = datum?.groups?.ensemble;
               const outliers = datum?.__outliers;
               const rawData: MetricValue[] = datum?.__rawData ?? [];
@@ -273,7 +303,6 @@ export const EnsembleChart = ({
                 const actualYMax = yDomain[1] ?? 1;
 
                 // Chart dimensions accounting for margins
-
                 for (const dataPoint of rawData) {
                   const value = Number(dataPoint.value);
                   if (Number.isFinite(value)) {
@@ -408,6 +437,7 @@ export const EnsembleChart = ({
                 <BoxWhiskerShape
                   prefix={groupName}
                   yDomain={yDomain}
+                  scale={scale}
                   highlightedPoint={highlightedPoint}
                   background={{ height: chartInnerHeight }}
                 />

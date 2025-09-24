@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { isScalarValue } from "../execution/values/types.ts";
 
-const ComparisonChart = React.lazy(() =>
-  import("./comparisonChart.tsx").then((module) => ({
-    default: module.ComparisonChart,
+const EnsembleChart = React.lazy(() =>
+  import("./ensembleChart.tsx").then((module) => ({
+    default: module.EnsembleChart,
   })),
 );
 
@@ -94,6 +95,8 @@ export const ComparisonChartCard = ({
     });
   };
 
+  const ensembleData = data.ensemble.data.filter((d) => isScalarValue(d));
+
   return (
     <Card className={cn("w-full", className)}>
       <CardHeader className="flex flex-row items-start justify-between">
@@ -119,8 +122,9 @@ export const ComparisonChartCard = ({
       <CardContent>
         {data ? (
           <Suspense fallback={<ComparisonChartCardSkeleton />}>
-            <ComparisonChart
-              data={data}
+            <EnsembleChart
+              data={ensembleData}
+              // TODO: Add source
               metricName={metricName}
               metricUnits={metricUnits}
               clipMin={clipMin}

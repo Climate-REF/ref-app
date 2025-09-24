@@ -40,7 +40,7 @@ export function DownloadOutputs({
       // Get filename from Content-Disposition header
       const filename = `execution-${executionGroup}-${executionId}-${type}.${type === "bundle" ? "json" : "tar.gz"}`;
 
-      // @ts-ignore
+      // @ts-expect-error Can't type correctly
       const downloadUrl = window.URL.createObjectURL(data);
       const link = document.createElement("a");
       link.href = downloadUrl;

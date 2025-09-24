@@ -168,9 +168,19 @@ async def list_recent_execution_groups(  # noqa: PLR0913
         query.order_by(models.ExecutionGroup.updated_at.desc()).limit(limit).offset(offset).all()
     )
 
+    data = []
+    for eg in execution_groups:
+        try:
+            # Eagerly load executions to avoid lazy loading during serialization
+            eg.executions
+            data.append(ExecutionGroup.build(eg, app_context))
+        except Exception as e:
+            logger.error(f"Error building execution group ID {eg.id}: {e}")
+            continue
+
     return Collection(
         total_count=total_count,
-        data=[ExecutionGroup.build(m, app_context) for m in execution_groups],
+        data=data,
     )
 
 

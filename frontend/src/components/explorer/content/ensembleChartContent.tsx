@@ -24,7 +24,7 @@ export function EnsembleChartContent({
     }),
   );
 
-  // @ts-ignore TODO: Fix the diagnosticsListMetricValuesOptions type
+  // @ts-expect-error TODO: Fix the diagnosticsListMetricValuesOptions type
   const values = (data?.data as MetricValue[]) ?? [];
 
   if (values.length === 0) {

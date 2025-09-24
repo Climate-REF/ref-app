@@ -16,7 +16,7 @@ function Tabs<T extends string = string>({
   ...props
 }: TabsProps<T>) {
   return (
-    // @ts-ignore
+    // @ts-expect-error close enough
     <TabsPrimitive.Root
       data-slot="tabs"
       className={cn("flex flex-col gap-2", className)}
