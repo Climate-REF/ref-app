@@ -4,6 +4,7 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
 import { ErrorFallback } from "@/components/app/errorFallback";
+import { Footer } from "@/components/app/footer";
 import { Navbar } from "@/components/app/navbar.tsx";
 
 function AppLayout() {
@@ -34,6 +35,7 @@ function AppLayout() {
       >
         <Outlet />
       </ErrorBoundary>
+      <Footer />
 
       <ReactQueryDevtools initialIsOpen={false} />
       <TanStackRouterDevtools />

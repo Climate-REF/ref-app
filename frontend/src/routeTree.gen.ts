@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as ContentRouteImport } from './routes/content/route'
 import { Route as AppRouteImport } from './routes/_app/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as ContentPrivacyImport } from './routes/content/privacy'
 import { Route as ContentAboutImport } from './routes/content/about'
 import { Route as AppExplorerRouteImport } from './routes/_app/explorer/route'
 import { Route as AppExplorerIndexImport } from './routes/_app/explorer/index'
@@ -48,6 +49,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const ContentPrivacyRoute = ContentPrivacyImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => ContentRouteRoute,
 } as any)
 
 const ContentAboutRoute = ContentAboutImport.update({
@@ -188,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/content/about'
       preLoaderRoute: typeof ContentAboutImport
+      parentRoute: typeof ContentRouteImport
+    }
+    '/content/privacy': {
+      id: '/content/privacy'
+      path: '/privacy'
+      fullPath: '/content/privacy'
+      preLoaderRoute: typeof ContentPrivacyImport
       parentRoute: typeof ContentRouteImport
     }
     '/_app/datasets/$slug': {
@@ -361,10 +375,12 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 
 interface ContentRouteRouteChildren {
   ContentAboutRoute: typeof ContentAboutRoute
+  ContentPrivacyRoute: typeof ContentPrivacyRoute
 }
 
 const ContentRouteRouteChildren: ContentRouteRouteChildren = {
   ContentAboutRoute: ContentAboutRoute,
+  ContentPrivacyRoute: ContentPrivacyRoute,
 }
 
 const ContentRouteRouteWithChildren = ContentRouteRoute._addFileChildren(
@@ -377,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/content': typeof ContentRouteRouteWithChildren
   '/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/privacy': typeof ContentPrivacyRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -398,6 +415,7 @@ export interface FileRoutesByTo {
   '': typeof AppRouteRouteWithChildren
   '/content': typeof ContentRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/privacy': typeof ContentPrivacyRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -420,6 +438,7 @@ export interface FileRoutesById {
   '/content': typeof ContentRouteRouteWithChildren
   '/_app/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/privacy': typeof ContentPrivacyRoute
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/_app/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -444,6 +463,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/explorer'
     | '/content/about'
+    | '/content/privacy'
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/diagnostics'
@@ -464,6 +484,7 @@ export interface FileRouteTypes {
     | ''
     | '/content'
     | '/content/about'
+    | '/content/privacy'
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/diagnostics'
@@ -484,6 +505,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/_app/explorer'
     | '/content/about'
+    | '/content/privacy'
     | '/_app/datasets/$slug'
     | '/_app/executions/$groupId'
     | '/_app/explorer/diagnostics'
@@ -546,7 +568,8 @@ export const routeTree = rootRoute
     "/content": {
       "filePath": "content/route.tsx",
       "children": [
-        "/content/about"
+        "/content/about",
+        "/content/privacy"
       ]
     },
     "/_app/explorer": {
@@ -560,7 +583,11 @@ export const routeTree = rootRoute
       ]
     },
     "/content/about": {
-      "filePath": "content/about.ts",
+      "filePath": "content/about.tsx",
+      "parent": "/content"
+    },
+    "/content/privacy": {
+      "filePath": "content/privacy.ts",
       "parent": "/content"
     },
     "/_app/datasets/$slug": {

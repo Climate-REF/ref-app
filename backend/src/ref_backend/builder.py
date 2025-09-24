@@ -32,7 +32,10 @@ def build_app(settings: Settings, ref_config: Config) -> FastAPI:
     Build the FastAPI application with the necessary configurations and middlewares.
     """
     if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
-        sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
+        sentry_sdk.init(
+            dsn=str(settings.SENTRY_DSN),
+            enable_tracing=True,
+        )
 
     register_cv_dimensions(ref_config)
 

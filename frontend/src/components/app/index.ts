@@ -5,5 +5,6 @@ export {
   ErrorFallback,
   PageErrorFallback,
 } from "./errorFallback";
+export { Footer } from "./footer";
 export { Navbar } from "./navbar";
 export { NavbarLogo } from "./navbarLogo";

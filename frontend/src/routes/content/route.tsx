@@ -6,7 +6,7 @@ function Content() {
 
   return (
     <MDXProvider components={components}>
-      <article className="prose prose-slate flex flex-1 flex-col gap-4 container mx-auto mt-8">
+      <article className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
         <Outlet />
       </article>
     </MDXProvider>
