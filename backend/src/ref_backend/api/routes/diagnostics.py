@@ -5,6 +5,7 @@ from collections.abc import Generator
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import and_, not_, text
+from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -117,17 +118,31 @@ async def list_execution_groups(
     app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
 ) -> Collection[ExecutionGroup]:
     """
-    Fetch a result using the slug
+    Fetch execution groups for a diagnostic.
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
+    # Precompute the diagnostic summary once (shared across all groups)
+    diagnostic_summary = DiagnosticSummary.build(diagnostic, app_context)
+
+    # Eager-load relationships to avoid per-item queries
     execution_groups = (
         app_context.session.query(models.ExecutionGroup)
+        .options(
+            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
+            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
+            selectinload(models.ExecutionGroup.diagnostic),
+        )
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
         .all()
     )
 
-    return Collection(data=[ExecutionGroup.build(e, app_context) for e in execution_groups])
+    return Collection(
+        data=[
+            ExecutionGroup.build(e, app_context, diagnostic_summary=diagnostic_summary)
+            for e in execution_groups
+        ]
+    )
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/comparison")

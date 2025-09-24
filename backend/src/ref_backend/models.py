@@ -272,10 +272,17 @@ class ExecutionGroup(BaseModel):
     updated_at: datetime
 
     @staticmethod
-    def build(execution_group: models.ExecutionGroup, app_context: "AppContext") -> "ExecutionGroup":
+    def build(
+        execution_group: models.ExecutionGroup,
+        app_context: "AppContext",
+        diagnostic_summary: "DiagnosticSummary | None" = None,
+    ) -> "ExecutionGroup":
         latest_execution = None
         if len(execution_group.executions):
             latest_execution = execution_group.executions[-1]
+
+        # Reuse a precomputed DiagnosticSummary when provided to avoid N+1 DB queries
+        diagnostic = diagnostic_summary or DiagnosticSummary.build(execution_group.diagnostic, app_context)
 
         return ExecutionGroup(
             id=execution_group.id,
@@ -284,7 +291,7 @@ class ExecutionGroup(BaseModel):
             executions=[Execution.build(r, app_context) for r in execution_group.executions],
             latest_execution=Execution.build(latest_execution, app_context) if latest_execution else None,
             selectors=execution_group.selectors,
-            diagnostic=DiagnosticSummary.build(execution_group.diagnostic, app_context),
+            diagnostic=diagnostic,
             created_at=execution_group.created_at,
             updated_at=execution_group.updated_at,
         )

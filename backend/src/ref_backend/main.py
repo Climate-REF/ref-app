@@ -27,7 +27,7 @@ database = get_database(ref_config)
 provider_registry = get_provider_registry(ref_config)
 
 setup_logging(settings.LOG_LEVEL)
-app = build_app(settings, ref_config)
+app = build_app(settings, ref_config, database)
 
 
 # Override dependencies to use the pre-initialized singletons
