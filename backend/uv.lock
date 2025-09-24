@@ -1166,7 +1166,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [
@@ -2825,6 +2825,7 @@ source = { editable = "." }
 dependencies = [
     { name = "climate-ref", extra = ["aft-providers", "postgres"] },
     { name = "fastapi", extra = ["standard"] },
+    { name = "loguru" },
     { name = "lz4" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
@@ -2848,6 +2849,7 @@ dev = [
 requires-dist = [
     { name = "climate-ref", extras = ["aft-providers", "postgres"], git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
+    { name = "loguru" },
     { name = "lz4", specifier = "==4.4.4" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1.13,<4.0.0" },
     { name = "pydantic", specifier = ">2.0" },

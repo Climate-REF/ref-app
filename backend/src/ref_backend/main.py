@@ -9,6 +9,7 @@ from climate_ref.database import Database
 from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
 from ref_backend.core.config import get_settings
+from ref_backend.log import setup_logging
 from ref_backend.testing import test_ref_config, test_settings
 
 # Load environment variables from a .env file, if it exists
@@ -25,6 +26,7 @@ ref_config = get_ref_config(settings)
 database = get_database(ref_config)
 provider_registry = get_provider_registry(ref_config)
 
+setup_logging(settings.LOG_LEVEL)
 app = build_app(settings, ref_config)
 
 

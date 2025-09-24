@@ -8,6 +8,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
+from loguru import logger
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.orm import Session, aliased
 from starlette.responses import StreamingResponse
@@ -246,6 +247,7 @@ async def execution_logs(
     mime_type, encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
+        logger.warning(f"Log file not found: {file_path}")
         raise HTTPException(status_code=404, detail="Log file not found")
 
     return StreamingResponse(
@@ -269,6 +271,7 @@ async def metric_bundle(
     file_path = app_context.ref_config.paths.results / execution.output_fragment / "diagnostic.json"
 
     if not file_path.exists():
+        logger.warning(f"Metric bundle not found: {file_path}")
         raise HTTPException(status_code=404, detail="Metrics bundle not found")
 
     return CMECMetric.load_from_json(file_path)

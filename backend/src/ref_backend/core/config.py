@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_HOST: str = "http://localhost:8000"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    LOG_LEVEL: str = "INFO"
     DIAGNOSTIC_PROVIDERS: list[str] | None = None
     """
     Limit the diagnostics to only query the providers defined in this list.
