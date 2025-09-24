@@ -48,17 +48,17 @@ const links = [
   },
   {
     name: "Privacy Policy",
-    url: "/privacy-policy",
+    url: "/content/privacy",
   },
   {
     name: "Terms of Use",
-    url: "/terms-of-use",
+    url: "/content/terms-of-use",
   },
 ];
 
 export const Footer = () => {
   return (
-    <footer className="bg-muted dark:bg-gray-900  text-sm">
+    <footer className="bg-muted dark:bg-gray-900  text-sm mt-16">
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Climate REF Logo */}

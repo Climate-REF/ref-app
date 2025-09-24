@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as ContentRouteImport } from './routes/content/route'
 import { Route as AppRouteImport } from './routes/_app/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as ContentTermsOfUseImport } from './routes/content/terms-of-use'
 import { Route as ContentPrivacyImport } from './routes/content/privacy'
 import { Route as ContentAboutImport } from './routes/content/about'
 import { Route as AppExplorerRouteImport } from './routes/_app/explorer/route'
@@ -49,6 +50,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const ContentTermsOfUseRoute = ContentTermsOfUseImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
+  getParentRoute: () => ContentRouteRoute,
 } as any)
 
 const ContentPrivacyRoute = ContentPrivacyImport.update({
@@ -202,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/content/privacy'
       preLoaderRoute: typeof ContentPrivacyImport
+      parentRoute: typeof ContentRouteImport
+    }
+    '/content/terms-of-use': {
+      id: '/content/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/content/terms-of-use'
+      preLoaderRoute: typeof ContentTermsOfUseImport
       parentRoute: typeof ContentRouteImport
     }
     '/_app/datasets/$slug': {
@@ -376,11 +390,13 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 interface ContentRouteRouteChildren {
   ContentAboutRoute: typeof ContentAboutRoute
   ContentPrivacyRoute: typeof ContentPrivacyRoute
+  ContentTermsOfUseRoute: typeof ContentTermsOfUseRoute
 }
 
 const ContentRouteRouteChildren: ContentRouteRouteChildren = {
   ContentAboutRoute: ContentAboutRoute,
   ContentPrivacyRoute: ContentPrivacyRoute,
+  ContentTermsOfUseRoute: ContentTermsOfUseRoute,
 }
 
 const ContentRouteRouteWithChildren = ContentRouteRoute._addFileChildren(
@@ -394,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
   '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -416,6 +433,7 @@ export interface FileRoutesByTo {
   '/content': typeof ContentRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
   '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -439,6 +457,7 @@ export interface FileRoutesById {
   '/_app/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
   '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/_app/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
@@ -464,6 +483,7 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/content/about'
     | '/content/privacy'
+    | '/content/terms-of-use'
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/diagnostics'
@@ -485,6 +505,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/content/about'
     | '/content/privacy'
+    | '/content/terms-of-use'
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/diagnostics'
@@ -506,6 +527,7 @@ export interface FileRouteTypes {
     | '/_app/explorer'
     | '/content/about'
     | '/content/privacy'
+    | '/content/terms-of-use'
     | '/_app/datasets/$slug'
     | '/_app/executions/$groupId'
     | '/_app/explorer/diagnostics'
@@ -569,7 +591,8 @@ export const routeTree = rootRoute
       "filePath": "content/route.tsx",
       "children": [
         "/content/about",
-        "/content/privacy"
+        "/content/privacy",
+        "/content/terms-of-use"
       ]
     },
     "/_app/explorer": {
@@ -588,6 +611,10 @@ export const routeTree = rootRoute
     },
     "/content/privacy": {
       "filePath": "content/privacy.ts",
+      "parent": "/content"
+    },
+    "/content/terms-of-use": {
+      "filePath": "content/terms-of-use.ts",
       "parent": "/content"
     },
     "/_app/datasets/$slug": {
