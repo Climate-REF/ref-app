@@ -22,6 +22,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
+        symmetricalAxes: true,
       },
       {
         type: "box-whisker-chart",
@@ -38,6 +39,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
+        symmetricalAxes: true,
       },
       {
         type: "box-whisker-chart",
@@ -53,6 +55,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
+        symmetricalAxes: true,
       },
       {
         type: "box-whisker-chart",
@@ -66,8 +69,9 @@ const cards: ExplorerCard[] = [
         },
         groupingConfig: {
           groupBy: "season",
-          hue: "metric",
+          hue: "season",
         },
+        symmetricalAxes: true,
       },
     ],
   },

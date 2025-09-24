@@ -40,6 +40,7 @@ export function EnsembleChartContent({
       clipMax={contentItem.clipMax}
       groupingConfig={contentItem.groupingConfig}
       showZeroLine={contentItem.showZeroLine ?? true}
+      symmetricalAxes={contentItem.symmetricalAxes ?? false}
     />
   );
 }

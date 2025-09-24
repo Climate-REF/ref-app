@@ -111,6 +111,7 @@ export function CardTemplateGenerator({
   const [clipMax, setClipMax] = useState<number | undefined>();
   const [span, setSpan] = useState<1 | 2>(1);
   const [includeFilters, setIncludeFilters] = useState<string[]>([]);
+  const [symmetricalAxes, setSymmetricalAxes] = useState(false);
 
   // Unified grouping configuration state
   const [groupingConfig, setGroupingConfig] = useState<ChartGroupingConfig>(
@@ -164,6 +165,7 @@ export function CardTemplateGenerator({
           metricUnits: metricUnits || "unitless",
           ...(clipMin !== undefined && { clipMin }),
           ...(clipMax !== undefined && { clipMax }),
+          ...(symmetricalAxes && { symmetricalAxes }),
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
           }),
@@ -195,6 +197,7 @@ export function CardTemplateGenerator({
           type: "series-chart",
           ...baseContent,
           metricUnits: metricUnits || "unitless",
+          ...(symmetricalAxes && { symmetricalAxes }),
           ...(Object.keys(selectedFilters).length > 0 && {
             otherFilters: selectedFilters,
           }),
@@ -229,6 +232,7 @@ export function CardTemplateGenerator({
     providerSlug,
     diagnosticSlug,
     groupingConfig,
+    symmetricalAxes,
   ]);
 
   // Copy template to clipboard
@@ -409,6 +413,23 @@ export function CardTemplateGenerator({
                     </div>
                   </>
                 )}
+
+                {/* Symmetrical Axes */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="symmetricalAxes"
+                    checked={symmetricalAxes}
+                    onCheckedChange={(checked) =>
+                      setSymmetricalAxes(checked === true)
+                    }
+                  />
+                  <Label
+                    htmlFor="symmetricalAxes"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Symmetrical Axes
+                  </Label>
+                </div>
               </>
             )}
 

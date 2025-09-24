@@ -33,7 +33,9 @@ function AppLayout() {
       <ErrorBoundary
         fallback={<ErrorFallback title="Page Error" showHomeButton={true} />}
       >
-        <Outlet />
+        <div className="min-h-screen">
+          <Outlet />
+        </div>
       </ErrorBoundary>
       <Footer />
 

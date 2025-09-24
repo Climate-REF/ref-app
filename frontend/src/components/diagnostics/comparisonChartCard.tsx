@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { diagnosticsComparison } from "@/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,7 @@ export const ComparisonChartCard = ({
   clipMax?: number;
 }) => {
   const navigate = useNavigate();
+  const [symmetricalAxes, setSymmetricalAxes] = React.useState(false);
   const {
     data: { data },
     error,
@@ -120,6 +122,16 @@ export const ComparisonChartCard = ({
         </DropdownMenu>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center space-x-2 mb-4">
+          <Checkbox
+            id="symmetrical-axes"
+            checked={symmetricalAxes}
+            onCheckedChange={(checked) => setSymmetricalAxes(checked === true)}
+          />
+          <label htmlFor="symmetrical-axes" className="text-sm">
+            Symmetrical Axes
+          </label>
+        </div>
         {data ? (
           <Suspense fallback={<ComparisonChartCardSkeleton />}>
             <EnsembleChart
@@ -129,6 +141,7 @@ export const ComparisonChartCard = ({
               metricUnits={metricUnits}
               clipMin={clipMin}
               clipMax={clipMax}
+              symmetricalAxes={symmetricalAxes}
             />
           </Suspense>
         ) : (

@@ -39,6 +39,8 @@ interface SeriesVisualizationProps {
   }) => void;
   // Hide the groupBy/hue/style controls for explorer cards
   hideControls?: boolean;
+  // Symmetrical axes option
+  symmetricalAxes?: boolean;
 }
 
 interface GroupedSeries {
@@ -85,6 +87,7 @@ export function SeriesVisualization({
   initialStyle,
   onParamsChange,
   hideControls = false,
+  symmetricalAxes = false,
 }: SeriesVisualizationProps) {
   // Get all available dimensions for grouping
   const availableDimensions = useMemo(() => {
@@ -857,7 +860,22 @@ export function SeriesVisualization({
                         height={60}
                       />
                       <YAxis
-                        domain={["dataMin - 0.1", "dataMax + 0.1"]}
+                        domain={
+                          symmetricalAxes
+                            ? (data) => {
+                                const values = data.flatMap((d) =>
+                                  Object.values(d).filter(
+                                    (v) => typeof v === "number",
+                                  ),
+                                ) as number[];
+                                if (values.length === 0) return [0, 1];
+                                const maxAbs = Math.max(
+                                  ...values.map(Math.abs),
+                                );
+                                return [-maxAbs, maxAbs];
+                              }
+                            : ["dataMin - 0.1", "dataMax + 0.1"]
+                        }
                         label={{
                           value: "Value",
                           angle: -90,

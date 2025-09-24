@@ -54,6 +54,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       enableZoom={false} // Disable zoom in preview
       maxVisibleGroups={5}
       hideControls={true} // Hide the groupBy/hue/style controls for explorer cards
+      symmetricalAxes={contentItem.symmetricalAxes ?? false}
     />
   );
 }

@@ -12,6 +12,7 @@ import {
   initializeGroupingConfig,
 } from "@/components/explorer/grouping";
 import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ValuesFigureProps {
   values: MetricValue[];
@@ -79,6 +80,9 @@ export function ValuesFigure({
     initialGroupingConfig,
   );
 
+  // State for symmetrical axes
+  const [symmetricalAxes, setSymmetricalAxes] = useState(false);
+
   // Handle grouping configuration changes
   const handleGroupingChange = useCallback(
     (newConfig: ChartGroupingConfig) => {
@@ -108,7 +112,19 @@ export function ValuesFigure({
             availableDimensions={availableDimensions}
             onChange={handleGroupingChange}
           />
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="symmetrical-axes"
+                checked={symmetricalAxes}
+                onCheckedChange={(checked) =>
+                  setSymmetricalAxes(checked === true)
+                }
+              />
+              <label htmlFor="symmetrical-axes" className="text-sm">
+                Symmetrical Axes
+              </label>
+            </div>
             <Button variant={"outline"} size="sm">
               <Download className="h-4 w-4 mr-2" />
               Download
@@ -122,6 +138,7 @@ export function ValuesFigure({
         metricUnits="unitless"
         groupingConfig={groupingConfig}
         showZeroLine={true}
+        symmetricalAxes={symmetricalAxes}
       />
     </>
   );

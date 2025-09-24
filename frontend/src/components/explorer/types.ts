@@ -13,6 +13,7 @@ export type ExplorerCardContent =
       clipMax?: number;
       span?: 1 | 2;
       showZeroLine?: boolean;
+      symmetricalAxes?: boolean;
       /** Unified grouping configuration */
       groupingConfig?: ChartGroupingConfig;
     }
@@ -33,6 +34,7 @@ export type ExplorerCardContent =
       metricUnits?: string;
       otherFilters?: Record<string, string>;
       span?: 1 | 2;
+      symmetricalAxes?: boolean;
       /** Unified grouping configuration */
       groupingConfig?: ChartGroupingConfig;
     };
