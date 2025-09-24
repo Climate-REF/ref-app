@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
+import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
 
 interface DiagnosticFigureGalleryProps {
   providerSlug: string;
@@ -154,7 +155,7 @@ export function FigureGallery({
   }, [filteredFigures.length]);
 
   if (isLoading) {
-    return <div>Loading figures...</div>;
+    return <FigureGallerySkeleton nColumns={columns} nRows={2} />;
   }
 
   const items = rowVirtualizer.getVirtualItems();

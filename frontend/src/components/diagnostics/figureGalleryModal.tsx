@@ -51,7 +51,7 @@ export function FigureGalleryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="w-auto max-w-full sm:max-w-8xl">
         {selectedIndex !== null && figures[selectedIndex] && (
           <>
             <DialogHeader>
@@ -80,7 +80,7 @@ export function FigureGalleryModal({
                 <ChevronRight className="h-4 w-4 mr-2" />
               </Button>
             </div>
-            <Figure {...figures[selectedIndex].figure} />
+            <Figure {...figures[selectedIndex].figure} size="large" />
             <div className="mt-4 text-sm text-muted-foreground">
               <p>Group: {figures[selectedIndex].executionGroup.key}</p>
               <p>Description: {figures[selectedIndex].figure.description}</p>
