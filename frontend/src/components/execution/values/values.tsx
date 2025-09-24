@@ -158,7 +158,7 @@ export function Values(props: ValuesProps) {
               }
             >
               <ValuesFigure
-                defaultGroupby="source_id"
+                defaultGroupby="metric"
                 values={finalDisplayedValues}
                 facets={props.facets}
                 loading={props.loading}

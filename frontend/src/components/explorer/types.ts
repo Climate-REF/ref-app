@@ -12,6 +12,7 @@ export type ExplorerCardContent =
       clipMin?: number;
       clipMax?: number;
       span?: 1 | 2;
+      showZeroLine?: boolean;
       /** Unified grouping configuration */
       groupingConfig?: ChartGroupingConfig;
     }

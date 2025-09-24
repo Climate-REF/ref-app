@@ -39,6 +39,7 @@ export function EnsembleChartContent({
       clipMin={contentItem.clipMin}
       clipMax={contentItem.clipMax}
       groupingConfig={contentItem.groupingConfig}
+      showZeroLine={contentItem.showZeroLine ?? true}
     />
   );
 }

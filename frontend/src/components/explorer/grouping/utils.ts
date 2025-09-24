@@ -13,7 +13,9 @@ export function extractAvailableDimensions<T extends DimensionedData>(
   const dimensions = new Set<string>();
 
   data.forEach((item) => {
-    Object.keys(item.dimensions).forEach((dim) => dimensions.add(dim));
+    Object.keys(item.dimensions).forEach((dim) => {
+      dimensions.add(dim);
+    });
   });
 
   const sortedDimensions = Array.from(dimensions).sort();

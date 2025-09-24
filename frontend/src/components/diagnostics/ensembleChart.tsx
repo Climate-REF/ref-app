@@ -189,7 +189,9 @@ export const EnsembleChart = ({
   const allGroupNames = useMemo(() => {
     const names = new Set<string>();
     chartData.forEach((d) => {
-      Object.keys(d.groups).forEach((groupName) => names.add(groupName));
+      Object.keys(d.groups).forEach((groupName) => {
+        names.add(groupName);
+      });
     });
     return Array.from(names).sort();
   }, [chartData]);
@@ -436,7 +438,6 @@ export const EnsembleChart = ({
               shape={
                 <BoxWhiskerShape
                   prefix={groupName}
-                  yDomain={yDomain}
                   scale={scale}
                   highlightedPoint={highlightedPoint}
                   background={{ height: chartInnerHeight }}

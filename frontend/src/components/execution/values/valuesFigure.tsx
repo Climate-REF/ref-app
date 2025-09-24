@@ -121,6 +121,7 @@ export function ValuesFigure({
         metricName="Values"
         metricUnits="unitless"
         groupingConfig={groupingConfig}
+        showZeroLine={true}
       />
     </>
   );

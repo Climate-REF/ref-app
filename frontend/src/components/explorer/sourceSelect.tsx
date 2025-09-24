@@ -39,7 +39,6 @@ export function SourceSelect({ options }: Props) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        {/** biome-ignore lint/a11y/useSemanticElements: testing*/}
         <Button
           variant="outline"
           role="combobox"

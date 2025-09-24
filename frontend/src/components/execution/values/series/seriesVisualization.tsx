@@ -90,7 +90,9 @@ export function SeriesVisualization({
   const availableDimensions = useMemo(() => {
     const dimensions = new Set<string>();
     seriesValues.forEach((series) => {
-      Object.keys(series.dimensions).forEach((dim) => dimensions.add(dim));
+      Object.keys(series.dimensions).forEach((dim) => {
+        dimensions.add(dim);
+      });
     });
     return Array.from(dimensions).sort();
   }, [seriesValues]);
@@ -383,10 +385,14 @@ export function SeriesVisualization({
 
           if (allHidden) {
             // Show all series in this category
-            categorySeriesKeys.forEach((key) => newSet.delete(key));
+            categorySeriesKeys.forEach((key) => {
+              newSet.delete(key);
+            });
           } else {
             // Hide all series in this category
-            categorySeriesKeys.forEach((key) => newSet.add(key));
+            categorySeriesKeys.forEach((key) => {
+              newSet.add(key);
+            });
           }
 
           return newSet;
