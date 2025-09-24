@@ -29,12 +29,7 @@ export function Navbar() {
     <NavigationMenu className="w-screen px-8 py-4">
       <div className="flex w-full items-center gap-4">
         <Link to={"/"} className={cn(navigationMenuTriggerStyle(), "relative")}>
-          <div className="flex items-center justify-between">
-            <NavbarLogo />
-            <h1 className="font-display font-medium text-lg">
-              Rapid Evaluation Framework
-            </h1>
-          </div>
+          <NavbarLogo />
         </Link>
 
         <NavigationMenuList className="flex">
@@ -58,12 +53,12 @@ export function Navbar() {
             {theme === "dark" ? (
               <>
                 <Sun className="h-4 w-4" />
-                Light
+                <span className="hidden md:inline">Light</span>
               </>
             ) : (
               <>
                 <Moon className="h-4 w-4" />
-                Dark
+                <span className="hidden md:inline">Dark</span>
               </>
             )}
           </button>
