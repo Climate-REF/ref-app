@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Union
 
+from attr import define
 from pydantic import BaseModel, computed_field
 from sqlalchemy import func
 
@@ -377,6 +378,8 @@ class MetricValue(ScalarMetricValue):
 
     execution_group_id: int
     execution_id: int
+    is_outlier: bool | None = None
+    verification_status: Literal["verified", "unverified"] | None = None
 
 
 class SeriesValue(BaseModel):
@@ -400,16 +403,27 @@ class Facet(BaseModel):
     values: list[str]
 
 
+@define
+class AnnotatedScalarValue:
+    value: models.ScalarMetricValue
+    is_outlier: bool | None = None
+    verification_status: Literal["verified", "unverified"] | None = None
+
+
 class MetricValueCollection(BaseModel):
     data: Sequence[MetricValue | SeriesValue]
     count: int
     facets: list[Facet]
     types: list[str]  # List of types present: 'scalar', 'series', or both
+    had_outliers: bool | None = None
+    outlier_count: int | None = None
 
     @staticmethod
     def build(
-        scalar_values: list[models.ScalarMetricValue] | None = None,
+        scalar_values: list[AnnotatedScalarValue] | None = None,
         series_values: list[models.SeriesMetricValue] | None = None,
+        had_outliers: bool | None = None,
+        outlier_count: int | None = None,
     ) -> "MetricValueCollection":
         """Build a MetricValueCollection from scalar and/or series values"""
         scalar_values = scalar_values or []
@@ -421,7 +435,9 @@ class MetricValueCollection(BaseModel):
         types_present = set()
 
         # Process scalar values
-        for v in scalar_values:
+        for item in scalar_values:
+            print(item)
+            v = item.value
             for key, value in v.dimensions.items():
                 if key in facets:
                     facets[key].add(value)
@@ -434,6 +450,7 @@ class MetricValueCollection(BaseModel):
                     value=sanitize_float_value(float(v.value)),
                     execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
+                    is_outlier=item.is_outlier,
                 )
             )
             types_present.add("scalar")
@@ -466,6 +483,8 @@ class MetricValueCollection(BaseModel):
                 Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
             ],
             types=sorted(list(types_present)),
+            had_outliers=had_outliers,
+            outlier_count=outlier_count,
         )
 
 

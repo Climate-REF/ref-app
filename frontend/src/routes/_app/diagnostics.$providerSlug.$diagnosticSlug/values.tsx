@@ -17,6 +17,9 @@ const valuesSearchSchema = z
     groupBy: z.string().optional(),
     hue: z.string().optional(),
     style: z.string().optional(),
+    // Outlier detection parameters
+    detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
+    include_unverified: z.coerce.boolean().default(false),
   })
   .catchall(z.string().optional());
 
@@ -41,13 +44,20 @@ export const ValuesTab = () => {
     }),
   );
 
-  // Extract current filters (excluding view and series params)
+  // Extract current filters (excluding view, series, and outlier params)
   const currentFilters = useMemo(() => {
     const filtered = Object.fromEntries(
       Object.entries(search).filter(
         ([key, value]) =>
           value !== undefined &&
-          !["view", "groupBy", "hue", "style"].includes(key),
+          ![
+            "view",
+            "groupBy",
+            "hue",
+            "style",
+            "detect_outliers",
+            "include_unverified",
+          ].includes(key),
       ),
     );
     // Ensure all values are strings, not undefined
@@ -69,11 +79,38 @@ export const ValuesTab = () => {
         facets={(metricValues as MetricValueCollection)?.facets ?? []}
         values={(metricValues as MetricValueCollection)?.data ?? []}
         loading={isLoading}
+        hadOutliers={
+          (metricValues as MetricValueCollection)?.had_outliers ?? undefined
+        }
+        outlierCount={
+          (metricValues as MetricValueCollection)?.outlier_count ?? undefined
+        }
+        initialDetectOutliers={search.detect_outliers}
+        onDetectOutliersChange={(value) => {
+          navigate({
+            search: { ...search, detect_outliers: value } as any,
+            replace: true,
+          });
+        }}
+        initialIncludeUnverified={search.include_unverified}
+        onIncludeUnverifiedChange={(value) => {
+          navigate({
+            search: { ...search, include_unverified: value } as any,
+            replace: true,
+          });
+        }}
         initialFilters={Object.entries(search)
           .filter(
             ([key, value]) =>
               value !== undefined &&
-              !["view", "groupBy", "hue", "style"].includes(key),
+              ![
+                "view",
+                "groupBy",
+                "hue",
+                "style",
+                "detect_outliers",
+                "include_unverified",
+              ].includes(key),
           )
           .map(([facetKey, value]) => ({
             id: crypto.randomUUID(),
@@ -116,16 +153,18 @@ export const ValuesTab = () => {
                   )
                 : {};
 
-            // Preserve view type and series visualization parameters
+            // Preserve view type, series visualization, and outlier parameters
             const otherParams = {
               ...(search.view && { view: search.view }),
               ...(search.groupBy && { groupBy: search.groupBy }),
               ...(search.hue && { hue: search.hue }),
               ...(search.style && { style: search.style }),
+              detect_outliers: search.detect_outliers,
+              include_unverified: search.include_unverified,
             };
 
             navigate({
-              search: { ...filterParams, ...otherParams },
+              search: { ...filterParams, ...otherParams } as any,
               replace: true,
             });
           },

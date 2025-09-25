@@ -231,6 +231,8 @@ export type MetricValue = {
     } | null;
     execution_group_id: number;
     execution_id: number;
+    is_outlier?: boolean | null;
+    verification_status?: ('verified' | 'unverified') | null;
 };
 
 export type MetricValueCollection = {
@@ -238,6 +240,8 @@ export type MetricValueCollection = {
     count: number;
     facets: Array<Facet>;
     types: Array<string>;
+    had_outliers?: boolean | null;
+    outlier_count?: number | null;
 };
 
 /**
@@ -562,6 +566,14 @@ export type DiagnosticsListMetricValuesData = {
          * Type of metric values to return: 'scalar', 'series', or 'all'
          */
         type?: string;
+        /**
+         * Outlier detection method: 'off' or 'iqr'
+         */
+        detect_outliers?: 'off' | 'iqr';
+        /**
+         * Include unverified (outlier) values
+         */
+        include_unverified?: boolean;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
@@ -784,6 +796,14 @@ export type ExecutionsMetricValuesData = {
          * Type of metric values to return: 'scalar', 'series', or 'all'
          */
         type?: string;
+        /**
+         * Outlier detection method: 'off' or 'iqr'
+         */
+        detect_outliers?: 'off' | 'iqr';
+        /**
+         * Include unverified (outlier) values
+         */
+        include_unverified?: boolean;
     };
     url: '/api/v1/executions/{group_id}/values';
 };

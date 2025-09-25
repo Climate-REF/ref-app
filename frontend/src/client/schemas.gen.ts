@@ -650,6 +650,29 @@ export const MetricValueSchema = {
         execution_id: {
             type: 'integer',
             title: 'Execution Id'
+        },
+        is_outlier: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Outlier'
+        },
+        verification_status: {
+            anyOf: [
+                {
+                    type: 'string',
+                    enum: ['verified', 'unverified']
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Verification Status'
         }
     },
     type: 'object',
@@ -693,6 +716,28 @@ export const MetricValueCollectionSchema = {
             },
             type: 'array',
             title: 'Types'
+        },
+        had_outliers: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Had Outliers'
+        },
+        outlier_count: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Outlier Count'
         }
     },
     type: 'object',

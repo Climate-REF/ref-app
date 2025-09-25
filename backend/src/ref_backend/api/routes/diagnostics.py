@@ -2,6 +2,7 @@ import csv
 import io
 import json
 from collections.abc import Generator
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import and_, not_, text
@@ -12,7 +13,9 @@ from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.json_utils import sanitize_float_value
+from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import (
+    AnnotatedScalarValue,
     Collection,
     DiagnosticSummary,
     Execution,
@@ -236,10 +239,12 @@ async def comparison(  # noqa: PLR0912, PLR0913
 
     return MetricValueComparison(
         source=MetricValueCollection.build(
-            scalar_values=source_scalar_values, series_values=source_series_values
+            scalar_values=[AnnotatedScalarValue(value=v) for v in source_scalar_values],
+            series_values=source_series_values,
         ),
         ensemble=MetricValueCollection.build(
-            scalar_values=ensemble_scalar_values, series_values=ensemble_series_values
+            scalar_values=[AnnotatedScalarValue(value=v) for v in ensemble_scalar_values],
+            series_values=ensemble_series_values,
         ),
     )
 
@@ -279,13 +284,17 @@ async def list_executions(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=None)
-async def list_metric_values(  # noqa: PLR0913
+async def list_metric_values(  # noqa: PLR0913, PLR0915
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
     request: Request,
     format: str | None = None,
     type: str = Query("all", description="Type of metric values to return: 'scalar', 'series', or 'all'"),
+    detect_outliers: Literal["off", "iqr"] = Query(
+        "iqr", description="Outlier detection method: 'off' or 'iqr'"
+    ),
+    include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic (both scalar and series)
@@ -327,15 +336,30 @@ async def list_metric_values(  # noqa: PLR0913
         if series_query and hasattr(models.SeriesMetricValue, key):
             series_query = series_query.filter(getattr(models.SeriesMetricValue, key) == value)
 
+    scalar_values = scalar_query.all() if scalar_query else []
+    series_values = series_query.all() if series_query else []
+
+    # Outlier detection
+    annotated_scalar_values: list[AnnotatedScalarValue]
+    had_outliers = False
+    outlier_count = 0
+    detection_ran = False
+    if detect_outliers == "iqr" and scalar_values:
+        detection_ran = True
+        annotated_scalar_values, outlier_count = detect_outliers_in_scalar_values(scalar_values)
+        had_outliers = outlier_count > 0
+        if not include_unverified:
+            annotated_scalar_values = [item for item in annotated_scalar_values if not item.is_outlier]
+    else:
+        annotated_scalar_values = [AnnotatedScalarValue(value=v) for v in scalar_values]
+
     if format == "csv":
-        scalar_values = scalar_query.all() if scalar_query else []
-        series_values = series_query.all() if series_query else []
 
         def generate_csv() -> Generator[str]:
             output = io.StringIO()
             writer = csv.writer(output)
 
-            if not scalar_values and not series_values:
+            if (not annotated_scalar_values and not scalar_values) and not series_values:
                 yield ""
                 return
 
@@ -343,24 +367,28 @@ async def list_metric_values(  # noqa: PLR0913
             # Scalar values: dimensions + value
             # Series values: dimensions + values (flattened) + index info
 
-            if scalar_values:
-                # Write scalar values
-                dimensions = sorted(scalar_values[0].dimensions.keys())
+            if annotated_scalar_values:
+                dimensions = sorted(annotated_scalar_values[0].value.dimensions.keys())
                 header = [*dimensions, "value", "type"]
+                if detection_ran:
+                    header.extend(["is_outlier", "verification_status"])
                 writer.writerow(header)
 
-                for mv in scalar_values:
+                for item in annotated_scalar_values:
+                    mv = item.value
                     row = [mv.dimensions.get(d) for d in dimensions] + [
                         sanitize_float_value(mv.value),
                         "scalar",
                     ]
+                    if detection_ran:
+                        row.extend([item.is_outlier, item.verification_status])
                     writer.writerow(row)
 
             if series_values:
                 # Write series values (flattened)
                 for sv in series_values:
                     dimensions = sorted(sv.dimensions.keys())
-                    if not scalar_values:  # Write header if not already written
+                    if not (annotated_scalar_values or scalar_values):  # Write header if not already written
                         header = [*dimensions, "value", "index", "index_name", "type"]
                         writer.writerow(header)
 
@@ -378,15 +406,22 @@ async def list_metric_values(  # noqa: PLR0913
             output.seek(0)
             yield output.read()
 
+        headers = {
+            "Content-Disposition": f"attachment; filename=metric_values_{provider_slug}_{diagnostic_slug}.csv"
+        }
+        if detection_ran:
+            headers["X-REF-Had-Outliers"] = "true" if had_outliers else "false"
+            headers["X-REF-Outlier-Count"] = str(outlier_count)
+
         return StreamingResponse(
             generate_csv(),
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; "
-                f"filename=metric_values_{provider_slug}_{diagnostic_slug}.csv"
-            },
+            headers=headers,
         )
     else:
-        scalar_values = scalar_query.all() if scalar_query else []
-        series_values = series_query.all() if series_query else []
-        return MetricValueCollection.build(scalar_values=scalar_values, series_values=series_values)
+        return MetricValueCollection.build(
+            scalar_values=annotated_scalar_values,
+            series_values=series_values,
+            had_outliers=had_outliers if detection_ran else None,
+            outlier_count=outlier_count if detection_ran else None,
+        )

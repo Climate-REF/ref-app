@@ -86,7 +86,7 @@ export const diagnosticsGet = <ThrowOnError extends boolean = false>(options: Op
 
 /**
  * List Execution Groups
- * Fetch a result using the slug
+ * Fetch execution groups for a diagnostic.
  */
 export const diagnosticsListExecutionGroups = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListExecutionGroupsData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionGroupsError, ThrowOnError>({

@@ -9,7 +9,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { Download, Eye, MoreHorizontal } from "lucide-react";
+import { AlertTriangle, Download, Eye, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
@@ -87,7 +87,24 @@ function ValuesDataTable({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title={"Value"} />
         ),
-        accessorFn: (cell) => (cell.value as number).toPrecision(3),
+        accessorFn: (cell) => cell.value,
+        cell: (cell) => {
+          const value = (cell.row.original.value as number).toPrecision(3);
+          const isOutlier = cell.row.original?.is_outlier === true;
+          return (
+            <div className="flex items-center gap-1">
+              {value}
+              {isOutlier && (
+                <span
+                  className="inline-flex items-center"
+                  title="Flagged outlier (3.0×IQR)"
+                >
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                </span>
+              )}
+            </div>
+          );
+        },
         enableSorting: true,
       },
       {

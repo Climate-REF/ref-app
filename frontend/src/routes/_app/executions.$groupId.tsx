@@ -28,7 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
-  const { tab, executionId } = Route.useSearch();
+  const { tab, executionId, detect_outliers, include_unverified } =
+    Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { data } = useSuspenseQuery(
@@ -47,7 +48,11 @@ const ExecutionInfo = () => {
   const metricValues = useQuery(
     executionsMetricValuesOptions({
       path: { group_id: groupId },
-      query: { execution_id: executionId },
+      query: {
+        execution_id: executionId,
+        detect_outliers: tab === "raw-data" ? detect_outliers : undefined,
+        include_unverified: tab === "raw-data" ? include_unverified : undefined,
+      },
     }),
   );
 
@@ -217,10 +222,38 @@ const ExecutionInfo = () => {
                       (metricValues.data as MetricValueCollection)?.data ?? []
                     }
                     loading={metricValues.isLoading}
+                    hadOutliers={
+                      (metricValues.data as MetricValueCollection)
+                        ?.had_outliers ?? undefined
+                    }
+                    outlierCount={
+                      (metricValues.data as MetricValueCollection)
+                        ?.outlier_count ?? undefined
+                    }
+                    initialDetectOutliers={detect_outliers}
+                    onDetectOutliersChange={(value) => {
+                      navigate({
+                        search: (prev) => ({ ...prev, detect_outliers: value }),
+                      });
+                    }}
+                    initialIncludeUnverified={include_unverified}
+                    onIncludeUnverifiedChange={(value) => {
+                      navigate({
+                        search: (prev) => ({
+                          ...prev,
+                          include_unverified: value,
+                        }),
+                      });
+                    }}
                     onDownload={async () => {
                       const response = await executionsMetricValues({
                         path: { group_id: groupId },
-                        query: { execution_id: executionId, format: "csv" },
+                        query: {
+                          execution_id: executionId,
+                          format: "csv",
+                          detect_outliers: detect_outliers,
+                          include_unverified: include_unverified,
+                        },
                       });
                       const blob = new Blob([response as unknown as string], {
                         type: "text/csv",
@@ -266,6 +299,9 @@ const executionInfoSchema = z.object({
     .enum(["datasets", "executions", "files", "raw-data", "logs"])
     .default("datasets"),
   executionId: z.string().optional(),
+  // Outlier detection parameters
+  detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
+  include_unverified: z.coerce.boolean().default(false),
 });
 
 export const Route = createFileRoute("/_app/executions/$groupId")({

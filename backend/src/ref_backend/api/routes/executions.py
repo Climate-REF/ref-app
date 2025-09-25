@@ -6,8 +6,10 @@ import tarfile
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.orm import Session, aliased
@@ -19,7 +21,9 @@ from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
+from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import (
+    AnnotatedScalarValue,
     Collection,
     Dataset,
     Execution,
@@ -288,13 +292,17 @@ async def metric_bundle(
 
 
 @router.get("/{group_id}/values", response_model=None)
-async def metric_values(
+async def metric_values(  # noqa: PLR0913, PLR0915
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
     format: str | None = None,
     type: str = Query("all", description="Type of metric values to return: 'scalar', 'series', or 'all'"),
-) -> MetricValueCollection | StreamingResponse:
+    detect_outliers: Literal["off", "iqr"] = Query(
+        "iqr", description="Outlier detection method: 'off' or 'iqr'"
+    ),
+    include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
+) -> MetricValueCollection | StreamingResponse | JSONResponse:
     """
     Fetch metric values for a specific execution (both scalar and series)
 
@@ -319,6 +327,19 @@ async def metric_values(
         )
         series_values = series_query.all()
 
+    # Outlier detection
+    annotated_scalar_values = None
+    had_outliers = False
+    outlier_count = 0
+    detection_ran = False
+    if detect_outliers == "iqr" and scalar_values:
+        detection_ran = True
+        annotated_scalar_values, outlier_count = detect_outliers_in_scalar_values(scalar_values)
+        had_outliers = outlier_count > 0
+        if not include_unverified:
+            annotated_scalar_values = [item for item in annotated_scalar_values if not item.is_outlier]
+    else:
+        annotated_scalar_values = [AnnotatedScalarValue(value=v) for v in scalar_values]
     # Return metric values as a CSV file
     if format == "csv":
 
@@ -326,7 +347,7 @@ async def metric_values(
             output = io.StringIO()
             writer = csv.writer(output)
 
-            if not scalar_values and not series_values:
+            if (not annotated_scalar_values and not scalar_values) and not series_values:
                 yield ""
                 return
 
@@ -334,21 +355,26 @@ async def metric_values(
             # Scalar values: dimensions + value
             # Series values: dimensions + values (flattened) + index info
 
-            if scalar_values:
+            if annotated_scalar_values:
                 # Write scalar values
-                dimensions = sorted(scalar_values[0].dimensions.keys())
+                dimensions = sorted(annotated_scalar_values[0].value.dimensions.keys())
                 header = [*dimensions, "value", "type"]
+                if detection_ran:
+                    header.extend(["is_outlier", "verification_status"])
                 writer.writerow(header)
 
-                for mv in scalar_values:
+                for item in annotated_scalar_values:
+                    mv = item.value
                     row = [mv.dimensions.get(d) for d in dimensions] + [mv.value, "scalar"]
+                    if detection_ran:
+                        row.extend([item.is_outlier, item.verification_status])
                     writer.writerow(row)
 
             if series_values:
                 # Write series values (flattened)
                 for sv in series_values:
                     dimensions = sorted(sv.dimensions.keys())
-                    if not scalar_values:  # Write header if not already written
+                    if not (annotated_scalar_values):  # Write header if not already written
                         header = [*dimensions, "value", "index", "index_name", "type"]
                         writer.writerow(header)
 
@@ -366,15 +392,23 @@ async def metric_values(
             output.seek(0)
             yield output.read()
 
+        headers = {"Content-Disposition": f"attachment; filename=metric_values_{group_id}_{execution.id}.csv"}
+        if detection_ran:
+            headers["X-REF-Had-Outliers"] = "true" if had_outliers else "false"
+            headers["X-REF-Outlier-Count"] = str(outlier_count)
+
         return StreamingResponse(
             generate_csv(),
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; filename=metric_values_{group_id}_{execution.id}.csv"
-            },
+            headers=headers,
         )
     else:
-        return MetricValueCollection.build(scalar_values=scalar_values, series_values=series_values)
+        return MetricValueCollection.build(
+            scalar_values=annotated_scalar_values,
+            series_values=series_values,
+            had_outliers=had_outliers if detection_ran else None,
+            outlier_count=outlier_count if detection_ran else None,
+        )
 
 
 @router.get("/{group_id}/archive")

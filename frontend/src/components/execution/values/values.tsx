@@ -43,6 +43,13 @@ type ValuesProps = {
     hue?: string;
     style?: string;
   }) => void;
+  // Outlier detection parameters
+  hadOutliers?: boolean;
+  outlierCount?: number;
+  initialDetectOutliers?: "off" | "iqr";
+  onDetectOutliersChange?: (value: "off" | "iqr") => void;
+  initialIncludeUnverified?: boolean;
+  onIncludeUnverifiedChange?: (value: boolean) => void;
 };
 
 type ViewType = "bar" | "table" | "series";
@@ -50,6 +57,13 @@ type ViewType = "bar" | "table" | "series";
 export function Values(props: ValuesProps) {
   const [viewType, setViewType] = useState<ViewType>(
     props.initialViewType || "table",
+  );
+
+  const [detectOutliers, setDetectOutliers] = useState<"off" | "iqr">(
+    props.initialDetectOutliers || "iqr",
+  );
+  const [includeUnverified, setIncludeUnverified] = useState<boolean>(
+    props.initialIncludeUnverified || false,
   );
 
   // Handle view type changes and sync with URL
@@ -88,10 +102,68 @@ export function Values(props: ValuesProps) {
     onFiltersChange: props.onFiltersChange,
   });
 
+  // Handle outlier control changes
+  const handleDetectOutliersChange = (value: "off" | "iqr") => {
+    setDetectOutliers(value);
+    if (props.onDetectOutliersChange) {
+      props.onDetectOutliersChange(value);
+    }
+  };
+
+  const handleIncludeUnverifiedChange = (value: boolean) => {
+    setIncludeUnverified(value);
+    if (props.onIncludeUnverifiedChange) {
+      props.onIncludeUnverifiedChange(value);
+    }
+  };
+
+  // Outlier banner
+  const showBanner = detectOutliers !== "off" && props.hadOutliers;
+  const bannerText = includeUnverified
+    ? `Showing unverified values (${props.outlierCount ?? 0} outliers)`
+    : `Outliers detected (${props.outlierCount ?? 0} filtered by server)`;
+
   return (
     <Card>
       <CardContent>
         <div className="flex flex-col gap-4">
+          {/* Outlier Banner */}
+          {showBanner && (
+            <div className="rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 p-3">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                {bannerText}
+              </p>
+            </div>
+          )}
+
+          {/* Outlier Controls */}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={includeUnverified ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleIncludeUnverifiedChange(!includeUnverified)}
+            >
+              {includeUnverified ? "Hide unverified" : "Show unverified"}
+            </Button>
+            <div className="flex items-center space-x-1">
+              <span className="text-sm">Detection:</span>
+              <Button
+                variant={detectOutliers === "iqr" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleDetectOutliersChange("iqr")}
+              >
+                IQR
+              </Button>
+              <Button
+                variant={detectOutliers === "off" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleDetectOutliersChange("off")}
+              >
+                Off
+              </Button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-end space-x-2">
             <div className="grow">
               <FilterControls
