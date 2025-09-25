@@ -68,6 +68,13 @@ export const EmptyEnsembleChart = () => {
   );
 };
 
+const renderKV = (k: string, v: string) => (
+  <div key={k} className="contents">
+    <div className="text-muted-foreground">{k}</div>
+    <div className="text-left">{v}</div>
+  </div>
+);
+
 const chartHeight = 320;
 const marginTop = 24;
 const marginBottom = 10;
@@ -299,13 +306,6 @@ export const EnsembleChart = ({
 
               const outliers = datum?.__outliers;
               const rawData: MetricValue[] = datum?.__rawData ?? [];
-
-              const renderKV = (k: string, v: string) => (
-                <div key={k} className="contents">
-                  <div className="text-muted-foreground">{k}</div>
-                  <div className="text-left">{v}</div>
-                </div>
-              );
 
               // // Find closest data point to mouse position
               let closestDataPoint: MetricValue | null = null;

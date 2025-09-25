@@ -12,10 +12,11 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
         title: "NAM Bias",
-        description: "Northern Annular Mode (NAM) Bias",
+        description:
+          "Northern Annular Mode (NAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
           method: "cbf",
-          statistic: "bias",
+          statistic: "rms",
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
@@ -28,11 +29,12 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-sam",
-        title: "SAM Bias",
-        description: "Southern Annular Mode (SAM) Bias",
+        title: "SAM RMSE",
+        description:
+          "Southern Annual Mode (SAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
           method: "cbf",
-          statistic: "bias",
+          statistic: "rms",
           domain: "atm-20c-plev-s",
         },
         groupingConfig: {
@@ -44,11 +46,49 @@ const cards: ExplorerCard[] = [
       {
         type: "box-whisker-chart",
         provider: "pmp",
-        diagnostic: "extratropical-modes-of-variability-nao",
-        title: "NAO Bias",
+        diagnostic: "extratropical-modes-of-variability-npgo",
+        title: "NPGO RMSE",
+        description:
+          "North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
           method: "cbf",
-          statistic: "bias",
+          statistic: "rms",
+          domain: "atm-20c-plev-n",
+        },
+        groupingConfig: {
+          groupBy: "season",
+          hue: "experiment_id",
+        },
+        symmetricalAxes: true,
+      },
+      {
+        type: "box-whisker-chart",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-nao",
+        title: "NAO RMSE",
+        description:
+          "North Atlantic Oscillation (NAO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        otherFilters: {
+          method: "cbf",
+          statistic: "rms",
+          domain: "atm-20c-plev-n",
+        },
+        groupingConfig: {
+          groupBy: "season",
+          hue: "season",
+        },
+        symmetricalAxes: true,
+      },
+      {
+        type: "box-whisker-chart",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-pdo",
+        title: "PDO Bias",
+        description:
+          "Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        otherFilters: {
+          method: "cbf",
+          statistic: "rms",
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
@@ -62,9 +102,11 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pna",
         title: "PNA Bias",
+        description:
+          "Pacific-North American (PNA) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
           method: "cbf",
-          statistic: "bias",
+          statistic: "rms",
           domain: "atm-20c-plev-n",
         },
         groupingConfig: {
