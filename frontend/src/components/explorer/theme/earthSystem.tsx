@@ -94,6 +94,7 @@ const cards: ExplorerCard[] = [
         },
       },
     ],
+    placeholder: true,
   },
 ];
 

@@ -1,7 +1,6 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 const ExplorerLayout = () => {
   return (
@@ -16,9 +15,7 @@ const ExplorerLayout = () => {
           <div className="text-sm text-muted-foreground">
             <p className="mb-2">
               How to use: Start with a Thematic Area to discover relevant
-              diagnostics, or browse Sources to focus on specific models and
-              reference datasets. Switch to Diagnostics to search by
-              provider/metric.
+              diagnostics.
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li>
@@ -35,22 +32,12 @@ const ExplorerLayout = () => {
               </li>
             </ul>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Explore diagnostics by scientific theme. Select a theme to view
+            relevant metrics and example analyses.
+          </p>
         </CardContent>
       </Card>
-      <Tabs defaultValue="themes" className="space-y-4">
-        <TabsList className="w-full">
-          <TabsTrigger value="themes" asChild>
-            <Link to="/explorer/themes">Thematic Areas</Link>
-          </TabsTrigger>
-          <TabsTrigger value="sources" asChild>
-            <Link to="/explorer/sources">Sources</Link>
-          </TabsTrigger>
-          <TabsTrigger value="diagnostics" asChild>
-            <Link to="/explorer/diagnostics">Diagnostics</Link>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       <Outlet />
     </div>
   );

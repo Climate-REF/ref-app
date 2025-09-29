@@ -13,6 +13,7 @@ const cards: ExplorerCard[] = [
         diagnostic: "climate-at-global-warming-leve",
         title: "Global Mean Temperature Change at Warming Levels",
         metricUnits: "K",
+        placeholder: true,
       },
     ],
   },

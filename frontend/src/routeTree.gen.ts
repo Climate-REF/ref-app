@@ -23,8 +23,6 @@ import { Route as AppExecutionsIndexImport } from './routes/_app/executions.inde
 import { Route as AppDiagnosticsIndexImport } from './routes/_app/diagnostics.index'
 import { Route as AppDatasetsIndexImport } from './routes/_app/datasets.index'
 import { Route as AppExplorerThemesImport } from './routes/_app/explorer/themes'
-import { Route as AppExplorerSourcesImport } from './routes/_app/explorer/sources'
-import { Route as AppExplorerDiagnosticsImport } from './routes/_app/explorer/diagnostics'
 import { Route as AppExecutionsGroupIdImport } from './routes/_app/executions.$groupId'
 import { Route as AppDatasetsSlugImport } from './routes/_app/datasets.$slug'
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/route'
@@ -103,18 +101,6 @@ const AppDatasetsIndexRoute = AppDatasetsIndexImport.update({
 const AppExplorerThemesRoute = AppExplorerThemesImport.update({
   id: '/themes',
   path: '/themes',
-  getParentRoute: () => AppExplorerRouteRoute,
-} as any)
-
-const AppExplorerSourcesRoute = AppExplorerSourcesImport.update({
-  id: '/sources',
-  path: '/sources',
-  getParentRoute: () => AppExplorerRouteRoute,
-} as any)
-
-const AppExplorerDiagnosticsRoute = AppExplorerDiagnosticsImport.update({
-  id: '/diagnostics',
-  path: '/diagnostics',
   getParentRoute: () => AppExplorerRouteRoute,
 } as any)
 
@@ -232,20 +218,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExecutionsGroupIdImport
       parentRoute: typeof AppRouteImport
     }
-    '/_app/explorer/diagnostics': {
-      id: '/_app/explorer/diagnostics'
-      path: '/diagnostics'
-      fullPath: '/explorer/diagnostics'
-      preLoaderRoute: typeof AppExplorerDiagnosticsImport
-      parentRoute: typeof AppExplorerRouteImport
-    }
-    '/_app/explorer/sources': {
-      id: '/_app/explorer/sources'
-      path: '/sources'
-      fullPath: '/explorer/sources'
-      preLoaderRoute: typeof AppExplorerSourcesImport
-      parentRoute: typeof AppExplorerRouteImport
-    }
     '/_app/explorer/themes': {
       id: '/_app/explorer/themes'
       path: '/themes'
@@ -322,15 +294,11 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AppExplorerRouteRouteChildren {
-  AppExplorerDiagnosticsRoute: typeof AppExplorerDiagnosticsRoute
-  AppExplorerSourcesRoute: typeof AppExplorerSourcesRoute
   AppExplorerThemesRoute: typeof AppExplorerThemesRoute
   AppExplorerIndexRoute: typeof AppExplorerIndexRoute
 }
 
 const AppExplorerRouteRouteChildren: AppExplorerRouteRouteChildren = {
-  AppExplorerDiagnosticsRoute: AppExplorerDiagnosticsRoute,
-  AppExplorerSourcesRoute: AppExplorerSourcesRoute,
   AppExplorerThemesRoute: AppExplorerThemesRoute,
   AppExplorerIndexRoute: AppExplorerIndexRoute,
 }
@@ -413,8 +381,6 @@ export interface FileRoutesByFullPath {
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
-  '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
-  '/explorer/sources': typeof AppExplorerSourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
@@ -436,8 +402,6 @@ export interface FileRoutesByTo {
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
-  '/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
-  '/explorer/sources': typeof AppExplorerSourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
@@ -460,8 +424,6 @@ export interface FileRoutesById {
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
-  '/_app/explorer/diagnostics': typeof AppExplorerDiagnosticsRoute
-  '/_app/explorer/sources': typeof AppExplorerSourcesRoute
   '/_app/explorer/themes': typeof AppExplorerThemesRoute
   '/_app/datasets/': typeof AppDatasetsIndexRoute
   '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
@@ -486,8 +448,6 @@ export interface FileRouteTypes {
     | '/content/terms-of-use'
     | '/datasets/$slug'
     | '/executions/$groupId'
-    | '/explorer/diagnostics'
-    | '/explorer/sources'
     | '/explorer/themes'
     | '/datasets'
     | '/diagnostics'
@@ -508,8 +468,6 @@ export interface FileRouteTypes {
     | '/content/terms-of-use'
     | '/datasets/$slug'
     | '/executions/$groupId'
-    | '/explorer/diagnostics'
-    | '/explorer/sources'
     | '/explorer/themes'
     | '/datasets'
     | '/diagnostics'
@@ -530,8 +488,6 @@ export interface FileRouteTypes {
     | '/content/terms-of-use'
     | '/_app/datasets/$slug'
     | '/_app/executions/$groupId'
-    | '/_app/explorer/diagnostics'
-    | '/_app/explorer/sources'
     | '/_app/explorer/themes'
     | '/_app/datasets/'
     | '/_app/diagnostics/'
@@ -599,8 +555,6 @@ export const routeTree = rootRoute
       "filePath": "_app/explorer/route.tsx",
       "parent": "/_app",
       "children": [
-        "/_app/explorer/diagnostics",
-        "/_app/explorer/sources",
         "/_app/explorer/themes",
         "/_app/explorer/"
       ]
@@ -624,14 +578,6 @@ export const routeTree = rootRoute
     "/_app/executions/$groupId": {
       "filePath": "_app/executions.$groupId.tsx",
       "parent": "/_app"
-    },
-    "/_app/explorer/diagnostics": {
-      "filePath": "_app/explorer/diagnostics.tsx",
-      "parent": "/_app/explorer"
-    },
-    "/_app/explorer/sources": {
-      "filePath": "_app/explorer/sources.tsx",
-      "parent": "/_app/explorer"
     },
     "/_app/explorer/themes": {
       "filePath": "_app/explorer/themes.tsx",

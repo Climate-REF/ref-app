@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -53,10 +54,18 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
   console.log("Rendering ExplorerCardContent:", contentItem);
 
   return (
-    <div className={`${spanClass} relative group`}>
+    <div
+      className={cn(
+        "relative group",
+        spanClass,
+        contentItem.placeholder ? "border-red-500" : "",
+      )}
+    >
       <Card>
         <CardHeader>
-          <CardTitle>{contentItem.title}</CardTitle>
+          <CardTitle>
+            {contentItem.placeholder ? "PLACEHOLDER: " : ""} {contentItem.title}
+          </CardTitle>
           {contentItem.description && (
             <CardDescription>{contentItem.description}</CardDescription>
           )}
