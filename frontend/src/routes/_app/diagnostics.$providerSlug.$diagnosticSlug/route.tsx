@@ -33,7 +33,13 @@ const DiagnosticInfoLayout = () => {
     <div className="flex flex-col gap-4">
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>{data.name}</CardTitle>
+          <CardTitle className="mb-6">
+            <span className="text-sm font-medium text-muted-foreground">
+              {data.aft_link?.name}
+            </span>
+            <br />
+            {data.name}
+          </CardTitle>
           <CardDescription>{data.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -51,12 +57,15 @@ const DiagnosticInfoLayout = () => {
               </div>
               {data.aft_link.provider_link && (
                 <div className="space-y-1 col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Diagnostic Description
+                  </p>
                   <a
-                    className="text-sm text-muted-foreground underline underline-offset-4"
+                    className="font-medium underline underline-offset-4"
                     href={data.aft_link.provider_link}
                     target="_blank"
                   >
-                    Diagnostic Description URL
+                    Link to provider
                   </a>
                 </div>
               )}

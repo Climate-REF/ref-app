@@ -54,7 +54,7 @@ export function DiagnosticCard({
           {/* AFT Information */}
           {diagnostic.aft_link && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">AFT ID:</span>
+              <span className="text-muted-foreground">CMIP7 AFT ID:</span>
               <span className="text-foreground font-medium">
                 {diagnostic.aft_link.id}
               </span>
