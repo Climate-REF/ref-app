@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Union
 
 from attr import define
+from loguru import logger
 from pydantic import BaseModel, HttpUrl, computed_field
 from sqlalchemy import func
 
@@ -226,9 +227,11 @@ class DiagnosticSummary(BaseModel):
         )
 
         aft_id = get_aft_for_ref_diagnostic(diagnostic.provider.slug, diagnostic.slug)
+
         if aft_id:
             aft = get_aft_diagnostic_by_id(aft_id)
         else:
+            logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
             aft = None
 
         return DiagnosticSummary(

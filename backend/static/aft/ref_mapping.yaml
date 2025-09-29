@@ -48,7 +48,7 @@
   - provider_slug: pmp
     diagnostic_slug: annual-cycle
   # ESMValTool too?
-3.2:
+3.2: []
   #  likely also the pmp diagnostic
   # - provider_slug: pmp
   #   diagnostic_slug: annual-cycle
@@ -74,13 +74,13 @@
   - provider_slug: esmvaltool
     diagnostic_slug: cloud-scatterplots-cli-ta
   - provider_slug: esmvaltool
-    diagnostic_slug: cloud-scatterplots-cli-lwcre
+    diagnostic_slug: cloud-scatterplots-clivi-lwcre
   - provider_slug: esmvaltool
-    diagnostic_slug: cloud-scatterplots-cli-swcre
+    diagnostic_slug: cloud-scatterplots-clt-swcre
   - provider_slug: esmvaltool
-    diagnostic_slug: cloud-scatterplots-cli-pr
+    diagnostic_slug: cloud-scatterplots-clwvi-pr
   - provider_slug: esmvaltool
-    diagnostic_slug: cloud-scatterplots-cli-reference
+    diagnostic_slug: cloud-scatterplots-reference
 
 4.1:
   - provider_slug: esmvaltool
@@ -100,7 +100,7 @@
   - provider_slug: esmvaltool
     diagnostic_slug: regional-historical-timeseries
   - provider_slug: esmvaltool
-    diagnostic_slug: regional-historical-trends
+    diagnostic_slug: regional-historical-trend
 5.3:
   - provider_slug: esmvaltool
     diagnostic_slug: climate-at-global-warming-levels

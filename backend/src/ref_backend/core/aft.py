@@ -1,8 +1,8 @@
-import csv
 import logging
 from functools import lru_cache
 from pathlib import Path
 
+import pandas as pd
 import yaml
 from pydantic import ValidationError
 
@@ -40,42 +40,47 @@ def load_official_aft_diagnostics() -> list[AFTDiagnosticBase]:
     """
     diagnostics: list[AFTDiagnosticBase] = []
     csv_path, _ = get_aft_paths()
+
+    expected_headers = {
+        "id",
+        "name",
+        "theme",
+        "version_control",
+        "reference_dataset",
+        "endorser",
+        "provider_link",
+        "description",
+        "short_description",
+    }
     try:
-        with open(csv_path, encoding="utf-8-sig") as f:  # Handle BOM
-            reader = csv.DictReader(f)
-            expected_headers = {
-                "id",
-                "name",
-                "theme",
-                "version_control",
-                "reference_dataset",
-                "endorser",
-                "provider_link",
-                "description",
-                "short_description",
-            }
+        df = pd.read_csv(csv_path)
 
-            if set(reader.fieldnames or []) != expected_headers:
-                raise ValueError(
-                    f"CSV headers mismatch. Expected: {expected_headers}, Got: {set(reader.fieldnames or [])}"
-                )
+        if set(df.columns) != {
+            "id",
+            "name",
+            "theme",
+            "version_control",
+            "reference_dataset",
+            "endorser",
+            "provider_link",
+            "description",
+            "short_description",
+        }:
+            raise ValueError(f"CSV headers mismatch. Expected: {expected_headers}, Got: {set(df.columns)}")
 
-            for row_num, row in enumerate(reader, start=2):  # Start at 2 since row 1 is headers
-                # Normalize whitespace and convert empty strings to None
-                normalized_row = {}
-                for key, value in row.items():
-                    stripped = value.strip() if value else ""
-                    normalized_row[key] = stripped if stripped else None
+        if df.id.unique().size != len(df):
+            raise ValueError("Duplicate 'id' values found in AFT CSV")
 
-                # Validate unique id
-                if normalized_row["id"] in [d.id for d in diagnostics]:
-                    raise ValueError(f"Duplicate id '{normalized_row['id']}' at row {row_num}")
+        # Clean data: strip whitespace and convert empty strings to None
+        for key in df.columns:
+            df[key] = df[key].astype(str).str.strip().replace({"": None})
 
-                try:
-                    diagnostic = AFTDiagnosticBase(**normalized_row)  # type: ignore[arg-type]
-                    diagnostics.append(diagnostic)
-                except ValidationError as e:
-                    raise ValueError(f"Validation error at row {row_num}: {e}") from e
+        for _, row in df.iterrows():  # Start at 2 since row 1 is headers
+            try:
+                diagnostic = AFTDiagnosticBase(**row.to_dict())
+                diagnostics.append(diagnostic)
+            except ValidationError as e:
+                raise ValueError(f"Validation error at row {row}: {e}") from e
 
     except FileNotFoundError:
         raise ValueError(f"AFT CSV file not found: {csv_path}")
@@ -110,12 +115,14 @@ def load_ref_mapping() -> dict[str, list[RefDiagnosticLink]]:
     except Exception as e:
         raise ValueError(f"Error loading AFT mapping YAML: {e}") from e
 
+    data = {str(k): v for k, v in data.items()}  # Ensure keys are strings
+
     mapping = {}
     official_ids = {d.id for d in load_official_aft_diagnostics()}
 
     for aft_id, refs in data.items():
         if aft_id not in official_ids:
-            logger.warning(f"AFT_CSV: Unknown AFT ID '{aft_id}' in mapping, ignoring")
+            logger.warning(f"AFT_CSV: Unknown AFT ID '{aft_id}' in {official_ids} official IDs), ignoring")
             continue
 
         if not isinstance(refs, list):
@@ -200,6 +207,7 @@ def get_aft_for_ref_diagnostic(provider_slug: str, diagnostic_slug: str) -> str 
     aft_ids = []
 
     for aft_id, ref_diagnostics in mapping.items():
+        logger.info(f"Checking AFT ID {aft_id} with refs {ref_diagnostics}")
         for ref in ref_diagnostics:
             if ref.provider_slug == provider_slug and ref.diagnostic_slug == diagnostic_slug:
                 aft_ids.append(aft_id)

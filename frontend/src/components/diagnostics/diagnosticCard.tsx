@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -19,10 +20,13 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
     <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1 space-y-1">
             <CardTitle className="text-lg font-semibold">
               {diagnostic.name}
             </CardTitle>
+            <CardDescription className="font-semibold">
+              {diagnostic.aft_link ? diagnostic.aft_link.name : ""}
+            </CardDescription>
             <Badge variant="secondary">{diagnostic.provider.slug}</Badge>
           </div>
         </div>
@@ -38,6 +42,16 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
         </div>
 
         <div className="space-y-3">
+          {/* AFT Information */}
+          {diagnostic.aft_link && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">AFT ID:</span>
+              <span className="text-foreground font-medium">
+                {diagnostic.aft_link.id}
+              </span>
+            </div>
+          )}
+
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>

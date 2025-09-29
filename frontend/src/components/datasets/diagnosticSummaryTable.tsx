@@ -87,6 +87,22 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
       );
     },
   },
+  {
+    id: "aft_link",
+    accessorFn: (row) => row.aft_link?.id || null,
+    enableSorting: true,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="AFT ID" />
+    ),
+    cell: (cell) => {
+      const aftId = cell.getValue<string | null>();
+      return aftId ? (
+        <span className="text-foreground font-medium">{aftId}</span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    },
+  },
 
   columnHelper.display({
     id: "link",

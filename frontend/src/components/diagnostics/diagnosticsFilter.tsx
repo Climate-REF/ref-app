@@ -23,6 +23,7 @@ export function DiagnosticsFilter({
 }: DiagnosticsFilterProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
+  const [selectedAftIds, setSelectedAftIds] = useState<string[]>([]);
   const [showWithMetricValues, setShowWithMetricValues] = useState<
     boolean | null
   >(null);
@@ -32,10 +33,23 @@ export function DiagnosticsFilter({
     new Set(diagnostics.map((d) => d.provider.slug)),
   ).sort();
 
+  // Extract unique AFT diagnostics from diagnostics
+  const allAftIds = Array.from(
+    new Map(
+      diagnostics
+        .filter((d) => d.aft_link)
+        .map((d) => [
+          d.aft_link!.id,
+          { id: d.aft_link!.id, name: d.aft_link!.name },
+        ]),
+    ).values(),
+  ).sort((a, b) => a.id.localeCompare(b.id));
+
   // Apply filters
   const applyFilters = (
     search: string,
     providers: string[],
+    aftIds: string[],
     metricValuesFilter: boolean | null,
   ) => {
     let filtered = diagnostics;
@@ -59,6 +73,14 @@ export function DiagnosticsFilter({
       );
     }
 
+    // AFT ID filter
+    if (aftIds.length > 0) {
+      filtered = filtered.filter(
+        (diagnostic) =>
+          diagnostic.aft_link && aftIds.includes(diagnostic.aft_link.id),
+      );
+    }
+
     // Metric values filter
     if (metricValuesFilter !== null) {
       filtered = filtered.filter(
@@ -71,7 +93,12 @@ export function DiagnosticsFilter({
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    applyFilters(value, selectedProviders, showWithMetricValues);
+    applyFilters(
+      value,
+      selectedProviders,
+      selectedAftIds,
+      showWithMetricValues,
+    );
   };
 
   const handleProviderToggle = (provider: string) => {
@@ -79,23 +106,45 @@ export function DiagnosticsFilter({
       ? selectedProviders.filter((p) => p !== provider)
       : [...selectedProviders, provider];
     setSelectedProviders(newProviders);
-    applyFilters(searchTerm, newProviders, showWithMetricValues);
+    applyFilters(
+      searchTerm,
+      newProviders,
+      selectedAftIds,
+      showWithMetricValues,
+    );
+  };
+
+  const handleAftIdToggle = (aftId: string) => {
+    const newAftIds = selectedAftIds.includes(aftId)
+      ? selectedAftIds.filter((id) => id !== aftId)
+      : [...selectedAftIds, aftId];
+    setSelectedAftIds(newAftIds);
+    applyFilters(
+      searchTerm,
+      selectedProviders,
+      newAftIds,
+      showWithMetricValues,
+    );
   };
 
   const handleMetricValuesFilter = (value: boolean | null) => {
     setShowWithMetricValues(value);
-    applyFilters(searchTerm, selectedProviders, value);
+    applyFilters(searchTerm, selectedProviders, selectedAftIds, value);
   };
 
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedProviders([]);
+    setSelectedAftIds([]);
     setShowWithMetricValues(null);
     onFilterChange(diagnostics);
   };
 
   const hasActiveFilters =
-    searchTerm || selectedProviders.length > 0 || showWithMetricValues !== null;
+    searchTerm ||
+    selectedProviders.length > 0 ||
+    selectedAftIds.length > 0 ||
+    showWithMetricValues !== null;
 
   return (
     <div className="space-y-4">
@@ -144,6 +193,41 @@ export function DiagnosticsFilter({
             </div>
           </PopoverContent>
         </Popover>
+
+        {allAftIds.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                CMIP7 AFT Diagnostics
+                {selectedAftIds.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedAftIds.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="font-medium">Filter by AFT Diagnostics</h4>
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {allAftIds.map((aft) => (
+                    <div key={aft.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`aft-${aft.id}`}
+                        checked={selectedAftIds.includes(aft.id)}
+                        onCheckedChange={() => handleAftIdToggle(aft.id)}
+                      />
+                      <Label htmlFor={`aft-${aft.id}`} className="text-sm">
+                        {aft.id} - {aft.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
 
         <Popover>
           <PopoverTrigger asChild>
@@ -203,7 +287,9 @@ export function DiagnosticsFilter({
       </div>
 
       {/* Active Filters Display */}
-      {(selectedProviders.length > 0 || showWithMetricValues !== null) && (
+      {(selectedProviders.length > 0 ||
+        selectedAftIds.length > 0 ||
+        showWithMetricValues !== null) && (
         <div className="flex flex-wrap gap-2">
           {selectedProviders.map((provider) => (
             <Badge
@@ -218,6 +304,23 @@ export function DiagnosticsFilter({
               />
             </Badge>
           ))}
+          {selectedAftIds.map((aftId) => {
+            const aft = allAftIds.find((a) => a.id === aftId);
+            return (
+              <Badge
+                key={`aft-${aftId}`}
+                variant="secondary"
+                className="cursor-pointer"
+              >
+                CMIP7 AFT: {aftId}
+                {aft ? ` - ${aft.name}` : ""}
+                <X
+                  className="h-3 w-3 ml-1"
+                  onClick={() => handleAftIdToggle(aftId)}
+                />
+              </Badge>
+            );
+          })}
           {showWithMetricValues !== null && (
             <Badge variant="secondary" className="cursor-pointer">
               {showWithMetricValues ? "Has values" : "No values"}
