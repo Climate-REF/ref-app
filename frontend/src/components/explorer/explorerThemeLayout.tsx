@@ -15,9 +15,11 @@ interface ExplorerThemeLayoutProps {
 export const ExplorerThemeLayout = ({ cards }: ExplorerThemeLayoutProps) => {
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 min-h-0">
         {cards.map((card) => (
-          <ExplorerCard key={card.title} card={card} />
+          <div key={card.title} className="flex-1">
+            <ExplorerCard card={card} />
+          </div>
         ))}
       </div>
     </TooltipProvider>

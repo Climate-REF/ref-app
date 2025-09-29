@@ -24,7 +24,7 @@ interface ExplorerCardProps {
 // Each card may contain multiple content items, which are rendered using the ExplorerCardContent component.
 export function ExplorerCard({ card }: ExplorerCardProps) {
   return (
-    <Card className={cn(card.placeholder ? "border-red-500 border-4" : "")}>
+    <Card className={cn(card.placeholder && "border-red-500 border-4")}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex-1">
