@@ -42,6 +42,7 @@ const cards: ExplorerCard[] = [
         },
       },
     ],
+    placeholder: true,
   },
   {
     title: "Cryosphere",
@@ -59,6 +60,7 @@ const cards: ExplorerCard[] = [
         },
       },
     ],
+    placeholder: true,
   },
 ];
 

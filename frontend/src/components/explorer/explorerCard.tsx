@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { ErrorBoundary, ErrorFallback } from "../app";
 import {
   ExplorerCardContent,
@@ -23,11 +24,13 @@ interface ExplorerCardProps {
 // Each card may contain multiple content items, which are rendered using the ExplorerCardContent component.
 export function ExplorerCard({ card }: ExplorerCardProps) {
   return (
-    <Card>
+    <Card className={cn(card.placeholder ? "border-red-500 border-4" : "")}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <CardTitle>{card.title}</CardTitle>
+            <CardTitle>
+              {card.placeholder && "PLACEHOLDER:"} {card.title}
+            </CardTitle>
             {card.description && (
               <CardDescription>{card.description}</CardDescription>
             )}

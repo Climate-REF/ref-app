@@ -6,6 +6,7 @@ const cards: ExplorerCard[] = [
     title: "Terrestrial Carbon Cycle",
     description:
       "The exchange of carbon between the land surface and the atmosphere.",
+    placeholder: true,
     content: [
       {
         type: "box-whisker-chart",

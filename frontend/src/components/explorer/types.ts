@@ -16,6 +16,7 @@ export type ExplorerCardContent =
       symmetricalAxes?: boolean;
       /** Unified grouping configuration */
       groupingConfig?: ChartGroupingConfig;
+      placeholder?: boolean;
     }
   | {
       type: "figure-gallery";
@@ -24,6 +25,7 @@ export type ExplorerCardContent =
       title: string;
       description?: string;
       span?: 1 | 2;
+      placeholder?: boolean;
     }
   | {
       type: "series-chart";
@@ -37,10 +39,12 @@ export type ExplorerCardContent =
       symmetricalAxes?: boolean;
       /** Unified grouping configuration */
       groupingConfig?: ChartGroupingConfig;
+      placeholder?: boolean;
     };
 
 export type ExplorerCard = {
   title: string;
   description?: string;
+  placeholder?: boolean;
   content: ExplorerCardContent[];
 };

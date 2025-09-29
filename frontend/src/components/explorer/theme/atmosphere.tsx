@@ -121,6 +121,7 @@ const cards: ExplorerCard[] = [
     title: "Cloud & Radiation",
     description:
       "Cloud properties and their effect on the Earth's energy balance.",
+    placeholder: true,
     content: [
       {
         type: "box-whisker-chart",
@@ -139,6 +140,7 @@ const cards: ExplorerCard[] = [
   {
     title: "Global Mean Timeseries",
     description: "Timeseries plots of global mean surface temperature.",
+    placeholder: true,
     content: [
       {
         type: "figure-gallery",
