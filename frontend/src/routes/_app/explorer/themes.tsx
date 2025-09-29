@@ -20,10 +20,6 @@ const Themes = () => {
   return (
     <Card>
       <CardContent className="space-y-4 pt-6">
-        <p className="text-sm text-muted-foreground">
-          Explore diagnostics by scientific theme. Select a theme to view
-          relevant metrics and example analyses.
-        </p>
         <ThematicContent />
       </CardContent>
     </Card>

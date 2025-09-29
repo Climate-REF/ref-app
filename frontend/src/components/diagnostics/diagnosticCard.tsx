@@ -1,28 +1,41 @@
 import { Link } from "@tanstack/react-router";
+import { MessageCircleWarning } from "lucide-react";
 import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface DiagnosticCardProps {
   diagnostic: DiagnosticSummary;
+  note?: string;
+  noteURL?: string;
 }
 
-export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
+export function DiagnosticCard({
+  diagnostic,
+  note,
+  noteURL,
+}: DiagnosticCardProps) {
+  console.log("Rendering DiagnosticCard for", diagnostic.slug, note, noteURL);
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1 space-y-1">
             <CardTitle className="text-lg font-semibold">
               {diagnostic.name}
             </CardTitle>
+            <CardDescription className="font-semibold">
+              {diagnostic.aft_link ? diagnostic.aft_link.name : ""}
+            </CardDescription>
             <Badge variant="secondary">{diagnostic.provider.slug}</Badge>
           </div>
         </div>
@@ -38,6 +51,16 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
         </div>
 
         <div className="space-y-3">
+          {/* AFT Information */}
+          {diagnostic.aft_link && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">CMIP7 AFT ID:</span>
+              <span className="text-foreground font-medium">
+                {diagnostic.aft_link.id}
+              </span>
+            </div>
+          )}
+
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>
@@ -71,6 +94,26 @@ export function DiagnosticCard({ diagnostic }: DiagnosticCardProps) {
             <span className="text-foreground">
               {diagnostic.successful_execution_count}/
               {diagnostic.execution_group_count}
+              {note && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <MessageCircleWarning className="ml-2 h-4 w-4 text-muted-foreground text-red-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{note}</p>
+                    {noteURL && (
+                      <a
+                        href={noteURL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Learn more
+                      </a>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </span>
           </div>
         </div>

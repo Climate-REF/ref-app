@@ -1,0 +1,109 @@
+1.1:
+  - provider_slug: esmvaltool
+    diagnostic_slug: sea-ice-sensitivity
+1.2:
+  - provider_slug: ilamb
+    diagnostic_slug: amoc-RAPID
+1.3:
+  - provider_slug: esmvaltool
+    diagnostic_slug: enso-basic-climatology
+  - provider_slug: esmvaltool
+    diagnostic_slug: enso-characteristics
+  - provider_slug: pmp
+    diagnostic_slug: enso_proc
+  - provider_slug: pmp
+    diagnostic_slug: enso_tel
+1.4:
+  - provider_slug: ilamb
+    diagnostic_slug: so-WOA2023-surface
+  # SST?
+1.5:
+  - provider_slug: ilamb
+    diagnostic_slug: ohc-NOAA
+1.6:
+  - provider_slug: esmvaltool
+    diagnostic_slug: sea-ice-area-basic
+2.1:
+  - provider_slug: ilamb
+    diagnostic_slug: cSoil-HWSD2
+2.2:
+  - provider_slug: ilamb
+    diagnostic_slug: gpp-FLUXNET2015
+2.3:
+  - provider_slug: ilamb
+    diagnostic_slug: mrro-LORA
+2.4:
+  - provider_slug: ilamb
+    diagnostic_slug: mrsos-WangMao
+2.5:
+  - provider_slug: ilamb
+    diagnostic_slug: nbp-Hoffman
+2.6:
+  - provider_slug: ilamb
+    diagnostic_slug: lai-AVH15C1
+2.7:
+  - provider_slug: ilamb
+    diagnostic_slug: snc-ESACCI
+3.1:
+  - provider_slug: pmp
+    diagnostic_slug: annual-cycle
+  # ESMValTool too?
+3.2: []
+  #  likely also the pmp diagnostic
+  # - provider_slug: pmp
+  #   diagnostic_slug: annual-cycle
+3.3:
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-nam
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-nao
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-npgo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-npo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-pdo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-pna
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-sam
+3.6:
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-radiative-effects
+3.7:
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-cli-ta
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clivi-lwcre
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clt-swcre
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clwvi-pr
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-reference
+
+4.1:
+  - provider_slug: esmvaltool
+    diagnostic_slug: equilibrium-climate-sensitivity
+4.2:
+  - provider_slug: esmvaltool
+    diagnostic_slug: transient-climate-response
+4.3:
+  - provider_slug: esmvaltool
+    diagnostic_slug: transient-climate-response-emissions
+4.4:
+  - provider_slug: esmvaltool
+    diagnostic_slug: zero-emission-commitment
+4.5:
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-annual-cycle
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-timeseries
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-trend
+5.3:
+  - provider_slug: esmvaltool
+    diagnostic_slug: climate-at-global-warming-levels
+5.4:
+  - provider_slug: esmvaltool
+    diagnostic_slug: climate-drivers-for-fire

@@ -135,8 +135,6 @@ const ExecutionInfo = () => {
                   // otherwise leave unknown. Fallback keeps type-safety with known fields.
                   execution.updated_at
                     ? (() => {
-                        // If created_at exists in the type in future, prefer that; currently only updated_at is guaranteed.
-                        // Show unknown when duration can't be computed reliably.
                         return "—";
                       })()
                     : "—",

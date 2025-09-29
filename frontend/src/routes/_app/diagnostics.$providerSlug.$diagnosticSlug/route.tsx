@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+
 import type { GroupBy } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
@@ -32,10 +33,44 @@ const DiagnosticInfoLayout = () => {
     <div className="flex flex-col gap-4">
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>{data.name}</CardTitle>
+          <CardTitle className="mb-6">
+            <span className="text-sm font-medium text-muted-foreground">
+              {data.aft_link?.name}
+            </span>
+            <br />
+            {data.name}
+          </CardTitle>
           <CardDescription>{data.description}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {data.aft_link && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">CMIP7 AFT ID</p>
+                <p className="font-medium">{data.aft_link.id}</p>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm text-muted-foreground">
+                  CMIP7 AFT Description
+                </p>
+                <p className="font-medium">{data.aft_link.short_description}</p>
+              </div>
+              {data.aft_link.provider_link && (
+                <div className="space-y-1 col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Diagnostic Description
+                  </p>
+                  <a
+                    className="font-medium underline underline-offset-4"
+                    href={data.aft_link.provider_link}
+                    target="_blank"
+                  >
+                    Link to provider
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Metric Provider</p>
@@ -67,8 +102,6 @@ const DiagnosticInfoLayout = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Tabs driven by parent route with tab in search to avoid undefined child routes in manifest */}
       <Tabs defaultValue="figures" className="space-y-4">
         <TabsList>
           <TabsTrigger value="groups" asChild>

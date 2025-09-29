@@ -3,6 +3,10 @@ Main entry point for the FastAPI application
 """
 
 import dotenv
+from fastapi import HTTPException, Request, Response
+from fastapi.exception_handlers import (
+    http_exception_handler as fasthttp_exception_handler,
+)
 
 from climate_ref.config import Config as RefConfig
 from climate_ref.database import Database
@@ -52,3 +56,11 @@ if settings.USE_TEST_DATA:
 
     app.dependency_overrides[get_settings] = test_settings
     app.dependency_overrides[deps._ref_config_dependency] = test_ref_config
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
+    from loguru import logger
+
+    logger.error(f"HTTP Exception: {exc.detail}")
+    return await fasthttp_exception_handler(request, exc)

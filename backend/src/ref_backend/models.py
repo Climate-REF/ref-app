@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Union
 
 from attr import define
-from pydantic import BaseModel, computed_field
+from loguru import logger
+from pydantic import BaseModel, HttpUrl, computed_field
 from sqlalchemy import func
 
 from climate_ref import models
@@ -57,7 +58,10 @@ class GroupBy(BaseModel):
 
 class DiagnosticSummary(BaseModel):
     """
-    A unique provider
+    Summary information about a diagnostic.
+
+    A diagnostic is a specific metric or set of metrics calculated by a provider.
+    Each diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.
     """
 
     id: int
@@ -116,9 +120,16 @@ class DiagnosticSummary(BaseModel):
     """
     Dimensions used for grouping datasets
     """
+    aft_link: "AFTDiagnosticDetail | None"
+    """
+    Associated AFT diagnostics
+    """
 
     @staticmethod
     def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
+        # Import here to avoid circular import issues
+        from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic
+
         concrete_diagnostic = app_context.provider_registry.get_metric(
             diagnostic.provider.slug, diagnostic.slug
         )
@@ -215,6 +226,14 @@ class DiagnosticSummary(BaseModel):
             .count()
         )
 
+        aft_id = get_aft_for_ref_diagnostic(diagnostic.provider.slug, diagnostic.slug)
+
+        if aft_id:
+            aft = get_aft_diagnostic_by_id(aft_id)
+        else:
+            logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
+            aft = None
+
         return DiagnosticSummary(
             id=diagnostic.id,
             provider=ProviderSummary.build(diagnostic.provider),
@@ -230,6 +249,7 @@ class DiagnosticSummary(BaseModel):
             execution_group_count=execution_group_count,
             successful_execution_group_count=successful_execution_group_count,
             group_by=group_by_summary,
+            aft_link=aft,
         )
 
 
@@ -561,3 +581,36 @@ class ExecutionStats(BaseModel):
         if self.total_execution_groups == 0:
             return 0.0
         return round((self.successful_execution_groups / self.total_execution_groups) * 100, 1)
+
+
+class AFTDiagnosticBase(BaseModel):
+    """CMIP7 Assessment Fast Track (AFT) diagnostic metadata.
+
+    This represents the diagnostic metadata as defined by the Model Benchmarking Task Team,
+    and approved by CMIP Panel.
+    """
+
+    id: str
+    name: str
+    theme: str | None
+    version_control: str | None
+    reference_dataset: str | None
+    endorser: str | None
+    provider_link: HttpUrl | None
+    description: str | None
+    short_description: str | None
+
+
+class AFTDiagnosticSummary(AFTDiagnosticBase):
+    pass
+
+
+class RefDiagnosticLink(BaseModel):
+    """Link to a specific diagnostic calculated by a provider."""
+
+    provider_slug: str
+    diagnostic_slug: str
+
+
+class AFTDiagnosticDetail(AFTDiagnosticBase):
+    diagnostics: list[RefDiagnosticLink]

@@ -9,7 +9,7 @@ from climate_ref import models
 from ref_backend.models import AnnotatedScalarValue
 
 
-def flag_outliers_iqr(values: Sequence[float], factor: float = 3.0, min_n: int = 4) -> list[bool]:
+def flag_outliers_iqr(values: Sequence[float], factor: float = 5.0, min_n: int = 10) -> list[bool]:
     """
     Flag outliers using the IQR method.
 

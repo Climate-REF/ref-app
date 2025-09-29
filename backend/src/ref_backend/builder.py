@@ -16,6 +16,19 @@ from climate_ref_core.pycmec.controlled_vocabulary import CV
 from ref_backend.api.main import api_router
 from ref_backend.core.config import Settings
 
+description = """
+API for querying the results from the Climate Rapid Evaluation Framework (Climate REF).
+This is used to back the [Climate REF Explorer](https://dashboard.climate-ref.org) web application.
+
+This API is a work in progress and will likely change in the future without warning.
+We are interested in your feedback on how you would like to use this API.
+This will help us prioritize features, and be aware of any API consumers before we make any changes.
+
+Contact [Jared Lewis](mailto:jared.lewis@climate-resource.com) or
+[file an issue on GitHub](https://github.com/Climate-REF/ref-app/issues),
+if you have any questions or feedback.
+"""
+
 
 def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
@@ -73,8 +86,17 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
+        description=description,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         generate_unique_id_function=custom_generate_unique_id,
+        contact={
+            "name": "Development Lead - Jared Lewis",
+            "email": "jared.lewis@climate-resource.com",
+        },
+        license_info={
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+        },
     )
     app.add_middleware(
         SQLAlchemyMonitor,
