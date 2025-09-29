@@ -8,6 +8,24 @@ import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
 
+const diagnosticNotes = [
+  {
+    slug: "climate-at-global-warming-levels",
+    note: "Known issue with an invalid dataset",
+    noteUrl: "https://github.com/Climate-REF/climate-ref/issues/428",
+  },
+  {
+    slug: "ohc-NOAA",
+    note: "Known issue",
+    noteUrl: "https://github.com/Climate-REF/climate-ref/issues/430",
+  },
+  {
+    slug: "sea-ice-sensitivity",
+    note: "Known issue with an invalid dataset",
+    noteUrl: "https://github.com/Climate-REF/climate-ref/issues/425",
+  },
+];
+
 const Diagnostics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
   const [view, setView] = useState<"cards" | "table">("cards");
@@ -38,12 +56,19 @@ const Diagnostics = () => {
 
       {view === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredDiagnostics.map((diagnostic) => (
-            <DiagnosticCard
-              key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
-              diagnostic={diagnostic}
-            />
-          ))}
+          {filteredDiagnostics.map((diagnostic) => {
+            const note = diagnosticNotes.find(
+              (n) => n.slug === diagnostic.slug,
+            );
+            return (
+              <DiagnosticCard
+                key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
+                diagnostic={diagnostic}
+                note={note?.note}
+                noteURL={note?.noteUrl}
+              />
+            );
+          })}
         </div>
       ) : (
         <DiagnosticSummaryTable summaries={filteredDiagnostics} />
