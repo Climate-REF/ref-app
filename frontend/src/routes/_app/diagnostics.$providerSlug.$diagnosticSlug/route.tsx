@@ -49,15 +49,17 @@ const DiagnosticInfoLayout = () => {
                 </p>
                 <p className="font-medium">{data.aft_link.short_description}</p>
               </div>
-              <div className="space-y-1 col-span-2">
-                <a
-                  className="text-sm text-muted-foreground"
-                  href={data.aft_link.provider_link}
-                  target="_blank"
-                >
-                  Diagnostic Description URL
-                </a>
-              </div>
+              {data.aft_link.provider_link && (
+                <div className="space-y-1 col-span-2">
+                  <a
+                    className="text-sm text-muted-foreground underline underline-offset-4"
+                    href={data.aft_link.provider_link}
+                    target="_blank"
+                  >
+                    Diagnostic Description URL
+                  </a>
+                </div>
+              )}
             </div>
           )}
           <div className="grid gap-4 sm:grid-cols-3">
