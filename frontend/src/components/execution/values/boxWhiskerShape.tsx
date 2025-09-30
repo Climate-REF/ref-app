@@ -22,18 +22,35 @@ interface BoxWhiskerShapeProps {
 }
 
 // Slightly darken a hex color for better contrast
-function darkenHex(hex: string, amount = 40) {
+function darkenHex(hex: string, amount = 40): string {
+  // Validate hex format and length
   if (!hex || !hex.startsWith("#")) return hex;
+
+  // Valid lengths: 4 (#rgb) or 7 (#rrggbb)
+  if (hex.length !== 4 && hex.length !== 7) return hex;
+
+  // Expand shorthand notation if needed
   const full =
     hex.length === 4
       ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
       : hex;
+
+  // Parse RGB components
+  const r = Number.parseInt(full.slice(1, 3), 16);
+  const g = Number.parseInt(full.slice(3, 5), 16);
+  const b = Number.parseInt(full.slice(5, 7), 16);
+
+  // Validate parsed values
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return hex;
+
+  // Apply darkening with clamping
   const clamp = (v: number) => Math.max(0, Math.min(255, v));
-  const r = clamp(Number.parseInt(full.slice(1, 3), 16) - amount);
-  const g = clamp(Number.parseInt(full.slice(3, 5), 16) - amount);
-  const b = clamp(Number.parseInt(full.slice(5, 7), 16) - amount);
+  const darkR = clamp(r - amount);
+  const darkG = clamp(g - amount);
+  const darkB = clamp(b - amount);
+
   const toHex = (v: number) => v.toString(16).padStart(2, "0");
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  return `#${toHex(darkR)}${toHex(darkG)}${toHex(darkB)}`;
 }
 
 export function BoxWhiskerShape({
@@ -42,14 +59,7 @@ export function BoxWhiskerShape({
   highlightedPoint,
   ...props
 }: BoxWhiskerShapeProps) {
-  const {
-    x = 0,
-    width = 0,
-    payload,
-    fill = "#8884d8", // Default fill
-    stroke = "#333", // Default stroke for lines
-    strokeWidth = 1,
-  } = props;
+  const { x = 0, width = 0, payload, fill, stroke, strokeWidth = 1 } = props;
 
   // Ensure we have the necessary data and the scale function
   if (
@@ -59,6 +69,10 @@ export function BoxWhiskerShape({
   ) {
     return null; // Don't render if data or scale is missing
   }
+
+  // Use category-specific color if available (for self-hued charts)
+  const effectiveFill = (payload as any).__categoryColor || fill;
+  const effectiveStroke = stroke ? stroke : darkenHex(effectiveFill, 50);
 
   const { min, lowerQuartile, median, upperQuartile, max, values } =
     payload.groups[prefix];
@@ -85,7 +99,7 @@ export function BoxWhiskerShape({
       ? Number(highlightedPoint.value)
       : null;
 
-    return values.map((v: number) => {
+    return values.map((v: number, idx: number) => {
       const isHighlighted =
         highlightedValue !== null && Math.abs(v - highlightedValue) < 0.0001;
       const crossSize = isHighlighted ? crossWidth * 1.5 : crossWidth;
@@ -97,7 +111,7 @@ export function BoxWhiskerShape({
 
       return (
         <Cross
-          key={v + Math.random()}
+          key={`${prefix}-value-${idx}-${v}`}
           strokeWidth={crossStrokeWidth}
           stroke={crossStroke}
           x={whiskerX}
@@ -118,7 +132,9 @@ export function BoxWhiskerShape({
 
   if (values.length < 5) {
     return (
-      <g className={props.className}>{scatterValues(fill, strokeWidth * 2)}</g>
+      <g className={props.className}>
+        {scatterValues(effectiveFill, strokeWidth * 2)}
+      </g>
     );
   }
   return (
@@ -129,8 +145,8 @@ export function BoxWhiskerShape({
         y={yQ3} // SVG rect y is top edge, Q3 value is smaller (higher on chart)
         width={width}
         height={Math.abs(yQ1 - yQ3)} // Height is the difference in pixels
-        fill={fill}
-        stroke={stroke}
+        fill={effectiveFill}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       {/* Median Line */}
@@ -139,7 +155,7 @@ export function BoxWhiskerShape({
         y1={yMedian}
         x2={boxX + width}
         y2={yMedian}
-        stroke={stroke}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth * 2} // Make median slightly thicker
       />
       {/* Lower Whisker Line */}
@@ -148,7 +164,7 @@ export function BoxWhiskerShape({
         y1={yMin}
         x2={whiskerX}
         y2={yQ1}
-        stroke={stroke}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       {/* Upper Whisker Line */}
@@ -157,7 +173,7 @@ export function BoxWhiskerShape({
         y1={yQ3}
         x2={whiskerX}
         y2={yMax}
-        stroke={stroke}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       {/* Optional: Min/Max horizontal caps */}
@@ -166,7 +182,7 @@ export function BoxWhiskerShape({
         y1={yMin}
         x2={boxX + width * 0.8}
         y2={yMin}
-        stroke={stroke}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       <line
@@ -174,11 +190,11 @@ export function BoxWhiskerShape({
         y1={yMax}
         x2={boxX + width * 0.8}
         y2={yMax}
-        stroke={stroke}
+        stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       {/*Value markers*/}
-      {scatterValues(fill, strokeWidth * 2)}
+      {scatterValues(effectiveFill, strokeWidth * 2)}
     </g>
   );
 }

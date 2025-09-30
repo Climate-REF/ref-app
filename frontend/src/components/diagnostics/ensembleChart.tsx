@@ -111,6 +111,10 @@ export const EnsembleChart = ({
   const groupByDimension = finalGroupingConfig.groupBy || "metric";
   const hueDimension = finalGroupingConfig.hue;
 
+  // When groupBy and hue are the same, don't create subgroups
+  // This prevents odd spacing where only one bar has data at each x-axis position
+  const isSelfHued = hueDimension === groupByDimension;
+
   // First group by the main dimension (x-axis)
   const primaryGroupedData = Object.groupBy(
     data,
@@ -118,25 +122,32 @@ export const EnsembleChart = ({
   );
 
   const chartData = Object.entries(primaryGroupedData).map(
-    ([groupName, values]: [string, MetricValue[] | undefined]) => {
+    (
+      [groupName, values]: [string, MetricValue[] | undefined],
+      categoryIndex,
+    ) => {
       if (!values || values.length === 0) {
         return {
           name: groupName,
           groups: {},
           __outliers: {},
           __rawData: [],
+          __categoryColor: isSelfHued
+            ? COLORS[categoryIndex % COLORS.length]
+            : undefined,
         };
       }
 
-      // If hue dimension is specified, create sub-groups
+      // If hue dimension is specified (and different from groupBy), create sub-groups
       let subGroups: { [key: string]: MetricValue[] };
-      if (hueDimension && hueDimension !== "none") {
+      if (!isSelfHued && hueDimension && hueDimension !== "none") {
+        // Normal hue: create sub-groups based on hue dimension
         subGroups = Object.groupBy(
           values,
           (d: MetricValue) => d.dimensions[hueDimension] ?? "Unknown",
         ) as { [key: string]: MetricValue[] };
       } else {
-        // Single group if no hue dimension
+        // Single group if no hue dimension or hue === groupBy
         subGroups = { ensemble: values };
       }
 
@@ -187,6 +198,9 @@ export const EnsembleChart = ({
         groups,
         __outliers: outliers,
         __rawData: allRawData,
+        __categoryColor: isSelfHued
+          ? COLORS[categoryIndex % COLORS.length]
+          : undefined,
       };
     },
   );
@@ -299,15 +313,66 @@ export const EnsembleChart = ({
               }
               const datum = payload[0].payload ?? {};
 
-              const groupName = datum?.name;
-              const groupStats = datum?.groups[
-                groupName
+              // Determine which subgroup we're hovering over
+              let statsKey: string;
+
+              if (
+                allGroupNames.length > 1 &&
+                coordinate &&
+                payload.length > 0
+              ) {
+                // Multiple bars at same x-position
+                // Each bar in the payload represents a different hue group
+                // Find which one we're actually hovering over by checking all payload items
+                const hoveredBar: string | null = null;
+
+                // find closest by Y position
+                let closestBar: string | null = null;
+                let minDistance = Number.POSITIVE_INFINITY;
+
+                for (const groupName of allGroupNames) {
+                  const groupData = datum?.groups?.[groupName];
+                  if (groupData) {
+                    const medianY = scale(groupData.median);
+                    const distance = Math.abs((coordinate.y ?? 0) - medianY);
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      closestBar = groupName;
+                    }
+                  }
+                }
+                statsKey = closestBar || "ensemble";
+              } else {
+                // Single bar - use ensemble or first available group
+                statsKey = "ensemble";
+                const groupKeys = Object.keys(datum?.groups || {});
+                if (groupKeys.length > 0 && !datum?.groups?.[statsKey]) {
+                  statsKey = groupKeys[0];
+                }
+              }
+
+              const groupStats = datum?.groups?.[
+                statsKey
               ] as GroupStatistics | null;
-
               const outliers = datum?.__outliers;
-              const rawData: MetricValue[] = datum?.__rawData ?? [];
+              const allRawData: MetricValue[] = datum?.__rawData ?? [];
 
-              // // Find closest data point to mouse position
+              // Filter raw data to only include points from the hovered subgroup
+              const rawData = allRawData.filter((d) => {
+                // For multi-hue charts, filter by the hovered subgroup
+                if (
+                  !isSelfHued &&
+                  hueDimension &&
+                  hueDimension !== "none" &&
+                  statsKey !== "ensemble"
+                ) {
+                  return d.dimensions[hueDimension] === statsKey;
+                }
+                // For self-hued or no-hue charts, include all data
+                return true;
+              });
+
+              // Find closest data point to mouse position (within the filtered data)
               let closestDataPoint: MetricValue | null = null;
               if (coordinate && rawData.length > 0) {
                 const mouseY = coordinate.y ?? 0;
@@ -335,7 +400,7 @@ export const EnsembleChart = ({
                 closestDataPoint !== null
               ) {
                 setHighlightedPoint({
-                  groupName: groupName,
+                  groupName: statsKey,
                   point: closestDataPoint,
                 });
               }
@@ -358,10 +423,17 @@ export const EnsembleChart = ({
                     transform:
                       side === "right"
                         ? "translate(20px, -20%)"
-                        : "translate(-320px, -20%)",
+                        : "translate(-370px, -20%)",
                   }}
                 >
-                  <div className="mb-2 font-medium">{label}</div>
+                  <div className="mb-2 font-medium">
+                    {label}
+                    {statsKey !== "ensemble" && allGroupNames.length > 1 && (
+                      <span className="ml-2 text-muted-foreground">
+                        ({statsKey})
+                      </span>
+                    )}
+                  </div>
 
                   {/* Ensemble Statistics */}
                   <div className="mb-3">
@@ -395,12 +467,12 @@ export const EnsembleChart = ({
                         "Count",
                         String(
                           (groupStats?.values?.length ?? 0) +
-                            (outliers?.ensemble ?? 0),
+                            (outliers?.[statsKey] ?? 0),
                         ),
                       )}
-                      {outliers?.ensemble ? (
+                      {outliers?.[statsKey] ? (
                         <div className="col-span-2 mt-1 text-muted-foreground">
-                          ({outliers.ensemble} outliers clipped)
+                          ({outliers[statsKey]} outliers clipped)
                         </div>
                       ) : null}
                     </div>
@@ -460,7 +532,6 @@ export const EnsembleChart = ({
               dataKey={(d) => d?.groups?.[groupName]?.median}
               name={groupName}
               fill={getGroupColor(groupName, index)}
-              stroke={getGroupColor(groupName, index)}
               isAnimationActive={false}
               shape={
                 <BoxWhiskerShape
