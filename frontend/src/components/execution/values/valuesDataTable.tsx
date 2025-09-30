@@ -44,12 +44,14 @@ function ValuesDataTable({
   onDownload,
 }: DataTableProps) {
   const columns: ColumnDef<ProcessedMetricValue>[] = useMemo(() => {
+    // Order so that "metric" and "statistic" are last closest to the value column
     const sortedFacets = [...facets].sort((a, b) => {
       const specialKeys = ["metric", "statistic"];
       const aIsSpecial = specialKeys.includes(a.key);
       const bIsSpecial = specialKeys.includes(b.key);
       if (aIsSpecial && !bIsSpecial) return 1;
       if (!aIsSpecial && bIsSpecial) return -1;
+
       return 0;
     });
     const indexColumns: ColumnDef<ProcessedMetricValue>[] = sortedFacets.map(
