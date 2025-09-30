@@ -137,21 +137,21 @@ const cards: ExplorerCard[] = [
       },
     ],
   },
-  {
-    title: "Global Mean Timeseries",
-    description: "Timeseries plots of global mean surface temperature.",
-    placeholder: true,
-    content: [
-      {
-        type: "figure-gallery",
-        provider: "esmvaltool",
-        description: "Examples of a figure gallery",
-        diagnostic: "global-mean-timeseries",
-        title: "Global Mean Temperature Timeseries",
-        span: 2,
-      },
-    ],
-  },
+  // {
+  //   title: "Global Mean Timeseries",
+  //   description: "Timeseries plots of global mean surface temperature.",
+  //   placeholder: true,
+  //   content: [
+  //     {
+  //       type: "figure-gallery",
+  //       provider: "esmvaltool",
+  //       description: "Examples of a figure gallery",
+  //       diagnostic: "global-mean-timeseries",
+  //       title: "Global Mean Temperature Timeseries",
+  //       span: 2,
+  //     },
+  //   ],
+  // },
 ];
 
 export function AtmosphereTheme() {
