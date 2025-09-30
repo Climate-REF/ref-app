@@ -44,7 +44,15 @@ function ValuesDataTable({
   onDownload,
 }: DataTableProps) {
   const columns: ColumnDef<ProcessedMetricValue>[] = useMemo(() => {
-    const indexColumns: ColumnDef<ProcessedMetricValue>[] = facets.map(
+    const sortedFacets = [...facets].sort((a, b) => {
+      const specialKeys = ["metric", "statistic"];
+      const aIsSpecial = specialKeys.includes(a.key);
+      const bIsSpecial = specialKeys.includes(b.key);
+      if (aIsSpecial && !bIsSpecial) return 1;
+      if (!aIsSpecial && bIsSpecial) return -1;
+      return 0;
+    });
+    const indexColumns: ColumnDef<ProcessedMetricValue>[] = sortedFacets.map(
       (facet) => ({
         id: facet.key,
         header: ({ column }) => (
