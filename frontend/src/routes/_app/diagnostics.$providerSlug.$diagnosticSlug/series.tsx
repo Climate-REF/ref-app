@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListMetricValues } from "@/client";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
@@ -20,12 +20,6 @@ const valuesSearchSchema = z
     include_unverified: z.coerce.boolean().default(false),
   })
   .catchall(z.string().optional());
-
-const filterNonEmptyValues = (search: Record<string, string | undefined>) => {
-  return Object.entries(search).filter(
-    ([, v]) => v !== undefined && v !== null && String(v).length > 0,
-  );
-};
 
 export const SeriesValuesTab = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams() as {
@@ -88,7 +82,7 @@ export const SeriesValuesTab = () => {
   }, [search]);
 
   // State to track current grouping configuration from the main chart
-  const [currentGroupingConfig, setCurrentGroupingConfig] = useState({
+  const [currentGroupingConfig, _] = useState({
     groupBy: search.groupBy,
     hue: search.hue,
     style: search.style,
@@ -109,14 +103,14 @@ export const SeriesValuesTab = () => {
         initialDetectOutliers={search.detect_outliers}
         onDetectOutliersChange={(value) => {
           navigate({
-            search: { ...search, detect_outliers: value },
+            search: { ...search, detect_outliers: String(value) } as any,
             replace: true,
           });
         }}
         initialIncludeUnverified={search.include_unverified}
         onIncludeUnverifiedChange={(value) => {
           navigate({
-            search: { ...search, include_unverified: value },
+            search: { ...search, include_unverified: String(value) } as any,
             replace: true,
           });
         }}

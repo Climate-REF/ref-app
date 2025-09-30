@@ -89,14 +89,14 @@ export const ScalarsValuesTab = () => {
         initialDetectOutliers={search.detect_outliers}
         onDetectOutliersChange={(value) => {
           navigate({
-            search: { ...search, detect_outliers: value } as any,
+            search: { ...search, detect_outliers: String(value) } as any,
             replace: true,
           });
         }}
         initialIncludeUnverified={search.include_unverified}
         onIncludeUnverifiedChange={(value) => {
           navigate({
-            search: { ...search, include_unverified: value } as any,
+            search: { ...search, include_unverified: String(value) } as any,
             replace: true,
           });
         }}
@@ -134,8 +134,8 @@ export const ScalarsValuesTab = () => {
               ...(search.groupBy && { groupBy: search.groupBy }),
               ...(search.hue && { hue: search.hue }),
               ...(search.style && { style: search.style }),
-              detect_outliers: search.detect_outliers,
-              include_unverified: search.include_unverified,
+              detect_outliers: String(search.detect_outliers), // Convert enum to string
+              include_unverified: String(search.include_unverified), // Convert boolean to string
             };
 
             navigate({

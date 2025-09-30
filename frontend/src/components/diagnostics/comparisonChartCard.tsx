@@ -83,7 +83,7 @@ export const ComparisonChartCard = ({
   const navigateToFiltered = () => {
     const allFilters = { ...sourceFilters, ...otherFilters };
     navigate({
-      to: "/diagnostics/$providerSlug/$diagnosticSlug/values",
+      to: "/diagnostics/$providerSlug/$diagnosticSlug/scalars",
       params: { providerSlug, diagnosticSlug },
       search: allFilters,
     });
@@ -91,7 +91,7 @@ export const ComparisonChartCard = ({
 
   const navigateToUnfiltered = () => {
     navigate({
-      to: "/diagnostics/$providerSlug/$diagnosticSlug/values",
+      to: "/diagnostics/$providerSlug/$diagnosticSlug/scalars",
       params: { providerSlug, diagnosticSlug },
       search: otherFilters,
     });

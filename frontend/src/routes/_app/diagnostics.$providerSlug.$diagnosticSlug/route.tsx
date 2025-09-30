@@ -1,4 +1,9 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router";
 
 import type { GroupBy } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
@@ -28,6 +33,10 @@ const GroupByItem = ({ source_type, group_by }: GroupBy) => {
 const DiagnosticInfoLayout = () => {
   const data = Route.useLoaderData();
   const { providerSlug, diagnosticSlug } = Route.useParams();
+  const location = useLocation();
+
+  // Determine the active tab based on the current URL pathname
+  const activeTab = location.pathname.split("/").pop() || "figures"; // Default to 'figures'
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,7 +111,7 @@ const DiagnosticInfoLayout = () => {
           </div>
         </CardContent>
       </Card>
-      <Tabs defaultValue="figures" className="space-y-4">
+      <Tabs value={activeTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="groups" asChild>
             <Link
@@ -112,7 +121,7 @@ const DiagnosticInfoLayout = () => {
               Execution Groups
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="scalar-values" asChild>
+          <TabsTrigger value="scalars" asChild>
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
               params={{ providerSlug, diagnosticSlug }}
@@ -120,7 +129,7 @@ const DiagnosticInfoLayout = () => {
               Scalar Values
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="series-values" asChild>
+          <TabsTrigger value="series" asChild>
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/series"
               params={{ providerSlug, diagnosticSlug }}
