@@ -9,11 +9,11 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { AlertTriangle, Download, Eye, MoreHorizontal } from "lucide-react";
+import { Eye, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
-import type { Facet, MetricValue } from "@/components/execution/values/types";
+import type { Facet, SeriesValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -22,45 +22,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { Sparkline } from "./sparkline";
 
-// Update to use ProcessedMetricValue which includes rowId
-type ProcessedMetricValue = MetricValue & { rowId: string };
+// Update to use ProcessedSeriesValue which includes rowId
+type ProcessedSeriesValue = SeriesValue & { rowId: string };
 
-interface DataTableProps {
-  values: ProcessedMetricValue[];
+interface SeriesDataTableProps {
+  values: ProcessedSeriesValue[];
   facets: Facet[];
   loading: boolean;
   rowSelection: RowSelectionState;
   setRowSelection: OnChangeFn<RowSelectionState>;
-  onDownload?: () => void;
 }
 
-function ValuesDataTable({
+function SeriesDataTable({
   values,
   facets,
   loading,
   rowSelection,
   setRowSelection,
-  onDownload,
-}: DataTableProps) {
-  const columns: ColumnDef<ProcessedMetricValue>[] = useMemo(() => {
-    // Order so that "metric" and "statistic" are last closest to the value column
-    const sortedFacets = [...facets].sort((a, b) => {
-      const specialKeys = ["metric", "statistic"];
-      const aIsSpecial = specialKeys.includes(a.key);
-      const bIsSpecial = specialKeys.includes(b.key);
-      if (aIsSpecial && !bIsSpecial) return 1;
-      if (!aIsSpecial && bIsSpecial) return -1;
-
-      return 0;
-    });
-    const indexColumns: ColumnDef<ProcessedMetricValue>[] = sortedFacets.map(
+}: SeriesDataTableProps) {
+  const columns: ColumnDef<ProcessedSeriesValue>[] = useMemo(() => {
+    const indexColumns: ColumnDef<ProcessedSeriesValue>[] = facets.map(
       (facet) => ({
         id: facet.key,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title={facet.key} />
         ),
-        accessorFn: (cell: ProcessedMetricValue) => cell.dimensions[facet.key],
+        accessorFn: (cell: ProcessedSeriesValue) => cell.dimensions[facet.key],
       }),
     );
 
@@ -93,29 +82,20 @@ function ValuesDataTable({
       },
       ...indexColumns,
       {
-        id: "value",
+        id: "sparkline",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title={"Value"} />
+          <DataTableColumnHeader column={column} title={"Series"} />
         ),
-        accessorFn: (cell) => cell.value,
+        accessorFn: (cell) => cell.values,
         cell: (cell) => {
-          const value = (cell.row.original.value as number).toPrecision(3);
-          const isOutlier = cell.row.original?.is_outlier === true;
+          const values = cell.row.original.values;
           return (
-            <div className="flex items-center gap-1">
-              {value}
-              {isOutlier && (
-                <span
-                  className="inline-flex items-center"
-                  title="Flagged outlier (3.0×IQR)"
-                >
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <Sparkline values={values} />
             </div>
           );
         },
-        enableSorting: true,
+        enableSorting: false, // Can't sort by series data easily
       },
       {
         id: "info",
@@ -170,18 +150,7 @@ function ValuesDataTable({
     return <div className="text-center p-4">Loading table data...</div>;
   }
 
-  return (
-    <div className="space-y-4">
-      {onDownload && (
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={onDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            Download CSV
-          </Button>
-        </div>
-      )}
-      <InnerDataTable table={table} loading={loading} />
-    </div>
-  );
+  return <InnerDataTable table={table} loading={loading} />;
 }
-export default ValuesDataTable;
+
+export default SeriesDataTable;

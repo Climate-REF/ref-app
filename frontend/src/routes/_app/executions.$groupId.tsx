@@ -50,8 +50,14 @@ const ExecutionInfo = () => {
       path: { group_id: groupId },
       query: {
         execution_id: executionId,
-        detect_outliers: tab === "raw-data" ? detect_outliers : undefined,
-        include_unverified: tab === "raw-data" ? include_unverified : undefined,
+        detect_outliers:
+          tab === "scalar-values" || tab === "series-values"
+            ? detect_outliers
+            : undefined,
+        include_unverified:
+          tab === "scalar-values" || tab === "series-values"
+            ? include_unverified
+            : undefined,
       },
     }),
   );
@@ -161,7 +167,8 @@ const ExecutionInfo = () => {
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
               <TabsTrigger value="files">Files</TabsTrigger>
-              <TabsTrigger value="raw-data">Metric Values</TabsTrigger>
+              <TabsTrigger value="scalar-values">Scalar Values</TabsTrigger>
+              <TabsTrigger value="series-values">Series Values</TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
             </TabsList>
 
@@ -202,10 +209,10 @@ const ExecutionInfo = () => {
               <ExecutionFilesContainer outputs={execution.outputs} />
             </TabsContent>
 
-            <TabsContent value="raw-data" className="space-y-4">
+            <TabsContent value="scalar-values" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Metric Values</CardTitle>
+                  <CardTitle>Scalar Values</CardTitle>
                   <CardDescription>
                     Scalar metrics from the current execution. Use facets to
                     filter and Export to download as CSV.
@@ -243,6 +250,7 @@ const ExecutionInfo = () => {
                         }),
                       });
                     }}
+                    valueType="scalars"
                     onDownload={async () => {
                       const response = await executionsMetricValues({
                         path: { group_id: groupId },
@@ -259,7 +267,74 @@ const ExecutionInfo = () => {
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      a.download = `metric-values-${groupId}.csv`;
+                      a.download = `scalar-values-${groupId}.csv`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="series-values" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Series Values</CardTitle>
+                  <CardDescription>
+                    Series metrics from the current execution. Use facets to
+                    filter and Export to download as CSV.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Values
+                    facets={
+                      (metricValues.data as MetricValueCollection)?.facets ?? []
+                    }
+                    values={
+                      (metricValues.data as MetricValueCollection)?.data ?? []
+                    }
+                    loading={metricValues.isLoading}
+                    hadOutliers={
+                      (metricValues.data as MetricValueCollection)
+                        ?.had_outliers ?? undefined
+                    }
+                    outlierCount={
+                      (metricValues.data as MetricValueCollection)
+                        ?.outlier_count ?? undefined
+                    }
+                    initialDetectOutliers={detect_outliers}
+                    onDetectOutliersChange={(value) => {
+                      navigate({
+                        search: (prev) => ({ ...prev, detect_outliers: value }),
+                      });
+                    }}
+                    initialIncludeUnverified={include_unverified}
+                    onIncludeUnverifiedChange={(value) => {
+                      navigate({
+                        search: (prev) => ({
+                          ...prev,
+                          include_unverified: value,
+                        }),
+                      });
+                    }}
+                    valueType="series"
+                    onDownload={async () => {
+                      const response = await executionsMetricValues({
+                        path: { group_id: groupId },
+                        query: {
+                          execution_id: executionId,
+                          format: "csv",
+                          detect_outliers: detect_outliers,
+                          include_unverified: include_unverified,
+                        },
+                      });
+                      const blob = new Blob([response as unknown as string], {
+                        type: "text/csv",
+                      });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `series-values-${groupId}.csv`;
                       a.click();
                       window.URL.revokeObjectURL(url);
                     }}
@@ -294,7 +369,14 @@ const ExecutionInfo = () => {
 
 const executionInfoSchema = z.object({
   tab: z
-    .enum(["datasets", "executions", "files", "raw-data", "logs"])
+    .enum([
+      "datasets",
+      "executions",
+      "files",
+      "scalar-values",
+      "series-values",
+      "logs",
+    ])
     .default("datasets"),
   executionId: z.string().optional(),
   // Outlier detection parameters

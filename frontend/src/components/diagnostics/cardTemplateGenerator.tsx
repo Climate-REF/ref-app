@@ -46,9 +46,7 @@ interface CardTemplateGeneratorProps {
   // Available data from the current diagnostic page (used to extract dimensions)
   availableData?: (MetricValue | SeriesValue)[];
   // Current tab context to determine default card type
-  currentTab?: "values" | "series" | "figures";
-  // Current view type within the values tab
-  currentViewType?: "table" | "bar" | "series";
+  currentTab?: "scalars" | "series" | "figures";
 }
 
 type CardType = "box-whisker-chart" | "figure-gallery" | "series-chart";
@@ -75,7 +73,6 @@ export function CardTemplateGenerator({
   currentGroupingConfig,
   availableData = [],
   currentTab,
-  currentViewType,
 }: CardTemplateGeneratorProps) {
   const { toast } = useToast();
   const [isVisible, setIsVisible] = useState(false);
@@ -95,11 +92,8 @@ export function CardTemplateGenerator({
   // Form state - set default based on current tab and view context
   const getDefaultCardType = (): CardType => {
     if (currentTab === "figures") return "figure-gallery";
-    if (currentTab === "values") {
-      if (currentViewType === "series") return "series-chart";
-      if (currentViewType === "bar") return "box-whisker-chart";
-      return "box-whisker-chart"; // Default for table view
-    }
+    if (currentTab === "series") return "series-chart";
+    if (currentTab === "scalars") return "box-whisker-chart";
     return "box-whisker-chart"; // Default fallback
   };
 

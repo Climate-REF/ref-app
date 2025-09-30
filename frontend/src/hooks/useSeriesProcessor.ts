@@ -1,17 +1,9 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 import { type SetStateAction, useMemo, useState } from "react";
-import type {
-  MetricValue,
-  SeriesValue,
-} from "@/components/execution/values/types";
+import type { SeriesValue } from "@/components/execution/values/types";
 
-// Generic processed value type (supports MetricValue, SeriesValue, or other
-// value shapes that include `dimensions`).
-export type ProcessedValue<T> = T & { rowId: string };
-
-// Backwards-compatible aliases for common usages
-export type ProcessedMetricValue = ProcessedValue<MetricValue>;
-export type ProcessedSeriesValue = ProcessedValue<SeriesValue>;
+// Define types used by the hook
+export type ProcessedSeriesValue = SeriesValue & { rowId: string };
 
 export interface Filter {
   id: string;
@@ -19,33 +11,19 @@ export interface Filter {
   value: string;
 }
 
-/**
- * Generic hook props to allow processing of either MetricValue, SeriesValue,
- * or any object that has a `dimensions` map.
- */
-interface UseValuesProcessorProps<
-  T extends { dimensions: { [key: string]: unknown } },
-> {
-  initialValues: T[];
+interface UseSeriesProcessorProps {
+  initialValues: SeriesValue[];
   loading: boolean;
   initialFilters?: Filter[];
   onFiltersChange?: (filters: Filter[]) => void;
 }
 
-/**
- * useValuesProcessor
- * - Generic hook that can process arrays of values that include a `dimensions` field.
- * - Returns processed values with a generated `rowId`, filtering by facets,
- *   exclusion handling, and row selection state.
- */
-export function useValuesProcessor<
-  T extends { dimensions: { [key: string]: unknown } },
->({
+export function useSeriesProcessor({
   initialValues,
   loading,
   initialFilters,
   onFiltersChange,
-}: UseValuesProcessorProps<T>) {
+}: UseSeriesProcessorProps) {
   const [filters, setInternalFilters] = useState<Filter[]>(
     initialFilters || [],
   );
@@ -68,14 +46,14 @@ export function useValuesProcessor<
     setExcludedRowIds(excluded);
   };
 
-  const processedValues = useMemo((): ProcessedValue<T>[] => {
+  const processedValues = useMemo((): ProcessedSeriesValue[] => {
     if (!initialValues) return [];
 
     // Ensure each value has a unique rowId
     return initialValues.map((v) => ({
       ...v,
       rowId: crypto.randomUUID(),
-    })) as ProcessedValue<T>[];
+    }));
   }, [initialValues]);
 
   const facetFilteredValues = useMemo(() => {
@@ -88,7 +66,7 @@ export function useValuesProcessor<
     }
     return itemsToFilter.filter((value) => {
       return filters.every((filter) => {
-        const dimensionValue = (value as any).dimensions[filter.facetKey];
+        const dimensionValue = value.dimensions[filter.facetKey];
         return String(dimensionValue) === filter.value;
       });
     });
@@ -96,7 +74,7 @@ export function useValuesProcessor<
 
   const finalDisplayedValues = useMemo(() => {
     return facetFilteredValues.filter(
-      (value) => !excludedRowIds.has((value as any).rowId),
+      (value) => !excludedRowIds.has(value.rowId),
     );
   }, [facetFilteredValues, excludedRowIds]);
 

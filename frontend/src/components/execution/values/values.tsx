@@ -1,21 +1,18 @@
-import { BarChart, Table, TrendingUp } from "lucide-react";
-import * as React from "react";
-import { Suspense, useMemo, useState } from "react";
+import { Download } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { type Filter, useValuesProcessor } from "@/hooks/useValuesProcessor";
-import { FilterControls } from "./filterControls.tsx"; // Import the new FilterControls component
-import { SeriesVisualization } from "./series/seriesVisualization.tsx";
+import {
+  type Filter,
+  type ProcessedMetricValue,
+  type ProcessedSeriesValue,
+  useValuesProcessor,
+} from "@/hooks/useValuesProcessor";
+import { FilterControls } from "./filterControls.tsx";
+import ScalarDataTable from "./scalarDataTable.tsx";
+import SeriesDataTable from "./seriesDataTable.tsx";
 import type { Facet, MetricValue, SeriesValue } from "./types";
 import { isScalarValue, isSeriesValue } from "./types";
-import ValuesDataTable from "./valuesDataTable.tsx";
-
-const ValuesFigure = React.lazy(() =>
-  import("./valuesFigure.tsx").then((module) => ({
-    default: module.ValuesFigure,
-  })),
-);
 
 type ValuesProps = {
   values: (MetricValue | SeriesValue)[];
@@ -24,19 +21,6 @@ type ValuesProps = {
   onDownload?: () => void;
   initialFilters?: Filter[];
   onFiltersChange?: (filters: Filter[]) => void;
-  // View type and series visualization URL parameters
-  initialViewType?: ViewType;
-  onViewTypeChange?: (viewType: ViewType) => void;
-  seriesParams?: {
-    groupBy?: string;
-    hue?: string;
-    style?: string;
-  };
-  onSeriesParamsChange?: (params: {
-    groupBy?: string;
-    hue?: string;
-    style?: string;
-  }) => void;
   // Callback to expose current grouping configuration
   onCurrentGroupingChange?: (config: {
     groupBy?: string;
@@ -50,15 +34,12 @@ type ValuesProps = {
   onDetectOutliersChange?: (value: "off" | "iqr") => void;
   initialIncludeUnverified?: boolean;
   onIncludeUnverifiedChange?: (value: boolean) => void;
+  valueType: ViewType;
 };
 
-type ViewType = "bar" | "table" | "series";
+type ViewType = "scalars" | "series";
 
-export function Values(props: ValuesProps) {
-  const [viewType, setViewType] = useState<ViewType>(
-    props.initialViewType || "table",
-  );
-
+export function Values({ valueType, ...props }: ValuesProps) {
   const [detectOutliers, setDetectOutliers] = useState<"off" | "iqr">(
     props.initialDetectOutliers || "iqr",
   );
@@ -66,26 +47,15 @@ export function Values(props: ValuesProps) {
     props.initialIncludeUnverified || false,
   );
 
-  // Handle view type changes and sync with URL
-  const handleViewTypeChange = (newViewType: ViewType) => {
-    console.log("handleViewTypeChange called with:", newViewType);
-    console.log("onViewTypeChange callback exists:", !!props.onViewTypeChange);
-    setViewType(newViewType);
-    if (props.onViewTypeChange) {
-      props.onViewTypeChange(newViewType);
-    }
-  };
-
-  // Separate scalar and series values
-  const scalarValues = useMemo(
-    () => props.values.filter(isScalarValue),
-    [props.values],
+  // Separate scalar and series values with correct typing
+  const filteredValues = useMemo(
+    () =>
+      props.values.filter(
+        valueType === "scalars" ? isScalarValue : isSeriesValue,
+      ),
+    [props.values, valueType],
   );
-  const seriesValues = useMemo(
-    () => props.values.filter(isSeriesValue),
-    [props.values],
-  );
-  const hasSeriesData = seriesValues.length > 0;
+  type Value = MetricValue | SeriesValue;
 
   const {
     filters,
@@ -95,8 +65,8 @@ export function Values(props: ValuesProps) {
     rowSelection,
     excludedRowIds,
     setExcludedRowIds,
-  } = useValuesProcessor({
-    initialValues: scalarValues, // Only pass scalar values to the processor for now
+  } = useValuesProcessor<Value>({
+    initialValues: filteredValues,
     loading: props.loading,
     initialFilters: props.initialFilters,
     onFiltersChange: props.onFiltersChange,
@@ -135,7 +105,6 @@ export function Values(props: ValuesProps) {
               </p>
             </div>
           )}
-
           {/* Outlier Controls */}
           <div className="flex items-center space-x-2">
             <Button
@@ -163,7 +132,6 @@ export function Values(props: ValuesProps) {
               </Button>
             </div>
           </div>
-
           <div className="flex items-center justify-end space-x-2">
             <div className="grow">
               <FilterControls
@@ -176,75 +144,27 @@ export function Values(props: ValuesProps) {
                 setExcludedRowIds={setExcludedRowIds}
               />
             </div>
-            <Button
-              variant={viewType === "bar" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                console.log("Bar button clicked");
-                handleViewTypeChange("bar");
-              }}
-            >
-              <BarChart className="h-4 w-4 mr-2" />
-              Chart
+            <Button variant="outline" size="sm" onClick={props.onDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
             </Button>
-            <Button
-              variant={viewType === "table" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                console.log("Table button clicked");
-                handleViewTypeChange("table");
-              }}
-            >
-              <Table className="h-4 w-4 mr-2" />
-              Table
-            </Button>
-            {hasSeriesData && (
-              <Button
-                variant={viewType === "series" ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  console.log("Series button clicked");
-                  handleViewTypeChange("series");
-                }}
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Series
-              </Button>
-            )}
           </div>
-          {/* Content: Table or Chart */}
-          {viewType === "table" && (
-            <ValuesDataTable
-              values={finalDisplayedValues}
+
+          {valueType === "scalars" ? (
+            <ScalarDataTable
+              values={finalDisplayedValues as ProcessedMetricValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}
               setRowSelection={setRowSelection}
-              onDownload={props.onDownload}
             />
-          )}
-          {viewType === "bar" && (
-            <Suspense
-              fallback={
-                <Skeleton className="w-full h-[500px] rounded-md border" />
-              }
-            >
-              <ValuesFigure
-                defaultGroupby="metric"
-                values={finalDisplayedValues}
-                facets={props.facets}
-                loading={props.loading}
-                onGroupingChange={props.onCurrentGroupingChange}
-              />
-            </Suspense>
-          )}
-          {viewType === "series" && hasSeriesData && (
-            <SeriesVisualization
-              seriesValues={seriesValues}
-              initialGroupBy={props.seriesParams?.groupBy}
-              initialHue={props.seriesParams?.hue}
-              initialStyle={props.seriesParams?.style}
-              onParamsChange={props.onSeriesParamsChange}
+          ) : (
+            <SeriesDataTable
+              values={finalDisplayedValues as ProcessedSeriesValue[]}
+              facets={props.facets}
+              loading={props.loading}
+              rowSelection={rowSelection}
+              setRowSelection={setRowSelection}
             />
           )}
         </div>

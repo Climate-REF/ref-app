@@ -112,12 +112,20 @@ const DiagnosticInfoLayout = () => {
               Execution Groups
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="values" asChild>
+          <TabsTrigger value="scalar-values" asChild>
             <Link
-              to="/diagnostics/$providerSlug/$diagnosticSlug/values"
+              to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
               params={{ providerSlug, diagnosticSlug }}
             >
-              Metric Values
+              Scalar Values
+            </Link>
+          </TabsTrigger>
+          <TabsTrigger value="series-values" asChild>
+            <Link
+              to="/diagnostics/$providerSlug/$diagnosticSlug/series"
+              params={{ providerSlug, diagnosticSlug }}
+            >
+              Series Values
             </Link>
           </TabsTrigger>
           <TabsTrigger value="figures" asChild>

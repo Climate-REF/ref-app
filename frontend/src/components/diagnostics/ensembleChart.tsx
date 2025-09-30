@@ -321,11 +321,6 @@ export const EnsembleChart = ({
                 coordinate &&
                 payload.length > 0
               ) {
-                // Multiple bars at same x-position
-                // Each bar in the payload represents a different hue group
-                // Find which one we're actually hovering over by checking all payload items
-                const hoveredBar: string | null = null;
-
                 // find closest by Y position
                 let closestBar: string | null = null;
                 let minDistance = Number.POSITIVE_INFINITY;

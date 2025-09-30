@@ -11,8 +11,6 @@ import type { MetricValueCollection } from "@/components/execution/values/types.
 
 const valuesSearchSchema = z
   .object({
-    // View type parameter
-    view: z.enum(["table", "bar", "series"]).optional(),
     // Series visualization parameters
     groupBy: z.string().optional(),
     hue: z.string().optional(),
@@ -29,10 +27,15 @@ const filterNonEmptyValues = (search: Record<string, string | undefined>) => {
   );
 };
 
-export const ValuesTab = () => {
-  const { providerSlug, diagnosticSlug } = Route.useParams();
-  const search = Route.useSearch();
+export const SeriesValuesTab = () => {
+  const { providerSlug, diagnosticSlug } = Route.useParams() as {
+    providerSlug: string;
+    diagnosticSlug: string;
+  };
+  const search = Route.useSearch() as typeof valuesSearchSchema._type;
   const navigate = useNavigate({ from: Route.fullPath });
+
+  const valueType = "series";
 
   const { data: metricValues, isLoading } = useQuery(
     diagnosticsListMetricValuesOptions({
@@ -40,18 +43,36 @@ export const ValuesTab = () => {
         provider_slug: providerSlug,
         diagnostic_slug: diagnosticSlug,
       },
-      query: Object.fromEntries(filterNonEmptyValues(search)),
+      query: {
+        ...Object.fromEntries(
+          Object.entries(search).filter(
+            ([key, value]) =>
+              value !== undefined &&
+              ![
+                "tab",
+                "groupBy",
+                "hue",
+                "style",
+                "detect_outliers",
+                "include_unverified",
+              ].includes(key),
+          ),
+        ),
+        type: "series",
+        detect_outliers: search.detect_outliers,
+        include_unverified: search.include_unverified,
+      },
     }),
   );
 
-  // Extract current filters (excluding view, series, and outlier params)
+  // Extract current filters (excluding tab, series, and outlier params)
   const currentFilters = useMemo(() => {
     const filtered = Object.fromEntries(
       Object.entries(search).filter(
         ([key, value]) =>
           value !== undefined &&
           ![
-            "view",
+            "tab",
             "groupBy",
             "hue",
             "style",
@@ -88,14 +109,14 @@ export const ValuesTab = () => {
         initialDetectOutliers={search.detect_outliers}
         onDetectOutliersChange={(value) => {
           navigate({
-            search: { ...search, detect_outliers: value } as any,
+            search: { ...search, detect_outliers: value },
             replace: true,
           });
         }}
         initialIncludeUnverified={search.include_unverified}
         onIncludeUnverifiedChange={(value) => {
           navigate({
-            search: { ...search, include_unverified: value } as any,
+            search: { ...search, include_unverified: value },
             replace: true,
           });
         }}
@@ -104,7 +125,7 @@ export const ValuesTab = () => {
             ([key, value]) =>
               value !== undefined &&
               ![
-                "view",
+                "tab",
                 "groupBy",
                 "hue",
                 "style",
@@ -117,101 +138,7 @@ export const ValuesTab = () => {
             facetKey,
             value: value as string,
           }))}
-        initialViewType={search.view as "table" | "bar" | "series" | undefined}
-        seriesParams={{
-          groupBy: search.groupBy,
-          hue: search.hue,
-          style: search.style,
-        }}
-        onViewTypeChange={useCallback(
-          (viewType: "table" | "bar" | "series") => {
-            console.log("onViewTypeChange called with:", viewType);
-            console.log("current search:", search);
-
-            // Preserve existing parameters
-            const existingParams = Object.fromEntries(
-              Object.entries(search).filter(([key]) => !["view"].includes(key)),
-            );
-
-            console.log("existingParams:", existingParams);
-            const newSearch = { ...existingParams, view: viewType };
-            console.log("newSearch:", newSearch);
-
-            navigate({
-              search: newSearch,
-              replace: true,
-            });
-          },
-          [search, navigate],
-        )}
-        onFiltersChange={useCallback(
-          (newFilters: Array<{ facetKey: string; value: string }>) => {
-            const filterParams =
-              newFilters.length > 0
-                ? Object.fromEntries(
-                    newFilters.map((filter) => [filter.facetKey, filter.value]),
-                  )
-                : {};
-
-            // Preserve view type, series visualization, and outlier parameters
-            const otherParams = {
-              ...(search.view && { view: search.view }),
-              ...(search.groupBy && { groupBy: search.groupBy }),
-              ...(search.hue && { hue: search.hue }),
-              ...(search.style && { style: search.style }),
-              detect_outliers: search.detect_outliers,
-              include_unverified: search.include_unverified,
-            };
-
-            navigate({
-              search: { ...filterParams, ...otherParams } as any,
-              replace: true,
-            });
-          },
-          [search, navigate],
-        )}
-        onSeriesParamsChange={useCallback(
-          (seriesParams: {
-            groupBy?: string;
-            hue?: string;
-            style?: string;
-          }) => {
-            // Update current grouping config state
-            setCurrentGroupingConfig({
-              groupBy: seriesParams.groupBy,
-              hue: seriesParams.hue,
-              style: seriesParams.style,
-            });
-
-            // Preserve existing filter parameters
-            const filterParams = Object.fromEntries(
-              Object.entries(search).filter(
-                ([key]) => !["groupBy", "hue", "style"].includes(key),
-              ),
-            );
-
-            navigate({
-              search: { ...filterParams, ...seriesParams },
-              replace: true,
-            });
-          },
-          [search, navigate],
-        )}
-        onCurrentGroupingChange={useCallback(
-          (groupingConfig: {
-            groupBy?: string;
-            hue?: string;
-            style?: string;
-          }) => {
-            // Update current grouping config state for card generator sync
-            setCurrentGroupingConfig({
-              groupBy: groupingConfig.groupBy,
-              hue: groupingConfig.hue,
-              style: groupingConfig.style,
-            });
-          },
-          [],
-        )}
+        valueType={valueType}
         onDownload={async () => {
           const response = await diagnosticsListMetricValues({
             path: {
@@ -220,7 +147,22 @@ export const ValuesTab = () => {
             },
             query: {
               format: "csv",
-              ...Object.fromEntries(filterNonEmptyValues(search)),
+              ...Object.fromEntries(
+                Object.entries(search).filter(
+                  ([key, value]) =>
+                    value !== undefined &&
+                    ![
+                      "tab",
+                      "groupBy",
+                      "hue",
+                      "style",
+                      "detect_outliers",
+                      "include_unverified",
+                    ].includes(key),
+                ),
+              ),
+              detect_outliers: search.detect_outliers,
+              include_unverified: search.include_unverified,
             },
             meta: {
               // Tell the client to expect a text response, not JSON
@@ -253,10 +195,7 @@ export const ValuesTab = () => {
           currentFilters={currentFilters}
           currentGroupingConfig={currentGroupingConfig}
           availableData={(metricValues as MetricValueCollection)?.data ?? []}
-          currentTab="values"
-          currentViewType={
-            search.view as "table" | "bar" | "series" | undefined
-          }
+          currentTab="series"
         />
       </div>
     </div>
@@ -264,8 +203,8 @@ export const ValuesTab = () => {
 };
 
 export const Route = createFileRoute(
-  "/_app/diagnostics/$providerSlug/$diagnosticSlug/values",
+  "/_app/diagnostics/$providerSlug/$diagnosticSlug/series",
 )({
-  component: ValuesTab,
+  component: SeriesValuesTab,
   validateSearch: zodValidator(valuesSearchSchema),
 });
