@@ -121,7 +121,7 @@ export function Values(props: ValuesProps) {
   const showBanner = detectOutliers !== "off" && props.hadOutliers;
   const bannerText = includeUnverified
     ? `Showing unverified values (${props.outlierCount ?? 0} outliers)`
-    : `Outliers detected (${props.outlierCount ?? 0} filtered by server)`;
+    : `Outliers detected (${props.outlierCount ?? 0} filtered values)`;
 
   return (
     <Card>

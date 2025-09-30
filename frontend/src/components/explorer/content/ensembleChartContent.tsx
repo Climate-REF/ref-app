@@ -60,7 +60,7 @@ export function EnsembleChartContent({
           <div className="text-sm">
             {hasOutliers && !includeUnverified && (
               <span className="text-amber-600 dark:text-amber-400">
-                Outliers detected ({outlierCount} filtered by server)
+                Outliers detected ({outlierCount} filtered values)
               </span>
             )}
             {hasOutliers && includeUnverified && (

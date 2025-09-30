@@ -11,7 +11,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
-        title: "NAM Bias",
+        title: "NAM RMSE",
         description:
           "Northern Annular Mode (NAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
