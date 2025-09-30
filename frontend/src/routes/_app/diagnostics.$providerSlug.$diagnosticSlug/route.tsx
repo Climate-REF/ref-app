@@ -121,18 +121,30 @@ const DiagnosticInfoLayout = () => {
               Execution Groups
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="scalars" asChild>
+          <TabsTrigger
+            value="scalars"
+            asChild
+            disabled={!data.has_scalar_values}
+            data-disabled={!data.has_scalar_values ? "true" : undefined}
+          >
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
               params={{ providerSlug, diagnosticSlug }}
+              disabled={!data.has_scalar_values}
             >
               Scalar Values
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="series" asChild>
+          <TabsTrigger
+            value="series"
+            asChild
+            disabled={!data.has_series_values}
+          >
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/series"
               params={{ providerSlug, diagnosticSlug }}
+              disabled={!data.has_series_values}
+              data-disabled={!data.has_series_values ? "true" : undefined}
             >
               Series Values
             </Link>

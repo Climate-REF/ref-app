@@ -14,7 +14,11 @@ import ExecutionDatasetTable from "@/components/execution/executionDatasetTable.
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs";
 import { Values } from "@/components/execution/values";
-import type { MetricValueCollection } from "@/components/execution/values/types";
+import {
+  isScalarValue,
+  isSeriesValue,
+  type MetricValueCollection,
+} from "@/components/execution/values/types";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -61,6 +65,10 @@ const ExecutionInfo = () => {
       },
     }),
   );
+
+  const values = metricValues?.data as MetricValueCollection | undefined;
+  const hasScalar = values?.data.filter(isScalarValue)?.length ?? false;
+  const hasSeries = values?.data.filter(isSeriesValue)?.length ?? false;
 
   return (
     <>
@@ -167,8 +175,24 @@ const ExecutionInfo = () => {
               <TabsTrigger value="datasets">Datasets</TabsTrigger>
               <TabsTrigger value="executions">Executions</TabsTrigger>
               <TabsTrigger value="files">Files</TabsTrigger>
-              <TabsTrigger value="scalar-values">Scalar Values</TabsTrigger>
-              <TabsTrigger value="series-values">Series Values</TabsTrigger>
+              <TabsTrigger
+                value="scalar-values"
+                disabled={metricValues.isLoading || !hasScalar}
+                data-disabled={
+                  metricValues.isLoading || !hasScalar ? "true" : undefined
+                }
+              >
+                Scalar Values
+              </TabsTrigger>
+              <TabsTrigger
+                value="series-values"
+                disabled={metricValues.isLoading || !hasSeries}
+                data-disabled={
+                  metricValues.isLoading || !hasSeries ? "true" : undefined
+                }
+              >
+                Series Values
+              </TabsTrigger>
               <TabsTrigger value="logs">Logs</TabsTrigger>
             </TabsList>
 
