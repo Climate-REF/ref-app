@@ -10,12 +10,7 @@ import { ViewToggle } from "@/components/diagnostics/viewToggle";
 
 const diagnosticNotes = [
   {
-    slug: "climate-at-global-warming-levels",
-    note: "Known issue with an invalid dataset",
-    noteUrl: "https://github.com/Climate-REF/climate-ref/issues/428",
-  },
-  {
-    slug: "ohc-NOAA",
+    slug: "ohc-noaa",
     note: "Known issue",
     noteUrl: "https://github.com/Climate-REF/climate-ref/issues/430",
   },
