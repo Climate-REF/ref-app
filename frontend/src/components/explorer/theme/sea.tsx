@@ -1,4 +1,3 @@
-import { stat } from "fs";
 import type { ExplorerCard } from "@/components/explorer/types";
 import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
