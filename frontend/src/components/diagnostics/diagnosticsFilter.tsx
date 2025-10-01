@@ -252,7 +252,7 @@ export function DiagnosticsFilter({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80">
+            <PopoverContent className="w-120">
               <div className="space-y-2">
                 <h4 className="font-medium">Filter by AFT Diagnostics</h4>
                 <div className="max-h-60 overflow-y-auto space-y-2">

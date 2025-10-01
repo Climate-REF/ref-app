@@ -6,48 +6,421 @@
 # - Providing display names and descriptions
 # - Adding tags for categorization
 #
-# Structure:
-#   provider-slug/diagnostic-slug:
-#     reference_datasets:
-#       - slug: "dataset-slug"
-#         description: "Description of how this dataset is used"
-#         type: "primary|secondary|comparison"
-#     display_name: "Display Name (overrides default)"
-#     tags: ["category1", "category2"]
-#
-# Example diagnostics (uncomment and populate with real diagnostics as needed):
 
-# pmp/annual-cycle:
-#   reference_datasets:
-#     - slug: "obs4mips.CERES-EBAF.v4.2"
-#       description: "CERES Energy Balanced and Filled - Primary reference for TOA radiation"
-#       type: "primary"
-#     - slug: "obs4mips.GPCP.v2.3"
-#       description: "Global Precipitation Climatology Project - Precipitation comparison"
-#       type: "secondary"
-#   display_name: "Annual Cycle Analysis"
-#   tags: ["atmosphere", "seasonal-cycle", "radiation"]
+# ============================================================================
+# PMP DIAGNOSTICS
+# ============================================================================
 
-# pmp/mean-state:
-#   reference_datasets:
-#     - slug: "obs4mips.ERA5.v1"
-#       description: "ERA5 Reanalysis - Primary climatology reference"
-#       type: "primary"
-#   display_name: "Mean State Climatology"
-#   tags: ["atmosphere", "climatology"]
-
-# Add your diagnostic metadata here
-
-# Real diagnostic from production database
 pmp/annual-cycle:
   reference_datasets:
-    - slug: "obs4mips.CERES-EBAF.v4.2"
-      description: "CERES Energy Balanced and Filled - Primary reference for TOA radiation"
+    - slug: "obs4MIPs-climatology.ERA-5"
+      description: "ERA5 Reanalysis - Primary climatology for surface temperature (ts), winds (uas, vas), and sea level pressure (psl)"
       type: "primary"
-    # - slug: "obs4mips.GPCP.v2.3"
-    #   description: "Global Precipitation Climatology Project - Precipitation comparison"
-    #   type: "secondary"
-    # - slug: "ERA5.monthly.single-levels"
-    #   description: "ERA5 Reanalysis - Temperature and pressure fields"
-    #   type: "comparison"
+    - slug: "obs4MIPs-climatology.GPCP-Monthly-3-2"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation reference"
+      type: "primary"
+    - slug: "obs4MIPs-climatology.CERES-EBAF-4-2"
+      description: "CERES Energy Balanced and Filled v4.2 - Radiation fields (rlds, rlus, rsds, rsus, rlut, rsut)"
+      type: "primary"
   display_name: "Annual Cycle Analysis"
+  tags: ["atmosphere", "seasonal-cycle", "climatology"]
+
+pmp/enso_perf:
+  reference_datasets:
+    - slug: "obs4mips.GPCP-Monthly-3-2"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation patterns"
+      type: "primary"
+    - slug: "obs4mips.TropFlux-1-0"
+      description: "TropFlux v1.0 - Tropical flux data"
+      type: "primary"
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1 - SST reference"
+      type: "primary"
+  display_name: "ENSO Performance Metrics"
+  tags: ["ocean", "atmosphere", "enso", "variability"]
+
+pmp/enso_tel:
+  reference_datasets:
+    - slug: "obs4mips.GPCP-Monthly-3-2"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation teleconnections"
+      type: "primary"
+    - slug: "obs4mips.TropFlux-1-0"
+      description: "TropFlux v1.0 - Tropical flux data"
+      type: "primary"
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and SST v1.1 - SST teleconnections"
+      type: "primary"
+  display_name: "ENSO Teleconnections"
+  tags: ["ocean", "atmosphere", "enso", "teleconnections"]
+
+pmp/enso_proc:
+  reference_datasets:
+    - slug: "obs4mips.GPCP-Monthly-3-2"
+      description: "Global Precipitation Climatology Project v3.2"
+      type: "primary"
+    - slug: "obs4mips.TropFlux-1-0"
+      description: "TropFlux v1.0 - Surface fluxes"
+      type: "primary"
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and SST v1.1"
+      type: "primary"
+    - slug: "obs4mips.CERES-EBAF-4-2"
+      description: "CERES Energy Balanced and Filled v4.2 - Radiation fluxes"
+      type: "primary"
+  display_name: "ENSO Processes"
+  tags: ["ocean", "atmosphere", "enso", "energy-balance"]
+
+# Extratropical Modes of Variability (Sea Surface Temperature modes)
+pmp/extratropical-modes-of-variability-pdo:
+  reference_datasets:
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and SST v1.1 - SST for Pacific Decadal Oscillation"
+      type: "primary"
+  display_name: "Pacific Decadal Oscillation (PDO)"
+  tags: ["ocean", "variability", "pacific", "decadal"]
+
+pmp/extratropical-modes-of-variability-npgo:
+  reference_datasets:
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and SST v1.1 - SST for North Pacific Gyre Oscillation"
+      type: "primary"
+  display_name: "North Pacific Gyre Oscillation (NPGO)"
+  tags: ["ocean", "variability", "pacific"]
+
+pmp/extratropical-modes-of-variability-amo:
+  reference_datasets:
+    - slug: "obs4mips.HadISST-1-1"
+      description: "Hadley Centre Sea Ice and SST v1.1 - SST for Atlantic Multidecadal Oscillation"
+      type: "primary"
+  display_name: "Atlantic Multidecadal Oscillation (AMO)"
+  tags: ["ocean", "variability", "atlantic", "decadal"]
+
+# Extratropical Modes of Variability (Sea Level Pressure modes)
+pmp/extratropical-modes-of-variability-nao:
+  reference_datasets:
+    - slug: "obs4mips.20CR"
+      description: "20th Century Reanalysis - Sea level pressure for North Atlantic Oscillation"
+      type: "primary"
+  display_name: "North Atlantic Oscillation (NAO)"
+  tags: ["atmosphere", "variability", "atlantic", "pressure"]
+
+pmp/extratropical-modes-of-variability-nam:
+  reference_datasets:
+    - slug: "obs4mips.20CR"
+      description: "20th Century Reanalysis - Sea level pressure for Northern Annular Mode"
+      type: "primary"
+  display_name: "Northern Annular Mode (NAM)"
+  tags: ["atmosphere", "variability", "hemispheric", "pressure"]
+
+pmp/extratropical-modes-of-variability-pna:
+  reference_datasets:
+    - slug: "obs4mips.20CR"
+      description: "20th Century Reanalysis - Sea level pressure for Pacific North American Pattern"
+      type: "primary"
+  display_name: "Pacific North American Pattern (PNA)"
+  tags: ["atmosphere", "variability", "pacific", "pressure"]
+
+pmp/extratropical-modes-of-variability-npo:
+  reference_datasets:
+    - slug: "obs4mips.20CR"
+      description: "20th Century Reanalysis - Sea level pressure for North Pacific Oscillation"
+      type: "primary"
+  display_name: "North Pacific Oscillation (NPO)"
+  tags: ["atmosphere", "variability", "pacific", "pressure"]
+
+pmp/extratropical-modes-of-variability-sam:
+  reference_datasets:
+    - slug: "obs4mips.20CR"
+      description: "20th Century Reanalysis - Sea level pressure for Southern Annular Mode"
+      type: "primary"
+  display_name: "Southern Annular Mode (SAM)"
+  tags: ["atmosphere", "variability", "southern-hemisphere", "pressure"]
+
+# ============================================================================
+# ESMValTool DIAGNOSTICS
+# ============================================================================
+
+esmvaltool/cloud-radiative-effects:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned to move to obs4MIPs)"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+    - slug: "esmvaltool.ISCCP-FH"
+      description: "ISCCP cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud Radiative Effects"
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-cli-ta:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA5 - Air temperature (ta)"
+      type: "primary"
+    - slug: "esmvaltool.CALIPSO-ICECLOUD"
+      description: "Ice Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
+  tags: ["atmosphere", "clouds", "temperature"]
+
+esmvaltool/cloud-scatterplots-clivi-lwcre:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned)"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-clt-swcre:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned to move to obs4MIPs)"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-clwvi-pr:
+  reference_datasets:
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation relationship"
+      type: "secondary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES - Reference cloud-radiation relationships"
+      type: "primary"
+  display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
+  tags: ["atmosphere", "clouds", "precipitation"]
+
+esmvaltool/cloud-scatterplots-reference:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES - Reference cloud-radiation relationships"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud Scatterplots for Reference dataset"
+  tags: ["atmosphere", "clouds"]
+
+esmvaltool/enso-basic-climatology:
+  reference_datasets:
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation relationship"
+      type: "secondary"
+    - slug: "esmvaltool.TROPFLUX"
+      description: "TROPFLUX - Air-sea fluxes"
+      type: "secondary"
+    - slug: "esmvaltool.CALIPSO-ICECLOUD"
+      description: "Ice Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "ENSO Basic Climatology"
+  tags: ["ocean", "enso", "climatology"]
+
+esmvaltool/enso-characteristics:
+  reference_datasets:
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation relationship"
+      type: "secondary"
+    - slug: "esmvaltool.TROPFLUX"
+      description: "TROPFLUX - Air-sea fluxes"
+      type: "secondary"
+  display_name: "ENSO Characteristics"
+  tags: ["ocean", "enso", "variability"]
+
+esmvaltool/equilibrium-climate-sensitivity:
+  reference_datasets: []
+  display_name: "Equilibrium Climate Sensitivity (ECS)"
+  tags: ["climate-sensitivity", "feedback"]
+
+esmvaltool/transient-climate-response:
+  reference_datasets: []
+  display_name: "Transient Climate Response (TCR)"
+  tags: ["climate-sensitivity", "transient"]
+
+esmvaltool/transient-climate-response-emissions:
+  reference_datasets: []
+  display_name: "Transient Climate Response to Emissions (TCRE)"
+  tags: ["climate-sensitivity", "carbon-cycle"]
+
+esmvaltool/zero-emission-commitment:
+  reference_datasets: []
+  display_name: "Zero Emission Commitment (ZEC)"
+  tags: ["climate-sensitivity", "commitment"]
+
+esmvaltool/regional-historical-annual-cycle:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
+      type: "primary"
+  display_name: "Regional Historical Annual Cycle"
+  tags: ["regional", "seasonal-cycle", "historical"]
+
+esmvaltool/regional-historical-timeseries:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
+      type: "primary"
+  display_name: "Regional Historical Timeseries"
+  tags: ["regional", "timeseries", "historical"]
+
+esmvaltool/regional-historical-trend:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
+      type: "primary"
+  display_name: "Regional Historical Trends"
+  tags: ["regional", "trends", "historical"]
+
+esmvaltool/sea-ice-area-basic:
+  reference_datasets:
+    - slug: "esmvaltool.OSI-450"
+      description: "OSI-450 - Sea ice area observations"
+      type: "primary"
+  display_name: "Sea Ice Area Basic Metrics"
+  tags: ["sea-ice", "cryosphere"]
+
+esmvaltool/sea-ice-sensitivity:
+  reference_datasets:
+    - slug: "esmvaltool.OSI-450"
+      description: "OSI-450 - Sea ice area observations"
+      type: "primary"
+  display_name: "Sea Ice Sensitivity"
+  tags: ["sea-ice", "cryosphere", "sensitivity"]
+
+esmvaltool/climate-at-global-warming-levels:
+  reference_datasets: []
+  display_name: "Climate at Global Warming Levels"
+  tags: ["scenarios", "warming-levels"]
+
+esmvaltool/climate-drivers-for-fire:
+  reference_datasets: []
+  display_name: "Climate Drivers for Fire"
+  tags: ["fire", "climate-drivers", "impacts"]
+
+# ============================================================================
+# ILAMB DIAGNOSTICS (Land)
+# ============================================================================
+
+ilamb/gpp-wecann:
+  reference_datasets:
+    - slug: "obs4REF.WECANN"
+      description: "WECANN GPP dataset - Primary gross primary productivity reference"
+      type: "primary"
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation relationship"
+      type: "secondary"
+    - slug: "obs4MIPs.CRU4.02"
+      description: "CRU TS v4.02 - Temperature relationship"
+      type: "secondary"
+  display_name: "Gross Primary Productivity (WECANN)"
+  tags: ["land", "carbon-cycle", "vegetation"]
+
+ilamb/gpp-fluxnet2015:
+  reference_datasets:
+    - slug: "obs4REF.FLUXNET2015"
+      description: "FLUXNET2015 - Tower-based GPP measurements"
+      type: "primary"
+  display_name: "Gross Primary Productivity (FLUXNET2015)"
+  tags: ["land", "carbon-cycle", "vegetation", "flux-towers"]
+
+ilamb/mrro-lora:
+  reference_datasets:
+    - slug: "obs4REF.LORA"
+      description: "LORA dataset - Runoff observations"
+      type: "primary"
+  display_name: "Runoff (LORA)"
+  tags: ["land", "hydrology", "runoff"]
+
+ilamb/mrsos-wangmao:
+  reference_datasets:
+    - slug: "obs4REF.WangMao"
+      description: "Wang-Mao dataset - Surface soil moisture"
+      type: "primary"
+  display_name: "Surface Soil Moisture (WangMao)"
+  tags: ["land", "hydrology", "soil-moisture"]
+
+ilamb/csoil-hwsd2:
+  reference_datasets:
+    - slug: "obs4REF.HWSD2"
+      description: "Harmonized World Soil Database v2 - Soil carbon content"
+      type: "primary"
+  display_name: "Soil Carbon (HWSD2)"
+  tags: ["land", "carbon-cycle", "soil"]
+
+ilamb/lai-avh15c1:
+  reference_datasets:
+    - slug: "obs4REF.AVH15C1"
+      description: "AVHRR - Leaf area index observations"
+      type: "primary"
+  display_name: "Leaf Area Index (AVH15C1)"
+  tags: ["land", "vegetation", "remote-sensing"]
+
+ilamb/nbp-hoffman:
+  reference_datasets:
+    - slug: "obs4REF.Hoffman"
+      description: "Hoffman dataset - Net biome productivity"
+      type: "primary"
+  display_name: "Net Biome Productivity (Hoffman)"
+  tags: ["land", "carbon-cycle", "net-flux"]
+
+ilamb/snc-esacci:
+  reference_datasets:
+    - slug: "obs4REF.CCI-CryoClim-FSC"
+      description: "ESA CCI Snow - Snow cover fraction"
+      type: "primary"
+  display_name: "Snow Cover (ESA CCI)"
+  tags: ["land", "cryosphere", "snow"]
+
+ilamb/burntfractionall-gfed:
+  reference_datasets:
+    - slug: "obs4REF.GFED"
+      description: "Global Fire Emissions Database - Burnt area fraction"
+      type: "primary"
+  display_name: "Burnt Fraction (GFED)"
+  tags: ["land", "fire", "disturbance"]
+
+# ============================================================================
+# ILAMB/IOMB DIAGNOSTICS (Ocean)
+# ============================================================================
+
+ilamb/thetao-woa2023-surface:
+  reference_datasets:
+    - slug: "obs4REF.WOA2023"
+      description: "World Ocean Atlas 2023 - Sea water potential temperature (surface)"
+      type: "primary"
+  display_name: "Sea Water Temperature (WOA2023 Surface)"
+  tags: ["ocean", "temperature", "surface"]
+
+ilamb/so-woa2023-surface:
+  reference_datasets:
+    - slug: "obs4REF.WOA2023"
+      description: "World Ocean Atlas 2023 - Sea water salinity (surface)"
+      type: "primary"
+  display_name: "Sea Water Salinity (WOA2023 Surface)"
+  tags: ["ocean", "salinity", "surface"]
+
+ilamb/amoc-rapid:
+  reference_datasets:
+    - slug: "obs4REF.RAPID"
+      description: "RAPID array - Atlantic Meridional Overturning Circulation observations"
+      type: "primary"
+  display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
+  tags: ["ocean", "circulation", "amoc"]
+
+ilamb/ohc-noaa:
+  reference_datasets:
+    - slug: "obs4REF.NOAA-OHC"
+      description: "NOAA - Ocean heat content (0-2000m)"
+      type: "primary"
+  display_name: "Ocean Heat Content (NOAA)"
+  tags: ["ocean", "heat-content", "climate-change"]

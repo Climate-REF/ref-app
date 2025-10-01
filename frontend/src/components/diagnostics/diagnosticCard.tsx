@@ -120,13 +120,40 @@ export function DiagnosticCard({
           {/* Reference Datasets */}
           {diagnostic.reference_datasets &&
             diagnostic.reference_datasets.length > 0 && (
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex flex-col gap-2 text-sm">
                 <span className="text-muted-foreground">
                   Reference Datasets:
                 </span>
-                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                  ● {diagnostic.reference_datasets.length}
-                </span>
+                <div className="flex flex-wrap gap-1">
+                  {diagnostic.reference_datasets.slice(0, 3).map((ref) => (
+                    <Tooltip key={ref.slug}>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="text-xs cursor-help"
+                        >
+                          {ref.slug}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-sm space-y-1">
+                          <div className="font-semibold">{ref.slug}</div>
+                          {ref.description && (
+                            <div className="text-muted-foreground">
+                              {ref.description}
+                            </div>
+                          )}
+                          <div className="text-xs mt-1">Type: {ref.type}</div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                  {diagnostic.reference_datasets.length > 3 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{diagnostic.reference_datasets.length - 3} more
+                    </Badge>
+                  )}
+                </div>
               </div>
             )}
         </div>
