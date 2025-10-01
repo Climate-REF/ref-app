@@ -15,8 +15,10 @@
     diagnostic_slug: enso_tel
 1.4:
   - provider_slug: ilamb
-    diagnostic_slug: so-WOA2023-surface
-  # SST?
+    diagnostic_slug: so-woa2023-surface
+  - provider_slug: ilamb
+    diagnostic_slug: thetao-woa2023-surface
+
 1.5:
   - provider_slug: ilamb
     diagnostic_slug: ohc-noaa
