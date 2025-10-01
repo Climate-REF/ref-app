@@ -19,31 +19,31 @@
   # SST?
 1.5:
   - provider_slug: ilamb
-    diagnostic_slug: ohc-NOAA
+    diagnostic_slug: ohc-noaa
 1.6:
   - provider_slug: esmvaltool
     diagnostic_slug: sea-ice-area-basic
 2.1:
   - provider_slug: ilamb
-    diagnostic_slug: cSoil-HWSD2
+    diagnostic_slug: csoil-hwSD2
 2.2:
   - provider_slug: ilamb
-    diagnostic_slug: gpp-FLUXNET2015
+    diagnostic_slug: gpp-fluxnet2015
 2.3:
   - provider_slug: ilamb
-    diagnostic_slug: mrro-LORA
+    diagnostic_slug: mrro-lora
 2.4:
   - provider_slug: ilamb
-    diagnostic_slug: mrsos-WangMao
+    diagnostic_slug: mrsos-wangmao
 2.5:
   - provider_slug: ilamb
-    diagnostic_slug: nbp-Hoffman
+    diagnostic_slug: nbp-hoffman
 2.6:
   - provider_slug: ilamb
-    diagnostic_slug: lai-AVH15C1
+    diagnostic_slug: lai-avh15c1
 2.7:
   - provider_slug: ilamb
-    diagnostic_slug: snc-ESACCI
+    diagnostic_slug: snc-esacci
 3.1:
   - provider_slug: pmp
     diagnostic_slug: annual-cycle
