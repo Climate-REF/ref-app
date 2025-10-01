@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import type { ExplorerCard } from "@/components/explorer/types";
 import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
@@ -14,8 +15,13 @@ const cards: ExplorerCard[] = [
         title: "AMOC Strength",
         metricUnits: "Sv",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "None",
+          metric: "Bias",
+          statistic: "Period Mean",
         },
       },
 
@@ -26,8 +32,13 @@ const cards: ExplorerCard[] = [
         title: "Sea Surface Salinity",
         metricUnits: "psu",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "None",
+          metric: "Bias",
+          statistic: "Period Mean",
         },
       },
       {
@@ -37,8 +48,13 @@ const cards: ExplorerCard[] = [
         title: "Sea Surface Temperature",
         metricUnits: "K",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "None",
+          metric: "Bias",
+          statistic: "Period Mean",
         },
       },
     ],
