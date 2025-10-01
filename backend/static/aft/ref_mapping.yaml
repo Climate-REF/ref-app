@@ -109,3 +109,5 @@
 5.4:
   - provider_slug: esmvaltool
     diagnostic_slug: climate-drivers-for-fire
+  - provider_slug: ilamb
+    diagnostic_slug: burntfractionall-gfed
