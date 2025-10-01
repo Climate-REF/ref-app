@@ -1,4 +1,4 @@
-hore:[[redirects]]
+[[redirects]]
   from = "/log/script.js"
   to = "https://plausible.io/js/script.file-downloads.outbound-links.js"
   status = 200
