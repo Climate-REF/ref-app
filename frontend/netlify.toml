@@ -1,9 +1,4 @@
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
+hore:[[redirects]]
   from = "/log/script.js"
   to = "https://plausible.io/js/script.file-downloads.outbound-links.js"
   status = 200
@@ -14,3 +9,8 @@
   to = "https://plausible.io/api/event"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
