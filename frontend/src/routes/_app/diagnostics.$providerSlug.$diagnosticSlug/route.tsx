@@ -4,7 +4,7 @@ import {
   Outlet,
   useLocation,
 } from "@tanstack/react-router";
-
+import { HelpCircle } from "lucide-react";
 import type { GroupBy, ReferenceDatasetLink } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
@@ -18,6 +18,11 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   return (
@@ -56,13 +61,46 @@ const DiagnosticInfoLayout = () => {
           {data.aft_link && (
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">CMIP7 AFT ID</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm text-muted-foreground">CMIP7 AFT ID</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        The unique identifier for the Associated Forcing Task
+                        (AFT) in the CMIP7 framework. AFTs define specific model
+                        evaluation tasks that address key climate science
+                        questions.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <p className="font-medium">{data.aft_link.id}</p>
               </div>
               <div className="space-y-1 col-span-2">
-                <p className="text-sm text-muted-foreground">
-                  CMIP7 AFT Description
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm text-muted-foreground">
+                    Diagnostic Collection Description (CMIP7 AFT)
+                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        The description of the scientific objective this
+                        diagnostic addresses as defined by the CMIP Model
+                        Benchmarking Task Team.
+                      </p>
+                      <p className="mt-2">
+                        Multiple diagnostics may be associated with a single
+                        collection.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <p className="font-medium">{data.aft_link.short_description}</p>
               </div>
               {data.aft_link.provider_link && (
@@ -75,7 +113,7 @@ const DiagnosticInfoLayout = () => {
                     href={data.aft_link.provider_link}
                     target="_blank"
                   >
-                    Link to provider
+                    Link to provider documentation
                   </a>
                 </div>
               )}
@@ -83,17 +121,57 @@ const DiagnosticInfoLayout = () => {
           )}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Metric Provider</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-muted-foreground">Metric Provider</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      The software package or tool that implements and executes
+                      this diagnostic. Each provider may offer multiple
+                      diagnostics.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <p className="font-medium">
                 <Badge>{data?.provider.name}</Badge>
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Slug</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-muted-foreground">Slug</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>A unique identifier for this diagnostic.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <p className="font-medium">{data?.slug}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Groupings</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-muted-foreground">Groupings</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      The dataset attributes (such as model name, experiment ID,
+                      or variable name) that are used to organize datasets into
+                      groups before running this diagnostic. Each unique
+                      combination of these attributes creates a separate
+                      execution group.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <div className="flex flex-col gap-2">
                 {data.group_by.map((groups: GroupBy) => (
                   <GroupByItem key={groups.source_type} {...groups} />
@@ -101,9 +179,26 @@ const DiagnosticInfoLayout = () => {
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">
-                Execution groups (successful/total)
-              </p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-muted-foreground">
+                  Execution groups (successful/total)
+                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      A collection of diagnostic runs that share the same
+                      combination of dataset grouping values. For example, if
+                      grouped by model and experiment, all runs for "CESM2" and
+                      "historical" form one execution group. The counter shows
+                      how many groups completed successfully versus the total
+                      number of groups.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <p className="font-medium">
                 {data.successful_execution_group_count}/
                 {data.execution_group_count}
@@ -116,9 +211,24 @@ const DiagnosticInfoLayout = () => {
             <>
               <Separator className="my-4" />
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground">
-                  Reference Datasets
-                </h3>
+                <div className="flex items-center gap-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    Reference Datasets
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        Observational or reference datasets that this diagnostic
+                        uses for comparison. Primary references are essential
+                        for the diagnostic to run, while secondary references
+                        provide additional context.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {data.reference_datasets.map((ref: ReferenceDatasetLink) => (
                     <Card key={ref.slug} className="p-3">
@@ -179,34 +289,54 @@ const DiagnosticInfoLayout = () => {
               Execution Groups
             </Link>
           </TabsTrigger>
-          <TabsTrigger
-            value="scalars"
-            asChild
-            disabled={!data.has_scalar_values}
-            data-disabled={!data.has_scalar_values ? "true" : undefined}
-          >
-            <Link
-              to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
-              params={{ providerSlug, diagnosticSlug }}
-              disabled={!data.has_scalar_values}
-            >
-              Scalar Values
-            </Link>
-          </TabsTrigger>
-          <TabsTrigger
-            value="series"
-            asChild
-            disabled={!data.has_series_values}
-          >
-            <Link
-              to="/diagnostics/$providerSlug/$diagnosticSlug/series"
-              params={{ providerSlug, diagnosticSlug }}
-              disabled={!data.has_series_values}
-              data-disabled={!data.has_series_values ? "true" : undefined}
-            >
-              Series Values
-            </Link>
-          </TabsTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger
+                value="scalars"
+                asChild
+                disabled={!data.has_scalar_values}
+                data-disabled={!data.has_scalar_values ? "true" : undefined}
+              >
+                <Link
+                  to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
+                  params={{ providerSlug, diagnosticSlug }}
+                  disabled={!data.has_scalar_values}
+                >
+                  Scalar Values
+                </Link>
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Single numeric values calculated from the data, such as global
+                means, root mean square errors, or correlation coefficients.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger
+                value="series"
+                asChild
+                disabled={!data.has_series_values}
+              >
+                <Link
+                  to="/diagnostics/$providerSlug/$diagnosticSlug/series"
+                  params={{ providerSlug, diagnosticSlug }}
+                  disabled={!data.has_series_values}
+                  data-disabled={!data.has_series_values ? "true" : undefined}
+                >
+                  Series Values
+                </Link>
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Time series or multi-dimensional data values, such as monthly
+                means over multiple years or values across different latitudes.
+              </p>
+            </TooltipContent>
+          </Tooltip>
           <TabsTrigger value="figures" asChild>
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/figures"
