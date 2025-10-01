@@ -4,7 +4,7 @@ export function NavbarLogo() {
       <img
         src="/logos/logo_cmip_ref.png"
         alt="Rapid Evaluation Framework"
-        className="h-10 w-10"
+        className="size-10 min-w-10"
       />
       <h1 className="font-display font-medium text-md hidden md:inline text-black">
         Rapid Evaluation <br />
