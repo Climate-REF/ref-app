@@ -24,6 +24,7 @@ export function DiagnosticsFilter({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [selectedAftIds, setSelectedAftIds] = useState<string[]>([]);
+  const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [showWithMetricValues, setShowWithMetricValues] = useState<
     boolean | null
   >(null);
@@ -45,11 +46,21 @@ export function DiagnosticsFilter({
     ).values(),
   ).sort((a, b) => a.id.localeCompare(b.id));
 
+  // Extract unique themes from diagnostics
+  const allThemes = Array.from(
+    new Set(
+      diagnostics
+        .filter((d) => d.aft_link?.theme)
+        .map((d) => d.aft_link!.theme!),
+    ),
+  ).sort();
+
   // Apply filters
   const applyFilters = (
     search: string,
     providers: string[],
     aftIds: string[],
+    themes: string[],
     metricValuesFilter: boolean | null,
   ) => {
     let filtered = diagnostics;
@@ -81,6 +92,15 @@ export function DiagnosticsFilter({
       );
     }
 
+    // Theme filter
+    if (themes.length > 0) {
+      filtered = filtered.filter(
+        (diagnostic) =>
+          diagnostic.aft_link?.theme &&
+          themes.includes(diagnostic.aft_link.theme),
+      );
+    }
+
     // Metric values filter
     if (metricValuesFilter !== null) {
       filtered = filtered.filter(
@@ -97,6 +117,7 @@ export function DiagnosticsFilter({
       value,
       selectedProviders,
       selectedAftIds,
+      selectedThemes,
       showWithMetricValues,
     );
   };
@@ -110,6 +131,7 @@ export function DiagnosticsFilter({
       searchTerm,
       newProviders,
       selectedAftIds,
+      selectedThemes,
       showWithMetricValues,
     );
   };
@@ -123,19 +145,41 @@ export function DiagnosticsFilter({
       searchTerm,
       selectedProviders,
       newAftIds,
+      selectedThemes,
+      showWithMetricValues,
+    );
+  };
+
+  const handleThemeToggle = (theme: string) => {
+    const newThemes = selectedThemes.includes(theme)
+      ? selectedThemes.filter((t) => t !== theme)
+      : [...selectedThemes, theme];
+    setSelectedThemes(newThemes);
+    applyFilters(
+      searchTerm,
+      selectedProviders,
+      selectedAftIds,
+      newThemes,
       showWithMetricValues,
     );
   };
 
   const handleMetricValuesFilter = (value: boolean | null) => {
     setShowWithMetricValues(value);
-    applyFilters(searchTerm, selectedProviders, selectedAftIds, value);
+    applyFilters(
+      searchTerm,
+      selectedProviders,
+      selectedAftIds,
+      selectedThemes,
+      value,
+    );
   };
 
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedProviders([]);
     setSelectedAftIds([]);
+    setSelectedThemes([]);
     setShowWithMetricValues(null);
     onFilterChange(diagnostics);
   };
@@ -144,6 +188,7 @@ export function DiagnosticsFilter({
     searchTerm ||
     selectedProviders.length > 0 ||
     selectedAftIds.length > 0 ||
+    selectedThemes.length > 0 ||
     showWithMetricValues !== null;
 
   return (
@@ -229,6 +274,41 @@ export function DiagnosticsFilter({
           </Popover>
         )}
 
+        {allThemes.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Themes
+                {selectedThemes.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedThemes.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="font-medium">Filter by Themes</h4>
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {allThemes.map((theme) => (
+                    <div key={theme} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`theme-${theme}`}
+                        checked={selectedThemes.includes(theme)}
+                        onCheckedChange={() => handleThemeToggle(theme)}
+                      />
+                      <Label htmlFor={`theme-${theme}`} className="text-sm">
+                        {theme}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm">
@@ -289,6 +369,7 @@ export function DiagnosticsFilter({
       {/* Active Filters Display */}
       {(selectedProviders.length > 0 ||
         selectedAftIds.length > 0 ||
+        selectedThemes.length > 0 ||
         showWithMetricValues !== null) && (
         <div className="flex flex-wrap gap-2">
           {selectedProviders.map((provider) => (
@@ -321,6 +402,19 @@ export function DiagnosticsFilter({
               </Badge>
             );
           })}
+          {selectedThemes.map((theme) => (
+            <Badge
+              key={`theme-${theme}`}
+              variant="secondary"
+              className="cursor-pointer"
+            >
+              Theme: {theme}
+              <X
+                className="h-3 w-3 ml-1"
+                onClick={() => handleThemeToggle(theme)}
+              />
+            </Badge>
+          ))}
           {showWithMetricValues !== null && (
             <Badge variant="secondary" className="cursor-pointer">
               {showWithMetricValues ? "Has values" : "No values"}

@@ -3,6 +3,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "../ui/card";
@@ -73,6 +74,16 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         <CardContent>
           <ExplorerCardContentInner contentItem={contentItem} />
         </CardContent>
+        <CardFooter>
+          {contentItem.interpretation && (
+            <div className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground font-semibold">
+                Interpretation:
+              </span>{" "}
+              {contentItem.interpretation}
+            </div>
+          )}
+        </CardFooter>
       </Card>
       <ExplorerTooltip contentItem={contentItem} showOnHover={true} />
     </div>

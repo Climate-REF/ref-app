@@ -1,46 +1,45 @@
 import type { ChartGroupingConfig } from "./grouping";
 
+// Base properties shared across all card types
+type BaseCardContent = {
+  provider: string;
+  diagnostic: string;
+  title: string;
+  description?: string;
+  interpretation?: string;
+  span?: 1 | 2;
+  placeholder?: boolean;
+};
+
+// Card-specific content types
+type BoxWhiskerChartContent = BaseCardContent & {
+  type: "box-whisker-chart";
+  interpretation?: string;
+  metricUnits?: string;
+  otherFilters?: Record<string, string>;
+  clipMin?: number;
+  clipMax?: number;
+  showZeroLine?: boolean;
+  symmetricalAxes?: boolean;
+  groupingConfig?: ChartGroupingConfig;
+};
+
+type FigureGalleryContent = BaseCardContent & {
+  type: "figure-gallery";
+};
+
+type SeriesChartContent = BaseCardContent & {
+  type: "series-chart";
+  metricUnits?: string;
+  otherFilters?: Record<string, string>;
+  symmetricalAxes?: boolean;
+  groupingConfig?: ChartGroupingConfig;
+};
+
 export type ExplorerCardContent =
-  | {
-      type: "box-whisker-chart";
-      provider: string;
-      diagnostic: string;
-      title: string;
-      description?: string;
-      metricUnits?: string;
-      otherFilters?: Record<string, string>;
-      clipMin?: number;
-      clipMax?: number;
-      span?: 1 | 2;
-      showZeroLine?: boolean;
-      symmetricalAxes?: boolean;
-      /** Unified grouping configuration */
-      groupingConfig?: ChartGroupingConfig;
-      placeholder?: boolean;
-    }
-  | {
-      type: "figure-gallery";
-      provider: string;
-      diagnostic: string;
-      title: string;
-      description?: string;
-      span?: 1 | 2;
-      placeholder?: boolean;
-    }
-  | {
-      type: "series-chart";
-      provider: string;
-      diagnostic: string;
-      title: string;
-      description?: string;
-      metricUnits?: string;
-      otherFilters?: Record<string, string>;
-      span?: 1 | 2;
-      symmetricalAxes?: boolean;
-      /** Unified grouping configuration */
-      groupingConfig?: ChartGroupingConfig;
-      placeholder?: boolean;
-    };
+  | BoxWhiskerChartContent
+  | FigureGalleryContent
+  | SeriesChartContent;
 
 export type ExplorerCard = {
   title: string;
