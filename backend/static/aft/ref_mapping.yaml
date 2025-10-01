@@ -3,7 +3,7 @@
     diagnostic_slug: sea-ice-sensitivity
 1.2:
   - provider_slug: ilamb
-    diagnostic_slug: amoc-RAPID
+    diagnostic_slug: amoc-rapid
 1.3:
   - provider_slug: esmvaltool
     diagnostic_slug: enso-basic-climatology
@@ -27,10 +27,10 @@
     diagnostic_slug: sea-ice-area-basic
 2.1:
   - provider_slug: ilamb
-    diagnostic_slug: csoil-hwSD2
+    diagnostic_slug: csoil-hwsd2
 2.2:
   - provider_slug: ilamb
-    diagnostic_slug: gpp-fluxnet2015
+    diagnostic_slug: gpp-wecann
 2.3:
   - provider_slug: ilamb
     diagnostic_slug: mrro-lora
