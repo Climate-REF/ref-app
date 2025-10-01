@@ -22,14 +22,6 @@ const ExplorerLayout = () => {
                 Thematic Areas: Curated entry points for common scientific
                 topics (e.g., atmosphere, sea, land).
               </li>
-              <li>
-                Sources: Filter and select target models and reference datasets
-                to scope results.
-              </li>
-              <li>
-                Diagnostics: Browse and search diagnostics across providers,
-                then open for details and results.
-              </li>
             </ul>
           </div>
           <p className="text-sm text-muted-foreground">

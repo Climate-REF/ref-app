@@ -1,3 +1,4 @@
+import { init } from "@plausible-analytics/tracker";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
@@ -6,6 +7,15 @@ import { ErrorBoundary } from "@/components/app/errorBoundary";
 import { ErrorFallback } from "@/components/app/errorFallback";
 import { Footer } from "@/components/app/footer";
 import { Navbar } from "@/components/app/navbar.tsx";
+
+// Initialize Plausible Analytics
+init({
+  domain: "climate-ref.org",
+  endpoint: "https://staging.climate-ref.org/log/api/event",
+  outboundLinks: true,
+  captureOnLocalhost: false,
+  fileDownloads: true,
+});
 
 function AppLayout() {
   return (
