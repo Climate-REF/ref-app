@@ -103,6 +103,32 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
       );
     },
   },
+  {
+    id: "reference_datasets",
+    accessorFn: (row) => row.reference_datasets?.length || 0,
+    enableSorting: true,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Ref Datasets" />
+    ),
+    cell: (cell) => {
+      const count = cell.getValue<number>();
+      return count > 0 ? (
+        <span
+          className="text-emerald-600 dark:text-emerald-400 font-medium"
+          title={`${count} reference dataset${count > 1 ? "s" : ""} defined`}
+        >
+          {count}
+        </span>
+      ) : (
+        <span
+          className="text-muted-foreground"
+          title="No reference datasets defined"
+        >
+          —
+        </span>
+      );
+    },
+  },
 
   columnHelper.display({
     id: "link",

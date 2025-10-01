@@ -1,0 +1,53 @@
+# Diagnostic Metadata Overrides
+#
+# This file provides additional metadata for diagnostics that supplements or overrides
+# the default values from the diagnostic implementations. It's particularly useful for:
+# - Exposing which reference datasets are used by each diagnostic
+# - Providing display names and descriptions
+# - Adding tags for categorization
+#
+# Structure:
+#   provider-slug/diagnostic-slug:
+#     reference_datasets:
+#       - slug: "dataset-slug"
+#         description: "Description of how this dataset is used"
+#         type: "primary|secondary|comparison"
+#     display_name: "Display Name (overrides default)"
+#     tags: ["category1", "category2"]
+#
+# Example diagnostics (uncomment and populate with real diagnostics as needed):
+
+# pmp/annual-cycle:
+#   reference_datasets:
+#     - slug: "obs4mips.CERES-EBAF.v4.2"
+#       description: "CERES Energy Balanced and Filled - Primary reference for TOA radiation"
+#       type: "primary"
+#     - slug: "obs4mips.GPCP.v2.3"
+#       description: "Global Precipitation Climatology Project - Precipitation comparison"
+#       type: "secondary"
+#   display_name: "Annual Cycle Analysis"
+#   tags: ["atmosphere", "seasonal-cycle", "radiation"]
+
+# pmp/mean-state:
+#   reference_datasets:
+#     - slug: "obs4mips.ERA5.v1"
+#       description: "ERA5 Reanalysis - Primary climatology reference"
+#       type: "primary"
+#   display_name: "Mean State Climatology"
+#   tags: ["atmosphere", "climatology"]
+
+# Add your diagnostic metadata here
+
+# Real diagnostic from production database
+pmp/annual-cycle:
+  reference_datasets:
+    - slug: "obs4mips.CERES-EBAF.v4.2"
+      description: "CERES Energy Balanced and Filled - Primary reference for TOA radiation"
+      type: "primary"
+    # - slug: "obs4mips.GPCP.v2.3"
+    #   description: "Global Precipitation Climatology Project - Precipitation comparison"
+    #   type: "secondary"
+    # - slug: "ERA5.monthly.single-levels"
+    #   description: "ERA5 Reanalysis - Temperature and pressure fields"
+    #   type: "comparison"
+  display_name: "Annual Cycle Analysis"

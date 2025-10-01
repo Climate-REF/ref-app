@@ -148,6 +148,8 @@ export type DiagnosticSummary = {
     successful_execution_group_count: number;
     group_by: Array<GroupBy>;
     aft_link: AftDiagnosticDetail | null;
+    reference_datasets?: Array<ReferenceDatasetLink> | null;
+    tags?: Array<string> | null;
 };
 
 export type Execution = {
@@ -307,6 +309,30 @@ export type ProviderSummary = {
 export type RefDiagnosticLink = {
     provider_slug: string;
     diagnostic_slug: string;
+};
+
+/**
+ * Link to a reference dataset used by a diagnostic.
+ *
+ * Reference datasets are observational or reanalysis datasets that diagnostics
+ * compare model outputs against. They can be classified by their role in the analysis.
+ */
+export type ReferenceDatasetLink = {
+    /**
+     * Unique identifier for the dataset (e.g., 'obs4mips.CERES-EBAF.v4.2')
+     */
+    slug: string;
+    /**
+     * Description of how this dataset is used in the diagnostic
+     */
+    description?: string | null;
+    /**
+     * Role of this reference dataset:
+     * - 'primary': Main reference dataset for the diagnostic
+     * - 'secondary': Additional reference for comparison or validation
+     * - 'comparison': Used for comparative analysis
+     */
+    type: 'primary' | 'secondary' | 'comparison';
 };
 
 /**

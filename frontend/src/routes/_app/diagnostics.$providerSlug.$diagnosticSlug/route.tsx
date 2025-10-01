@@ -5,7 +5,7 @@ import {
   useLocation,
 } from "@tanstack/react-router";
 
-import type { GroupBy } from "@/client";
+import type { GroupBy, ReferenceDatasetLink } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
@@ -109,6 +110,63 @@ const DiagnosticInfoLayout = () => {
               </p>
             </div>
           </div>
+
+          {/* Reference Datasets Section */}
+          {data.reference_datasets && data.reference_datasets.length > 0 && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground">
+                  Reference Datasets
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {data.reference_datasets.map((ref: ReferenceDatasetLink) => (
+                    <Card key={ref.slug} className="p-3">
+                      <div className="flex items-start gap-2">
+                        <Badge
+                          variant={
+                            ref.type === "primary" ? "default" : "secondary"
+                          }
+                          className="mt-0.5"
+                        >
+                          {ref.type}
+                        </Badge>
+                        <div className="flex-1 space-y-1">
+                          <code className="text-sm font-medium">
+                            {ref.slug}
+                          </code>
+                          {ref.description && (
+                            <p className="text-xs text-muted-foreground">
+                              {ref.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Tags Section */}
+          {data.tags && data.tags.length > 0 && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground">
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {data.tags.map((tag: string) => (
+                    <Badge key={tag} variant="outline">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
       <Tabs value={activeTab} className="space-y-4">

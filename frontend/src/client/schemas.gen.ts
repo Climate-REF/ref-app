@@ -521,6 +521,34 @@ export const DiagnosticSummarySchema = {
                     type: 'null'
                 }
             ]
+        },
+        reference_datasets: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/ReferenceDatasetLink'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Datasets'
+        },
+        tags: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Tags'
         }
     },
     type: 'object',
@@ -1029,6 +1057,44 @@ export const RefDiagnosticLinkSchema = {
     required: ['provider_slug', 'diagnostic_slug'],
     title: 'RefDiagnosticLink',
     description: 'Link to a specific diagnostic calculated by a provider.'
+} as const;
+
+export const ReferenceDatasetLinkSchema = {
+    properties: {
+        slug: {
+            type: 'string',
+            title: 'Slug',
+            description: "Unique identifier for the dataset (e.g., 'obs4mips.CERES-EBAF.v4.2')"
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description',
+            description: 'Description of how this dataset is used in the diagnostic'
+        },
+        type: {
+            type: 'string',
+            enum: ['primary', 'secondary', 'comparison'],
+            title: 'Type',
+            description: `Role of this reference dataset:
+- 'primary': Main reference dataset for the diagnostic
+- 'secondary': Additional reference for comparison or validation
+- 'comparison': Used for comparative analysis`
+        }
+    },
+    type: 'object',
+    required: ['slug', 'type'],
+    title: 'ReferenceDatasetLink',
+    description: `Link to a reference dataset used by a diagnostic.
+
+Reference datasets are observational or reanalysis datasets that diagnostics
+compare model outputs against. They can be classified by their role in the analysis.`
 } as const;
 
 export const ResultOutputTypeSchema = {

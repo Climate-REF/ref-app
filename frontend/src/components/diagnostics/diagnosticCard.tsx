@@ -116,7 +116,31 @@ export function DiagnosticCard({
               )}
             </span>
           </div>
+
+          {/* Reference Datasets */}
+          {diagnostic.reference_datasets &&
+            diagnostic.reference_datasets.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Reference Datasets:
+                </span>
+                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                  ● {diagnostic.reference_datasets.length}
+                </span>
+              </div>
+            )}
         </div>
+
+        {/* Tags */}
+        {diagnostic.tags && diagnostic.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {diagnostic.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
 
       <CardFooter>

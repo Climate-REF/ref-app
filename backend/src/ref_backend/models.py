@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Union
+from typing import TYPE_CHECKING, ClassVar, Generic, Literal, TypeVar, Union
 
 from attr import define
 from loguru import logger
@@ -11,6 +11,11 @@ from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.execution import ResultOutputType
 from climate_ref_core.metric_values import ScalarMetricValue
+from ref_backend.core.diagnostic_metadata import (
+    DiagnosticMetadata,
+    ReferenceDatasetLink,
+    load_diagnostic_metadata,
+)
 from ref_backend.core.json_utils import sanitize_float_list, sanitize_float_value
 
 if TYPE_CHECKING:
@@ -124,11 +129,32 @@ class DiagnosticSummary(BaseModel):
     """
     Associated AFT diagnostics
     """
+    reference_datasets: list[ReferenceDatasetLink] | None = None
+    """
+    Reference datasets used by this diagnostic (from metadata overrides)
+
+    These are manually curated and may not be complete at this time.
+    """
+    tags: list[str] | None = None
+    """
+    Tags for categorizing the diagnostic (from metadata overrides)
+    """
+
+    # Cache for loaded diagnostic metadata (class variable)
+    _metadata_cache: ClassVar[dict[str, DiagnosticMetadata] | None] = None
 
     @staticmethod
     def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
         # Import here to avoid circular import issues
         from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic
+
+        # Load metadata YAML on first use (cached)
+        if DiagnosticSummary._metadata_cache is None:
+            metadata_path = app_context.settings.diagnostic_metadata_path_resolved
+            DiagnosticSummary._metadata_cache = load_diagnostic_metadata(metadata_path)
+            logger.debug(
+                f"Loaded diagnostic metadata cache with {len(DiagnosticSummary._metadata_cache)} entries"
+            )
 
         concrete_diagnostic = app_context.provider_registry.get_metric(
             diagnostic.provider.slug, diagnostic.slug
@@ -234,7 +260,8 @@ class DiagnosticSummary(BaseModel):
             logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
             aft = None
 
-        return DiagnosticSummary(
+        # Build the base diagnostic summary
+        summary = DiagnosticSummary(
             id=diagnostic.id,
             provider=ProviderSummary.build(diagnostic.provider),
             slug=diagnostic.slug,
@@ -251,6 +278,23 @@ class DiagnosticSummary(BaseModel):
             group_by=group_by_summary,
             aft_link=aft,
         )
+
+        # Apply metadata overrides from YAML if available
+        diagnostic_key = f"{diagnostic.provider.slug}/{diagnostic.slug}"
+        if diagnostic_key in DiagnosticSummary._metadata_cache:
+            metadata = DiagnosticSummary._metadata_cache[diagnostic_key]
+
+            # Apply overrides: YAML values override database values
+            if metadata.display_name is not None:
+                summary.name = metadata.display_name
+            if metadata.reference_datasets is not None:
+                summary.reference_datasets = metadata.reference_datasets
+            if metadata.tags is not None:
+                summary.tags = metadata.tags
+
+            logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
+
+        return summary
 
 
 class ExecutionOutput(BaseModel):
