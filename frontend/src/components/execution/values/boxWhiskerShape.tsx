@@ -74,15 +74,17 @@ export function BoxWhiskerShape({
   const effectiveFill = (payload as any).__categoryColor || fill;
   const effectiveStroke = stroke ? stroke : darkenHex(effectiveFill, 50);
 
-  const { min, lowerQuartile, median, upperQuartile, max, values } =
+  const { lowerQuartile, median, upperQuartile, values } =
     payload.groups[prefix];
 
   // Calculate pixel coordinates for each value
-  const yMin = scale(min) as number;
   const yQ1 = scale(lowerQuartile) as number;
   const yMedian = scale(median) as number;
   const yQ3 = scale(upperQuartile) as number;
-  const yMax = scale(max) as number;
+  const iqr = yQ3 - yQ1;
+
+  const yUpperBar = yQ3 - iqr * 1.5;
+  const yLowerBar = yQ1 + iqr * 1.5;
 
   const whiskerX = x + width / 2; // Center X for vertical lines
   const crossWidth = 10; // Center X for cross lines
@@ -124,6 +126,7 @@ export function BoxWhiskerShape({
             transform: "rotate(45deg)",
             transformOrigin: "center",
             transformBox: "fill-box",
+            zIndex: isHighlighted ? 1000 : 1,
           }}
         />
       );
@@ -161,7 +164,7 @@ export function BoxWhiskerShape({
       {/* Lower Whisker Line */}
       <line
         x1={whiskerX}
-        y1={yMin}
+        y1={yLowerBar}
         x2={whiskerX}
         y2={yQ1}
         stroke={effectiveStroke}
@@ -172,24 +175,24 @@ export function BoxWhiskerShape({
         x1={whiskerX}
         y1={yQ3}
         x2={whiskerX}
-        y2={yMax}
+        y2={yUpperBar}
         stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       {/* Optional: Min/Max horizontal caps */}
       <line
         x1={boxX + width * 0.2}
-        y1={yMin}
+        y1={yUpperBar}
         x2={boxX + width * 0.8}
-        y2={yMin}
+        y2={yUpperBar}
         stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />
       <line
         x1={boxX + width * 0.2}
-        y1={yMax}
+        y1={yLowerBar}
         x2={boxX + width * 0.8}
-        y2={yMax}
+        y2={yLowerBar}
         stroke={effectiveStroke}
         strokeWidth={strokeWidth}
       />

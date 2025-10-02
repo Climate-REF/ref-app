@@ -68,8 +68,8 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         contentItem.placeholder ? "border-red-500" : "",
       )}
     >
-      <Card className="h-full">
-        <CardHeader>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex-none">
           <CardTitle>
             {contentItem.placeholder ? "PLACEHOLDER: " : ""} {contentItem.title}
           </CardTitle>
@@ -79,10 +79,10 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
             )}
           </div>
         </CardHeader>
-        <CardContent className="grow">
+        <CardContent className="flex-auto flex flex-col justify-end">
           <ExplorerCardContentInner contentItem={contentItem} />
         </CardContent>
-        <CardFooter className="h-min-32">
+        <CardFooter className="h-min-32 flex-none">
           {contentItem.interpretation && (
             <div className="text-sm text-muted-foreground">
               <span className="text-sm text-muted-foreground font-semibold">

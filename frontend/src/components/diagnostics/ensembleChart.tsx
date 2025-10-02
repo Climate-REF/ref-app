@@ -49,6 +49,8 @@ interface EnsembleChartProps {
   showZeroLine?: boolean;
   /** When true, use symmetrical axes centered on zero */
   symmetricalAxes?: boolean;
+  yMin?: number;
+  yMax?: number;
 }
 
 interface GroupStatistics {
@@ -90,6 +92,8 @@ export const EnsembleChart = ({
   groupingConfig,
   showZeroLine,
   symmetricalAxes,
+  yMin,
+  yMax,
 }: EnsembleChartProps) => {
   const { mousePosition, windowSize } = useMousePositionAndWidth();
   const [highlightedPoint, setHighlightedPoint] = useState<{
@@ -253,9 +257,12 @@ export const EnsembleChart = ({
     const padding = range * 0.05;
 
     return scaleLinear()
-      .domain([minVal - padding, maxVal + padding])
+      .domain([
+        yMin !== undefined ? yMin : minVal - padding,
+        yMax !== undefined ? yMax : maxVal + padding,
+      ])
       .nice();
-  }, [chartData, symmetricalAxes]);
+  }, [chartData, symmetricalAxes, yMin, yMax]);
   const yDomain = scale.domain() as [number, number];
 
   // Get color for a group

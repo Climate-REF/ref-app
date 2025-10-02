@@ -22,6 +22,10 @@ type BoxWhiskerChartContent = BaseCardContent & {
   showZeroLine?: boolean;
   symmetricalAxes?: boolean;
   groupingConfig?: ChartGroupingConfig;
+  yMin?: number;
+  /* Override the y-axis minimum value */
+  yMax?: number;
+  /* Override the y-axis maximum value */
 };
 
 type FigureGalleryContent = BaseCardContent & {

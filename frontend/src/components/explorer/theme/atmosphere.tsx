@@ -23,7 +23,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
       {
         type: "box-whisker-chart",
@@ -41,7 +41,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
       {
         type: "box-whisker-chart",
@@ -59,7 +59,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "experiment_id",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
       {
         type: "box-whisker-chart",
@@ -77,13 +77,13 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
       {
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pdo",
-        title: "PDO Bias",
+        title: "PDO RMSE",
         description:
           "Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -95,13 +95,13 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
       {
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pna",
-        title: "PNA Bias",
+        title: "PNA RMSE",
         description:
           "Pacific-North American (PNA) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -113,7 +113,7 @@ const cards: ExplorerCard[] = [
           groupBy: "season",
           hue: "season",
         },
-        symmetricalAxes: true,
+        yMin: 0,
       },
     ],
   },
