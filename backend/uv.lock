@@ -331,8 +331,8 @@ wheels = [
 
 [[package]]
 name = "climate-ref"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "alembic" },
     { name = "attrs" },
@@ -362,8 +362,8 @@ postgres = [
 
 [[package]]
 name = "climate-ref-core"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-core#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-core&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "attrs" },
     { name = "cattrs" },
@@ -382,8 +382,8 @@ dependencies = [
 
 [[package]]
 name = "climate-ref-esmvaltool"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-esmvaltool#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-esmvaltool&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "pooch" },
@@ -393,8 +393,8 @@ dependencies = [
 
 [[package]]
 name = "climate-ref-example"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-example#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-example&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "dask" },
@@ -404,8 +404,8 @@ dependencies = [
 
 [[package]]
 name = "climate-ref-ilamb"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-ilamb#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-ilamb&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "ilamb3" },
@@ -414,8 +414,8 @@ dependencies = [
 
 [[package]]
 name = "climate-ref-pmp"
-version = "0.6.6"
-source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-pmp#93e5e4adebad1fbdc55a1566c4fd83ddbe538b17" }
+version = "0.7.0"
+source = { git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-pmp&tag=v0.7.0#e146ffbb06dc7825150c04da35d0142dc6f397f1" }
 dependencies = [
     { name = "climate-ref-core" },
 ]
@@ -2877,7 +2877,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "climate-ref", extras = ["aft-providers", "postgres"], git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref" },
+    { name = "climate-ref", extras = ["aft-providers", "postgres"], git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref&tag=v0.7.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "fastapi-sqlalchemy-monitor", specifier = ">=1.1.3" },
     { name = "loguru" },
@@ -2893,7 +2893,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "climate-ref-example", git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-example" },
+    { name = "climate-ref-example", git = "https://github.com/Climate-REF/climate-ref?subdirectory=packages%2Fclimate-ref-example&tag=v0.7.0" },
     { name = "coverage", specifier = ">=7.4.3,<8.0.0" },
     { name = "mypy", specifier = ">=1.8.0,<2.0.0" },
     { name = "pandas-stubs", specifier = ">=2.3.2.250827" },
