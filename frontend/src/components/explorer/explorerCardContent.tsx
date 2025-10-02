@@ -66,7 +66,6 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         "relative group",
         spanClass,
         contentItem.placeholder ? "border-red-500" : "",
-        p,
       )}
     >
       <Card className="h-full">
