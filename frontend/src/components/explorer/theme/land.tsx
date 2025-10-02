@@ -25,7 +25,8 @@ const cards: ExplorerCard[] = [
         provider: "ilamb",
         diagnostic: "gpp-fluxnet2015",
         title: "Gross Primary Production (GPP) Annual Cycle",
-        description: "Calculated as the mean seasonal cycle over 2001-2010",
+        description:
+          "Calculated as the mean seasonal cycle over 2001-2010. TODO: JL - simplify the styling of this chart as it isn't intuative. Users likely need a single line per model and the nesting is overkill",
         span: 2,
         metricUnits: "kgC/m^2/s",
         otherFilters: {
