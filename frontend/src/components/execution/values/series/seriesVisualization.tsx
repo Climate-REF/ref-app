@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,6 @@ interface SeriesVisualizationProps {
   maxSeriesLimit?: number;
   maxLegendItems?: number;
   enableZoom?: boolean;
-  maxVisibleGroups?: number;
   // URL synchronization props
   initialGroupBy?: string;
   initialHue?: string;
@@ -79,9 +78,7 @@ const LINE_STYLES = [
 export function SeriesVisualization({
   seriesValues,
   maxSeriesLimit = 500,
-  maxLegendItems = 20,
   enableZoom = false,
-  maxVisibleGroups = 10,
   initialGroupBy,
   initialHue,
   initialStyle,
@@ -799,7 +796,6 @@ export function SeriesVisualization({
 
         if (chartData.length === 0) return null;
 
-        const showLegend = seriesKeys.length <= maxLegendItems;
         const currentZoomDomain = zoomDomain[group.indexType];
         const tickFormatter = createTickFormatter(chartData, group.indexName);
         const tickCount = getTickCount(chartData, group.indexName);
@@ -808,210 +804,183 @@ export function SeriesVisualization({
         const legendItems = getLegendItems(group, seriesKeys);
 
         return (
-          <Card key={group.indexType}>
-            <CardHeader>
-              <CardTitle>
-                Series by {group.indexName}
-                {groupByDimension &&
-                  groupByDimension !== "none" &&
-                  ` (grouped by ${groupByDimension})`}
-              </CardTitle>
-              {!showLegend && (
-                <div className="text-sm text-gray-500">
-                  {seriesKeys.length} series (click legend items to toggle
-                  visibility)
-                </div>
-              )}
-              {enableZoom && (
-                <div className="text-xs text-gray-400">
-                  Use the brush below the chart to zoom and navigate
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                {/* Chart */}
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={700}>
-                    <LineChart
-                      data={chartData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: enableZoom ? 60 : 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey={group.indexName}
-                        domain={currentZoomDomain || ["dataMin", "dataMax"]}
-                        label={{
-                          value: group.indexName,
-                          position: "insideBottom",
-                          offset: -5,
-                        }}
-                        type="number"
-                        scale="linear"
-                        tickFormatter={tickFormatter}
-                        tickCount={tickCount}
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis
-                        domain={
-                          symmetricalAxes
-                            ? (data) => {
-                                const values = data.flatMap((d) =>
-                                  Object.values(d).filter(
-                                    (v) => typeof v === "number",
-                                  ),
-                                ) as number[];
-                                if (values.length === 0) return [0, 1];
-                                const maxAbs = Math.max(
-                                  ...values.map(Math.abs),
-                                );
-                                return [-maxAbs, maxAbs];
-                              }
-                            : ["dataMin - 0.1", "dataMax + 0.1"]
-                        }
-                        label={{
-                          value: "Value",
-                          angle: -90,
-                          position: "insideLeft",
-                        }}
-                        tickFormatter={(value: number) => value.toFixed(2)}
-                      />
-                      <Tooltip
-                        content={
-                          <CustomSeriesToolTip
-                            hiddenSeries={hiddenSeries}
-                            isReferenceSeriesKey={(seriesKey: string) =>
-                              isReferenceSeriesKey(seriesKey, group)
-                            }
-                            hoveredSeries={hoveredSeries}
-                          />
-                        }
-                        cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
-                        key={group.indexType} // Add key to prevent tooltip reuse issues
-                      />
-                      {/* Sort series keys for proper rendering order: hidden -> visible -> reference -> hovered */}
-                      {seriesKeys
-                        .sort((a, b) => {
-                          const aIsReference = isReferenceSeriesKey(a, group);
-                          const bIsReference = isReferenceSeriesKey(b, group);
-                          const aIsHidden = hiddenSeries.has(a);
-                          const bIsHidden = hiddenSeries.has(b);
-                          const aIsHovered = hoveredSeries === a;
-                          const bIsHovered = hoveredSeries === b;
-
-                          // Create priority scores (higher = rendered later/on top)
-                          const getPriority = (
-                            isHidden: boolean,
-                            isReference: boolean,
-                            isHovered: boolean,
-                          ) => {
-                            if (isHovered) return 4; // Highest priority - always on top
-                            if (!isHidden && !isReference) return 3; // Regular visible lines
-                            if (!isHidden) return 2; // Reference lines third highest
-
-                            return 1; // Hidden lines lowest priority
-                          };
-
-                          const aPriority = getPriority(
-                            aIsHidden,
-                            aIsReference,
-                            aIsHovered,
-                          );
-                          const bPriority = getPriority(
-                            bIsHidden,
-                            bIsReference,
-                            bIsHovered,
-                          );
-
-                          return aPriority - bPriority;
-                        })
-                        .map((seriesKey) => {
-                          const isHidden = hiddenSeries.has(seriesKey);
-                          const isHovered = hoveredSeries === seriesKey;
-                          const isOtherHovered =
-                            hoveredSeries !== null &&
-                            hoveredSeries !== seriesKey;
-                          const isReference = isReferenceSeriesKey(
-                            seriesKey,
-                            group,
-                          );
-
-                          // Determine stroke color: gray for hidden/unselected lines, original color for visible lines
-                          let strokeColor: string;
-                          if (isReference) {
-                            strokeColor = "#000000"; // Red color for reference lines
-                          } else if (isHidden && !isHovered) {
-                            strokeColor = "#9CA3AF"; // Gray color for hidden lines
-                          } else {
-                            strokeColor = getSeriesColor(seriesKey); // Original color for visible lines
+          <div key={group.indexType} className="flex gap-4">
+            {/* Chart */}
+            <div className="flex-1">
+              <ResponsiveContainer width="100%" height={700}>
+                <LineChart
+                  data={chartData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: enableZoom ? 60 : 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey={group.indexName}
+                    domain={currentZoomDomain || ["dataMin", "dataMax"]}
+                    label={{
+                      value: group.indexName,
+                      position: "insideBottom",
+                      offset: -5,
+                    }}
+                    type="number"
+                    scale="linear"
+                    tickFormatter={tickFormatter}
+                    tickCount={tickCount}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis
+                    domain={
+                      symmetricalAxes
+                        ? (data) => {
+                            const values = data.flatMap((d) =>
+                              Object.values(d).filter(
+                                (v) => typeof v === "number",
+                              ),
+                            ) as number[];
+                            if (values.length === 0) return [0, 1];
+                            const maxAbs = Math.max(...values.map(Math.abs));
+                            return [-maxAbs, maxAbs];
                           }
+                        : ["dataMin - 0.1", "dataMax + 0.1"]
+                    }
+                    label={{
+                      value: "Value",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                    tickFormatter={(value: number) => value.toFixed(2)}
+                  />
+                  <Tooltip
+                    content={
+                      <CustomSeriesToolTip
+                        hiddenSeries={hiddenSeries}
+                        isReferenceSeriesKey={(seriesKey: string) =>
+                          isReferenceSeriesKey(seriesKey, group)
+                        }
+                        hoveredSeries={hoveredSeries}
+                      />
+                    }
+                    cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
+                    key={group.indexType} // Add key to prevent tooltip reuse issues
+                  />
+                  {/* Sort series keys for proper rendering order: hidden -> visible -> reference -> hovered */}
+                  {seriesKeys
+                    .sort((a, b) => {
+                      const aIsReference = isReferenceSeriesKey(a, group);
+                      const bIsReference = isReferenceSeriesKey(b, group);
+                      const aIsHidden = hiddenSeries.has(a);
+                      const bIsHidden = hiddenSeries.has(b);
+                      const aIsHovered = hoveredSeries === a;
+                      const bIsHovered = hoveredSeries === b;
 
-                          // Determine opacity
-                          let opacity = 1;
-                          if (isOtherHovered) {
-                            opacity = 0.3; // Dimmed when another line is hovered
-                          } else if (isReference) {
-                            opacity = 1; // Reference lines always full opacity when not hidden
-                          } else {
-                            opacity = isHidden ? 0.7 : 1; // Slightly reduced opacity for hidden non-reference lines
+                      // Create priority scores (higher = rendered later/on top)
+                      const getPriority = (
+                        isHidden: boolean,
+                        isReference: boolean,
+                        isHovered: boolean,
+                      ) => {
+                        if (isHovered) return 4; // Highest priority - always on top
+                        if (!isHidden && !isReference) return 3; // Regular visible lines
+                        if (!isHidden) return 2; // Reference lines third highest
+
+                        return 1; // Hidden lines lowest priority
+                      };
+
+                      const aPriority = getPriority(
+                        aIsHidden,
+                        aIsReference,
+                        aIsHovered,
+                      );
+                      const bPriority = getPriority(
+                        bIsHidden,
+                        bIsReference,
+                        bIsHovered,
+                      );
+
+                      return aPriority - bPriority;
+                    })
+                    .map((seriesKey) => {
+                      const isHidden = hiddenSeries.has(seriesKey);
+                      const isHovered = hoveredSeries === seriesKey;
+                      const isOtherHovered =
+                        hoveredSeries !== null && hoveredSeries !== seriesKey;
+                      const isReference = isReferenceSeriesKey(
+                        seriesKey,
+                        group,
+                      );
+
+                      // Determine stroke color: gray for hidden/unselected lines, original color for visible lines
+                      let strokeColor: string;
+                      if (isReference) {
+                        strokeColor = "#000000"; // Red color for reference lines
+                      } else if (isHidden && !isHovered) {
+                        strokeColor = "#9CA3AF"; // Gray color for hidden lines
+                      } else {
+                        strokeColor = getSeriesColor(seriesKey); // Original color for visible lines
+                      }
+
+                      // Determine opacity
+                      let opacity = 1;
+                      if (isOtherHovered) {
+                        opacity = 0.3; // Dimmed when another line is hovered
+                      } else if (isReference) {
+                        opacity = 1; // Reference lines always full opacity when not hidden
+                      } else {
+                        opacity = isHidden ? 0.7 : 1; // Slightly reduced opacity for hidden non-reference lines
+                      }
+
+                      return (
+                        <Line
+                          key={seriesKey}
+                          type="monotone"
+                          dataKey={seriesKey}
+                          stroke={strokeColor}
+                          strokeWidth={
+                            isHovered
+                              ? getSeriesStrokeWidth(seriesKey, group) + 1
+                              : getSeriesStrokeWidth(seriesKey, group)
                           }
-
-                          return (
-                            <Line
-                              key={seriesKey}
-                              type="monotone"
-                              dataKey={seriesKey}
-                              stroke={strokeColor}
-                              strokeWidth={
-                                isHovered
-                                  ? getSeriesStrokeWidth(seriesKey, group) + 1
-                                  : getSeriesStrokeWidth(seriesKey, group)
-                              }
-                              strokeOpacity={opacity}
-                              dot={false} // Disable dots for better performance
-                              activeDot={{ r: 4 }}
-                              name={seriesKey}
-                              {...getSeriesStyle(seriesKey)}
-                              onClick={() => toggleSeries(seriesKey)}
-                              onMouseEnter={() => handleSeriesHover(seriesKey)}
-                              onMouseLeave={() => handleSeriesHover(null)}
-                              style={{ cursor: "pointer" }}
-                              isAnimationActive={false} // Disable animation for performance
-                            />
-                          );
-                        })}
-                      {enableZoom && (
-                        <Brush
-                          dataKey={group.indexName}
-                          height={30}
-                          stroke="#8884d8"
-                          onChange={brushOnChange(group, chartData)}
+                          strokeOpacity={opacity}
+                          dot={false} // Disable dots for better performance
+                          activeDot={{ r: 4 }}
+                          name={seriesKey}
+                          {...getSeriesStyle(seriesKey)}
+                          onClick={() => toggleSeries(seriesKey)}
+                          onMouseEnter={() => handleSeriesHover(seriesKey)}
+                          onMouseLeave={() => handleSeriesHover(null)}
+                          style={{ cursor: "pointer" }}
+                          isAnimationActive={false} // Disable animation for performance
                         />
-                      )}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                      );
+                    })}
+                  {enableZoom && (
+                    <Brush
+                      dataKey={group.indexName}
+                      height={30}
+                      stroke="#8884d8"
+                      onChange={brushOnChange(group, chartData)}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
 
-                {/* Sidebar Legend */}
-                <SeriesLegendSidebar
-                  legendItems={legendItems}
-                  hiddenSeries={hiddenSeries}
-                  onToggleSeries={toggleSeries}
-                  onToggleGroup={getToggleGroup(group)}
-                  onHoverSeries={handleSeriesHover}
-                  hoveredSeries={hoveredSeries}
-                  maxVisibleGroups={maxVisibleGroups}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            {/* Sidebar Legend */}
+            <SeriesLegendSidebar
+              legendItems={legendItems}
+              hiddenSeries={hiddenSeries}
+              onToggleSeries={toggleSeries}
+              onToggleGroup={getToggleGroup(group)}
+              onHoverSeries={handleSeriesHover}
+              hoveredSeries={hoveredSeries}
+            />
+          </div>
         );
       })}
     </div>

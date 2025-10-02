@@ -1,13 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListMetricValues } from "@/client";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { CardTemplateGenerator } from "@/components/diagnostics/cardTemplateGenerator";
 import { Values } from "@/components/execution/values";
-import type { MetricValueCollection } from "@/components/execution/values/types.ts";
+import type {
+  MetricValue,
+  MetricValueCollection,
+  SeriesValue,
+} from "@/components/execution/values/types.ts";
 
 const valuesSearchSchema = z
   .object({
@@ -28,6 +32,14 @@ export const SeriesValuesTab = () => {
   };
   const search = Route.useSearch() as typeof valuesSearchSchema._type;
   const navigate = useNavigate({ from: Route.fullPath });
+
+  // Extract search values to prevent unnecessary callback recreation
+  const searchTab = search.tab;
+  const searchGroupBy = search.groupBy;
+  const searchHue = search.hue;
+  const searchStyle = search.style;
+  const searchDetectOutliers = search.detect_outliers;
+  const searchIncludeUnverified = search.include_unverified;
 
   const valueType = "series";
 
@@ -82,11 +94,24 @@ export const SeriesValuesTab = () => {
   }, [search]);
 
   // State to track current grouping configuration from the main chart
-  const [currentGroupingConfig, _] = useState({
+  const [currentGroupingConfig, setCurrentGroupingConfig] = useState({
     groupBy: search.groupBy,
     hue: search.hue,
     style: search.style,
   });
+
+  // Track filtered data from the Values component
+  const [filteredData, setFilteredData] = useState<
+    (MetricValue | SeriesValue)[]
+  >([]);
+
+  // Callback to receive filtered data from Values component
+  const handleFilteredDataChange = useCallback(
+    (data: (MetricValue | SeriesValue)[]) => {
+      setFilteredData(data);
+    },
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -133,6 +158,56 @@ export const SeriesValuesTab = () => {
             value: value as string,
           }))}
         valueType={valueType}
+        onFiltersChange={useCallback(
+          (newFilters: Array<{ facetKey: string; value: string }>) => {
+            const filterParams =
+              newFilters.length > 0
+                ? Object.fromEntries(
+                    newFilters.map((filter) => [filter.facetKey, filter.value]),
+                  )
+                : {};
+
+            // Preserve tab, series visualization, and outlier parameters
+            const otherParams = {
+              tab: searchTab,
+              ...(searchGroupBy && { groupBy: searchGroupBy }),
+              ...(searchHue && { hue: searchHue }),
+              ...(searchStyle && { style: searchStyle }),
+              detect_outliers: String(searchDetectOutliers), // Convert enum to string
+              include_unverified: String(searchIncludeUnverified), // Convert boolean to string
+            };
+
+            navigate({
+              search: { ...filterParams, ...otherParams } as any,
+              replace: true,
+            });
+          },
+          [
+            searchTab,
+            searchGroupBy,
+            searchHue,
+            searchStyle,
+            searchDetectOutliers,
+            searchIncludeUnverified,
+            navigate,
+          ],
+        )}
+        onCurrentGroupingChange={useCallback(
+          (groupingConfig: {
+            groupBy?: string;
+            hue?: string;
+            style?: string;
+          }) => {
+            // Update current grouping config state for card generator sync
+            setCurrentGroupingConfig({
+              groupBy: groupingConfig.groupBy,
+              hue: groupingConfig.hue,
+              style: groupingConfig.style,
+            });
+          },
+          [],
+        )}
+        onFilteredDataChange={handleFilteredDataChange}
         onDownload={async () => {
           const response = await diagnosticsListMetricValues({
             path: {
@@ -188,7 +263,11 @@ export const SeriesValuesTab = () => {
           diagnosticSlug={diagnosticSlug}
           currentFilters={currentFilters}
           currentGroupingConfig={currentGroupingConfig}
-          availableData={(metricValues as MetricValueCollection)?.data ?? []}
+          availableData={
+            filteredData.length > 0
+              ? filteredData
+              : ((metricValues as MetricValueCollection)?.data ?? [])
+          }
           currentTab="series"
         />
       </div>

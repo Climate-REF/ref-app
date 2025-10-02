@@ -12,13 +12,30 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "gpp-fluxnet2015",
-        title: "Gross Primary Production",
+        title: "Gross Primary Production (GPP)",
         metricUnits: "kgC/m^2/s",
         otherFilters: { region: "global" },
         groupingConfig: {
           groupBy: "metric",
           hue: "metric",
         },
+      },
+      {
+        type: "series-chart",
+        provider: "ilamb",
+        diagnostic: "gpp-fluxnet2015",
+        title: "Gross Primary Production (GPP) Annual Cycle",
+        description: "Calculated as the mean seasonal cycle over 2001-2010",
+        span: 1,
+        metricUnits: "kgC/m^2/s",
+        otherFilters: {
+          metric: "cycle_global",
+        },
+        groupingConfig: {
+          groupBy: "source_id",
+          hue: "source_id",
+        },
+        placeholder: true,
       },
       {
         type: "box-whisker-chart",

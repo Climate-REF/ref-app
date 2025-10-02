@@ -454,7 +454,7 @@ class SeriesValue(BaseModel):
     """
 
     dimensions: dict[str, str]
-    values: list[float]
+    values: list[float | None]
     index: list[Union[str, float]] | None = None
     index_name: str | None = None
     attributes: dict[str, Union[str, float]] | None = None

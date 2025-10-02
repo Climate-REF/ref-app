@@ -35,7 +35,6 @@ function SeriesLegendSidebarComponent({
   onToggleGroup,
   onHoverSeries,
   hoveredSeries,
-  maxVisibleGroups = 10,
   className,
 }: SeriesLegendSidebarProps) {
   // Initialize collapsed state - start with all categories collapsed
@@ -118,11 +117,7 @@ function SeriesLegendSidebarComponent({
   );
 
   // Determine if we should show all groups or limit them
-  const totalGroups = sortedCategories.length;
-  const shouldLimitGroups = totalGroups > maxVisibleGroups;
-  const visibleCategories = shouldLimitGroups
-    ? sortedCategories.slice(0, maxVisibleGroups)
-    : sortedCategories;
+  const visibleCategories = sortedCategories;
 
   const toggleCategory = useCallback((category: string) => {
     setCollapsedCategories((prev) => {
@@ -141,16 +136,13 @@ function SeriesLegendSidebarComponent({
   }
 
   return (
-    <div className={cn("w-80 flex-shrink-0", className)}>
-      <div className="pb-3">
+    <div
+      className={cn("w-80 flex-shrink-0 h-[700px] flex flex-col", className)}
+    >
+      <div className="pb-3 flex-shrink-0">
         <div className="text-base">Series Legend</div>
-        {shouldLimitGroups && (
-          <p className="text-xs text-muted-foreground">
-            Showing {visibleCategories.length} of {totalGroups} categories
-          </p>
-        )}
       </div>
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
         {visibleCategories.map((category) => {
           const items = groupedItems[category];
           const hasVisibleItems = shouldAutoExpand(category);
@@ -298,16 +290,6 @@ function SeriesLegendSidebarComponent({
             </div>
           );
         })}
-
-        {/* Show hidden categories info */}
-        {shouldLimitGroups && (
-          <div className="pt-2 border-t">
-            <p className="text-xs text-muted-foreground">
-              {totalGroups - visibleCategories.length} more categories hidden.
-              Use filters to reduce the number of series.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

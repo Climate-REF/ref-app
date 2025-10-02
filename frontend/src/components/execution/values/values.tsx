@@ -1,5 +1,5 @@
 import { Download } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -27,6 +27,8 @@ type ValuesProps = {
     hue?: string;
     style?: string;
   }) => void;
+  // Callback to expose filtered data
+  onFilteredDataChange?: (filteredData: (MetricValue | SeriesValue)[]) => void;
   // Outlier detection parameters
   hadOutliers?: boolean;
   outlierCount?: number;
@@ -71,6 +73,13 @@ export function Values({ valueType, ...props }: ValuesProps) {
     initialFilters: props.initialFilters,
     onFiltersChange: props.onFiltersChange,
   });
+
+  // Notify parent component when filtered data changes
+  useEffect(() => {
+    if (props.onFilteredDataChange) {
+      props.onFilteredDataChange(finalDisplayedValues);
+    }
+  }, [finalDisplayedValues, props.onFilteredDataChange]);
 
   // Handle outlier control changes
   const handleDetectOutliersChange = (value: "off" | "iqr") => {
