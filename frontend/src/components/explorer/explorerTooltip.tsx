@@ -20,11 +20,12 @@ export const ExplorerTooltip = ({
   <Tooltip>
     <TooltipTrigger asChild>
       <Button
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           {
             "opacity-0 group-hover:opacity-100 transition-opacity": showOnHover,
           },
-          "absolute top-2 right-2 p-1 bg-white/80 hover:bg-white rounded shadow-sm",
+          "top-2 right-2 p-1 bg-white/80 hover:bg-white rounded shadow-sm",
         )}
       >
         <Info className="h-3 w-3 text-gray-600" />

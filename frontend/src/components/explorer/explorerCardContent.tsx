@@ -13,6 +13,7 @@ import {
   SeriesChartContent,
   TaylorDiagramContentWrapper,
 } from "./content";
+import { ExplorerCardDropdown } from "./explorerCardDropdown";
 import { ExplorerTooltip } from "./explorerTooltip";
 import type { ExplorerCardContent as ExplorerCardContentType } from "./types";
 
@@ -58,8 +59,6 @@ export const ExplorerCardContentSkeleton = () => {
 export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
   const spanClass = contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
 
-  console.log("Rendering ExplorerCardContent:", contentItem);
-
   return (
     <div
       className={cn(
@@ -69,14 +68,29 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
       )}
     >
       <Card className="h-full flex flex-col">
-        <CardHeader className="flex-none">
-          <CardTitle>
-            {contentItem.placeholder ? "PLACEHOLDER: " : ""} {contentItem.title}
-          </CardTitle>
-          <div className="h-min-32">
-            {contentItem.description && (
-              <CardDescription>{contentItem.description}</CardDescription>
-            )}
+        <CardHeader className="flex items-start justify-between">
+          <div className="flex flex-col gap-2">
+            <CardTitle>
+              {contentItem.placeholder ? "PLACEHOLDER: " : ""}{" "}
+              {contentItem.title}
+            </CardTitle>
+            <div className="h-min-32">
+              {contentItem.description && (
+                <CardDescription>{contentItem.description}</CardDescription>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto">
+            <ExplorerTooltip contentItem={contentItem} showOnHover={true} />
+            {contentItem.type === "box-whisker-chart" ||
+            contentItem.type === "series-chart" ? (
+              <ExplorerCardDropdown
+                contentItem={contentItem}
+                // Hardcode for now, may add a global toggle later
+                includeUnverified={false}
+              />
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="flex-auto flex flex-col justify-end">
@@ -93,7 +107,6 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
           )}
         </CardFooter>
       </Card>
-      <ExplorerTooltip contentItem={contentItem} showOnHover={true} />
     </div>
   );
 }

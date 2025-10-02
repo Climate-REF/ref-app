@@ -17,7 +17,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-n",
         },
         groupingConfig: {
           groupBy: "season",
@@ -35,7 +34,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-s",
         },
         groupingConfig: {
           groupBy: "season",
@@ -53,7 +51,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-n",
         },
         groupingConfig: {
           groupBy: "season",
@@ -71,7 +68,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-n",
         },
         groupingConfig: {
           groupBy: "season",
@@ -89,7 +85,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-n",
         },
         groupingConfig: {
           groupBy: "season",
@@ -107,7 +102,6 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
-          domain: "atm-20c-plev-n",
         },
         groupingConfig: {
           groupBy: "season",

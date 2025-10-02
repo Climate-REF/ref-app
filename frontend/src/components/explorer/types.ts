@@ -1,7 +1,7 @@
 import type { ChartGroupingConfig } from "./grouping";
 
 // Base properties shared across all card types
-type BaseCardContent = {
+export type BaseCardContent = {
   provider: string;
   diagnostic: string;
   title: string;
@@ -12,7 +12,7 @@ type BaseCardContent = {
 };
 
 // Card-specific content types
-type BoxWhiskerChartContent = BaseCardContent & {
+export type BoxWhiskerChartContent = BaseCardContent & {
   type: "box-whisker-chart";
   interpretation?: string;
   metricUnits?: string;
@@ -28,11 +28,11 @@ type BoxWhiskerChartContent = BaseCardContent & {
   /* Override the y-axis maximum value */
 };
 
-type FigureGalleryContent = BaseCardContent & {
+export type FigureGalleryContent = BaseCardContent & {
   type: "figure-gallery";
 };
 
-type SeriesChartContent = BaseCardContent & {
+export type SeriesChartContent = BaseCardContent & {
   type: "series-chart";
   metricUnits?: string;
   otherFilters?: Record<string, string>;
@@ -40,7 +40,7 @@ type SeriesChartContent = BaseCardContent & {
   groupingConfig?: ChartGroupingConfig;
 };
 
-type TaylorDiagramContent = BaseCardContent & {
+export type TaylorDiagramContent = BaseCardContent & {
   type: "taylor-diagram";
   otherFilters?: Record<string, string>;
   referenceStddev?: number;

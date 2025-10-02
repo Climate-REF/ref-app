@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import { cn } from "@/lib/utils";
 import { ErrorBoundary, ErrorFallback } from "../app";
 import {
@@ -25,27 +26,14 @@ interface ExplorerCardProps {
 export function ExplorerCard({ card }: ExplorerCardProps) {
   return (
     <Card className={cn(card.placeholder ? "border-red-500" : "")}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <CardTitle>
-              {card.placeholder && "PLACEHOLDER:"} {card.title}
-            </CardTitle>
-            {card.description && (
-              <CardDescription>{card.description}</CardDescription>
-            )}
-          </div>
-
-          {/* Not working properly with TooltipProvider
-          <div>
-            <ExplorerTooltip
-              contentItem={{
-                title: card.title,
-                description: card.description,
-                content: card.content,
-              }}
-            />
-          </div> */}
+      <CardHeader className="flex-none">
+        <CardTitle>
+          {card.placeholder && "PLACEHOLDER:"} {card.title}
+        </CardTitle>
+        <div className="h-min-32">
+          {card.description && (
+            <CardDescription>{card.description}</CardDescription>
+          )}
         </div>
       </CardHeader>
       <CardContent>
