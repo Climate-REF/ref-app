@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
@@ -17,12 +18,53 @@ const diagnosticNotes = [
   },
 ];
 
+// Define search params schema for URL filtering
+// Arrays are stored as comma-separated strings and parsed in the component
+const diagnosticsSearchSchema = z.object({
+  search: z.string().optional().catch(undefined),
+  providers: z.string().optional().catch(undefined),
+  aftIds: z.string().optional().catch(undefined),
+  themes: z.string().optional().catch(undefined),
+  metricValues: z.enum(["true", "false"]).optional().catch(undefined),
+  view: z.enum(["cards", "table"]).default("cards"),
+});
+
 const Diagnostics = () => {
   const { data } = useSuspenseQuery(diagnosticsListOptions());
-  const [view, setView] = useState<"cards" | "table">("cards");
+  const navigate = useNavigate({ from: Route.fullPath });
+  const searchParams = Route.useSearch();
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
     DiagnosticSummary[]
   >(data.data);
+
+  const handleViewChange = (newView: "cards" | "table") => {
+    navigate({
+      search: (prev) => ({ ...prev, view: newView }),
+      replace: true,
+    });
+  };
+
+  // Update URL when filters change
+  const handleFilterChange = (
+    search: string,
+    providers: string[],
+    aftIds: string[],
+    themes: string[],
+    metricValues: boolean | null,
+  ) => {
+    navigate({
+      search: {
+        view: searchParams.view,
+        search: search || undefined,
+        providers: providers.length > 0 ? providers.join(",") : undefined,
+        aftIds: aftIds.length > 0 ? aftIds.join(",") : undefined,
+        themes: themes.length > 0 ? themes.join(",") : undefined,
+        metricValues:
+          metricValues === null ? undefined : metricValues ? "true" : "false",
+      },
+      replace: true,
+    });
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -35,7 +77,10 @@ const Diagnostics = () => {
               performance against observations and benchmarks.
             </p>
           </div>
-          <ViewToggle view={view} onViewChange={setView} />
+          <ViewToggle
+            view={searchParams.view}
+            onViewChange={handleViewChange}
+          />
         </div>
       </div>
 
@@ -125,10 +170,22 @@ const Diagnostics = () => {
         <DiagnosticsFilter
           diagnostics={data.data}
           onFilterChange={setFilteredDiagnostics}
+          onFilterParamsChange={handleFilterChange}
+          initialSearch={searchParams.search}
+          initialProviders={searchParams.providers?.split(",") ?? []}
+          initialAftIds={searchParams.aftIds?.split(",") ?? []}
+          initialThemes={searchParams.themes?.split(",") ?? []}
+          initialMetricValues={
+            searchParams.metricValues === "true"
+              ? true
+              : searchParams.metricValues === "false"
+                ? false
+                : null
+          }
         />
       </div>
 
-      {view === "cards" ? (
+      {searchParams.view === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredDiagnostics.map((diagnostic) => {
             const note = diagnosticNotes.find(
@@ -164,6 +221,7 @@ export const Route = createFileRoute("/_app/diagnostics/")({
   staticData: {
     title: "Diagnostics",
   },
+  validateSearch: diagnosticsSearchSchema,
   loader: ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(diagnosticsListOptions());
   },

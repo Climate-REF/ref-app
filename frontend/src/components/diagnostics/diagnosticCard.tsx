@@ -24,7 +24,6 @@ export function DiagnosticCard({
   note,
   noteURL,
 }: DiagnosticCardProps) {
-  console.log("Rendering DiagnosticCard for", diagnostic.slug, note, noteURL);
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>

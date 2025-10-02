@@ -1,5 +1,5 @@
 import { Filter, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,38 @@ import {
 interface DiagnosticsFilterProps {
   diagnostics: DiagnosticSummary[];
   onFilterChange: (filteredDiagnostics: DiagnosticSummary[]) => void;
+  onFilterParamsChange?: (
+    search: string,
+    providers: string[],
+    aftIds: string[],
+    themes: string[],
+    metricValues: boolean | null,
+  ) => void;
+  initialSearch?: string;
+  initialProviders?: string[];
+  initialAftIds?: string[];
+  initialThemes?: string[];
+  initialMetricValues?: boolean | null;
 }
 
 export function DiagnosticsFilter({
   diagnostics,
   onFilterChange,
+  onFilterParamsChange,
+  initialSearch = "",
+  initialProviders = [],
+  initialAftIds = [],
+  initialThemes = [],
+  initialMetricValues = null,
 }: DiagnosticsFilterProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [selectedAftIds, setSelectedAftIds] = useState<string[]>([]);
-  const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedProviders, setSelectedProviders] =
+    useState<string[]>(initialProviders);
+  const [selectedAftIds, setSelectedAftIds] = useState<string[]>(initialAftIds);
+  const [selectedThemes, setSelectedThemes] = useState<string[]>(initialThemes);
   const [showWithMetricValues, setShowWithMetricValues] = useState<
     boolean | null
-  >(null);
+  >(initialMetricValues);
 
   // Extract unique providers from diagnostics
   const allProviders = Array.from(
@@ -55,61 +74,89 @@ export function DiagnosticsFilter({
     ),
   ).sort();
 
-  // Apply filters
-  const applyFilters = (
-    search: string,
-    providers: string[],
-    aftIds: string[],
-    themes: string[],
-    metricValuesFilter: boolean | null,
-  ) => {
-    let filtered = diagnostics;
+  // Apply filters (only updates the filtered diagnostics list)
+  const applyFilters = useCallback(
+    (
+      search: string,
+      providers: string[],
+      aftIds: string[],
+      themes: string[],
+      metricValuesFilter: boolean | null,
+      updateUrl = false,
+    ) => {
+      let filtered = diagnostics;
 
-    // Search filter
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (diagnostic) =>
-          diagnostic.name.toLowerCase().includes(searchLower) ||
-          diagnostic.description?.toLowerCase().includes(searchLower) ||
-          diagnostic.provider.name.toLowerCase().includes(searchLower) ||
-          diagnostic.provider.slug.toLowerCase().includes(searchLower),
-      );
-    }
+      // Search filter
+      if (search.trim()) {
+        const searchLower = search.toLowerCase();
+        filtered = filtered.filter(
+          (diagnostic) =>
+            diagnostic.name.toLowerCase().includes(searchLower) ||
+            diagnostic.description?.toLowerCase().includes(searchLower) ||
+            diagnostic.provider.name.toLowerCase().includes(searchLower) ||
+            diagnostic.provider.slug.toLowerCase().includes(searchLower),
+        );
+      }
 
-    // Provider filter
-    if (providers.length > 0) {
-      filtered = filtered.filter((diagnostic) =>
-        providers.includes(diagnostic.provider.slug),
-      );
-    }
+      // Provider filter
+      if (providers.length > 0) {
+        filtered = filtered.filter((diagnostic) =>
+          providers.includes(diagnostic.provider.slug),
+        );
+      }
 
-    // AFT ID filter
-    if (aftIds.length > 0) {
-      filtered = filtered.filter(
-        (diagnostic) =>
-          diagnostic.aft_link && aftIds.includes(diagnostic.aft_link.id),
-      );
-    }
+      // AFT ID filter
+      if (aftIds.length > 0) {
+        filtered = filtered.filter(
+          (diagnostic) =>
+            diagnostic.aft_link && aftIds.includes(diagnostic.aft_link.id),
+        );
+      }
 
-    // Theme filter
-    if (themes.length > 0) {
-      filtered = filtered.filter(
-        (diagnostic) =>
-          diagnostic.aft_link?.theme &&
-          themes.includes(diagnostic.aft_link.theme),
-      );
-    }
+      // Theme filter
+      if (themes.length > 0) {
+        filtered = filtered.filter(
+          (diagnostic) =>
+            diagnostic.aft_link?.theme &&
+            themes.includes(diagnostic.aft_link.theme),
+        );
+      }
 
-    // Metric values filter
-    if (metricValuesFilter !== null) {
-      filtered = filtered.filter(
-        (diagnostic) => diagnostic.has_metric_values === metricValuesFilter,
-      );
-    }
+      // Metric values filter
+      if (metricValuesFilter !== null) {
+        filtered = filtered.filter(
+          (diagnostic) => diagnostic.has_metric_values === metricValuesFilter,
+        );
+      }
 
-    onFilterChange(filtered);
-  };
+      onFilterChange(filtered);
+
+      // Update URL only when explicitly requested (user interaction)
+      if (updateUrl && onFilterParamsChange) {
+        onFilterParamsChange(
+          search,
+          providers,
+          aftIds,
+          themes,
+          metricValuesFilter,
+        );
+      }
+    },
+    [diagnostics, onFilterChange, onFilterParamsChange],
+  );
+
+  // Apply initial filters from URL on mount only
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run on initial mount to apply URL params
+  useEffect(() => {
+    applyFilters(
+      searchTerm,
+      selectedProviders,
+      selectedAftIds,
+      selectedThemes,
+      showWithMetricValues,
+      false, // Don't update URL on initial mount
+    );
+  }, []);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -119,6 +166,7 @@ export function DiagnosticsFilter({
       selectedAftIds,
       selectedThemes,
       showWithMetricValues,
+      true, // Update URL on user interaction
     );
   };
 
@@ -133,6 +181,7 @@ export function DiagnosticsFilter({
       selectedAftIds,
       selectedThemes,
       showWithMetricValues,
+      true, // Update URL on user interaction
     );
   };
 
@@ -147,6 +196,7 @@ export function DiagnosticsFilter({
       newAftIds,
       selectedThemes,
       showWithMetricValues,
+      true, // Update URL on user interaction
     );
   };
 
@@ -161,6 +211,7 @@ export function DiagnosticsFilter({
       selectedAftIds,
       newThemes,
       showWithMetricValues,
+      true, // Update URL on user interaction
     );
   };
 
@@ -172,6 +223,7 @@ export function DiagnosticsFilter({
       selectedAftIds,
       selectedThemes,
       value,
+      true, // Update URL on user interaction
     );
   };
 
@@ -181,7 +233,7 @@ export function DiagnosticsFilter({
     setSelectedAftIds([]);
     setSelectedThemes([]);
     setShowWithMetricValues(null);
-    onFilterChange(diagnostics);
+    applyFilters("", [], [], [], null, true);
   };
 
   const hasActiveFilters =
