@@ -21,6 +21,7 @@ from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
+from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import (
     AnnotatedScalarValue,
@@ -158,11 +159,12 @@ async def list_recent_execution_groups(  # noqa: PLR0913
         DS = aliased(CMIP6Dataset)
 
         # Build a SQLAlchemy Core selectable for EXISTS (required by typing/runtime)
+        source_condition = build_filter_clause(DS.source_id, source_id)
         exists_select = (
             select(E.id)
             .join(EG, E.execution_group_id == EG.id)
             .join(DS, E.datasets)
-            .where(and_(EG.id == models.ExecutionGroup.id, DS.source_id == source_id))
+            .where(and_(EG.id == models.ExecutionGroup.id, source_condition))
         )
         query = query.filter(exists(exists_select))
 

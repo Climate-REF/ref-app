@@ -116,15 +116,25 @@ export const ScalarsValuesTab = () => {
           .map(([facetKey, value]) => ({
             id: crypto.randomUUID(),
             facetKey,
-            value: value as string,
+            // Normalize comma-separated values from the URL:
+            // - split on commas
+            // - trim whitespace
+            // - remove empty tokens
+            values: (value as string)
+              .split(",")
+              .map((v) => v.trim())
+              .filter(Boolean),
           }))}
         valueType={"scalars"}
         onFiltersChange={useCallback(
-          (newFilters: Array<{ facetKey: string; value: string }>) => {
+          (newFilters: Array<{ facetKey: string; values: string[] }>) => {
             const filterParams =
               newFilters.length > 0
                 ? Object.fromEntries(
-                    newFilters.map((filter) => [filter.facetKey, filter.value]),
+                    newFilters.map((filter) => [
+                      filter.facetKey,
+                      filter.values.join(","),
+                    ]),
                   )
                 : {};
 

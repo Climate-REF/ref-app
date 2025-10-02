@@ -42,7 +42,10 @@ export function FilterControls({
             <span>
               {facets.find((f) => f.key === filter.facetKey)?.key ||
                 filter.facetKey}
-              : {filter.value}
+              :{" "}
+              {filter.values.length > 1
+                ? filter.values.join(", ")
+                : filter.values[0]}
             </span>
             <Button
               variant="ghost"
@@ -77,13 +80,13 @@ export function FilterControls({
 
         <FilterAddPopover
           facets={availableFacets}
-          onAdd={(facetKey, value) => {
+          onAdd={(facetKey, values) => {
             setFilters((existing) => [
               ...existing,
               {
                 id: crypto.randomUUID(),
                 facetKey,
-                value,
+                values,
               },
             ]);
           }}

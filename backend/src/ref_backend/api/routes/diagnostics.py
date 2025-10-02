@@ -12,6 +12,7 @@ from starlette.responses import StreamingResponse
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
 from ref_backend.api.deps import AppContextDep
+from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import (
@@ -202,10 +203,12 @@ async def comparison(  # noqa: PLR0912, PLR0913
             continue
 
         if scalar_query and key in models.ScalarMetricValue._cv_dimensions:
-            scalar_query = scalar_query.filter(getattr(models.ScalarMetricValue, key) == value)
+            col = getattr(models.ScalarMetricValue, key)
+            scalar_query = scalar_query.filter(build_filter_clause(col, value))
 
         if series_query and key in models.SeriesMetricValue._cv_dimensions:
-            series_query = series_query.filter(getattr(models.SeriesMetricValue, key) == value)
+            col = getattr(models.SeriesMetricValue, key)
+            series_query = series_query.filter(build_filter_clause(col, value))
 
     # Build source filter conditions
     scalar_source_clauses = []
@@ -213,10 +216,12 @@ async def comparison(  # noqa: PLR0912, PLR0913
 
     for key, value in source_filter_dict.items():
         if scalar_query and key in models.ScalarMetricValue._cv_dimensions:
-            scalar_source_clauses.append(getattr(models.ScalarMetricValue, key) == value)
+            col = getattr(models.ScalarMetricValue, key)
+            scalar_source_clauses.append(build_filter_clause(col, value))
 
         if series_query and key in models.SeriesMetricValue._cv_dimensions:
-            series_source_clauses.append(getattr(models.SeriesMetricValue, key) == value)
+            col = getattr(models.SeriesMetricValue, key)
+            series_source_clauses.append(build_filter_clause(col, value))
 
     if not scalar_source_clauses and not series_source_clauses:
         raise HTTPException(status_code=400, detail="source_filters cannot be empty or contain no valid keys")
@@ -276,7 +281,8 @@ async def list_executions(
     query_params = request.query_params
     for key, value in query_params.items():
         if hasattr(CMIP6Dataset, key):
-            executions_query = executions_query.filter(getattr(CMIP6Dataset, key) == value)
+            col = getattr(CMIP6Dataset, key)
+            executions_query = executions_query.filter(build_filter_clause(col, value))
 
     executions = executions_query.all()
 
@@ -331,10 +337,12 @@ async def list_metric_values(  # noqa: PLR0913, PLR0915
             continue
 
         if scalar_query and hasattr(models.ScalarMetricValue, key):
-            scalar_query = scalar_query.filter(getattr(models.ScalarMetricValue, key) == value)
+            col = getattr(models.ScalarMetricValue, key)
+            scalar_query = scalar_query.filter(build_filter_clause(col, value))
 
         if series_query and hasattr(models.SeriesMetricValue, key):
-            series_query = series_query.filter(getattr(models.SeriesMetricValue, key) == value)
+            col = getattr(models.SeriesMetricValue, key)
+            series_query = series_query.filter(build_filter_clause(col, value))
 
     scalar_values = scalar_query.all() if scalar_query else []
     series_values = series_query.all() if series_query else []

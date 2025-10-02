@@ -1,7 +1,15 @@
-import { PlusCircle } from "lucide-react";
+import { Check, PlusCircle } from "lucide-react";
 import { type ComponentProps, useEffect, useState } from "react";
 import type { Facet } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
   Popover,
@@ -15,10 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { cn } from "@/lib/utils";
 
 interface FilterAddPopoverProps extends ComponentProps<typeof Button> {
   facets: Facet[];
-  onAdd: (facetKey: string, value: string) => void;
+  onAdd: (facetKey: string, values: string[]) => void;
 }
 
 export function FilterAddPopover({
@@ -28,10 +37,12 @@ export function FilterAddPopover({
 }: FilterAddPopoverProps) {
   const [facetKey, setFacetKey] = useState<string | undefined>(facets[0]?.key);
   const [facetValues, setFacetValues] = useState<string[]>([]);
-  const [value, setValue] = useState<string | undefined>(undefined);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setFacetValues(facets.find((f) => f.key === facetKey)?.values ?? []);
+    setSelectedValues([]); // Reset selected values when facet changes
   }, [facets, facetKey]);
 
   return (
@@ -75,42 +86,69 @@ export function FilterAddPopover({
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="width">Value</Label>
-              <Select
-                value={value}
-                onValueChange={setValue}
-                disabled={!facetKey || facetValues.length === 0}
-              >
-                <SelectTrigger
-                  id="facetValueSelect"
-                  className="bg-background"
-                  disabled={!facetKey || facetValues.length === 0}
-                >
-                  <SelectValue placeholder="Select value" />
-                </SelectTrigger>
-                <SelectContent>
-                  {facetValues.length > 0 ? (
-                    facetValues.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-options" disabled>
-                      No values for this facet
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-2">
+              <Label>Values (select multiple)</Label>
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="justify-between"
+                    disabled={!facetKey || facetValues.length === 0}
+                  >
+                    {selectedValues.length > 0
+                      ? `${selectedValues.length} selected`
+                      : "Select values..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search values..." />
+                    <CommandList>
+                      <CommandEmpty>No values found.</CommandEmpty>
+                      <CommandGroup>
+                        {facetValues.map((value) => {
+                          const isSelected = selectedValues.includes(value);
+                          return (
+                            <CommandItem
+                              key={value}
+                              value={value}
+                              onSelect={() => {
+                                setSelectedValues((prev) =>
+                                  isSelected
+                                    ? prev.filter((v) => v !== value)
+                                    : [...prev, value],
+                                );
+                              }}
+                            >
+                              <div
+                                className={cn(
+                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "opacity-50 [&_svg]:invisible",
+                                )}
+                              >
+                                <Check className="h-4 w-4" />
+                              </div>
+                              <span>{value}</span>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <Button
               variant="outline"
-              disabled={!facetKey || !value}
+              disabled={!facetKey || selectedValues.length === 0}
               onClick={() => {
-                if (facetKey && value) {
-                  onAdd(facetKey, value);
-                  setValue(undefined);
+                if (facetKey && selectedValues.length > 0) {
+                  onAdd(facetKey, selectedValues);
+                  setSelectedValues([]);
                 }
               }}
             >

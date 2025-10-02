@@ -3,6 +3,7 @@ import {
   Link,
   Outlet,
   useLocation,
+  useNavigate,
 } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
 import type { GroupBy, ReferenceDatasetLink } from "@/client";
@@ -40,6 +41,7 @@ const DiagnosticInfoLayout = () => {
   const data = Route.useLoaderData();
   const { providerSlug, diagnosticSlug } = Route.useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Determine the active tab based on the current URL pathname
   const activeTab = location.pathname.split("/").pop() || "figures"; // Default to 'figures'
@@ -289,54 +291,53 @@ const DiagnosticInfoLayout = () => {
               Execution Groups
             </Link>
           </TabsTrigger>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <TabsTrigger
-                value="scalars"
-                asChild
-                disabled={!data.has_scalar_values}
-                data-disabled={!data.has_scalar_values ? "true" : undefined}
-              >
-                <Link
-                  to="/diagnostics/$providerSlug/$diagnosticSlug/scalars"
-                  params={{ providerSlug, diagnosticSlug }}
-                  disabled={!data.has_scalar_values}
-                >
-                  Scalar Values
-                </Link>
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Single numeric values calculated from the data, such as global
-                means, root mean square errors, or correlation coefficients.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <TabsTrigger
-                value="series"
-                asChild
-                disabled={!data.has_series_values}
-              >
-                <Link
-                  to="/diagnostics/$providerSlug/$diagnosticSlug/series"
-                  params={{ providerSlug, diagnosticSlug }}
-                  disabled={!data.has_series_values}
-                  data-disabled={!data.has_series_values ? "true" : undefined}
-                >
-                  Series Values
-                </Link>
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Time series or multi-dimensional data values, such as monthly
-                means over multiple years or values across different latitudes.
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          <TabsTrigger
+            value="scalars"
+            disabled={!data.has_scalar_values}
+            data-disabled={!data.has_scalar_values ? "true" : undefined}
+            onClick={() =>
+              navigate({
+                to: "/diagnostics/$providerSlug/$diagnosticSlug/scalars",
+                params: { providerSlug, diagnosticSlug },
+              })
+            }
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>Scalar Values</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Single numeric values calculated from the data, such as global
+                  means, root mean square errors, or correlation coefficients.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TabsTrigger>
+          <TabsTrigger
+            value="series"
+            disabled={!data.has_series_values}
+            data-disabled={!data.has_series_values ? "true" : undefined}
+            onClick={() =>
+              navigate({
+                to: "/diagnostics/$providerSlug/$diagnosticSlug/series",
+                params: { providerSlug, diagnosticSlug },
+              })
+            }
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>Series Values</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Time series or multi-dimensional data values, such as monthly
+                  means over multiple years or values across different
+                  latitudes.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TabsTrigger>
           <TabsTrigger value="figures" asChild>
             <Link
               to="/diagnostics/$providerSlug/$diagnosticSlug/figures"

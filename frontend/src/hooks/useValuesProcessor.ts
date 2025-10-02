@@ -9,14 +9,13 @@ import type {
 // value shapes that include `dimensions`).
 export type ProcessedValue<T> = T & { rowId: string };
 
-// Backwards-compatible aliases for common usages
 export type ProcessedMetricValue = ProcessedValue<MetricValue>;
 export type ProcessedSeriesValue = ProcessedValue<SeriesValue>;
 
 export interface Filter {
   id: string;
   facetKey: string;
-  value: string;
+  values: string[];
 }
 
 /**
@@ -79,7 +78,6 @@ export function useValuesProcessor<
   }, [initialValues]);
 
   const facetFilteredValues = useMemo(() => {
-    // Ensure processedValues is used, and loading check is appropriate
     if (loading && processedValues.length === 0) return [];
 
     const itemsToFilter = processedValues;
@@ -88,8 +86,13 @@ export function useValuesProcessor<
     }
     return itemsToFilter.filter((value) => {
       return filters.every((filter) => {
-        const dimensionValue = (value as any).dimensions[filter.facetKey];
-        return String(dimensionValue) === filter.value;
+        const dimensionValue = value.dimensions[filter.facetKey];
+        if (dimensionValue === undefined || dimensionValue === null)
+          return false;
+
+        // Normalize filter values to strings and trim whitespace
+        const filterValues = filter.values.map((v) => String(v).trim());
+        return filterValues.includes(String(dimensionValue).trim());
       });
     });
   }, [processedValues, filters, loading]);
