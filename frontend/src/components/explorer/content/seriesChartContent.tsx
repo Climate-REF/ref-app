@@ -52,7 +52,6 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       maxSeriesLimit={100} // Limit for performance in preview
       maxLegendItems={10}
       enableZoom={false} // Disable zoom in preview
-      maxVisibleGroups={5}
       hideControls={true} // Hide the groupBy/hue/style controls for explorer cards
       symmetricalAxes={contentItem.symmetricalAxes ?? false}
     />
