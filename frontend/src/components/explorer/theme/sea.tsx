@@ -19,7 +19,7 @@ const cards: ExplorerCard[] = [
         },
         otherFilters: {
           region: "None",
-          metric: "Bias",
+          metric: "timeseries",
           statistic: "Period Mean",
         },
       },

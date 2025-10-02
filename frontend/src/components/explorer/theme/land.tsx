@@ -26,7 +26,7 @@ const cards: ExplorerCard[] = [
         diagnostic: "gpp-fluxnet2015",
         title: "Gross Primary Production (GPP) Annual Cycle",
         description: "Calculated as the mean seasonal cycle over 2001-2010",
-        span: 1,
+        span: 2,
         metricUnits: "kgC/m^2/s",
         otherFilters: {
           metric: "cycle_global",
@@ -59,7 +59,7 @@ const cards: ExplorerCard[] = [
         title: "Soil Carbon",
         description: "Bias in Soil Carbon Content compared to HWSDv2",
         metricUnits: "kg/m^2",
-        otherFilters: { metric: "Bias" },
+        otherFilters: { statistic: "Bias" },
         groupingConfig: {
           groupBy: "region",
           hue: "region",
@@ -99,8 +99,12 @@ const cards: ExplorerCard[] = [
         title: "Snow Cover Extent",
         metricUnits: "%",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "global",
+          metric: "Bias",
         },
       },
       {
@@ -110,8 +114,12 @@ const cards: ExplorerCard[] = [
         title: "Surface Soil Moisture",
         metricUnits: "kg/m^2",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "global",
+          metric: "Bias",
         },
       },
       {
@@ -121,8 +129,12 @@ const cards: ExplorerCard[] = [
         title: "Total Runoff",
         metricUnits: "kg/m^2/s",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "global",
+          metric: "Bias",
         },
       },
       {
@@ -132,8 +144,12 @@ const cards: ExplorerCard[] = [
         title: "Leaf Area Index",
         metricUnits: "1",
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
+        },
+        otherFilters: {
+          region: "global",
+          metric: "Bias",
         },
       },
     ],
