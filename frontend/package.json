@@ -11,6 +11,7 @@
     "openapi-ts": "openapi-ts"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.16",
     "@hey-api/client-fetch": "^0.10.0",
     "@mdx-js/react": "^3.1.0",
     "@mdx-js/rollup": "^3.1.0",
@@ -56,6 +57,7 @@
     "@tailwindcss/typography": "^0.5.18",
     "@tanstack/react-router-devtools": "^1.115.3",
     "@tanstack/router-plugin": "^1.115.3",
+    "@types/d3": "^7.4.3",
     "@types/node": "^22.13.8",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

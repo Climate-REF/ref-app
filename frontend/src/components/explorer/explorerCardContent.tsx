@@ -11,6 +11,7 @@ import {
   EnsembleChartContent,
   FigureGalleryContent,
   SeriesChartContent,
+  TaylorDiagramContentWrapper,
 } from "./content";
 import { ExplorerTooltip } from "./explorerTooltip";
 import type { ExplorerCardContent as ExplorerCardContentType } from "./types";
@@ -31,6 +32,11 @@ function ExplorerCardContentInner({ contentItem }: ExplorerCardContentProps) {
   if (contentItem.type === "series-chart") {
     return <SeriesChartContent contentItem={contentItem} />;
   }
+
+  if (contentItem.type === "taylor-diagram") {
+    return <TaylorDiagramContentWrapper contentItem={contentItem} />;
+  }
+
   return null;
 }
 
@@ -60,21 +66,24 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         "relative group",
         spanClass,
         contentItem.placeholder ? "border-red-500" : "",
+        p,
       )}
     >
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>
             {contentItem.placeholder ? "PLACEHOLDER: " : ""} {contentItem.title}
           </CardTitle>
-          {contentItem.description && (
-            <CardDescription>{contentItem.description}</CardDescription>
-          )}
+          <div className="h-min-32">
+            {contentItem.description && (
+              <CardDescription>{contentItem.description}</CardDescription>
+            )}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grow">
           <ExplorerCardContentInner contentItem={contentItem} />
         </CardContent>
-        <CardFooter>
+        <CardFooter className="h-min-32">
           {contentItem.interpretation && (
             <div className="text-sm text-muted-foreground">
               <span className="text-sm text-muted-foreground font-semibold">

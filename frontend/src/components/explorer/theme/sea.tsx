@@ -56,6 +56,20 @@ const cards: ExplorerCard[] = [
           statistic: "Period Mean",
         },
       },
+      {
+        type: "taylor-diagram",
+        provider: "ilamb",
+        diagnostic: "thetao-woa2023-surface",
+        title: "Sea Surface Temperature (Taylor Diagram)",
+        description:
+          "Taylor diagram showing the performance of global sea surface temperatures against WOA2023 observations. Taylor diagrams summarize how closely models match observations in terms of correlation, standard deviation, and root-mean-square difference.",
+        interpretation:
+          "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
+        otherFilters: {
+          region: "None",
+          metric: "Spatial Distribution",
+        },
+      },
     ],
     placeholder: true,
   },

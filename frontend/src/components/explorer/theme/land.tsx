@@ -46,6 +46,26 @@ const cards: ExplorerCard[] = [
     ],
   },
   {
+    title: "Terrestrial Model Performance",
+    description:
+      "Taylor diagram showing correlation and normalized standard deviation for model spatial distributions. A taylor diagram is a polar plot that graphically summarizes how closely a pattern (or a set of patterns) matches observations. The radial distance from the origin represents the normalized standard deviation, while the angle represents the correlation coefficient.",
+    content: [
+      {
+        type: "taylor-diagram",
+        provider: "ilamb",
+        diagnostic: "gpp-fluxnet2015",
+        title: "GPP Spatial Performance",
+        description:
+          "Model performance in reproducing spatial patterns of Gross Primary Production",
+        interpretation:
+          "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
+        span: 1,
+        otherFilters: { region: "global" },
+        referenceStddev: 1.0,
+      },
+    ],
+  },
+  {
     title: "Land Surface & Hydrology",
     description:
       "Properties of the land surface including snow, soil moisture, and runoff.",

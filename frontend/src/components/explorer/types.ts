@@ -36,10 +36,18 @@ type SeriesChartContent = BaseCardContent & {
   groupingConfig?: ChartGroupingConfig;
 };
 
+type TaylorDiagramContent = BaseCardContent & {
+  type: "taylor-diagram";
+  otherFilters?: Record<string, string>;
+  referenceStddev?: number;
+  /* Reference standard deviation value for the diagram, defaults to 1.0 */
+};
+
 export type ExplorerCardContent =
   | BoxWhiskerChartContent
   | FigureGalleryContent
-  | SeriesChartContent;
+  | SeriesChartContent
+  | TaylorDiagramContent;
 
 export type ExplorerCard = {
   title: string;
