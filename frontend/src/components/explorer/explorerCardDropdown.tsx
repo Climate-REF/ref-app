@@ -39,10 +39,6 @@ export function ExplorerCardDropdown({
     //   : {}),
   };
 
-  const queryString =
-    Object.keys(searchParams).length > 0
-      ? `?${new URLSearchParams(searchParams).toString()}`
-      : "";
   const uri = contentItem.type === "box-whisker-chart" ? "scalars" : "series";
 
   return (
