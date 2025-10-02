@@ -26,10 +26,13 @@ def get_database(ref_config: Config) -> Database:
     database = Database.from_config(ref_config, run_migrations=False)
     with database._engine.connect() as connection:
         if _get_database_revision(connection) is None:
-            raise ValueError(
+            msg = (
                 "The database migration has not been run. "
                 "Check the database URL in your config file and run the migration."
             )
+            logger.warning(msg)
+            if ref_config.db.run_migrations:
+                raise ValueError(msg)
     return database
 
 
