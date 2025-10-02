@@ -8,13 +8,7 @@ import {
 } from "@/components/diagnostics/ensembleChart";
 import type { MetricValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import type { ExplorerCardContent } from "../types";
 
 interface EnsembleChartContentProps {
@@ -25,7 +19,6 @@ export function EnsembleChartContent({
   contentItem,
 }: EnsembleChartContentProps) {
   const [includeUnverified, setIncludeUnverified] = useState(false);
-  const [detectOutliers, setDetectOutliers] = useState<"off" | "iqr">("iqr");
 
   const { data } = useSuspenseQuery(
     diagnosticsListMetricValuesOptions({
@@ -36,7 +29,7 @@ export function EnsembleChartContent({
       query: {
         ...contentItem.otherFilters,
         type: "scalar",
-        detect_outliers: detectOutliers,
+        detect_outliers: "iqr",
         include_unverified: includeUnverified,
       },
     }),
@@ -70,18 +63,6 @@ export function EnsembleChartContent({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Select
-              value={detectOutliers}
-              onValueChange={(value: "off" | "iqr") => setDetectOutliers(value)}
-            >
-              <SelectTrigger className="w-20 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="iqr">IQR</SelectItem>
-                <SelectItem value="off">Off</SelectItem>
-              </SelectContent>
-            </Select>
             <Button
               variant="outline"
               size="sm"

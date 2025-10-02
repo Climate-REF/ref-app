@@ -11,7 +11,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
-        title: "NAM RMSE",
+        title: "Northern Annular Mode (NAM) RMSE",
         description:
           "Northern Annular Mode (NAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -29,7 +29,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-sam",
-        title: "SAM RMSE",
+        title: "Southern Annual Mode (SAM) RMSE",
         description:
           "Southern Annual Mode (SAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -47,7 +47,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-npgo",
-        title: "NPGO RMSE",
+        title: "North Pacific Gyre Oscillation (NPGO) RMSE",
         description:
           "North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -65,7 +65,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nao",
-        title: "NAO RMSE",
+        title: "North Atlantic Oscillation (NAO) RMSE",
         description:
           "North Atlantic Oscillation (NAO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -83,7 +83,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pdo",
-        title: "PDO RMSE",
+        title: "Pacific-Decadal Oscillation (PDO) RMSE",
         description:
           "Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {
@@ -101,7 +101,7 @@ const cards: ExplorerCard[] = [
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pna",
-        title: "PNA RMSE",
+        title: "Pacific-North American (PNA) RMSE",
         description:
           "Pacific-North American (PNA) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
         otherFilters: {

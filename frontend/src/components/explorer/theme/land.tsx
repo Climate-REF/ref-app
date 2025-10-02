@@ -42,22 +42,27 @@ const cards: ExplorerCard[] = [
         provider: "ilamb",
         diagnostic: "nbp-hoffman",
         title: "Net Biome Production",
+        description:
+          "Bias in Net Biome Production (NBP) compared to Hoffman et al. (2020) estimates",
         metricUnits: "PgC/yr",
         clipMax: 2000,
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "statistic",
+          hue: "statistic",
         },
+        placeholder: true,
       },
       {
         type: "box-whisker-chart",
         provider: "ilamb",
         diagnostic: "csoil-hwsd2",
         title: "Soil Carbon",
-        metricUnits: "kgC/m^2",
+        description: "Bias in Soil Carbon Content compared to HWSDv2",
+        metricUnits: "kg/m^2",
+        otherFilters: { metric: "Bias" },
         groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
+          groupBy: "region",
+          hue: "region",
         },
       },
     ],
@@ -73,7 +78,7 @@ const cards: ExplorerCard[] = [
         diagnostic: "gpp-fluxnet2015",
         title: "GPP Spatial Performance",
         description:
-          "Model performance in reproducing spatial patterns of Gross Primary Production",
+          "Model performance in reproducing spatial patterns of Gross Primary Production (GPP) compared to FLUXNET2015 observations.",
         interpretation:
           "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
         span: 1,
