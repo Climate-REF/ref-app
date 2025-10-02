@@ -60,13 +60,13 @@ const Diagnostics = () => {
             </h3>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>PMP (PCMDI Metrics Package):</strong>
+                <strong>PMP (PCMDI Metrics Package)</strong>
               </li>
               <li>
-                <strong>ESMValTool:</strong>
+                <strong>ESMValTool</strong>
               </li>
               <li>
-                <strong>ILAMB/IOMB:</strong>
+                <strong>ILAMB/IOMB</strong>
               </li>
             </ul>
           </div>
