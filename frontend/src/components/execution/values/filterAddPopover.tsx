@@ -57,6 +57,14 @@ export function FilterAddPopover({
     initialIds ? Array.from(initialIds).join(",") : "",
   );
 
+  // Auto-select first facet when facets populate and no facet is selected
+  useEffect(() => {
+    if (!facetKey && facets.length > 0) {
+      setFacetKey(facets[0].key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facets, facetKey]);
+
   useEffect(() => {
     setFacetValues(facets.find((f) => f.key === facetKey)?.values ?? []);
     setSelectedValues([]); // Reset selected values when facet changes
