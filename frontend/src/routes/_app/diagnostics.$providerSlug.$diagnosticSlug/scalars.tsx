@@ -58,6 +58,8 @@ export const ScalarsValuesTab = () => {
             "style",
             "detect_outliers",
             "include_unverified",
+            "isolate_ids",
+            "exclude_ids",
           ].includes(key),
       ),
     );

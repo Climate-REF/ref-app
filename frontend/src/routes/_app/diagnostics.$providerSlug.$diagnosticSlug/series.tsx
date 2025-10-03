@@ -61,6 +61,8 @@ export const SeriesValuesTab = () => {
                 "style",
                 "detect_outliers",
                 "include_unverified",
+                "isolate_ids",
+                "exclude_ids",
               ].includes(key),
           ),
         ),
@@ -84,6 +86,8 @@ export const SeriesValuesTab = () => {
             "style",
             "detect_outliers",
             "include_unverified",
+            "isolate_ids",
+            "exclude_ids",
           ].includes(key),
       ),
     );
