@@ -144,7 +144,6 @@ export function Values({ valueType, ...props }: ValuesProps) {
           <div className="flex items-center justify-end space-x-2">
             <div className="grow">
               <FilterControls
-                values={finalDisplayedValues}
                 facets={props.facets}
                 filters={filters}
                 setFilters={setFilters}

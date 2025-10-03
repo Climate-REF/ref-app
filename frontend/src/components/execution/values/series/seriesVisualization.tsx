@@ -49,7 +49,7 @@ interface GroupedSeries {
 }
 
 interface ChartData {
-  [key: string]: number | string;
+  [key: string]: number | string | null;
 }
 
 // Color palette for different series

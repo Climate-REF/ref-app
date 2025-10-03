@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import type { Filter } from "@/hooks/useValuesProcessor";
 
 interface FilterControlsProps {
-  values: { rowId: string }[];
   facets: Facet[];
   filters: Filter[];
   setFilters: Dispatch<SetStateAction<Filter[]>>;
@@ -18,7 +17,6 @@ interface FilterControlsProps {
 }
 
 export function FilterControls({
-  values,
   facets,
   filters,
   setFilters,
@@ -182,7 +180,7 @@ export function FilterControls({
               const idx = existing.findIndex((f) => (f as any).type === mode);
               if (idx >= 0) {
                 const existingFilter = existing[idx] as any;
-                const existingIds = existingFilter.ids
+                const existingIds: string[] = existingFilter.ids
                   ? Array.from(existingFilter.ids)
                   : [];
                 const mergedIds = new Set<string>([
@@ -223,7 +221,7 @@ export function FilterControls({
                   );
                   if (idx >= 0) {
                     const existingFilter = existing[idx] as any;
-                    const existingIds = existingFilter.ids
+                    const existingIds: string[] = existingFilter.ids
                       ? Array.from(existingFilter.ids)
                       : [];
                     const mergedIds = new Set<string>([
@@ -264,7 +262,7 @@ export function FilterControls({
                   );
                   if (idx >= 0) {
                     const existingFilter = existing[idx] as any;
-                    const existingIds = existingFilter.ids
+                    const existingIds: string[] = existingFilter.ids
                       ? Array.from(existingFilter.ids)
                       : [];
                     const mergedIds = new Set<string>([

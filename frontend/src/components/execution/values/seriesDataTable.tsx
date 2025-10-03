@@ -91,7 +91,7 @@ function SeriesDataTable({
           const values = cell.row.original.values;
           return (
             <div className="flex items-center gap-2">
-              <Sparkline values={values} />
+              <Sparkline values={values.filter((value) => value !== null)} />
             </div>
           );
         },
