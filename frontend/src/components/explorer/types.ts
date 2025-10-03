@@ -60,3 +60,27 @@ export type ExplorerCard = {
   placeholder?: boolean;
   content: ExplorerCardContent[];
 };
+
+// --- Metric filter types ---
+// Facet (dimension) filter applied to metric values
+export interface FacetFilter {
+  type: "facet";
+  id: string; // Unique identifier for the filter
+  facetKey: string;
+  values: string[];
+}
+
+export interface IsolateFilter {
+  type: "isolate";
+  id: string; // Unique identifier for the filter
+  ids: Set<string>; // Set of row IDs to isolate
+}
+
+export interface ExcludeFilter {
+  type: "exclude";
+  id: string; // Unique identifier for the filter
+  ids: Set<string>; // Set of row IDs to exclude
+}
+
+// Union of supported metric filters
+export type MetricFilter = FacetFilter | IsolateFilter | ExcludeFilter;

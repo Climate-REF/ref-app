@@ -883,6 +883,10 @@ export const MetricValueSchema = {
             ],
             title: 'Attributes'
         },
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
         execution_group_id: {
             type: 'integer',
             title: 'Execution Group Id'
@@ -916,7 +920,7 @@ export const MetricValueSchema = {
         }
     },
     type: 'object',
-    required: ['dimensions', 'value', 'execution_group_id', 'execution_id'],
+    required: ['dimensions', 'value', 'id', 'execution_group_id', 'execution_id'],
     title: 'MetricValue',
     description: `A flattened representation of a scalar diagnostic value
 
@@ -1064,7 +1068,7 @@ export const ReferenceDatasetLinkSchema = {
         slug: {
             type: 'string',
             title: 'Slug',
-            description: "Unique identifier for the dataset (e.g., 'obs4mips.CERES-EBAF.v4.2')"
+            description: "Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')"
         },
         description: {
             anyOf: [
@@ -1108,6 +1112,10 @@ These map to the categories of output in the CMEC output bundle`
 
 export const SeriesValueSchema = {
     properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
         dimensions: {
             additionalProperties: {
                 type: 'string'
@@ -1117,7 +1125,14 @@ export const SeriesValueSchema = {
         },
         values: {
             items: {
-                type: 'number'
+                anyOf: [
+                    {
+                        type: 'number'
+                    },
+                    {
+                        type: 'null'
+                    }
+                ]
             },
             type: 'array',
             title: 'Values'
@@ -1185,7 +1200,7 @@ export const SeriesValueSchema = {
         }
     },
     type: 'object',
-    required: ['dimensions', 'values', 'execution_group_id', 'execution_id'],
+    required: ['id', 'dimensions', 'values', 'execution_group_id', 'execution_id'],
     title: 'SeriesValue',
     description: `A flattened representation of a series diagnostic value
 

@@ -4,6 +4,7 @@ import type {
   MetricValue,
   SeriesValue,
 } from "@/components/execution/values/types";
+import type { FacetFilter, MetricFilter } from "@/components/explorer/types";
 
 // Generic processed value type (supports MetricValue, SeriesValue, or other
 // value shapes that include `dimensions`).
@@ -12,11 +13,8 @@ export type ProcessedValue<T> = T & { rowId: string };
 export type ProcessedMetricValue = ProcessedValue<MetricValue>;
 export type ProcessedSeriesValue = ProcessedValue<SeriesValue>;
 
-export interface Filter {
-  id: string;
-  facetKey: string;
-  values: string[];
-}
+// Maintain backwards-compatible exported Filter alias (MetricFilter union)
+export type Filter = MetricFilter;
 
 /**
  * Generic hook props to allow processing of either MetricValue, SeriesValue,
@@ -27,15 +25,17 @@ interface UseValuesProcessorProps<
 > {
   initialValues: T[];
   loading: boolean;
-  initialFilters?: Filter[];
-  onFiltersChange?: (filters: Filter[]) => void;
+  initialFilters?: MetricFilter[]; // now supports facet/isolate/exclude filters
+  initialExcludedRowIds?: string[];
+  onFiltersChange?: (filters: MetricFilter[]) => void;
 }
 
 /**
  * useValuesProcessor
  * - Generic hook that can process arrays of values that include a `dimensions` field.
- * - Returns processed values with a generated `rowId`, filtering by facets,
- *   exclusion handling, and row selection state.
+ * - Returns processed values with a generated `rowId`, filtering by facets.
+ * - Note: isolate/exclude filtering is now intended to be handled by the backend
+ *   via query parameters; this hook only applies facet (dimension) filters client-side.
  */
 export function useValuesProcessor<
   T extends { dimensions: { [key: string]: unknown } },
@@ -43,15 +43,18 @@ export function useValuesProcessor<
   initialValues,
   loading,
   initialFilters,
+  initialExcludedRowIds,
   onFiltersChange,
 }: UseValuesProcessorProps<T>) {
-  const [filters, setInternalFilters] = useState<Filter[]>(
+  const [filters, setInternalFilters] = useState<MetricFilter[]>(
     initialFilters || [],
   );
-  const [excludedRowIds, setExcludedRowIds] = useState<Set<string>>(new Set());
+  const [excludedRowIds, setExcludedRowIds] = useState<Set<string>>(
+    new Set(initialExcludedRowIds ?? []),
+  );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const setFilters = (newFilters: SetStateAction<Filter[]>) => {
+  const setFilters = (newFilters: SetStateAction<MetricFilter[]>) => {
     setInternalFilters(newFilters);
     if (onFiltersChange) {
       const resolvedFilters =
@@ -70,10 +73,14 @@ export function useValuesProcessor<
   const processedValues = useMemo((): ProcessedValue<T>[] => {
     if (!initialValues) return [];
 
-    // Ensure each value has a unique rowId
+    // Use database ID when available so rowId is stable across fetches.
+    // Fall back to crypto.randomUUID() for backward compatibility.
     return initialValues.map((v) => ({
       ...v,
-      rowId: crypto.randomUUID(),
+      rowId:
+        (v as any).id !== undefined
+          ? String((v as any).id)
+          : crypto.randomUUID(),
     })) as ProcessedValue<T>[];
   }, [initialValues]);
 
@@ -81,11 +88,15 @@ export function useValuesProcessor<
     if (loading && processedValues.length === 0) return [];
 
     const itemsToFilter = processedValues;
-    if (filters.length === 0) {
+    // Apply only facet (dimension) filters client-side. Isolate/exclude are handled server-side.
+    const activeFacetFilters = (filters ?? []).filter(
+      (f): f is FacetFilter => (f as any).type === "facet",
+    );
+    if (activeFacetFilters.length === 0) {
       return itemsToFilter;
     }
     return itemsToFilter.filter((value) => {
-      return filters.every((filter) => {
+      return activeFacetFilters.every((filter) => {
         const dimensionValue = value.dimensions[filter.facetKey];
         if (dimensionValue === undefined || dimensionValue === null)
           return false;
@@ -98,10 +109,9 @@ export function useValuesProcessor<
   }, [processedValues, filters, loading]);
 
   const finalDisplayedValues = useMemo(() => {
-    return facetFilteredValues.filter(
-      (value) => !excludedRowIds.has((value as any).rowId),
-    );
-  }, [facetFilteredValues, excludedRowIds]);
+    // Backend handles isolate/exclude by id. Keep only facet filtering here.
+    return facetFilteredValues;
+  }, [facetFilteredValues]);
 
   return {
     filters,

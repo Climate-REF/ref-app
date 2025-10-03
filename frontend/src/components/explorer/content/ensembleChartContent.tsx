@@ -20,6 +20,12 @@ export function EnsembleChartContent({
 }: EnsembleChartContentProps) {
   const [includeUnverified, setIncludeUnverified] = useState(false);
 
+  // Extract potential ID filters (isolate/exclude) from otherFilters and pass
+  // them through to the backend. Backend expects 'isolate_ids' and 'exclude_ids'
+  // as comma-separated lists. Keep otherFilters for facet/dimension filters.
+  const isolateIdsParam = contentItem.otherFilters?.isolate_ids;
+  const excludeIdsParam = contentItem.otherFilters?.exclude_ids;
+
   const { data } = useSuspenseQuery(
     diagnosticsListMetricValuesOptions({
       path: {
@@ -28,9 +34,13 @@ export function EnsembleChartContent({
       },
       query: {
         ...contentItem.otherFilters,
+        // Ensure explicit flags for type and outlier handling
         type: "scalar",
         detect_outliers: "iqr",
         include_unverified: includeUnverified,
+        // Only include isolate/exclude params if present
+        ...(isolateIdsParam ? { isolate_ids: isolateIdsParam } : {}),
+        ...(excludeIdsParam ? { exclude_ids: excludeIdsParam } : {}),
       },
     }),
   );

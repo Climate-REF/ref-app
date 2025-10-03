@@ -150,13 +150,15 @@ async def list_execution_groups(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/comparison")
-async def comparison(  # noqa: PLR0912, PLR0913
+async def comparison(  # noqa: PLR0912, PLR0913, PLR0915
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
     request: Request,
     source_filters: str = Query(..., description="JSON string for source filters"),
     type: str = Query("scalar", description="Type of metric values to compare: 'scalar', 'series', or 'all'"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
 ) -> MetricValueComparison:
     """
     Get all the diagnostic values for a given diagnostic, with flexible filtering.
@@ -211,6 +213,26 @@ async def comparison(  # noqa: PLR0912, PLR0913
             series_query = series_query.filter(build_filter_clause(col, value))
 
     # Build source filter conditions
+    # Support id-based filtering via isolate_ids / exclude_ids (isolate takes precedence)
+    def _parse_id_list(id_str: str) -> list[int]:
+        try:
+            return [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
+
+    if isolate_ids:
+        ids = _parse_id_list(isolate_ids)
+        if scalar_query:
+            scalar_query = scalar_query.filter(models.ScalarMetricValue.id.in_(ids))
+        if series_query:
+            series_query = series_query.filter(models.SeriesMetricValue.id.in_(ids))
+    elif exclude_ids:
+        ids = _parse_id_list(exclude_ids)
+        if scalar_query:
+            scalar_query = scalar_query.filter(~models.ScalarMetricValue.id.in_(ids))
+        if series_query:
+            series_query = series_query.filter(~models.SeriesMetricValue.id.in_(ids))
+
     scalar_source_clauses = []
     series_source_clauses = []
 
@@ -290,7 +312,7 @@ async def list_executions(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=None)
-async def list_metric_values(  # noqa: PLR0913, PLR0915
+async def list_metric_values(  # noqa: PLR0912, PLR0913, PLR0915
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -301,6 +323,8 @@ async def list_metric_values(  # noqa: PLR0913, PLR0915
         "iqr", description="Outlier detection method: 'off' or 'iqr'"
     ),
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic (both scalar and series)
@@ -343,6 +367,26 @@ async def list_metric_values(  # noqa: PLR0913, PLR0915
         if series_query and hasattr(models.SeriesMetricValue, key):
             col = getattr(models.SeriesMetricValue, key)
             series_query = series_query.filter(build_filter_clause(col, value))
+
+    # Apply id-based filtering (isolate takes precedence over exclude)
+    def _parse_id_list(id_str: str) -> list[int]:
+        try:
+            return [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
+
+    if isolate_ids:
+        ids = _parse_id_list(isolate_ids)
+        if scalar_query:
+            scalar_query = scalar_query.filter(models.ScalarMetricValue.id.in_(ids))
+        if series_query:
+            series_query = series_query.filter(models.SeriesMetricValue.id.in_(ids))
+    elif exclude_ids:
+        ids = _parse_id_list(exclude_ids)
+        if scalar_query:
+            scalar_query = scalar_query.filter(~models.ScalarMetricValue.id.in_(ids))
+        if series_query:
+            series_query = series_query.filter(~models.SeriesMetricValue.id.in_(ids))
 
     scalar_values = scalar_query.all() if scalar_query else []
     series_values = series_query.all() if series_query else []

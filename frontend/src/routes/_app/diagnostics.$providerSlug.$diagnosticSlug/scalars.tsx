@@ -100,53 +100,114 @@ export const ScalarsValuesTab = () => {
             replace: true,
           });
         }}
-        initialFilters={Object.entries(search)
-          .filter(
-            ([key, value]) =>
-              value !== undefined &&
-              ![
-                "tab",
-                "groupBy",
-                "hue",
-                "style",
-                "detect_outliers",
-                "include_unverified",
-              ].includes(key),
-          )
-          .map(([facetKey, value]) => ({
-            id: crypto.randomUUID(),
-            facetKey,
-            // Normalize comma-separated values from the URL:
-            // - split on commas
-            // - trim whitespace
-            // - remove empty tokens
-            values: (value as string)
+        initialFilters={(() => {
+          // Build facet filters from URL search params (same as before)
+          const facetFilters = Object.entries(search)
+            .filter(
+              ([key, value]) =>
+                value !== undefined &&
+                ![
+                  "tab",
+                  "groupBy",
+                  "hue",
+                  "style",
+                  "detect_outliers",
+                  "include_unverified",
+                ].includes(key),
+            )
+            .map(([facetKey, value]) => ({
+              type: "facet",
+              id: crypto.randomUUID(),
+              facetKey,
+              // Normalize comma-separated values from the URL:
+              // - split on commas
+              // - trim whitespace
+              // - remove empty tokens
+              values: (value as string)
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean),
+            }));
+
+          // Parse isolate/exclude id params from URL and convert into initial filters.
+          const combinedFilters: any[] = [...facetFilters];
+
+          if (search.isolate_ids) {
+            const isolateIds = String(search.isolate_ids)
               .split(",")
-              .map((v) => v.trim())
-              .filter(Boolean),
-          }))}
+              .map((s) => s.trim())
+              .filter(Boolean);
+            if (isolateIds.length > 0) {
+              combinedFilters.push({
+                type: "isolate",
+                id: crypto.randomUUID(),
+                ids: new Set(isolateIds),
+              });
+            }
+          }
+
+          if (search.exclude_ids) {
+            const excludeIds = String(search.exclude_ids)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean);
+            if (excludeIds.length > 0) {
+              combinedFilters.push({
+                type: "exclude",
+                id: crypto.randomUUID(),
+                ids: new Set(excludeIds),
+              });
+            }
+          }
+
+          return combinedFilters;
+        })()}
         valueType={"scalars"}
         onFiltersChange={useCallback(
-          (newFilters: Array<{ facetKey: string; values: string[] }>) => {
+          (newFilters: any[]) => {
+            // Build facet filter params
+            const facetFilters = (newFilters ?? []).filter(
+              (f) => f.type === "facet",
+            );
             const filterParams =
-              newFilters.length > 0
+              facetFilters.length > 0
                 ? Object.fromEntries(
-                    newFilters.map((filter) => [
+                    facetFilters.map((filter: any) => [
                       filter.facetKey,
                       filter.values.join(","),
                     ]),
                   )
                 : {};
 
+            // Collect isolate and exclude ids (may be multiple filters of each type)
+            const isolateIds = (newFilters ?? [])
+              .filter((f) => f.type === "isolate")
+              .flatMap((f: any) => Array.from(f.ids ?? []));
+            const excludeIds = (newFilters ?? [])
+              .filter((f) => f.type === "exclude")
+              .flatMap((f: any) => Array.from(f.ids ?? []));
+
             // Preserve tab, series visualization, and outlier parameters
-            const otherParams = {
-              tab: search.tab,
-              ...(search.groupBy && { groupBy: search.groupBy }),
-              ...(search.hue && { hue: search.hue }),
-              ...(search.style && { style: search.style }),
-              detect_outliers: String(search.detect_outliers), // Convert enum to string
-              include_unverified: String(search.include_unverified), // Convert boolean to string
+            const otherParams: Record<string, string> = {
+              ...(search.tab ? { tab: String(search.tab) } : {}),
+              ...(search.groupBy ? { groupBy: String(search.groupBy) } : {}),
+              ...(search.hue ? { hue: String(search.hue) } : {}),
+              ...(search.style ? { style: String(search.style) } : {}),
+              ...(search.detect_outliers !== undefined
+                ? { detect_outliers: String(search.detect_outliers) }
+                : {}),
+              ...(search.include_unverified !== undefined
+                ? { include_unverified: String(search.include_unverified) }
+                : {}),
             };
+
+            // Add isolate/exclude params if present
+            if (isolateIds.length > 0) {
+              otherParams.isolate_ids = isolateIds.join(",");
+            }
+            if (excludeIds.length > 0) {
+              otherParams.exclude_ids = excludeIds.join(",");
+            }
 
             navigate({
               search: { ...filterParams, ...otherParams } as any,

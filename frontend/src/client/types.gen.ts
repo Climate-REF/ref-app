@@ -260,6 +260,7 @@ export type MetricValue = {
     attributes?: {
         [key: string]: string | number | number;
     } | null;
+    id: number;
     execution_group_id: number;
     execution_id: number;
     is_outlier?: boolean | null;
@@ -319,7 +320,7 @@ export type RefDiagnosticLink = {
  */
 export type ReferenceDatasetLink = {
     /**
-     * Unique identifier for the dataset (e.g., 'obs4mips.CERES-EBAF.v4.2')
+     * Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')
      */
     slug: string;
     /**
@@ -348,10 +349,11 @@ export type ResultOutputType = 'plot' | 'data' | 'html';
  * This includes the dimensions, values array, index array, and index name
  */
 export type SeriesValue = {
+    id: number;
     dimensions: {
         [key: string]: string;
     };
-    values: Array<number>;
+    values: Array<number | null>;
     index?: Array<string | number> | null;
     index_name?: string | null;
     attributes?: {
@@ -610,6 +612,14 @@ export type DiagnosticsComparisonData = {
          * Type of metric values to compare: 'scalar', 'series', or 'all'
          */
         type?: string;
+        /**
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/comparison';
 };
@@ -680,6 +690,14 @@ export type DiagnosticsListMetricValuesData = {
          * Include unverified (outlier) values
          */
         include_unverified?: boolean;
+        /**
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
@@ -910,6 +928,14 @@ export type ExecutionsMetricValuesData = {
          * Include unverified (outlier) values
          */
         include_unverified?: boolean;
+        /**
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
     };
     url: '/api/v1/executions/{group_id}/values';
 };

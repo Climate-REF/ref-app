@@ -13,13 +13,22 @@ interface SeriesChartContentProps {
 }
 
 export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
+  // Forward isolate/exclude id filters (if present) from card config to backend.
+  const isolateIdsParam = contentItem.otherFilters?.isolate_ids;
+  const excludeIdsParam = contentItem.otherFilters?.exclude_ids;
+
   const { data } = useSuspenseQuery(
     diagnosticsListMetricValuesOptions({
       path: {
         provider_slug: contentItem.provider,
         diagnostic_slug: contentItem.diagnostic,
       },
-      query: { ...contentItem.otherFilters, type: "series" },
+      query: {
+        ...contentItem.otherFilters,
+        type: "series",
+        ...(isolateIdsParam ? { isolate_ids: isolateIdsParam } : {}),
+        ...(excludeIdsParam ? { exclude_ids: excludeIdsParam } : {}),
+      },
     }),
   );
 

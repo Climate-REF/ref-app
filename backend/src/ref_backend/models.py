@@ -440,6 +440,7 @@ class MetricValue(ScalarMetricValue):
     This includes the dimensions and the value of the diagnostic
     """
 
+    id: int
     execution_group_id: int
     execution_id: int
     is_outlier: bool | None = None
@@ -453,6 +454,7 @@ class SeriesValue(BaseModel):
     This includes the dimensions, values array, index array, and index name
     """
 
+    id: int
     dimensions: dict[str, str]
     values: list[float | None]
     index: list[Union[str, float]] | None = None
@@ -509,6 +511,7 @@ class MetricValueCollection(BaseModel):
                     facets[key] = {value}
             all_data.append(
                 MetricValue(
+                    id=v.id,
                     dimensions=v.dimensions,
                     attributes=v.attributes,
                     value=sanitize_float_value(float(v.value)),
@@ -529,6 +532,7 @@ class MetricValueCollection(BaseModel):
 
             all_data.append(
                 SeriesValue(
+                    id=series.id,
                     dimensions=series.dimensions,
                     attributes=series.attributes,
                     values=sanitize_float_list(series.values or []),

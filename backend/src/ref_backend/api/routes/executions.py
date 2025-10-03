@@ -294,7 +294,7 @@ async def metric_bundle(
 
 
 @router.get("/{group_id}/values", response_model=None)
-async def metric_values(  # noqa: PLR0913, PLR0915
+async def metric_values(  # noqa: PLR0912, PLR0913, PLR0915
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
@@ -304,6 +304,8 @@ async def metric_values(  # noqa: PLR0913, PLR0915
         "iqr", description="Outlier detection method: 'off' or 'iqr'"
     ),
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
 ) -> MetricValueCollection | StreamingResponse | JSONResponse:
     """
     Fetch metric values for a specific execution (both scalar and series)
@@ -314,6 +316,8 @@ async def metric_values(  # noqa: PLR0913, PLR0915
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
     # Build queries for scalar and series values
+    scalar_query = None
+    series_query = None
     scalar_values = []
     series_values = []
 
@@ -321,13 +325,34 @@ async def metric_values(  # noqa: PLR0913, PLR0915
         scalar_query = app_context.session.query(models.ScalarMetricValue).filter(
             models.ScalarMetricValue.execution_id == execution.id
         )
-        scalar_values = scalar_query.all()
 
     if type in ("series", "all"):
         series_query = app_context.session.query(models.SeriesMetricValue).filter(
             models.SeriesMetricValue.execution_id == execution.id
         )
-        series_values = series_query.all()
+
+    # Apply id-based filtering (isolate takes precedence)
+    def _parse_id_list(id_str: str) -> list[int]:
+        try:
+            return [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
+
+    if isolate_ids:
+        ids = _parse_id_list(isolate_ids)
+        if "scalar_query" in locals() and scalar_query is not None:
+            scalar_query = scalar_query.filter(models.ScalarMetricValue.id.in_(ids))
+        if "series_query" in locals() and series_query is not None:
+            series_query = series_query.filter(models.SeriesMetricValue.id.in_(ids))
+    elif exclude_ids:
+        ids = _parse_id_list(exclude_ids)
+        if "scalar_query" in locals() and scalar_query is not None:
+            scalar_query = scalar_query.filter(~models.ScalarMetricValue.id.in_(ids))
+        if "series_query" in locals() and series_query is not None:
+            series_query = series_query.filter(~models.SeriesMetricValue.id.in_(ids))
+
+    scalar_values = scalar_query.all() if "scalar_query" in locals() and scalar_query is not None else []
+    series_values = series_query.all() if "series_query" in locals() and series_query is not None else []
 
     # Outlier detection
     annotated_scalar_values = None

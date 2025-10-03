@@ -153,6 +153,7 @@ export const SeriesValuesTab = () => {
               ].includes(key),
           )
           .map(([facetKey, value]) => ({
+            type: "facet",
             id: crypto.randomUUID(),
             facetKey,
             values: (value as string)
@@ -162,26 +163,50 @@ export const SeriesValuesTab = () => {
           }))}
         valueType={valueType}
         onFiltersChange={useCallback(
-          (newFilters: Array<{ facetKey: string; values: string[] }>) => {
+          (newFilters: any[]) => {
+            // Build facet filter params
+            const facetFilters = (newFilters ?? []).filter(
+              (f) => f.type === "facet",
+            );
             const filterParams =
-              newFilters.length > 0
+              facetFilters.length > 0
                 ? Object.fromEntries(
-                    newFilters.map((filter) => [
+                    facetFilters.map((filter: any) => [
                       filter.facetKey,
                       filter.values.join(","),
                     ]),
                   )
                 : {};
 
+            // Collect isolate and exclude ids (may be multiple filters of each type)
+            const isolateIds = (newFilters ?? [])
+              .filter((f) => f.type === "isolate")
+              .flatMap((f: any) => Array.from(f.ids ?? []));
+            const excludeIds = (newFilters ?? [])
+              .filter((f) => f.type === "exclude")
+              .flatMap((f: any) => Array.from(f.ids ?? []));
+
             // Preserve tab, series visualization, and outlier parameters
-            const otherParams = {
-              tab: searchTab,
-              ...(searchGroupBy && { groupBy: searchGroupBy }),
-              ...(searchHue && { hue: searchHue }),
-              ...(searchStyle && { style: searchStyle }),
-              detect_outliers: String(searchDetectOutliers), // Convert enum to string
-              include_unverified: String(searchIncludeUnverified), // Convert boolean to string
+            const otherParams: Record<string, string> = {
+              ...(searchTab ? { tab: String(searchTab) } : {}),
+              ...(searchGroupBy ? { groupBy: String(searchGroupBy) } : {}),
+              ...(searchHue ? { hue: String(searchHue) } : {}),
+              ...(searchStyle ? { style: String(searchStyle) } : {}),
+              ...(searchDetectOutliers !== undefined
+                ? { detect_outliers: String(searchDetectOutliers) }
+                : {}),
+              ...(searchIncludeUnverified !== undefined
+                ? { include_unverified: String(searchIncludeUnverified) }
+                : {}),
             };
+
+            // Add isolate/exclude params if present
+            if (isolateIds.length > 0) {
+              otherParams.isolate_ids = isolateIds.join(",");
+            }
+            if (excludeIds.length > 0) {
+              otherParams.exclude_ids = excludeIds.join(",");
+            }
 
             navigate({
               search: { ...filterParams, ...otherParams } as any,
