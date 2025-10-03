@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { ChartGroupingConfig } from "./grouping";
 
 // Base properties shared across all card types
@@ -5,7 +6,7 @@ export type BaseCardContent = {
   provider: string;
   diagnostic: string;
   title: string;
-  description?: string;
+  description?: string | ReactNode;
   interpretation?: string;
   span?: 1 | 2;
   placeholder?: boolean;
@@ -55,7 +56,7 @@ export type ExplorerCardContent =
 
 export type ExplorerCard = {
   title: string;
-  description?: string;
+  description?: string | ReactNode;
   placeholder?: boolean;
   content: ExplorerCardContent[];
 };

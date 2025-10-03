@@ -1,19 +1,39 @@
 import type { ExplorerCard } from "@/components/explorer/types";
+import { Link } from "@/components/ui/link";
 import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {
     title: "Modes of Variability",
-    description:
-      "Key metrics for large-scale atmospheric circulation patterns.",
+    description: (
+      <>
+        Spatial comparison of simulated vs. observed leading EOF patterns
+        representing the main modes of low-frequency variability in the
+        extra-tropical atmosphere and ocean, based on seasonal-mean sea level
+        pressure and monthly-mean sea surface temperature anomalies in the
+        spatial domains defined in{" "}
+        <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+          Lee et al. 2019
+        </Link>
+        , Table 1. Simulated EOFs are obtained with the "common basis function"
+        (CBF) approach described in the appendix of this article. The considered
+        time-period is 1900-2005 for the NH modes and 1950-2005 for the SAM.
+      </>
+    ),
     content: [
       {
         type: "box-whisker-chart",
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nam",
         title: "Northern Annular Mode (NAM) RMSE",
-        description:
-          "Northern Annular Mode (NAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            Northern Annular Mode (NAM) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
@@ -29,8 +49,14 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-sam",
         title: "Southern Annual Mode (SAM) RMSE",
-        description:
-          "Southern Annual Mode (SAM) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            Southern Annual Mode (SAM) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
@@ -46,8 +72,15 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-npgo",
         title: "North Pacific Gyre Oscillation (NPGO) RMSE",
-        description:
-          "North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE,
+            see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
@@ -63,8 +96,14 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-nao",
         title: "North Atlantic Oscillation (NAO) RMSE",
-        description:
-          "North Atlantic Oscillation (NAO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            North Atlantic Oscillation (NAO) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
@@ -80,8 +119,14 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pdo",
         title: "Pacific-Decadal Oscillation (PDO) RMSE",
-        description:
-          "Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
@@ -97,8 +142,14 @@ const cards: ExplorerCard[] = [
         provider: "pmp",
         diagnostic: "extratropical-modes-of-variability-pna",
         title: "Pacific-North American (PNA) RMSE",
-        description:
-          "Pacific-North American (PNA) individual-model pattern RMSE, see https://doi.org/10.1007/s00382-018-4355-4",
+        description: (
+          <>
+            Pacific-North American (PNA) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
         otherFilters: {
           method: "cbf",
           statistic: "rms",
