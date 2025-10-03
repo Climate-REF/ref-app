@@ -1,6 +1,8 @@
 // Ensure that the why did you render tool is imported first
 import "./wdyr";
+import "./instrument";
 
+import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -34,7 +36,16 @@ declare module "@tanstack/react-router" {
   }
 }
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById("root")!, {
+  // Callback called when an error is thrown and not caught by an ErrorBoundary.
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.warn("Uncaught error", error, errorInfo.componentStack);
+  }),
+  // Callback called when React catches an error in an ErrorBoundary.
+  onCaughtError: Sentry.reactErrorHandler(),
+  // Callback called when React automatically recovers from errors.
+  onRecoverableError: Sentry.reactErrorHandler(),
+}).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />

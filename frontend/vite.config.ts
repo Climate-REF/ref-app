@@ -1,5 +1,6 @@
 import path from "node:path";
 import mdx from "@mdx-js/rollup";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
@@ -7,6 +8,9 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
   server: {
     proxy: {
       "/api": {
@@ -26,6 +30,11 @@ export default defineConfig(({ mode }) => ({
           : "react",
     }),
     tailwindcss(),
+    sentryVitePlugin({
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      org: "cmip-ipo",
+      project: "ref-app-backend",
+    }),
   ],
   resolve: {
     alias: {
