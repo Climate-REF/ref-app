@@ -1,0 +1,35 @@
+log_level = "INFO"
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan> - <level>{message}</level>"
+cmip6_parser = "complete"
+
+[paths]
+log = "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/log"
+scratch = "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch"
+software = "/home/gha-runner/.config/climate_ref/software"
+results = "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/results"
+dimensions_cv = "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml"
+
+[db]
+database_url = "sqlite:///test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/db/climate_ref.db"
+run_migrations = true
+max_backups = 5
+
+[executor]
+executor = "climate_ref.executor.LocalExecutor"
+
+[executor.config]
+
+[[diagnostic_providers]]
+provider = "climate_ref_esmvaltool"
+
+[diagnostic_providers.config]
+
+[[diagnostic_providers]]
+provider = "climate_ref_ilamb"
+
+[diagnostic_providers.config]
+
+[[diagnostic_providers]]
+provider = "climate_ref_pmp"
+
+[diagnostic_providers.config]

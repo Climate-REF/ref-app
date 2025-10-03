@@ -1,0 +1,47 @@
+{
+  "index": "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/f35c61d89de4f77151bfd92679b8f749677f5f38/executions/recipe_20251001_162139/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/f35c61d89de4f77151bfd92679b8f749677f5f38/executions/recipe_20251001_162139/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20251001_162139/work/zec/zec/zec.nc": {
+      "filename": "executions/recipe_20251001_162139/work/zec/zec/zec.nc",
+      "long_name": "",
+      "description": "",
+      "dimensions": null
+    },
+    "executions/recipe_20251001_162139/work/zec/zec/zec_50.nc": {
+      "filename": "executions/recipe_20251001_162139/work/zec/zec/zec_50.nc",
+      "long_name": "",
+      "description": "",
+      "dimensions": null
+    }
+  },
+  "plots": {
+    "executions/recipe_20251001_162139/plots/zec/zec/zec_50_barplot.png": {
+      "filename": "executions/recipe_20251001_162139/plots/zec/zec/zec_50_barplot.png",
+      "long_name": "Barplot of ZEC_50",
+      "description": "",
+      "dimensions": null
+    },
+    "executions/recipe_20251001_162139/plots/zec/zec/zec_timeseries_all_models.png": {
+      "filename": "executions/recipe_20251001_162139/plots/zec/zec/zec_timeseries_all_models.png",
+      "long_name": "ZEC timeseries",
+      "description": "",
+      "dimensions": null
+    }
+  },
+  "html": {
+    "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/f35c61d89de4f77151bfd92679b8f749677f5f38/executions/recipe_20251001_162139/index.html": {
+      "filename": "/home/gha-runner/actions-runners/org-climate-ref/_work/climate-ref/climate-ref/test-outputs/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/f35c61d89de4f77151bfd92679b8f749677f5f38/executions/recipe_20251001_162139/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}
