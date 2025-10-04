@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  Brush,
   CartesianGrid,
   Line,
   LineChart,
@@ -10,660 +9,124 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CustomSeriesToolTip } from "../customSeriesToolTip";
 import type { SeriesValue } from "../types";
-import { SeriesLegendSidebar } from "./seriesLegendSidebar";
-import { createScaledTickFormatter, getDimensionHashIndex } from "./utils";
+import { SeriesLegend } from "./seriesLegend";
+import { SeriesTooltip } from "./seriesToolip";
+import { createChartData, createScaledTickFormatter } from "./utils";
 
-interface SeriesVisualizationProps {
+interface SimpleSeriesVisualizationProps {
   seriesValues: SeriesValue[];
+  referenceSeriesValues?: SeriesValue[];
+  labelTemplate?: string; // e.g., "{variable_id} - {source_id}"
   maxSeriesLimit?: number;
-  maxLegendItems?: number;
-  enableZoom?: boolean;
-  // URL synchronization props
-  initialGroupBy?: string;
-  initialHue?: string;
-  initialStyle?: string;
-  onParamsChange?: (params: {
-    groupBy?: string;
-    hue?: string;
-    style?: string;
-  }) => void;
-  // Hide the groupBy/hue/style controls for explorer cards
-  hideControls?: boolean;
-  // Symmetrical axes option
   symmetricalAxes?: boolean;
 }
 
-interface GroupedSeries {
-  indexType: string;
-  indexName: string;
-  series: SeriesValue[];
-}
-
-interface ChartData {
-  [key: string]: number | string | null;
-}
-
-// Color palette for different series
-const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00ff00",
-  "#0088fe",
-  "#00c49f",
-  "#ffbb28",
-  "#ff8042",
-  "#8dd1e1",
-];
-
-// Line styles for differentiation
-const LINE_STYLES = [
-  { strokeDasharray: "none" },
-  { strokeDasharray: "5 5" },
-  { strokeDasharray: "10 5" },
-  { strokeDasharray: "15 5 5 5" },
-  { strokeDasharray: "20 5" },
-];
-
 export function SeriesVisualization({
   seriesValues,
+  referenceSeriesValues = [],
+  labelTemplate,
   maxSeriesLimit = 500,
-  enableZoom = false,
-  initialGroupBy,
-  initialHue,
-  initialStyle,
-  onParamsChange,
-  hideControls = false,
   symmetricalAxes = false,
-}: SeriesVisualizationProps) {
-  // Get all available dimensions for grouping
-  const availableDimensions = useMemo(() => {
-    const dimensions = new Set<string>();
-    seriesValues.forEach((series) => {
-      Object.keys(series.dimensions).forEach((dim) => {
-        dimensions.add(dim);
-      });
+}: SimpleSeriesVisualizationProps) {
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+
+  // Create chart data and metadata
+  const { chartData, seriesMetadata, indexName } = useMemo(
+    () => createChartData(seriesValues, referenceSeriesValues, labelTemplate),
+    [seriesValues, referenceSeriesValues, labelTemplate],
+  );
+
+  // State for hidden labels - initialize with all non-reference series hidden
+  const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(() => {
+    const hidden = new Set<string>();
+    seriesMetadata.forEach((meta) => {
+      if (!meta.isReference) {
+        hidden.add(meta.label);
+      }
     });
-    return Array.from(dimensions).sort();
-  }, [seriesValues]);
-
-  // State for user controls - initialize from URL params if provided
-  const [groupByDimension, setGroupByDimension] = useState<string>(() => {
-    if (initialGroupBy && availableDimensions.includes(initialGroupBy)) {
-      return initialGroupBy;
-    }
-    return availableDimensions.includes("source_id")
-      ? "source_id"
-      : availableDimensions[0] || "none";
+    return hidden;
   });
 
-  const [hueDimension, setHueDimension] = useState<string>(() => {
-    if (
-      initialHue &&
-      (initialHue === "none" || availableDimensions.includes(initialHue))
-    ) {
-      return initialHue;
-    }
-    return availableDimensions.includes("source_id") ? "source_id" : "none";
-  });
-
-  const [styleDimension, setStyleDimension] = useState<string>(() => {
-    if (
-      initialStyle &&
-      (initialStyle === "none" || availableDimensions.includes(initialStyle))
-    ) {
-      return initialStyle;
-    }
-    return "none";
-  });
-
-  // State for zoom functionality
-  const [zoomDomain, setZoomDomain] = useState<{
-    [key: string]: [number, number] | null;
-  }>({});
-
-  // State for hidden series (for interactive legend)
-  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
-
-  // State for hovered series (for line highlighting)
-  const [hoveredSeries, setHoveredSeries] = useState<string | null>(null);
-
-  // Group series by index type and name
-  const groupedByIndex = useMemo(() => {
-    const groups: { [key: string]: GroupedSeries } = {};
-
-    seriesValues.forEach((series) => {
-      const indexKey = `${series.index_name || "index"}`;
-      if (!groups[indexKey]) {
-        groups[indexKey] = {
-          indexType: indexKey,
-          indexName: series.index_name || "index",
-          series: [],
-        };
-      }
-      groups[indexKey].series.push(series);
-    });
-
-    return Object.values(groups);
-  }, [seriesValues]);
-
-  // Create a unique key for a series based on selected dimensions
-  const createSeriesKey = useCallback(
-    (
-      series: SeriesValue,
-      groupBy: string,
-      hue: string,
-      style: string,
-    ): string => {
-      const parts: string[] = [];
-
-      if (groupBy && groupBy !== "none" && series.dimensions[groupBy]) {
-        parts.push(`${groupBy}:${series.dimensions[groupBy]}`);
-      }
-      if (hue && hue !== "none" && series.dimensions[hue]) {
-        parts.push(`${hue}:${series.dimensions[hue]}`);
-      }
-      if (style && style !== "none" && series.dimensions[style]) {
-        parts.push(`${style}:${series.dimensions[style]}`);
-      }
-
-      // If no dimensions selected, use a combination of key dimensions
-      if (parts.length === 0) {
-        const keyDims = [
-          "source_id",
-          "experiment_id",
-          "variable_id",
-          "metric",
-          "region",
-        ];
-        keyDims.forEach((dim) => {
-          if (series.dimensions[dim]) {
-            parts.push(`${series.dimensions[dim]}`);
-          }
+  // Get unique labels with their colors and counts, sorted alphabetically with Reference at top
+  const uniqueLabels = useMemo(() => {
+    const labelMap = new Map<
+      string,
+      { color: string; count: number; isReference: boolean }
+    >();
+    seriesMetadata.forEach((meta) => {
+      const existing = labelMap.get(meta.label);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        labelMap.set(meta.label, {
+          color: meta.color,
+          count: 1,
+          isReference: meta.isReference,
         });
       }
-
-      return parts.join(" | ") || "Series";
-    },
-    [],
-  );
-
-  // Create main label for legend display (based on hue dimension)
-  const createMainLabel = useCallback(
-    (series: SeriesValue, hue: string): string => {
-      if (hue && hue !== "none" && series.dimensions[hue]) {
-        return series.dimensions[hue];
-      }
-
-      // Fallback to a combination of key dimensions if no hue selected
-      const keyDims = ["experiment_id", "variable_id", "metric", "region"];
-      const parts: string[] = [];
-      keyDims.forEach((dim) => {
-        if (series.dimensions[dim]) {
-          parts.push(series.dimensions[dim]);
-        }
-      });
-
-      return parts.join(" | ") || "Series";
-    },
-    [],
-  );
-
-  // Create sublabel for legend display (based on style dimension)
-  const createSubLabel = useCallback(
-    (series: SeriesValue, style: string): string | null => {
-      if (style && style !== "none" && series.dimensions[style]) {
-        return series.dimensions[style];
-      }
-      return null;
-    },
-    [],
-  );
-
-  // Detect if a series is a reference line based on source_id
-  const isReferenceSeries = useCallback((series: SeriesValue): boolean => {
-    return series.dimensions.source_id === "Reference";
-  }, []);
-
-  // Helper to check if a series key represents a reference series
-  const isReferenceSeriesKey = useCallback(
-    (seriesKey: string, group: GroupedSeries): boolean => {
-      // Find the series that matches this key
-      const matchingSeries = group.series.find((series) => {
-        const key = createSeriesKey(
-          series,
-          groupByDimension,
-          hueDimension,
-          styleDimension,
-        );
-        return key === seriesKey;
-      });
-      return matchingSeries ? isReferenceSeries(matchingSeries) : false;
-    },
-    [
-      createSeriesKey,
-      isReferenceSeries,
-      groupByDimension,
-      hueDimension,
-      styleDimension,
-    ],
-  );
-
-  // Categorize series for the legend based on the selected groupBy dimension
-  const categorizeSeries = useCallback(
-    (seriesKey: string, group: GroupedSeries): string => {
-      // Find the series that matches this key
-      const matchingSeries = group.series.find((series) => {
-        const key = createSeriesKey(
-          series,
-          groupByDimension,
-          hueDimension,
-          styleDimension,
-        );
-        return key === seriesKey;
-      });
-
-      if (matchingSeries) {
-        // Use the groupBy dimension for categorization
-        if (
-          groupByDimension &&
-          groupByDimension !== "none" &&
-          matchingSeries.dimensions[groupByDimension]
-        ) {
-          return matchingSeries.dimensions[groupByDimension];
-        }
-        // Fallback to source_id if no groupBy dimension is selected
-        if (matchingSeries.dimensions.source_id) {
-          return matchingSeries.dimensions.source_id;
-        }
-      }
-
-      return "Other";
-    },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
-  );
-
-  // Initialize hidden series state - hide all non-reference series by default
-  useEffect(() => {
-    const hiddenSet = new Set<string>();
-
-    // For each group, find non-reference series and hide them initially
-    groupedByIndex.forEach((group) => {
-      group.series.forEach((series) => {
-        if (!isReferenceSeries(series)) {
-          const seriesKey = createSeriesKey(
-            series,
-            groupByDimension,
-            hueDimension,
-            styleDimension,
-          );
-          hiddenSet.add(seriesKey);
-        }
-      });
     });
+    return Array.from(labelMap.entries())
+      .map(([label, { color, count, isReference }]) => ({
+        label,
+        color,
+        count,
+        isReference,
+      }))
+      .sort((a, b) => {
+        // Reference series always at the top
+        if (a.isReference && !b.isReference) return -1;
+        if (!a.isReference && b.isReference) return 1;
+        // Otherwise alphabetical
+        return a.label.localeCompare(b.label);
+      });
+  }, [seriesMetadata]);
 
-    setHiddenSeries(hiddenSet);
-  }, [
-    groupedByIndex,
-    groupByDimension,
-    hueDimension,
-    styleDimension,
-    createSeriesKey,
-    isReferenceSeries,
-  ]);
-
-  // Toggle series visibility (memoized)
-  const toggleSeries = useCallback((seriesKey: string) => {
-    setHiddenSeries((prev) => {
+  // Toggle label visibility
+  const toggleLabel = useCallback((label: string) => {
+    setHiddenLabels((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(seriesKey)) {
-        newSet.delete(seriesKey);
+      if (newSet.has(label)) {
+        newSet.delete(label);
       } else {
-        newSet.add(seriesKey);
+        newSet.add(label);
       }
       return newSet;
     });
   }, []);
 
-  // Memoized toggle group functions for each group
-  const toggleGroupCache = useMemo(
-    () => new Map<string, (category: string) => void>(),
-    [],
-  );
-
-  // Function to get toggle group function for a group (with caching)
-  const getToggleGroup = useCallback(
-    (group: GroupedSeries) => {
-      const cacheKey = `${group.indexType}-${groupByDimension}-${hueDimension}-${styleDimension}`;
-
-      if (toggleGroupCache.has(cacheKey)) {
-        return toggleGroupCache.get(cacheKey)!;
-      }
-
-      const toggleFn = (category: string) => {
-        setHiddenSeries((prev) => {
-          const newSet = new Set(prev);
-
-          // Find all series keys in this category
-          const categorySeriesKeys = group.series
-            .map((series) =>
-              createSeriesKey(
-                series,
-                groupByDimension,
-                hueDimension,
-                styleDimension,
-              ),
-            )
-            .filter((seriesKey) => {
-              const matchingSeries = group.series.find((series) => {
-                const key = createSeriesKey(
-                  series,
-                  groupByDimension,
-                  hueDimension,
-                  styleDimension,
-                );
-                return key === seriesKey;
-              });
-              return (
-                matchingSeries &&
-                categorizeSeries(seriesKey, group) === category
-              );
-            });
-
-          // Check if all series in this category are currently hidden
-          const allHidden = categorySeriesKeys.every((key) => newSet.has(key));
-
-          if (allHidden) {
-            // Show all series in this category
-            categorySeriesKeys.forEach((key) => {
-              newSet.delete(key);
-            });
-          } else {
-            // Hide all series in this category
-            categorySeriesKeys.forEach((key) => {
-              newSet.add(key);
-            });
-          }
-
-          return newSet;
-        });
-      };
-
-      toggleGroupCache.set(cacheKey, toggleFn);
-      return toggleFn;
-    },
-    [
-      toggleGroupCache,
-      createSeriesKey,
-      groupByDimension,
-      hueDimension,
-      styleDimension,
-      categorizeSeries,
-    ],
-  );
-
-  // Memoized brush onChange handler
-  const brushOnChange = useCallback(
-    (group: GroupedSeries, chartData: ChartData[]) => (brushData: any) => {
-      if (
-        brushData &&
-        brushData.startIndex !== undefined &&
-        brushData.endIndex !== undefined
-      ) {
-        const startValue = chartData[brushData.startIndex]?.[group.indexName];
-        const endValue = chartData[brushData.endIndex]?.[group.indexName];
-        if (typeof startValue === "number" && typeof endValue === "number") {
-          setZoomDomain((prev) => ({
-            ...prev,
-            [group.indexType]: [startValue, endValue],
-          }));
-        }
-      }
-    },
-    [],
-  );
-
-  // Handle series hover (memoized)
-  const handleSeriesHover = useCallback((seriesKey: string | null) => {
-    setHoveredSeries(seriesKey);
+  // Handle label hover
+  const handleLabelHover = useCallback((label: string | null) => {
+    setHoveredLabel(label);
   }, []);
 
-  // Sync URL parameters when dimensions change
-  useEffect(() => {
-    if (onParamsChange) {
-      const params: { groupBy?: string; hue?: string; style?: string } = {};
+  // Calculate Y domain from all data values for intelligent tick formatting
+  const yDomain = useMemo(() => {
+    const allValues = chartData.flatMap((d) =>
+      Object.values(d).filter((v) => typeof v === "number"),
+    ) as number[];
 
-      if (groupByDimension !== "none") {
-        params.groupBy = groupByDimension;
-      }
-      if (hueDimension !== "none") {
-        params.hue = hueDimension;
-      }
-      if (styleDimension !== "none") {
-        params.style = styleDimension;
-      }
+    if (allValues.length === 0) return [0, 1];
 
-      onParamsChange(params);
+    if (symmetricalAxes) {
+      const maxAbs = Math.max(...allValues.map(Math.abs));
+      return [-maxAbs, maxAbs];
     }
-  }, [groupByDimension, hueDimension, styleDimension, onParamsChange]);
 
-  // Create chart data for each index group
-  const createChartData = useCallback(
-    (group: GroupedSeries): ChartData[] => {
-      if (group.series.length === 0) return [];
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    return [min, max];
+  }, [chartData, symmetricalAxes]);
 
-      // Find the maximum length of all series to create a unified index
-      const maxLength = Math.max(
-        ...group.series.map((s) => s.values?.length || 0),
-      );
-      const chartData: ChartData[] = [];
-
-      for (let i = 0; i < maxLength; i++) {
-        const dataPoint: ChartData = {
-          [group.indexName]: group.series[0]?.index?.[i] ?? i,
-        };
-
-        group.series.forEach((series) => {
-          if (series.values && i < series.values.length) {
-            // Create a unique key for this series based on dimensions
-            const seriesKey = createSeriesKey(
-              series,
-              groupByDimension,
-              hueDimension,
-              styleDimension,
-            );
-            dataPoint[seriesKey] = series.values[i];
-          }
-        });
-
-        chartData.push(dataPoint);
-      }
-
-      return chartData;
-    },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
+  // Create intelligent tick formatter based on data range
+  const tickFormatter = useMemo(
+    () => createScaledTickFormatter(yDomain),
+    [yDomain],
   );
 
-  // Get unique series keys for a group to create lines
-  const getUniqueSeriesKeys = useCallback(
-    (group: GroupedSeries): string[] => {
-      const keys = new Set<string>();
-      group.series.forEach((series) => {
-        const key = createSeriesKey(
-          series,
-          groupByDimension,
-          hueDimension,
-          styleDimension,
-        );
-        keys.add(key);
-      });
-      return Array.from(keys);
-    },
-    [createSeriesKey, groupByDimension, hueDimension, styleDimension],
-  );
-
-  // Memoize expensive color calculations
-  const getSeriesColor = useCallback(
-    (seriesKey: string): string => {
-      return COLORS[
-        getDimensionHashIndex(seriesKey, hueDimension, COLORS.length)
-      ];
-    },
-    [hueDimension],
-  );
-
-  // Memoize line style calculations
-  const getSeriesStyle = useCallback(
-    (seriesKey: string) => {
-      return LINE_STYLES[
-        getDimensionHashIndex(seriesKey, styleDimension, LINE_STYLES.length)
-      ];
-    },
-    [styleDimension],
-  );
-
-  // Memoize stroke width calculations
-  const getSeriesStrokeWidth = useCallback(
-    (seriesKey: string, group: GroupedSeries): number => {
-      if (isReferenceSeriesKey(seriesKey, group)) {
-        return 10;
-      }
-      if (hiddenSeries.has(seriesKey)) {
-        return 2;
-      }
-      return 4;
-    },
-    [isReferenceSeriesKey, hiddenSeries],
-  );
-
-  // Smart tick formatting function based on data range
-  const createTickFormatter = useCallback(
-    (chartData: ChartData[], indexName: string) => {
-      if (chartData.length === 0)
-        return (value: string | number) => String(value);
-
-      const values = chartData
-        .map((d) => d[indexName])
-        .filter((v) => typeof v === "number") as number[];
-
-      return createScaledTickFormatter(values);
-    },
-    [],
-  );
-
-  // Calculate appropriate tick count based on chart width and data range
-  const getTickCount = useCallback(
-    (chartData: ChartData[], indexName: string): number => {
-      if (chartData.length === 0) return 5;
-
-      const values = chartData
-        .map((d) => d[indexName])
-        .filter((v) => typeof v === "number") as number[];
-
-      if (values.length === 0) return 5;
-
-      const range = Math.max(...values) - Math.min(...values);
-
-      // Adjust tick count based on data density and range
-      if (range < 10) return 8;
-      if (range < 100) return 6;
-      if (range < 1000) return 5;
-      return 4;
-    },
-    [],
-  );
-
-  // Memoized legend items for each group
-  const legendItemsCache = useMemo(() => {
-    const cache = new Map<string, any[]>();
-    return cache;
-  }, []);
-
-  // Function to get legend items for a group (with caching)
-  const getLegendItems = useCallback(
-    (group: GroupedSeries, seriesKeys: string[]) => {
-      const cacheKey = `${group.indexType}-${seriesKeys.join(",")}-${groupByDimension}-${hueDimension}-${styleDimension}`;
-
-      if (legendItemsCache.has(cacheKey)) {
-        return legendItemsCache.get(cacheKey)!;
-      }
-
-      const items = seriesKeys.map((seriesKey) => {
-        // Find the series that matches this key
-        const matchingSeries = group.series.find((series) => {
-          const key = createSeriesKey(
-            series,
-            groupByDimension,
-            hueDimension,
-            styleDimension,
-          );
-          return key === seriesKey;
-        });
-
-        if (!matchingSeries) {
-          return {
-            key: seriesKey,
-            label: seriesKey,
-            sublabel: null,
-            color: getSeriesColor(seriesKey),
-            strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
-            isReference: false,
-            category: "Other",
-          };
-        }
-
-        const mainLabel = createMainLabel(matchingSeries, hueDimension);
-        const subLabel = createSubLabel(matchingSeries, styleDimension);
-
-        return {
-          key: seriesKey,
-          label: mainLabel,
-          sublabel: subLabel,
-          color: getSeriesColor(seriesKey),
-          strokeDasharray: getSeriesStyle(seriesKey).strokeDasharray,
-          isReference: isReferenceSeriesKey(seriesKey, group),
-          category: categorizeSeries(seriesKey, group),
-        };
-      });
-
-      legendItemsCache.set(cacheKey, items);
-      return items;
-    },
-    [
-      legendItemsCache,
-      createSeriesKey,
-      groupByDimension,
-      hueDimension,
-      styleDimension,
-      createMainLabel,
-      createSubLabel,
-      getSeriesColor,
-      getSeriesStyle,
-      isReferenceSeriesKey,
-      categorizeSeries,
-    ],
-  );
-
-  if (seriesValues.length === 0) {
-    return (
-      <div className="text-center text-gray-500 py-8">
-        No series data available
-      </div>
-    );
-  }
-
-  // Performance safeguard: Don't render if there are too many series
-  if (seriesValues.length > maxSeriesLimit) {
+  // Performance safeguard
+  const totalSeries = seriesValues.length + referenceSeriesValues.length;
+  if (totalSeries > maxSeriesLimit) {
     return (
       <Card>
         <CardContent className="text-center py-8">
@@ -672,8 +135,8 @@ export function SeriesVisualization({
               Too Many Series to Display
             </div>
             <div className="text-sm text-gray-600">
-              Found {seriesValues.length} series values, but only up to{" "}
-              {maxSeriesLimit} can be displayed for performance reasons.
+              Found {totalSeries} series values, but only up to {maxSeriesLimit}{" "}
+              can be displayed for performance reasons.
             </div>
             <div className="text-sm text-gray-500">
               Please use the filtering options above to reduce the number of
@@ -685,304 +148,140 @@ export function SeriesVisualization({
     );
   }
 
+  if (totalSeries === 0) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        No series data available
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Controls - only show if not hidden */}
-      {!hideControls && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Group:
-                </span>
-                <Select
-                  value={groupByDimension}
-                  onValueChange={setGroupByDimension}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {availableDimensions.map((dim) => (
-                      <SelectItem key={dim} value={dim}>
-                        {dim}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Color:
-                </span>
-                <Select value={hueDimension} onValueChange={setHueDimension}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {availableDimensions.map((dim) => (
-                      <SelectItem key={dim} value={dim}>
-                        {dim}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Style:
-                </span>
-                <Select
-                  value={styleDimension}
-                  onValueChange={setStyleDimension}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {availableDimensions.map((dim) => (
-                      <SelectItem key={dim} value={dim}>
-                        {dim}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Summary of current configuration */}
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-muted-foreground">
-                  {groupByDimension !== "none" && (
-                    <span>
-                      Groups by <strong>{groupByDimension}</strong>
-                    </span>
-                  )}
-                  {hueDimension !== "none" && (
-                    <span>
-                      {groupByDimension !== "none" ? ", " : ""}Colors by{" "}
-                      <strong>{hueDimension}</strong>
-                    </span>
-                  )}
-                  {styleDimension !== "none" && (
-                    <span>
-                      {groupByDimension !== "none" || hueDimension !== "none"
-                        ? ", "
-                        : ""}
-                      Styles by <strong>{styleDimension}</strong>
-                    </span>
-                  )}
-                  {groupByDimension === "none" &&
-                    hueDimension === "none" &&
-                    styleDimension === "none" && (
-                      <span>Using default grouping and styling</span>
-                    )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Charts with Sidebar */}
-      {groupedByIndex.map((group) => {
-        const chartData = createChartData(group);
-        const seriesKeys = getUniqueSeriesKeys(group);
-
-        if (chartData.length === 0) return null;
-
-        const currentZoomDomain = zoomDomain[group.indexType];
-        const tickFormatter = createTickFormatter(chartData, group.indexName);
-        const tickCount = getTickCount(chartData, group.indexName);
-
-        // Create legend items for the sidebar using three-tier system
-        const legendItems = getLegendItems(group, seriesKeys);
-
-        return (
-          <div key={group.indexType} className="flex gap-4">
-            {/* Chart */}
-            <div className="flex-1">
-              <ResponsiveContainer width="100%" height={700}>
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: enableZoom ? 60 : 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey={group.indexName}
-                    domain={currentZoomDomain || ["dataMin", "dataMax"]}
-                    label={{
-                      value: group.indexName,
-                      position: "insideBottom",
-                      offset: -5,
-                    }}
-                    type="number"
-                    scale="linear"
-                    tickFormatter={tickFormatter}
-                    tickCount={tickCount}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis
-                    domain={
-                      symmetricalAxes
-                        ? (data) => {
-                            const values = data.flatMap((d) =>
-                              Object.values(d).filter(
-                                (v) => typeof v === "number",
-                              ),
-                            ) as number[];
-                            if (values.length === 0) return [0, 1];
-                            const maxAbs = Math.max(...values.map(Math.abs));
-                            return [-maxAbs, maxAbs];
-                          }
-                        : ["dataMin - 0.1", "dataMax + 0.1"]
-                    }
-                    label={{
-                      value: "Value",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                    tickFormatter={(value: number) => value.toFixed(2)}
-                  />
-                  <Tooltip
-                    content={
-                      <CustomSeriesToolTip
-                        hiddenSeries={hiddenSeries}
-                        isReferenceSeriesKey={(seriesKey: string) =>
-                          isReferenceSeriesKey(seriesKey, group)
-                        }
-                        hoveredSeries={hoveredSeries}
-                      />
-                    }
-                    cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
-                    key={group.indexType} // Add key to prevent tooltip reuse issues
-                  />
-                  {/* Sort series keys for proper rendering order: hidden -> visible -> reference -> hovered */}
-                  {seriesKeys
-                    .sort((a, b) => {
-                      const aIsReference = isReferenceSeriesKey(a, group);
-                      const bIsReference = isReferenceSeriesKey(b, group);
-                      const aIsHidden = hiddenSeries.has(a);
-                      const bIsHidden = hiddenSeries.has(b);
-                      const aIsHovered = hoveredSeries === a;
-                      const bIsHovered = hoveredSeries === b;
-
-                      // Create priority scores (higher = rendered later/on top)
-                      const getPriority = (
-                        isHidden: boolean,
-                        isReference: boolean,
-                        isHovered: boolean,
-                      ) => {
-                        if (isHovered) return 4; // Highest priority - always on top
-                        if (!isHidden && !isReference) return 3; // Regular visible lines
-                        if (!isHidden) return 2; // Reference lines third highest
-
-                        return 1; // Hidden lines lowest priority
-                      };
-
-                      const aPriority = getPriority(
-                        aIsHidden,
-                        aIsReference,
-                        aIsHovered,
-                      );
-                      const bPriority = getPriority(
-                        bIsHidden,
-                        bIsReference,
-                        bIsHovered,
-                      );
-
-                      return aPriority - bPriority;
-                    })
-                    .map((seriesKey) => {
-                      const isHidden = hiddenSeries.has(seriesKey);
-                      const isHovered = hoveredSeries === seriesKey;
-                      const isOtherHovered =
-                        hoveredSeries !== null && hoveredSeries !== seriesKey;
-                      const isReference = isReferenceSeriesKey(
-                        seriesKey,
-                        group,
-                      );
-
-                      // Determine stroke color: gray for hidden/unselected lines, original color for visible lines
-                      let strokeColor: string;
-                      if (isReference) {
-                        strokeColor = "#000000"; // Red color for reference lines
-                      } else if (isHidden && !isHovered) {
-                        strokeColor = "#9CA3AF"; // Gray color for hidden lines
-                      } else {
-                        strokeColor = getSeriesColor(seriesKey); // Original color for visible lines
-                      }
-
-                      // Determine opacity
-                      let opacity = 1;
-                      if (isOtherHovered) {
-                        opacity = 0.3; // Dimmed when another line is hovered
-                      } else if (isReference) {
-                        opacity = 1; // Reference lines always full opacity when not hidden
-                      } else {
-                        opacity = isHidden ? 0.7 : 1; // Slightly reduced opacity for hidden non-reference lines
-                      }
-
-                      return (
-                        <Line
-                          key={seriesKey}
-                          type="monotone"
-                          dataKey={seriesKey}
-                          stroke={strokeColor}
-                          strokeWidth={
-                            isHovered
-                              ? getSeriesStrokeWidth(seriesKey, group) + 1
-                              : getSeriesStrokeWidth(seriesKey, group)
-                          }
-                          strokeOpacity={opacity}
-                          dot={false} // Disable dots for better performance
-                          activeDot={{ r: 4 }}
-                          name={seriesKey}
-                          {...getSeriesStyle(seriesKey)}
-                          onClick={() => toggleSeries(seriesKey)}
-                          onMouseEnter={() => handleSeriesHover(seriesKey)}
-                          onMouseLeave={() => handleSeriesHover(null)}
-                          style={{ cursor: "pointer" }}
-                          isAnimationActive={false} // Disable animation for performance
-                        />
-                      );
-                    })}
-                  {enableZoom && (
-                    <Brush
-                      dataKey={group.indexName}
-                      height={30}
-                      stroke="#8884d8"
-                      onChange={brushOnChange(group, chartData)}
-                    />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Sidebar Legend */}
-            <SeriesLegendSidebar
-              legendItems={legendItems}
-              hiddenSeries={hiddenSeries}
-              onToggleSeries={toggleSeries}
-              onToggleGroup={getToggleGroup(group)}
-              onHoverSeries={handleSeriesHover}
-              hoveredSeries={hoveredSeries}
+    <div className="flex gap-4">
+      {/* Chart */}
+      <div className="flex-1">
+        <ResponsiveContainer width="100%" height={700}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey={indexName}
+              label={{
+                value: indexName,
+                position: "insideBottom",
+                offset: -5,
+              }}
+              type="number"
+              scale="linear"
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
-          </div>
-        );
-      })}
+            <YAxis
+              domain={
+                symmetricalAxes
+                  ? (data) => {
+                      const values = data.flatMap((d) =>
+                        Object.values(d).filter((v) => typeof v === "number"),
+                      ) as number[];
+                      if (values.length === 0) return [0, 1];
+                      const maxAbs = Math.max(...values.map(Math.abs));
+                      return [-maxAbs, maxAbs];
+                    }
+                  : ["dataMin - 0.1", "dataMax + 0.1"]
+              }
+              label={{
+                value: "Value",
+                angle: -90,
+                position: "insideLeft",
+              }}
+              tickFormatter={tickFormatter}
+            />
+            <Tooltip
+              content={
+                <SeriesTooltip
+                  hiddenLabels={hiddenLabels}
+                  hoveredLabel={hoveredLabel}
+                  seriesMetadata={seriesMetadata}
+                />
+              }
+              cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
+            />
+            {/* Render all series with proper visual hierarchy */}
+            {seriesMetadata
+              .sort((a, b) => {
+                // Visual hierarchy: hidden lines (bottom), visible regular lines (middle), reference lines (top)
+                const aHidden = hiddenLabels.has(a.label);
+                const bHidden = hiddenLabels.has(b.label);
+
+                // Reference series always on top
+                if (a.isReference && !b.isReference) return 1;
+                if (!a.isReference && b.isReference) return -1;
+
+                // Hidden series go to bottom
+                if (aHidden && !bHidden) return -1;
+                if (!aHidden && bHidden) return 1;
+
+                return 0;
+              })
+              .map((meta) => {
+                const isLabelHidden = hiddenLabels.has(meta.label);
+                const isOtherLabelHovered =
+                  hoveredLabel !== null && hoveredLabel !== meta.label;
+
+                // Determine opacity: 0.4 for hidden, 1.0 for visible (or 0.3 when other label hovered)
+                let opacity = 1;
+                if (isLabelHidden) {
+                  opacity = 0.4;
+                } else if (isOtherLabelHovered) {
+                  opacity = 0.3;
+                }
+
+                // Determine stroke color and width
+                const strokeColor = isLabelHidden
+                  ? "#9CA3AF"
+                  : meta.isReference
+                    ? "#000000"
+                    : meta.color;
+                const strokeWidth = isLabelHidden
+                  ? 1
+                  : meta.isReference
+                    ? 4
+                    : 2;
+
+                return (
+                  <Line
+                    key={meta.seriesIndex}
+                    type="monotone"
+                    dataKey={`series_${meta.seriesIndex}`}
+                    stroke={strokeColor}
+                    strokeWidth={strokeWidth}
+                    strokeOpacity={opacity}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                    name={meta.label}
+                    onClick={() => toggleLabel(meta.label)}
+                    onMouseEnter={() => handleLabelHover(meta.label)}
+                    onMouseLeave={() => handleLabelHover(null)}
+                    style={{ cursor: "pointer" }}
+                    isAnimationActive={false}
+                  />
+                );
+              })}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend Sidebar */}
+      <SeriesLegend
+        uniqueLabels={uniqueLabels}
+        hiddenLabels={hiddenLabels}
+        hoveredLabel={hoveredLabel}
+        onToggleLabel={toggleLabel}
+        onHoverLabel={handleLabelHover}
+      />
     </div>
   );
 }

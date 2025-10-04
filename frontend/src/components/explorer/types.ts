@@ -39,6 +39,8 @@ export type SeriesChartContent = BaseCardContent & {
   otherFilters?: Record<string, string>;
   symmetricalAxes?: boolean;
   groupingConfig?: ChartGroupingConfig;
+  labelTemplate?: string;
+  /* Template for series labels (e.g., "{variable_id} - {source_id}") */
 };
 
 export type TaylorDiagramContent = BaseCardContent & {

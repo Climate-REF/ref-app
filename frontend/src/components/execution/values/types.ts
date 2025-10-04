@@ -39,3 +39,10 @@ export type ProcessedGroupedDataEntry = {
   name: string;
   groups: { [key: string]: BoxPlot };
 };
+
+export interface SeriesMetadata {
+  seriesIndex: number;
+  label: string;
+  color: string;
+  isReference: boolean; // NEW - track reference series
+}

@@ -122,6 +122,7 @@ export function CardTemplateGenerator({
   const [span, setSpan] = useState<1 | 2>(1);
   const [includeFilters, setIncludeFilters] = useState<string[]>([]);
   const [symmetricalAxes, setSymmetricalAxes] = useState(false);
+  const [labelTemplate, setLabelTemplate] = useState<string>("");
 
   // Unified grouping configuration state
   const [groupingConfig, setGroupingConfig] = useState<ChartGroupingConfig>(
@@ -198,6 +199,7 @@ export function CardTemplateGenerator({
           metricUnits: metricUnits || "unitless",
           ...(symmetricalAxes && { symmetricalAxes }),
           ...(hasFilters && { otherFilters: selectedFilters }),
+          ...(labelTemplate && { labelTemplate }),
           groupingConfig: builtGroupingConfig,
         };
     }
@@ -215,6 +217,7 @@ export function CardTemplateGenerator({
     diagnosticSlug,
     groupingConfig,
     symmetricalAxes,
+    labelTemplate,
     isolateIds,
     excludeIds,
   ]);
@@ -342,6 +345,27 @@ export function CardTemplateGenerator({
                     placeholder="e.g., K, mm/day, unitless"
                   />
                 </div>
+
+                {/* Label Template - only for series charts */}
+                {cardType === "series-chart" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="labelTemplate">
+                      Label Template (optional)
+                    </Label>
+                    <Input
+                      id="labelTemplate"
+                      value={labelTemplate}
+                      onChange={(e) => setLabelTemplate(e.target.value)}
+                      placeholder="e.g., {variable_id} - {source_id}"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use curly braces to reference dimension names. Example:{" "}
+                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                        {"{source_id} ({experiment_id})"}
+                      </code>
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">

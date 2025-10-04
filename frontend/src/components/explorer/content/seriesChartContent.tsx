@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
-import { SeriesVisualization } from "@/components/execution/values/series/seriesVisualization";
+import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
   MetricValueCollection,
   SeriesValue,
@@ -34,11 +34,20 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   // Extract series values from the data
   const collection = data as MetricValueCollection;
-  const seriesValues = (collection?.data ?? []).filter(
+  const allSeriesValues = (collection?.data ?? []).filter(
     isSeriesValue,
   ) as SeriesValue[];
 
-  if (seriesValues.length === 0) {
+  // Split into regular and reference series
+  // TODO: support other times
+  const regularSeries = allSeriesValues.filter(
+    (series) => series.dimensions.source_id !== "Reference",
+  );
+  const referenceSeries = allSeriesValues.filter(
+    (series) => series.dimensions.source_id === "Reference",
+  );
+
+  if (allSeriesValues.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
         <div className="text-center text-sm text-gray-500">
@@ -54,15 +63,11 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   return (
     <SeriesVisualization
-      seriesValues={seriesValues}
-      initialGroupBy={contentItem.groupingConfig?.groupBy}
-      initialHue={contentItem.groupingConfig?.hue}
-      initialStyle={contentItem.groupingConfig?.style}
-      maxSeriesLimit={100} // Limit for performance in preview
-      maxLegendItems={10}
-      enableZoom={false} // Disable zoom in preview
-      hideControls={true} // Hide the groupBy/hue/style controls for explorer cards
+      seriesValues={regularSeries}
+      referenceSeriesValues={referenceSeries}
+      maxSeriesLimit={500} // Limit for performance in preview
       symmetricalAxes={contentItem.symmetricalAxes ?? false}
+      labelTemplate={contentItem.labelTemplate}
     />
   );
 }
