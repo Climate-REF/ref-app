@@ -22,7 +22,7 @@ export function WelcomeModal() {
       if (!seen) {
         setOpen(true);
       }
-    } catch (e) {
+    } catch (_e) {
       // localStorage may be unavailable in some environments; fail silently
     }
   }, []);
@@ -30,7 +30,7 @@ export function WelcomeModal() {
   const acknowledge = () => {
     try {
       localStorage.setItem(STORAGE_KEY, "true");
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
     setOpen(false);

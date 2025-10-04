@@ -1,5 +1,5 @@
 import type { ExplorerCard } from "@/components/explorer/types";
-import { Link } from "@/components/ui/link";
+import { LinkExternal } from "@/components/ui/link";
 import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
@@ -12,9 +12,9 @@ const cards: ExplorerCard[] = [
         extra-tropical atmosphere and ocean, based on seasonal-mean sea level
         pressure and monthly-mean sea surface temperature anomalies in the
         spatial domains defined in{" "}
-        <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+        <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
           Lee et al. 2019
-        </Link>
+        </LinkExternal>
         , Table 1. Simulated EOFs are obtained with the "Common Basis Function"
         (CBF) approach described in the appendix of this article. The considered
         time-period is 1901-2005 for the NH modes and 1951-2005 for the SAM.
@@ -29,9 +29,9 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             Northern Annular Mode (NAM) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
@@ -54,9 +54,9 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             Southern Annual Mode (SAM) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
@@ -79,9 +79,9 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             Pacific-North American (PNA) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
@@ -105,9 +105,9 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             North Atlantic Oscillation (NAO) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
@@ -130,9 +130,9 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
@@ -155,9 +155,9 @@ const cards: ExplorerCard[] = [
           <>
             North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE,
             see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+            <LinkExternal href="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
-            </Link>
+            </LinkExternal>
           </>
         ),
         otherFilters: {
