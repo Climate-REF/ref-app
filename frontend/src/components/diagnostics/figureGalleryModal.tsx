@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
-import { Figure } from "@/components/execution/executionFiles/figure.tsx";
+import { Figure } from "@/components/diagnostics/figure";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -51,7 +51,7 @@ export function FigureGalleryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-auto max-w-full sm:max-w-8xl">
+      <DialogContent className="w-3/4 max-h-full sm:max-w-full">
         {selectedIndex !== null && figures[selectedIndex] && (
           <>
             <DialogHeader>

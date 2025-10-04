@@ -8,11 +8,11 @@ const cards: ExplorerCard[] = [
       "Climate conditions at different global warming levels, relevant to policy targets.",
     content: [
       {
-        type: "box-whisker-chart",
+        type: "figure-gallery",
         provider: "esmvaltool",
-        diagnostic: "climate-at-global-warming-leve",
+        diagnostic: "climate-at-global-warming-levels",
         title: "Global Mean Temperature Change at Warming Levels",
-        metricUnits: "K",
+        span: 2,
         placeholder: true,
       },
     ],

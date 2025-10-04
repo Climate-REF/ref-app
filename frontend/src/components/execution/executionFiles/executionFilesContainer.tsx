@@ -1,5 +1,5 @@
 import type { ExecutionOutput } from "@/client";
-import { Figure } from "@/components/execution/executionFiles/figure.tsx";
+import { Figure } from "@/components/diagnostics/figure.tsx";
 import {
   Card,
   CardContent,

@@ -2,19 +2,14 @@ import { Link as LinkRouter } from "@tanstack/react-router";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
+const common =
+  "color-oceanBlue dark:color-icyBlue hover:underline font-medium underline-offset-2";
+
 function Link({
   className,
   ...props
 }: React.ComponentProps<typeof LinkRouter>) {
-  return (
-    <LinkRouter
-      className={cn(
-        "text-primary hover:underline font-medium underline-offset-2",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <LinkRouter className={cn(common, className)} {...props} />;
 }
 
 function LinkExternal({ className, ...props }: React.ComponentProps<"a">) {
@@ -22,10 +17,7 @@ function LinkExternal({ className, ...props }: React.ComponentProps<"a">) {
     <a
       target="_blank"
       rel="noopener noreferrer"
-      className={cn(
-        "text-primary hover:underline font-medium underline-offset-2",
-        className,
-      )}
+      className={cn(common, className)}
       {...props}
     />
   );

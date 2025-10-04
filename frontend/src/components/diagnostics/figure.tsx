@@ -8,10 +8,8 @@ const figureVariants = cva(
   {
     variants: {
       size: {
-        // Primary: strong contrast; slightly softer hover in dark
         default: "max-h-96",
-        // Destructive: ensure proper tokens in both themes
-        large: "h-[800px] max-w-full",
+        large: "h-[800px] max-h-full",
       },
     },
     defaultVariants: {

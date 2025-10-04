@@ -19,13 +19,13 @@ const Dashboard = () => {
   );
   return (
     <div>
-      <div className="space-y-8 mx-4">
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950">
+      <div className="space-y-8">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-icyBlue to-white dark:from-gray-900 dark:to-gray-950">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
-                  CMIP Assessment Fast Track
+                  CMIP7 Assessment Fast Track
                   <br /> Rapid Evaluation Framework
                 </h1>
                 <p className="mx-auto max-w-8xl text-gray-500 md:text-xl dark:text-gray-400">

@@ -5,7 +5,7 @@ import { Download, ExternalLink, MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
-import { Figure } from "@/components/execution/executionFiles/figure.tsx";
+import { Figure } from "@/components/diagnostics/figure.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -120,7 +120,7 @@ export function FigureGallery({
     if (filter) {
       try {
         const regex = new RegExp(filter, "i");
-        return regex.test(figure.description);
+        return regex.test(figure.description) || regex.test(figure.filename);
       } catch {
         // Invalid regex, don't filter
         return true;
@@ -225,10 +225,21 @@ export function FigureGallery({
                       >
                         <CardContent className="p-4">
                           <Figure {...figure} />
+
                           <div className="mt-4 flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
-                              Group: {executionGroup.key}
-                            </p>
+                            <div className="flex flex-col space-y-2">
+                              <small className="text-sm text-muted-foreground">
+                                <span className="font-semibold">
+                                  Execution Group:
+                                </span>{" "}
+                                {executionGroup.key}
+                              </small>
+                              <small className="text-sm text-muted-foreground truncate">
+                                <span className="font-semibold">Filename:</span>{" "}
+                                {figure.filename}
+                              </small>
+                            </div>
+
                             <FigureDropDown
                               figure={figure}
                               executionGroup={executionGroup}

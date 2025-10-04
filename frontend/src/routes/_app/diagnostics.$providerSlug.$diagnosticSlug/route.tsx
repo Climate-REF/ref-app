@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LinkExternal } from "@/components/ui/link";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -62,25 +63,40 @@ const DiagnosticInfoLayout = () => {
         <CardContent className="space-y-6">
           {data.aft_link && (
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-sm text-muted-foreground">CMIP7 AFT ID</p>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>
-                        The unique identifier for the Associated Forcing Task
-                        (AFT) in the CMIP7 framework. AFTs define specific model
-                        evaluation tasks that address key climate science
-                        questions.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm text-muted-foreground">
+                      CMIP7 AFT Collection ID
+                    </p>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>
+                          The unique identifier for the Associated Forcing Task
+                          (AFT) in the CMIP7 framework. AFTs define specific
+                          model evaluation tasks that address key climate
+                          science questions.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className="font-medium">{data.aft_link.id}</p>
                 </div>
-                <p className="font-medium">{data.aft_link.id}</p>
+                {data.aft_link.provider_link && (
+                  <div className="space-y-1 col-span-2">
+                    <p className="text-sm text-muted-foreground">
+                      Diagnostic Description
+                    </p>
+                    <LinkExternal href={data.aft_link.provider_link}>
+                      Provider documentation
+                    </LinkExternal>
+                  </div>
+                )}
               </div>
+
               <div className="space-y-1 col-span-2">
                 <div className="flex items-center gap-1">
                   <p className="text-sm text-muted-foreground">
@@ -105,20 +121,6 @@ const DiagnosticInfoLayout = () => {
                 </div>
                 <p className="font-medium">{data.aft_link.short_description}</p>
               </div>
-              {data.aft_link.provider_link && (
-                <div className="space-y-1 col-span-2">
-                  <p className="text-sm text-muted-foreground">
-                    Diagnostic Description
-                  </p>
-                  <a
-                    className="font-medium underline underline-offset-4"
-                    href={data.aft_link.provider_link}
-                    target="_blank"
-                  >
-                    Link to provider documentation
-                  </a>
-                </div>
-              )}
             </div>
           )}
           <div className="grid gap-4 sm:grid-cols-3">
