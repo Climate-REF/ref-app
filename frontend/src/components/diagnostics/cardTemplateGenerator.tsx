@@ -30,11 +30,22 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { downloadJson } from "@/lib/downloadUtils";
 import { ErrorFallback } from "../app/errorFallback";
 import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
 } from "../explorer/explorerCardContent";
+
+// Build grouping config object, omitting "none" values
+function buildGroupingConfig(config: ChartGroupingConfig) {
+  return {
+    ...(config.groupBy &&
+      config.groupBy !== "none" && { groupBy: config.groupBy }),
+    ...(config.hue && config.hue !== "none" && { hue: config.hue }),
+    ...(config.style && config.style !== "none" && { style: config.style }),
+  };
+}
 
 interface CardTemplateGeneratorProps {
   providerSlug: string;
@@ -147,12 +158,8 @@ export function CardTemplateGenerator({
     );
 
     // Add isolate/exclude IDs to the filters
-    if (isolateIds) {
-      selectedFilters.isolate_ids = isolateIds;
-    }
-    if (excludeIds) {
-      selectedFilters.exclude_ids = excludeIds;
-    }
+    if (isolateIds) selectedFilters.isolate_ids = isolateIds;
+    if (excludeIds) selectedFilters.exclude_ids = excludeIds;
 
     const baseContent = {
       provider: providerSlug,
@@ -162,70 +169,38 @@ export function CardTemplateGenerator({
       span,
     };
 
-    let content: ExplorerCardContentType;
+    const hasFilters = Object.keys(selectedFilters).length > 0;
+    const builtGroupingConfig = buildGroupingConfig(groupingConfig);
 
     switch (cardType) {
       case "box-whisker-chart":
-        content = {
+        return {
           type: "box-whisker-chart",
           ...baseContent,
           metricUnits: metricUnits || "unitless",
           ...(clipMin !== undefined && { clipMin }),
           ...(clipMax !== undefined && { clipMax }),
           ...(symmetricalAxes && { symmetricalAxes }),
-          ...(Object.keys(selectedFilters).length > 0 && {
-            otherFilters: selectedFilters,
-          }),
-          // Use unified grouping configuration
-          groupingConfig: {
-            ...(groupingConfig.groupBy &&
-              groupingConfig.groupBy !== "none" && {
-                groupBy: groupingConfig.groupBy,
-              }),
-            ...(groupingConfig.hue &&
-              groupingConfig.hue !== "none" && { hue: groupingConfig.hue }),
-            ...(groupingConfig.style &&
-              groupingConfig.style !== "none" && {
-                style: groupingConfig.style,
-              }),
-          },
+          ...(hasFilters && { otherFilters: selectedFilters }),
+          groupingConfig: builtGroupingConfig,
         };
-        break;
 
       case "figure-gallery":
-        content = {
+        return {
           type: "figure-gallery",
           ...baseContent,
         };
-        break;
 
       case "series-chart":
-        content = {
+        return {
           type: "series-chart",
           ...baseContent,
           metricUnits: metricUnits || "unitless",
           ...(symmetricalAxes && { symmetricalAxes }),
-          ...(Object.keys(selectedFilters).length > 0 && {
-            otherFilters: selectedFilters,
-          }),
-          // Use unified grouping configuration
-          groupingConfig: {
-            ...(groupingConfig.groupBy &&
-              groupingConfig.groupBy !== "none" && {
-                groupBy: groupingConfig.groupBy,
-              }),
-            ...(groupingConfig.hue &&
-              groupingConfig.hue !== "none" && { hue: groupingConfig.hue }),
-            ...(groupingConfig.style &&
-              groupingConfig.style !== "none" && {
-                style: groupingConfig.style,
-              }),
-          },
+          ...(hasFilters && { otherFilters: selectedFilters }),
+          groupingConfig: builtGroupingConfig,
         };
-        break;
     }
-
-    return content;
   }, [
     cardType,
     title,
@@ -267,16 +242,10 @@ export function CardTemplateGenerator({
   // Download template as JSON file
   const downloadTemplate = useCallback(() => {
     const template = generateTemplate();
-    const templateString = JSON.stringify(template, null, 2);
-    const blob = new Blob([templateString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `card-template-${providerSlug}-${diagnosticSlug}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadJson(
+      template,
+      `card-template-${providerSlug}-${diagnosticSlug}.json`,
+    );
 
     toast({
       title: "Template downloaded!",

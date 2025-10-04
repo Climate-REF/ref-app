@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/card";
 import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { downloadBlob } from "@/lib/downloadUtils";
 
 const ExecutionInfo = () => {
   const { groupId } = Route.useParams();
@@ -288,12 +289,7 @@ const ExecutionInfo = () => {
                       const blob = new Blob([response as unknown as string], {
                         type: "text/csv",
                       });
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `scalar-values-${groupId}.csv`;
-                      a.click();
-                      window.URL.revokeObjectURL(url);
+                      downloadBlob(blob, `scalar-values-${groupId}.csv`);
                     }}
                   />
                 </CardContent>
@@ -355,12 +351,7 @@ const ExecutionInfo = () => {
                       const blob = new Blob([response as unknown as string], {
                         type: "text/csv",
                       });
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `series-values-${groupId}.csv`;
-                      a.click();
-                      window.URL.revokeObjectURL(url);
+                      downloadBlob(blob, `series-values-${groupId}.csv`);
                     }}
                   />
                 </CardContent>

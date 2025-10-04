@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { downloadBlob } from "@/lib/downloadUtils";
 
 interface ExplorerCardDropdownProps {
   contentItem: BoxWhiskerChartContent | SeriesChartContent;
@@ -91,14 +92,7 @@ export function ExplorerCardDropdown({
 
               if (error) throw error;
               const filename = `${contentItem.provider}-${contentItem.diagnostic}-values.csv`;
-              const downloadUrl = window.URL.createObjectURL(data as Blob);
-              const a = document.createElement("a");
-              a.href = downloadUrl;
-              a.setAttribute("download", filename);
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              window.URL.revokeObjectURL(downloadUrl);
+              downloadBlob(data as Blob, filename);
             } catch (err) {
               console.error("Download failed:", err);
               alert("Failed to download data. Please try again.");

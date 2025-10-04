@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { executionsExecutionArchive, executionsMetricBundle } from "@/client";
 import { Button } from "@/components/ui/button.tsx";
+import { downloadBlob } from "@/lib/downloadUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,14 +42,7 @@ export function DownloadOutputs({
       const filename = `execution-${executionGroup}-${executionId}-${type}.${type === "bundle" ? "json" : "tar.gz"}`;
 
       // @ts-expect-error Can't type correctly
-      const downloadUrl = window.URL.createObjectURL(data);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      downloadBlob(data, filename);
     } catch (error) {
       console.error(`Error downloading ${type}:`, error);
       alert(`Failed to download ${type}. Please try again.`);
