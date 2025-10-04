@@ -44,6 +44,7 @@ const cards: ExplorerCard[] = [
           hue: "season",
         },
         yMin: 0,
+        yMax: 1.5,
       },
       {
         type: "box-whisker-chart",
@@ -53,6 +54,82 @@ const cards: ExplorerCard[] = [
         description: (
           <>
             Southern Annual Mode (SAM) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
+        otherFilters: {
+          method: "cbf",
+          statistic: "rms",
+          experiment_id: "historical",
+        },
+        groupingConfig: {
+          groupBy: "season",
+          hue: "season",
+        },
+        yMin: 0,
+        yMax: 1.5,
+      },
+      {
+        type: "box-whisker-chart",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-pna",
+        title: "Pacific-North American (PNA) RMSE",
+        description: (
+          <>
+            Pacific-North American (PNA) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
+        otherFilters: {
+          method: "cbf",
+          statistic: "rms",
+          experiment_id: "historical",
+        },
+        groupingConfig: {
+          groupBy: "season",
+          hue: "season",
+        },
+        yMin: 0,
+        yMax: 1.5,
+      },
+
+      {
+        type: "box-whisker-chart",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-nao",
+        title: "North Atlantic Oscillation (NAO) RMSE",
+        description: (
+          <>
+            North Atlantic Oscillation (NAO) individual-model pattern RMSE, see{" "}
+            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
+              Lee et al. 2019
+            </Link>
+          </>
+        ),
+        otherFilters: {
+          method: "cbf",
+          statistic: "rms",
+          experiment_id: "historical",
+        },
+        groupingConfig: {
+          groupBy: "season",
+          hue: "season",
+        },
+        yMin: 0,
+        yMax: 1.5,
+      },
+      {
+        type: "box-whisker-chart",
+        provider: "pmp",
+        diagnostic: "extratropical-modes-of-variability-pdo",
+        title: "Pacific-Decadal Oscillation (PDO) RMSE",
+        description: (
+          <>
+            Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see{" "}
             <Link to="https://doi.org/10.1007/s00382-018-4355-4">
               Lee et al. 2019
             </Link>
@@ -91,78 +168,6 @@ const cards: ExplorerCard[] = [
         groupingConfig: {
           groupBy: "season",
           hue: "experiment_id",
-        },
-        yMin: 0,
-      },
-      {
-        type: "box-whisker-chart",
-        provider: "pmp",
-        diagnostic: "extratropical-modes-of-variability-nao",
-        title: "North Atlantic Oscillation (NAO) RMSE",
-        description: (
-          <>
-            North Atlantic Oscillation (NAO) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
-              Lee et al. 2019
-            </Link>
-          </>
-        ),
-        otherFilters: {
-          method: "cbf",
-          statistic: "rms",
-          experiment_id: "historical",
-        },
-        groupingConfig: {
-          groupBy: "season",
-          hue: "season",
-        },
-        yMin: 0,
-      },
-      {
-        type: "box-whisker-chart",
-        provider: "pmp",
-        diagnostic: "extratropical-modes-of-variability-pdo",
-        title: "Pacific-Decadal Oscillation (PDO) RMSE",
-        description: (
-          <>
-            Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
-              Lee et al. 2019
-            </Link>
-          </>
-        ),
-        otherFilters: {
-          method: "cbf",
-          statistic: "rms",
-          experiment_id: "historical",
-        },
-        groupingConfig: {
-          groupBy: "season",
-          hue: "season",
-        },
-        yMin: 0,
-      },
-      {
-        type: "box-whisker-chart",
-        provider: "pmp",
-        diagnostic: "extratropical-modes-of-variability-pna",
-        title: "Pacific-North American (PNA) RMSE",
-        description: (
-          <>
-            Pacific-North American (PNA) individual-model pattern RMSE, see{" "}
-            <Link to="https://doi.org/10.1007/s00382-018-4355-4">
-              Lee et al. 2019
-            </Link>
-          </>
-        ),
-        otherFilters: {
-          method: "cbf",
-          statistic: "rms",
-          experiment_id: "historical",
-        },
-        groupingConfig: {
-          groupBy: "season",
-          hue: "season",
         },
         yMin: 0,
       },

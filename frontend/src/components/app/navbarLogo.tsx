@@ -1,6 +1,6 @@
 export function NavbarLogo() {
   return (
-    <div className="flex items-center justify-between gap-2 bg-white rounded p-1">
+    <div className="flex items-center justify-between gap-2 bg-white rounded p-1 hover:shadow-md transition-shadow">
       <img
         src="/logos/logo_cmip_ref.png"
         alt="Rapid Evaluation Framework"

@@ -28,7 +28,7 @@ export function Navbar() {
   return (
     <NavigationMenu className="w-screen px-8 py-4">
       <div className="flex w-full items-center gap-4">
-        <Link to={"/"} className={cn(navigationMenuTriggerStyle(), "relative")}>
+        <Link to={"/"} className={cn("relative")}>
           <NavbarLogo />
         </Link>
 

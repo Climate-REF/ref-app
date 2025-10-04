@@ -81,16 +81,19 @@ export function WelcomeModal() {
           </p>
 
           <section>
-            <h3 className="text-sm font-semibold mb-2">Automated Datasets</h3>
-            <p className="text-sm text-muted-foreground text-red-700">
-              <strong>[Content TBD]</strong>
-              Information about how datasets are automatically processed and
-              updated will be available here. <strong>[Content TBD]</strong>
-            </p>
-
-            <p className="text-sm text-muted-foreground text-red-700 mt-2">
-              Text about the errata process and how to report issues via GitHub.
-              This portal is under active development; we welcome your feedback.
+            <h3 className="text-sm font-semibold mb-2">Disclaimer</h3>
+            <p className="text-sm text-muted-foreground ">
+              The content of the Rapid Evaluation Framework is under
+              development. This experimental research tool is provided in its
+              current state to solicit user feedback, with no guarantee of
+              quality, performance, stability or functionality. Every effort is
+              being made to identify and address errors and bugs. Users can
+              assist by reporting these on the dedicated GitHub repo. WCRP and
+              CMIP governing bodies, the CMIP International Project Office, the
+              developers, and funders of the REF accept no responsibility for
+              any injury, loss, damage, or delay - direct, indirect or
+              consequential - that may result from the use of the tool or
+              reliance on its results.
             </p>
           </section>
         </div>

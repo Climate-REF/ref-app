@@ -1,3 +1,4 @@
+import { MDXProvider } from "@mdx-js/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
@@ -9,6 +10,22 @@ import { ExecutionStats } from "@/components/dashboard/executionStats.tsx";
 import { RecentDatasets } from "@/components/dashboard/recentDatasets.tsx";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import IndexContent from "./index.mdx";
+
+const CTA = () => {
+  return (
+    <div className="flex flex-col sm:flex-row gap-4">
+      <Button asChild size="lg">
+        <a href="/explorer">
+          Explore Data <ArrowRight className="ml-2 h-4 w-4" />
+        </a>
+      </Button>
+      <Button variant="outline" asChild size="lg">
+        <Link to="/content/about">Learn More</Link>
+      </Button>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const recentExecutions = useQuery(
@@ -20,7 +37,7 @@ const Dashboard = () => {
   return (
     <div>
       <div className="space-y-8">
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-icyBlue to-white dark:from-gray-900 dark:to-gray-950">
+        <section className="w-full py-12 md:py-24 lg:py-28 bg-gradient-to-b from-icyBlue to-white dark:from-gray-900 dark:to-gray-950">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
@@ -28,24 +45,23 @@ const Dashboard = () => {
                   CMIP7 Assessment Fast Track
                   <br /> Rapid Evaluation Framework
                 </h1>
-                <p className="mx-auto max-w-8xl text-gray-500 md:text-xl dark:text-gray-400">
+                <p className="mx-auto max-w-8xl text-gray-500 md:text-xl dark:text-gray-400 mt-6">
                   Systematic and comprehensive evaluation of climate models
                   through comparison with observational data
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg">
-                  <a href="/explorer">
-                    Explore Data <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-                <Button variant="outline" asChild size="lg">
-                  <Link to="/content/about">Learn More</Link>
-                </Button>
-              </div>
+              <CTA />
             </div>
           </div>
         </section>
+        <MDXProvider>
+          <article className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
+            <IndexContent />
+          </article>
+        </MDXProvider>
+        <div className="flex justify-center">
+          <CTA />
+        </div>
         <div className="container mx-auto space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <ExecutionStats />
