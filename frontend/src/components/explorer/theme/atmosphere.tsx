@@ -15,9 +15,9 @@ const cards: ExplorerCard[] = [
         <Link to="https://doi.org/10.1007/s00382-018-4355-4">
           Lee et al. 2019
         </Link>
-        , Table 1. Simulated EOFs are obtained with the "common basis function"
+        , Table 1. Simulated EOFs are obtained with the "Common Basis Function"
         (CBF) approach described in the appendix of this article. The considered
-        time-period is 1900-2005 for the NH modes and 1950-2005 for the SAM.
+        time-period is 1901-2005 for the NH modes and 1951-2005 for the SAM.
       </>
     ),
     content: [
@@ -37,6 +37,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
@@ -60,6 +61,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
@@ -84,6 +86,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
@@ -107,6 +110,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
@@ -130,6 +134,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
@@ -153,6 +158,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           method: "cbf",
           statistic: "rms",
+          experiment_id: "historical",
         },
         groupingConfig: {
           groupBy: "season",
