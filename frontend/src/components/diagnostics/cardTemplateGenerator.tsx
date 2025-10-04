@@ -47,6 +47,9 @@ interface CardTemplateGeneratorProps {
   availableData?: (MetricValue | SeriesValue)[];
   // Current tab context to determine default card type
   currentTab?: "scalars" | "series" | "figures";
+  // Isolate and exclude IDs
+  isolateIds?: string;
+  excludeIds?: string;
 }
 
 type CardType = "box-whisker-chart" | "figure-gallery" | "series-chart";
@@ -73,6 +76,8 @@ export function CardTemplateGenerator({
   currentGroupingConfig,
   availableData = [],
   currentTab,
+  isolateIds,
+  excludeIds,
 }: CardTemplateGeneratorProps) {
   const { toast } = useToast();
   const [isVisible, setIsVisible] = useState(false);
@@ -140,6 +145,14 @@ export function CardTemplateGenerator({
         .map((key) => [key, currentFilters[key]])
         .filter(([, value]) => value),
     );
+
+    // Add isolate/exclude IDs to the filters
+    if (isolateIds) {
+      selectedFilters.isolate_ids = isolateIds;
+    }
+    if (excludeIds) {
+      selectedFilters.exclude_ids = excludeIds;
+    }
 
     const baseContent = {
       provider: providerSlug,
@@ -227,6 +240,8 @@ export function CardTemplateGenerator({
     diagnosticSlug,
     groupingConfig,
     symmetricalAxes,
+    isolateIds,
+    excludeIds,
   ]);
 
   // Copy template to clipboard

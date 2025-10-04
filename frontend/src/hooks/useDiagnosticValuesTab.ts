@@ -282,6 +282,14 @@ export function useDiagnosticValuesTab({
     window.URL.revokeObjectURL(url);
   }, [providerSlug, diagnosticSlug, search]);
 
+  // Extract isolate/exclude IDs from search params
+  const isolateIds = search.isolate_ids
+    ? String(search.isolate_ids).split(",").filter(Boolean).join(",")
+    : undefined;
+  const excludeIds = search.exclude_ids
+    ? String(search.exclude_ids).split(",").filter(Boolean).join(",")
+    : undefined;
+
   return {
     metricValues: metricValues as MetricValueCollection | undefined,
     isLoading,
@@ -289,6 +297,8 @@ export function useDiagnosticValuesTab({
     currentGroupingConfig,
     filteredData,
     initialFilters,
+    isolateIds,
+    excludeIds,
     handlers: {
       onFiltersChange: handleFiltersChange,
       onDetectOutliersChange: handleDetectOutliersChange,

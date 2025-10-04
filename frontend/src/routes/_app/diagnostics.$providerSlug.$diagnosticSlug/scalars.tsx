@@ -28,6 +28,8 @@ export const ScalarsValuesTab = () => {
     currentFilters,
     currentGroupingConfig,
     initialFilters,
+    isolateIds,
+    excludeIds,
     handlers,
   } = useDiagnosticValuesTab({
     providerSlug,
@@ -71,6 +73,8 @@ export const ScalarsValuesTab = () => {
           currentGroupingConfig={currentGroupingConfig}
           availableData={metricValues?.data ?? []}
           currentTab="scalars"
+          isolateIds={isolateIds}
+          excludeIds={excludeIds}
         />
       </div>
     </div>

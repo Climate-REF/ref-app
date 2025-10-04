@@ -29,6 +29,8 @@ export const SeriesValuesTab = () => {
     currentGroupingConfig,
     filteredData,
     initialFilters,
+    isolateIds,
+    excludeIds,
     handlers,
   } = useDiagnosticValuesTab({
     providerSlug,
@@ -75,6 +77,8 @@ export const SeriesValuesTab = () => {
             filteredData.length > 0 ? filteredData : (metricValues?.data ?? [])
           }
           currentTab="series"
+          isolateIds={isolateIds}
+          excludeIds={excludeIds}
         />
       </div>
     </div>
