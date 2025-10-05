@@ -1,6 +1,7 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
@@ -8,6 +9,7 @@ import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 
 const diagnosticNotes = [
@@ -29,13 +31,46 @@ const diagnosticsSearchSchema = z.object({
   view: z.enum(["cards", "table"]).default("cards"),
 });
 
+const ErrorComponent = ({ message }: { message: string }) => {
+  return (
+    <div className="container mx-auto py-10">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Diagnostics Catalog</h1>
+            <p className="text-muted-foreground">
+              A set of standardised diagnostics for evaluating climate model
+              performance against observations and benchmarks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Alert variant="destructive" className="mb-6">
+        <AlertDescription>
+          Failed to load diagnostics. Please try again later.
+          <br />
+          <span className="text-sm">{message}</span>
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+};
+
 const Diagnostics = () => {
-  const { data } = useSuspenseQuery(diagnosticsListOptions());
+  const { data, isLoading, error } = useQuery(diagnosticsListOptions());
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
     DiagnosticSummary[]
-  >(data.data);
+  >([]);
+
+  // Update filtered diagnostics when data arrives
+  useEffect(() => {
+    if (data?.data) {
+      setFilteredDiagnostics(data.data);
+    }
+  }, [data]);
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -65,6 +100,15 @@ const Diagnostics = () => {
       replace: true,
     });
   };
+
+  // Show error state if query fails
+  if (error) {
+    return (
+      <ErrorComponent
+        message={error instanceof Error ? error.message : String(error)}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto py-10">
@@ -167,50 +211,78 @@ const Diagnostics = () => {
       </Card>
 
       <div className="mb-6">
-        <DiagnosticsFilter
-          diagnostics={data.data}
-          onFilterChange={setFilteredDiagnostics}
-          onFilterParamsChange={handleFilterChange}
-          initialSearch={searchParams.search}
-          initialProviders={searchParams.providers?.split(",") ?? []}
-          initialAftIds={searchParams.aftIds?.split(",") ?? []}
-          initialThemes={searchParams.themes?.split(",") ?? []}
-          initialMetricValues={
-            searchParams.metricValues === "true"
-              ? true
-              : searchParams.metricValues === "false"
-                ? false
-                : null
-          }
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span className="text-muted-foreground">
+              Loading diagnostics...
+            </span>
+          </div>
+        ) : (
+          <DiagnosticsFilter
+            diagnostics={data?.data || []}
+            onFilterChange={setFilteredDiagnostics}
+            onFilterParamsChange={handleFilterChange}
+            initialSearch={searchParams.search}
+            initialProviders={searchParams.providers?.split(",") ?? []}
+            initialAftIds={searchParams.aftIds?.split(",") ?? []}
+            initialThemes={searchParams.themes?.split(",") ?? []}
+            initialMetricValues={
+              searchParams.metricValues === "true"
+                ? true
+                : searchParams.metricValues === "false"
+                  ? false
+                  : null
+            }
+          />
+        )}
       </div>
 
-      {searchParams.view === "cards" ? (
+      {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredDiagnostics.map((diagnostic) => {
-            const note = diagnosticNotes.find(
-              (n) => n.slug === diagnostic.slug,
-            );
-            return (
-              <DiagnosticCard
-                key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
-                diagnostic={diagnostic}
-                note={note?.note}
-                noteURL={note?.noteUrl}
-              />
-            );
-          })}
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Card
+              key={`diagnostic-skeleton-${Date.now()}-${index}`}
+              className="animate-pulse"
+            >
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded mb-2" />
+                <div className="h-3 bg-muted rounded mb-1 w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : (
-        <DiagnosticSummaryTable summaries={filteredDiagnostics} />
-      )}
+        <>
+          {searchParams.view === "cards" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredDiagnostics.map((diagnostic) => {
+                const note = diagnosticNotes.find(
+                  (n) => n.slug === diagnostic.slug,
+                );
+                return (
+                  <DiagnosticCard
+                    key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
+                    diagnostic={diagnostic}
+                    note={note?.note}
+                    noteURL={note?.noteUrl}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <DiagnosticSummaryTable summaries={filteredDiagnostics} />
+          )}
 
-      {filteredDiagnostics.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">
-            No diagnostics found matching your filters.
-          </p>
-        </div>
+          {filteredDiagnostics.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No diagnostics found matching your filters.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
