@@ -15,7 +15,7 @@ const funders = [
 const builders = [
   {
     name: "Climate Resource",
-    url: "https://www.climateresource.com/",
+    url: "https://www.climate-resource.com/",
   },
   {
     name: "Oak Ridge National Laboratory",

@@ -22,6 +22,7 @@ import { Route as AppExplorerIndexImport } from './routes/_app/explorer/index'
 import { Route as AppExecutionsIndexImport } from './routes/_app/executions.index'
 import { Route as AppDiagnosticsIndexImport } from './routes/_app/diagnostics.index'
 import { Route as AppDatasetsIndexImport } from './routes/_app/datasets.index'
+import { Route as AppSettingsApiEndpointImport } from './routes/_app/settings.api-endpoint'
 import { Route as AppExplorerThemesImport } from './routes/_app/explorer/themes'
 import { Route as AppExecutionsGroupIdImport } from './routes/_app/executions.$groupId'
 import { Route as AppDatasetsSlugImport } from './routes/_app/datasets.$slug'
@@ -96,6 +97,12 @@ const AppDiagnosticsIndexRoute = AppDiagnosticsIndexImport.update({
 const AppDatasetsIndexRoute = AppDatasetsIndexImport.update({
   id: '/datasets/',
   path: '/datasets/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppSettingsApiEndpointRoute = AppSettingsApiEndpointImport.update({
+  id: '/settings/api-endpoint',
+  path: '/settings/api-endpoint',
   getParentRoute: () => AppRouteRoute,
 } as any)
 
@@ -233,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExplorerThemesImport
       parentRoute: typeof AppExplorerRouteImport
     }
+    '/_app/settings/api-endpoint': {
+      id: '/_app/settings/api-endpoint'
+      path: '/settings/api-endpoint'
+      fullPath: '/settings/api-endpoint'
+      preLoaderRoute: typeof AppSettingsApiEndpointImport
+      parentRoute: typeof AppRouteImport
+    }
     '/_app/datasets/': {
       id: '/_app/datasets/'
       path: '/datasets'
@@ -352,6 +366,7 @@ interface AppRouteRouteChildren {
   AppExplorerRouteRoute: typeof AppExplorerRouteRouteWithChildren
   AppDatasetsSlugRoute: typeof AppDatasetsSlugRoute
   AppExecutionsGroupIdRoute: typeof AppExecutionsGroupIdRoute
+  AppSettingsApiEndpointRoute: typeof AppSettingsApiEndpointRoute
   AppDatasetsIndexRoute: typeof AppDatasetsIndexRoute
   AppDiagnosticsIndexRoute: typeof AppDiagnosticsIndexRoute
   AppExecutionsIndexRoute: typeof AppExecutionsIndexRoute
@@ -362,6 +377,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppExplorerRouteRoute: AppExplorerRouteRouteWithChildren,
   AppDatasetsSlugRoute: AppDatasetsSlugRoute,
   AppExecutionsGroupIdRoute: AppExecutionsGroupIdRoute,
+  AppSettingsApiEndpointRoute: AppSettingsApiEndpointRoute,
   AppDatasetsIndexRoute: AppDatasetsIndexRoute,
   AppDiagnosticsIndexRoute: AppDiagnosticsIndexRoute,
   AppExecutionsIndexRoute: AppExecutionsIndexRoute,
@@ -400,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
+  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
@@ -422,6 +439,7 @@ export interface FileRoutesByTo {
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
+  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
@@ -445,6 +463,7 @@ export interface FileRoutesById {
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRoute
   '/_app/explorer/themes': typeof AppExplorerThemesRoute
+  '/_app/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/_app/datasets/': typeof AppDatasetsIndexRoute
   '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
   '/_app/executions/': typeof AppExecutionsIndexRoute
@@ -470,6 +489,7 @@ export interface FileRouteTypes {
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/themes'
+    | '/settings/api-endpoint'
     | '/datasets'
     | '/diagnostics'
     | '/executions'
@@ -491,6 +511,7 @@ export interface FileRouteTypes {
     | '/datasets/$slug'
     | '/executions/$groupId'
     | '/explorer/themes'
+    | '/settings/api-endpoint'
     | '/datasets'
     | '/diagnostics'
     | '/executions'
@@ -512,6 +533,7 @@ export interface FileRouteTypes {
     | '/_app/datasets/$slug'
     | '/_app/executions/$groupId'
     | '/_app/explorer/themes'
+    | '/_app/settings/api-endpoint'
     | '/_app/datasets/'
     | '/_app/diagnostics/'
     | '/_app/executions/'
@@ -561,6 +583,7 @@ export const routeTree = rootRoute
         "/_app/explorer",
         "/_app/datasets/$slug",
         "/_app/executions/$groupId",
+        "/_app/settings/api-endpoint",
         "/_app/datasets/",
         "/_app/diagnostics/",
         "/_app/executions/",
@@ -606,6 +629,10 @@ export const routeTree = rootRoute
     "/_app/explorer/themes": {
       "filePath": "_app/explorer/themes.tsx",
       "parent": "/_app/explorer"
+    },
+    "/_app/settings/api-endpoint": {
+      "filePath": "_app/settings.api-endpoint.tsx",
+      "parent": "/_app"
     },
     "/_app/datasets/": {
       "filePath": "_app/datasets.index.tsx",

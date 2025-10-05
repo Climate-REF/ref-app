@@ -222,7 +222,4 @@ export const Route = createFileRoute("/_app/diagnostics/")({
     title: "Diagnostics",
   },
   validateSearch: diagnosticsSearchSchema,
-  loader: ({ context: { queryClient } }) => {
-    return queryClient.ensureQueryData(diagnosticsListOptions());
-  },
 });

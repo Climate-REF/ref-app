@@ -8,11 +8,12 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { client } from "@/client/client.gen";
+import { getStoredApiEndpoint } from "@/lib/apiEndpoint";
 import { routeTree } from "@/routeTree.gen";
 
 import "./styles/global.css";
 
-client.setConfig({ baseUrl: import.meta.env.VITE_BASE_URL });
+client.setConfig({ baseUrl: getStoredApiEndpoint() });
 const queryClient = new QueryClient();
 
 const router = createRouter({

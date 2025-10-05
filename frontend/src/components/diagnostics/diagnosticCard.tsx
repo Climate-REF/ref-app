@@ -96,7 +96,7 @@ export function DiagnosticCard({
               {note && (
                 <Tooltip>
                   <TooltipTrigger>
-                    <MessageCircleWarning className="ml-2 h-4 w-4 text-muted-foreground text-red-500" />
+                    <MessageCircleWarning className="ml-2 h-4 w-4 text-red-500" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{note}</p>
