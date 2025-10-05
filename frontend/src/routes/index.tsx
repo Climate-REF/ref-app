@@ -86,4 +86,7 @@ const Dashboard = () => {
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
+  staticData: {
+    title: "Dashboard",
+  },
 });

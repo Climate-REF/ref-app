@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
+import { useEffect } from "react";
 import type { GroupBy, ReferenceDatasetLink } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
@@ -49,6 +50,7 @@ const DiagnosticInfoLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
+      <title>{`${data?.name} - Climate REF`}</title>
       <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle className="mb-6">
@@ -362,6 +364,9 @@ export const Route = createFileRoute(
   component: DiagnosticInfoLayout,
   pendingComponent: DiagnosticInfoSkeleton,
   pendingMs: 200,
+  staticData: {
+    title: "Diagnostic Details",
+  },
   loader: ({ context: { queryClient }, params }) => {
     return queryClient.ensureQueryData(
       diagnosticsGetOptions({

@@ -11,6 +11,7 @@ import { Footer } from "@/components/app/footer";
 import { Navbar } from "@/components/app/navbar.tsx";
 import { WelcomeModal } from "@/components/app/welcomeModal";
 import { useApiEndpoint } from "@/hooks/useApiEndpoint";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 // Initialize Plausible Analytics
 init({
@@ -23,6 +24,7 @@ init({
 
 function AppLayout() {
   const { isUsingOverride } = useApiEndpoint();
+  const title = useDocumentTitle();
   return (
     <ErrorBoundary
       fallback={
@@ -49,6 +51,7 @@ function AppLayout() {
         });
       }}
     >
+      <title>{title}</title>
       <Navbar />
       <ErrorBoundary
         fallback={<ErrorFallback title="Page Error" showHomeButton={true} />}

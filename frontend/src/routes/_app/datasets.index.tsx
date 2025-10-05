@@ -26,6 +26,9 @@ const DatasetsSearchSchema = z.object({
 export const Route = createFileRoute("/_app/datasets/")({
   component: SourcesIndexPage,
   validateSearch: zodValidator(DatasetsSearchSchema),
+  staticData: {
+    title: "Datasets",
+  },
   loader: async ({ context: { queryClient } }) => {
     return queryClient.ensureQueryData(datasetsListOptions());
   },

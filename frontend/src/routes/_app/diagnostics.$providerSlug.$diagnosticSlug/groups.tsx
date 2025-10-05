@@ -18,4 +18,7 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups",
 )({
   component: Executions,
+  staticData: {
+    title: "Execution Groups",
+  },
 });

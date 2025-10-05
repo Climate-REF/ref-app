@@ -86,4 +86,7 @@ export const Route = createFileRoute(
 )({
   component: ScalarsValuesTab,
   validateSearch: zodValidator(valuesSearchSchema),
+  staticData: {
+    title: "Scalar Values",
+  },
 });

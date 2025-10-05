@@ -90,4 +90,7 @@ export const Route = createFileRoute(
 )({
   component: SeriesValuesTab,
   validateSearch: zodValidator(valuesSearchSchema),
+  staticData: {
+    title: "Series Values",
+  },
 });

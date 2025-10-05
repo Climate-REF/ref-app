@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import type { ExecutionGroup } from "@/client";
 import {
   datasetsExecutionsOptions,
@@ -31,6 +32,9 @@ export const Route = createFileRoute("/_app/datasets/$slug")({
     return { dataset, executions };
   },
   component: DatasetPage,
+  staticData: {
+    title: "Dataset Details",
+  },
   errorComponent: ({ error }) => {
     return <div>Error: {error.message}</div>;
   },
@@ -43,6 +47,7 @@ function DatasetPage() {
 
   return (
     <div className="container mx-auto p-4">
+      <title>{`${ds.slug} - Climate REF`}</title>
       <DetailsPanel
         title={ds.slug}
         description={ds.dataset_type}

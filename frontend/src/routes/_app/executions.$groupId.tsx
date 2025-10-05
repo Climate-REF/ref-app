@@ -73,6 +73,7 @@ const ExecutionInfo = () => {
 
   return (
     <>
+      <title>{`${data?.diagnostic?.name} - ${data?.key} - Climate REF`}</title>
       {/*<PageHeader*/}
       {/*  breadcrumbs={[*/}
       {/*    {*/}
@@ -402,4 +403,7 @@ const executionInfoSchema = z.object({
 export const Route = createFileRoute("/_app/executions/$groupId")({
   component: ExecutionInfo,
   validateSearch: executionInfoSchema,
+  staticData: {
+    title: "Execution Details",
+  },
 });

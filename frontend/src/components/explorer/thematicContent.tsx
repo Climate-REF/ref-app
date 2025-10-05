@@ -40,6 +40,7 @@ export function ThematicContent() {
   const themeObj = themes.find((t) => t.name === theme);
   return (
     <>
+      <title>{`${themeObj?.title} Explorer - Climate REF`}</title>
       <div className="space-x-2">
         {themes.map((item) => (
           <Link

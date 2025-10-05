@@ -102,4 +102,7 @@ const ExplorerLayout = () => {
 
 export const Route = createFileRoute("/_app/explorer")({
   component: ExplorerLayout,
+  staticData: {
+    title: "Data Explorer",
+  },
 });

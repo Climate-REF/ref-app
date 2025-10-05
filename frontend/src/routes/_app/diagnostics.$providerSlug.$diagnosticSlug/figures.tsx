@@ -7,6 +7,7 @@ export const Figures = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
   return (
     <div className="space-y-4">
+      <title>{`Figures - ${diagnosticSlug} - Climate REF`}</title>
       <Card>
         <CardHeader>
           <CardTitle>Figures Gallery</CardTitle>
