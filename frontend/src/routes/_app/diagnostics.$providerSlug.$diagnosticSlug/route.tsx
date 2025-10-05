@@ -6,7 +6,6 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
-import { useEffect } from "react";
 import type { GroupBy, ReferenceDatasetLink } from "@/client";
 import { diagnosticsGetOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { DiagnosticInfoSkeleton } from "@/components/diagnostics/diagnosticInfoSkeleton";
