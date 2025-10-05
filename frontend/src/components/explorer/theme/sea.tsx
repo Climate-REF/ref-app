@@ -109,7 +109,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           statistic: "20-year average seasonal cycle of the sea ice area",
           exclude_ids: "568564,568570",
-          region: "	Northern Hemisphere",
+          region: "Northern Hemisphere",
         },
         groupingConfig: {
           groupBy: "source_id",
