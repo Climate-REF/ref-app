@@ -6,7 +6,7 @@ import {
   EmptyEnsembleChart,
   EnsembleChart,
 } from "@/components/diagnostics/ensembleChart";
-import type { MetricValue } from "@/components/execution/values/types";
+import type { ScalarValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button";
 
 import type { ExplorerCardContent } from "../types";
@@ -35,7 +35,7 @@ export function EnsembleChartContent({
       query: {
         ...contentItem.otherFilters,
         // Ensure explicit flags for type and outlier handling
-        type: "scalar",
+        value_type: "scalar",
         detect_outliers: "iqr",
         include_unverified: includeUnverified,
         // Only include isolate/exclude params if present
@@ -46,7 +46,7 @@ export function EnsembleChartContent({
   );
 
   const collection = data as MetricValueCollection;
-  const values = (collection?.data as MetricValue[]) ?? [];
+  const values = (collection?.data as ScalarValue[]) ?? [];
 
   if (values.length === 0) {
     return <EmptyEnsembleChart />;

@@ -1,23 +1,23 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 import { type SetStateAction, useMemo, useState } from "react";
 import type {
-  MetricValue,
+  ScalarValue,
   SeriesValue,
 } from "@/components/execution/values/types";
 import type { FacetFilter, MetricFilter } from "@/components/explorer/types";
 
-// Generic processed value type (supports MetricValue, SeriesValue, or other
+// Generic processed value type (supports ScalarValue, SeriesValue, or other
 // value shapes that include `dimensions`).
 export type ProcessedValue<T> = T & { rowId: string };
 
-export type ProcessedMetricValue = ProcessedValue<MetricValue>;
+export type ProcessedScalarValue = ProcessedValue<ScalarValue>;
 export type ProcessedSeriesValue = ProcessedValue<SeriesValue>;
 
 // Maintain backwards-compatible exported Filter alias (MetricFilter union)
 export type Filter = MetricFilter;
 
 /**
- * Generic hook props to allow processing of either MetricValue, SeriesValue,
+ * Generic hook props to allow processing of either ScalarValue, SeriesValue,
  * or any object that has a `dimensions` map.
  */
 interface UseValuesProcessorProps<

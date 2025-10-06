@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
-import type { MetricValue } from "@/components/execution/values/types";
+import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
 import {
   TaylorDiagramContent,
@@ -19,7 +19,7 @@ interface TaylorDiagramContentWrapperProps {
  * Expects metrics with metric="Spatial Distribution" containing
  * "Correlation" and "Normalized Standard Deviation" statistics.
  */
-function transformToTaylorModels(values: MetricValue[]): TaylorDiagramModel[] {
+function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
   // Group values by model/dataset identifier
   const modelGroups = new Map<
     string,
@@ -77,14 +77,14 @@ export function TaylorDiagramContentWrapper({
         diagnostic_slug: contentItem.diagnostic,
       },
       query: {
-        type: "scalar",
+        value_type: "scalar",
         ...contentItem.otherFilters,
       },
     }),
   );
 
   const collection = data as MetricValueCollection;
-  const values = (collection?.data as MetricValue[]) ?? [];
+  const values = (collection?.data as ScalarValue[]) ?? [];
 
   // Transform scalar values to Taylor diagram format
   const models = transformToTaylorModels(values);

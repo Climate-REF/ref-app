@@ -3,7 +3,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { CardTemplateGenerator } from "@/components/diagnostics/cardTemplateGenerator";
 import { Values } from "@/components/execution/values";
-import { useDiagnosticValuesTab } from "@/hooks/useDiagnosticValuesTab";
+import { useDiagnosticMetricValues } from "@/hooks/useDiagnosticMetricValues";
 
 const valuesSearchSchema = z
   .object({
@@ -32,7 +32,7 @@ export const SeriesValuesTab = () => {
     isolateIds,
     excludeIds,
     handlers,
-  } = useDiagnosticValuesTab({
+  } = useDiagnosticMetricValues({
     providerSlug,
     diagnosticSlug,
     search,

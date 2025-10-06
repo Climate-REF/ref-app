@@ -13,7 +13,7 @@ import { AlertTriangle, Eye, MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { InnerDataTable } from "@/components/dataTable/innerDataTable.tsx";
-import type { Facet, MetricValue } from "@/components/execution/values/types";
+import type { Facet, ScalarValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 
 // Update to use ProcessedMetricValue which includes rowId
-type ProcessedMetricValue = MetricValue & { rowId: string };
+type ProcessedMetricValue = ScalarValue & { rowId: string };
 
 interface DataTableProps {
   values: ProcessedMetricValue[];

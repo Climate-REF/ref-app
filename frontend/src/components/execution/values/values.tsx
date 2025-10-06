@@ -11,11 +11,11 @@ import {
 import { FilterControls } from "./filterControls.tsx";
 import ScalarDataTable from "./scalarDataTable.tsx";
 import SeriesDataTable from "./seriesDataTable.tsx";
-import type { Facet, MetricValue, SeriesValue } from "./types";
+import type { Facet, ScalarValue, SeriesValue } from "./types";
 import { isScalarValue, isSeriesValue } from "./types";
 
 type ValuesProps = {
-  values: (MetricValue | SeriesValue)[];
+  values: (ScalarValue | SeriesValue)[];
   facets: Facet[];
   loading: boolean;
   onDownload?: () => void;
@@ -28,7 +28,7 @@ type ValuesProps = {
     style?: string;
   }) => void;
   // Callback to expose filtered data
-  onFilteredDataChange?: (filteredData: (MetricValue | SeriesValue)[]) => void;
+  onFilteredDataChange?: (filteredData: (ScalarValue | SeriesValue)[]) => void;
   // Outlier detection parameters
   hadOutliers?: boolean;
   outlierCount?: number;
@@ -57,7 +57,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
       ),
     [props.values, valueType],
   );
-  type Value = MetricValue | SeriesValue;
+  type Value = ScalarValue | SeriesValue;
 
   const {
     filters,

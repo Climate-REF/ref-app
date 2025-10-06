@@ -1,23 +1,23 @@
-import type { MetricValue, SeriesValue } from "../../../client/types.gen";
+import type { ScalarValue, SeriesValue } from "../../../client/types.gen";
 
 // Re-export types from the generated API client
 export type {
   Facet,
-  MetricValue,
   MetricValueCollection,
+  ScalarValue,
   SeriesValue,
 } from "../../../client/types.gen";
 
 // Type guard functions
 export function isSeriesValue(
-  value: MetricValue | SeriesValue,
+  value: ScalarValue | SeriesValue,
 ): value is SeriesValue {
   return "values" in value && "index" in value && "index_name" in value;
 }
 
 export function isScalarValue(
-  value: MetricValue | SeriesValue,
-): value is MetricValue {
+  value: ScalarValue | SeriesValue,
+): value is ScalarValue {
   return "value" in value && !("values" in value);
 }
 

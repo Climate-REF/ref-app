@@ -1,5 +1,3 @@
-import csv
-import io
 import mimetypes
 import os
 import tarfile
@@ -8,8 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.orm import Session, aliased
@@ -22,9 +19,14 @@ from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.core.filter_utils import build_filter_clause
-from ref_backend.core.outliers import detect_outliers_in_scalar_values
+from ref_backend.core.metric_values import (
+    MetricValueType,
+    apply_metric_filters,
+    generate_csv_response_scalar,
+    generate_csv_response_series,
+    process_scalar_values,
+)
 from ref_backend.models import (
-    AnnotatedScalarValue,
     Collection,
     Dataset,
     Execution,
@@ -293,149 +295,90 @@ async def metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
-@router.get("/{group_id}/values", response_model=None)
-async def metric_values(  # noqa: PLR0912, PLR0913, PLR0915
+@router.get("/{group_id}/values", response_model=MetricValueCollection)
+async def list_metric_values(  # noqa: PLR0913
     app_context: AppContextDep,
+    request: Request,
     group_id: str,
     execution_id: str | None = None,
+    value_type: MetricValueType = Query(..., description="Type of metric values to return"),
     format: str | None = None,
-    type: str = Query("all", description="Type of metric values to return: 'scalar', 'series', or 'all'"),
     detect_outliers: Literal["off", "iqr"] = Query(
         "iqr", description="Outlier detection method: 'off' or 'iqr'"
     ),
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
     isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
     exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
-) -> MetricValueCollection | StreamingResponse | JSONResponse:
+) -> MetricValueCollection | StreamingResponse:
     """
     Fetch metric values for a specific execution (both scalar and series)
 
-    - `type`: Filter by metric value type - 'scalar', 'series', or 'all' (default)
+    - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
     - `format`: Return format - 'json' (default) or 'csv'
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
-
-    # Build queries for scalar and series values
-    scalar_query = None
-    series_query = None
-    scalar_values = []
-    series_values = []
-
-    if type in ("scalar", "all"):
+    # Extract additional filters from query parameters
+    query_params = request.query_params
+    filter_params = {}
+    for key, value in query_params.items():
+        if key in {"format", "value_type"}:
+            continue
+        filter_params[key] = value
+    if value_type == MetricValueType.SCALAR:
         scalar_query = app_context.session.query(models.ScalarMetricValue).filter(
             models.ScalarMetricValue.execution_id == execution.id
         )
+        scalar_query = apply_metric_filters(scalar_query, filter_params, isolate_ids, exclude_ids)
 
-    if type in ("series", "all"):
+        scalar_values = scalar_query.all() if scalar_query else []
+
+        # Process scalar values with outlier detection
+        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
+            scalar_values, detect_outliers, include_unverified
+        )
+
+        if format == "csv":
+            filename = f"metric_values_scalar_{group_id}_{execution.id}.csv"
+            return generate_csv_response_scalar(
+                annotated_scalar_values,
+                detection_ran,
+                had_outliers,
+                outlier_count,
+                filename,
+            )
+        else:
+            return MetricValueCollection.build_scalar(
+                scalar_values=annotated_scalar_values,
+                had_outliers=had_outliers if detection_ran else None,
+                outlier_count=outlier_count if detection_ran else None,
+            )
+
+    elif value_type == MetricValueType.SERIES:
         series_query = app_context.session.query(models.SeriesMetricValue).filter(
             models.SeriesMetricValue.execution_id == execution.id
         )
 
-    # Apply id-based filtering (isolate takes precedence)
-    def _parse_id_list(id_str: str) -> list[int]:
-        try:
-            return [int(i.strip()) for i in id_str.split(",") if i.strip()]
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
+        series_query = apply_metric_filters(series_query, filter_params, isolate_ids, exclude_ids)
 
-    if isolate_ids:
-        ids = _parse_id_list(isolate_ids)
-        if "scalar_query" in locals() and scalar_query is not None:
-            scalar_query = scalar_query.filter(models.ScalarMetricValue.id.in_(ids))
-        if "series_query" in locals() and series_query is not None:
-            series_query = series_query.filter(models.SeriesMetricValue.id.in_(ids))
-    elif exclude_ids:
-        ids = _parse_id_list(exclude_ids)
-        if "scalar_query" in locals() and scalar_query is not None:
-            scalar_query = scalar_query.filter(~models.ScalarMetricValue.id.in_(ids))
-        if "series_query" in locals() and series_query is not None:
-            series_query = series_query.filter(~models.SeriesMetricValue.id.in_(ids))
+        series_values = series_query.all() if series_query else []
 
-    scalar_values = scalar_query.all() if "scalar_query" in locals() and scalar_query is not None else []
-    series_values = series_query.all() if "series_query" in locals() and series_query is not None else []
-
-    # Outlier detection
-    annotated_scalar_values = None
-    had_outliers = False
-    outlier_count = 0
-    detection_ran = False
-    if detect_outliers == "iqr" and scalar_values:
-        detection_ran = True
-        annotated_scalar_values, outlier_count = detect_outliers_in_scalar_values(scalar_values)
-        had_outliers = outlier_count > 0
-        if not include_unverified:
-            annotated_scalar_values = [item for item in annotated_scalar_values if not item.is_outlier]
+        if format == "csv":
+            filename = f"metric_values_series_{group_id}_{execution.id}.csv"
+            return generate_csv_response_series(
+                series_values,
+                detection_ran=False,
+                had_outliers=False,
+                outlier_count=0,
+                filename=filename,
+            )
+        else:
+            return MetricValueCollection.build_series(
+                series_values=series_values,
+                had_outliers=None,
+                outlier_count=None,
+            )
     else:
-        annotated_scalar_values = [AnnotatedScalarValue(value=v) for v in scalar_values]
-    # Return metric values as a CSV file
-    if format == "csv":
-
-        def generate_csv() -> Generator[str]:
-            output = io.StringIO()
-            writer = csv.writer(output)
-
-            if (not annotated_scalar_values and not scalar_values) and not series_values:
-                yield ""
-                return
-
-            # For CSV, we'll handle scalar and series differently
-            # Scalar values: dimensions + value
-            # Series values: dimensions + values (flattened) + index info
-
-            if annotated_scalar_values:
-                # Write scalar values
-                dimensions = sorted(annotated_scalar_values[0].value.dimensions.keys())
-                header = [*dimensions, "value", "type"]
-                if detection_ran:
-                    header.extend(["is_outlier", "verification_status"])
-                writer.writerow(header)
-
-                for item in annotated_scalar_values:
-                    mv = item.value
-                    row = [mv.dimensions.get(d) for d in dimensions] + [mv.value, "scalar"]
-                    if detection_ran:
-                        row.extend([item.is_outlier, item.verification_status])
-                    writer.writerow(row)
-
-            if series_values:
-                # Write series values (flattened)
-                for sv in series_values:
-                    dimensions = sorted(sv.dimensions.keys())
-                    if not (annotated_scalar_values):  # Write header if not already written
-                        header = [*dimensions, "value", "index", "index_name", "type"]
-                        writer.writerow(header)
-
-                    # Flatten series into multiple rows
-                    for i, value in enumerate(sv.values):
-                        index_value = sv.index[i] if sv.index and i < len(sv.index) else i
-                        row = [sv.dimensions.get(d) for d in dimensions] + [
-                            value,
-                            index_value,
-                            sv.index_name or "index",
-                            "series",
-                        ]
-                        writer.writerow(row)
-
-            output.seek(0)
-            yield output.read()
-
-        headers = {"Content-Disposition": f"attachment; filename=metric_values_{group_id}_{execution.id}.csv"}
-        if detection_ran:
-            headers["X-REF-Had-Outliers"] = "true" if had_outliers else "false"
-            headers["X-REF-Outlier-Count"] = str(outlier_count)
-
-        return StreamingResponse(
-            generate_csv(),
-            media_type="text/csv",
-            headers=headers,
-        )
-    else:
-        return MetricValueCollection.build(
-            scalar_values=annotated_scalar_values,
-            series_values=series_values,
-            had_outliers=had_outliers if detection_ran else None,
-            outlier_count=outlier_count if detection_ran else None,
-        )
+        raise HTTPException(status_code=500, detail="Unknown value_type")
 
 
 @router.get("/{group_id}/archive")

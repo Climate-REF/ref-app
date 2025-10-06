@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MetricValue } from "@/client/types.gen";
+import type { ScalarValue } from "@/client/types.gen";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
 import {
@@ -37,7 +37,7 @@ const COLORS = [
 ];
 
 interface EnsembleChartProps {
-  data: MetricValue[];
+  data: ScalarValue[];
   metricName: string;
   metricUnits: string;
   valueFormatter?: (v: number) => string;
@@ -98,7 +98,7 @@ export const EnsembleChart = ({
   const { mousePosition, windowSize } = useMousePositionAndWidth();
   const [highlightedPoint, setHighlightedPoint] = useState<{
     groupName: string;
-    point: MetricValue;
+    point: ScalarValue;
   } | null>(null);
 
   // Extract available dimensions and initialize grouping config
@@ -122,12 +122,12 @@ export const EnsembleChart = ({
   // First group by the main dimension (x-axis)
   const primaryGroupedData = Object.groupBy(
     data,
-    (d: MetricValue) => d.dimensions[groupByDimension] ?? metricName,
+    (d: ScalarValue) => d.dimensions[groupByDimension] ?? metricName,
   );
 
   const chartData = Object.entries(primaryGroupedData).map(
     (
-      [groupName, values]: [string, MetricValue[] | undefined],
+      [groupName, values]: [string, ScalarValue[] | undefined],
       categoryIndex,
     ) => {
       if (!values || values.length === 0) {
@@ -143,13 +143,13 @@ export const EnsembleChart = ({
       }
 
       // If hue dimension is specified (and different from groupBy), create sub-groups
-      let subGroups: { [key: string]: MetricValue[] };
+      let subGroups: { [key: string]: ScalarValue[] };
       if (!isSelfHued && hueDimension && hueDimension !== "none") {
         // Normal hue: create sub-groups based on hue dimension
         subGroups = Object.groupBy(
           values,
-          (d: MetricValue) => d.dimensions[hueDimension] ?? "Unknown",
-        ) as { [key: string]: MetricValue[] };
+          (d: ScalarValue) => d.dimensions[hueDimension] ?? "Unknown",
+        ) as { [key: string]: ScalarValue[] };
       } else {
         // Single group if no hue dimension or hue === groupBy
         subGroups = { ensemble: values };
@@ -157,12 +157,12 @@ export const EnsembleChart = ({
 
       const groups: { [key: string]: GroupStatistics | null } = {};
       const outliers: { [key: string]: number } = {};
-      const allRawData: MetricValue[] = [];
+      const allRawData: ScalarValue[] = [];
 
       Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
         const allValues: number[] =
           subGroupValues
-            ?.map((d: MetricValue) => Number(d.value))
+            ?.map((d: ScalarValue) => Number(d.value))
             ?.filter((v: number) => Number.isFinite(v)) ?? [];
 
         const filteredValues: number[] = allValues
@@ -357,7 +357,7 @@ export const EnsembleChart = ({
                 statsKey
               ] as GroupStatistics | null;
               const outliers = datum?.__outliers;
-              const allRawData: MetricValue[] = datum?.__rawData ?? [];
+              const allRawData: ScalarValue[] = datum?.__rawData ?? [];
 
               // Filter raw data to only include points from the hovered subgroup
               const rawData = allRawData.filter((d) => {
@@ -375,7 +375,7 @@ export const EnsembleChart = ({
               });
 
               // Find closest data point to mouse position (within the filtered data)
-              let closestDataPoint: MetricValue | null = null;
+              let closestDataPoint: ScalarValue | null = null;
               if (coordinate && rawData.length > 0) {
                 const mouseY = coordinate.y ?? 0;
                 let minDistance = Number.POSITIVE_INFINITY;

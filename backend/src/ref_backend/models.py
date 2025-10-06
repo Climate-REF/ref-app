@@ -143,6 +143,7 @@ class DiagnosticSummary(BaseModel):
     # Cache for loaded diagnostic metadata (class variable)
     _metadata_cache: ClassVar[dict[str, DiagnosticMetadata] | None] = None
 
+    # TODO: Cache this
     @staticmethod
     def _ensure_metadata_cache(app_context: "AppContext") -> dict[str, DiagnosticMetadata]:
         """Ensure metadata cache is loaded and return it."""
@@ -457,11 +458,6 @@ class Execution(BaseModel):
         )
 
 
-class ExecutionGroupSummary(BaseModel):
-    data: list[ExecutionGroup]
-    count: int
-
-
 class CMIP6DatasetMetadata(BaseModel):
     variable_id: str
     source_id: str
@@ -503,7 +499,7 @@ class Dataset(BaseModel):
         )
 
 
-class MetricValue(ScalarMetricValue):
+class ScalarValue(ScalarMetricValue):
     """
     A flattened representation of a scalar diagnostic value
 
@@ -547,28 +543,26 @@ class AnnotatedScalarValue:
 
 
 class MetricValueCollection(BaseModel):
-    data: Sequence[MetricValue | SeriesValue]
+    data: Sequence[ScalarValue | SeriesValue]
     count: int
     facets: list[Facet]
-    types: list[str]  # List of types present: 'scalar', 'series', or both
+    types: list[str]  # List of types present: 'scalar' or 'scalar'
     had_outliers: bool | None = None
     outlier_count: int | None = None
 
     @staticmethod
-    def build(
-        scalar_values: list[AnnotatedScalarValue] | None = None,
-        series_values: list[models.SeriesMetricValue] | None = None,
+    def build_scalar(
+        scalar_values: list[AnnotatedScalarValue],
         had_outliers: bool | None = None,
         outlier_count: int | None = None,
     ) -> "MetricValueCollection":
-        """Build a MetricValueCollection from scalar and/or series values"""
+        """
+        Build a MetricValueCollection from series values"""
         scalar_values = scalar_values or []
-        series_values = series_values or []
 
         # TODO: Query this using SQL
         facets: dict[str, set[str]] = {}
-        all_data: list[MetricValue | SeriesValue] = []
-        types_present = set()
+        all_data: list[ScalarValue] = []
 
         # Process scalar values
         for item in scalar_values:
@@ -580,7 +574,7 @@ class MetricValueCollection(BaseModel):
                 else:
                     facets[key] = {value}
             all_data.append(
-                MetricValue(
+                ScalarValue(
                     id=v.id,
                     dimensions=v.dimensions,
                     attributes=v.attributes,
@@ -590,7 +584,30 @@ class MetricValueCollection(BaseModel):
                     is_outlier=item.is_outlier,
                 )
             )
-            types_present.add("scalar")
+
+        return MetricValueCollection(
+            data=all_data,
+            count=len(all_data),
+            facets=[
+                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
+            ],
+            types=["scalar"],
+            had_outliers=had_outliers,
+            outlier_count=outlier_count,
+        )
+
+    @staticmethod
+    def build_series(
+        series_values: list[models.SeriesMetricValue],
+        had_outliers: None = None,
+        outlier_count: None = None,
+    ) -> "MetricValueCollection":
+        """Build a MetricValueCollection from scalar and/or series values"""
+        series_values = series_values or []
+
+        # TODO: Query this using SQL
+        facets: dict[str, set[str]] = {}
+        all_data: list[ScalarValue | SeriesValue] = []
 
         # Process series values
         for series in series_values:
@@ -612,7 +629,6 @@ class MetricValueCollection(BaseModel):
                     execution_id=series.execution_id,
                 )
             )
-            types_present.add("series")
 
         return MetricValueCollection(
             data=all_data,
@@ -620,25 +636,10 @@ class MetricValueCollection(BaseModel):
             facets=[
                 Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
             ],
-            types=sorted(list(types_present)),
+            types=["series"],
             had_outliers=had_outliers,
             outlier_count=outlier_count,
         )
-
-
-class MetricValueComparison(BaseModel):
-    """
-    A comparison of metric values for a specific source against n ensemble.
-    """
-
-    source: MetricValueCollection
-    """
-    Metric values for the specified source_id.
-    """
-    ensemble: MetricValueCollection
-    """
-    Metric values for all other source_ids in the execution group.
-    """
 
 
 class MetricValueFacetSummary(BaseModel):

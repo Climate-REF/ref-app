@@ -1,12 +1,12 @@
 import type { ScaleLinear } from "d3-scale";
 import { Cross } from "recharts";
-import type { MetricValue } from "@/client/types.gen";
+import type { ScalarValue } from "@/client/types.gen";
 import type { ProcessedGroupedDataEntry } from "./types";
 
 interface BoxWhiskerShapeProps {
   prefix: string;
   scale: ScaleLinear<number, number>;
-  highlightedPoint?: MetricValue | null;
+  highlightedPoint?: ScalarValue | null;
 
   // Standard Recharts props provided to shapes
   x?: number;

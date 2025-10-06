@@ -2,7 +2,7 @@ import { Copy, Download, Eye, EyeOff } from "lucide-react";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
 import type {
-  MetricValue,
+  ScalarValue,
   SeriesValue,
 } from "@/components/execution/values/types";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
@@ -55,7 +55,7 @@ interface CardTemplateGeneratorProps {
   // Current grouping configuration from the diagnostic page
   currentGroupingConfig?: ChartGroupingConfig;
   // Available data from the current diagnostic page (used to extract dimensions)
-  availableData?: (MetricValue | SeriesValue)[];
+  availableData?: (ScalarValue | SeriesValue)[];
   // Current tab context to determine default card type
   currentTab?: "scalars" | "series" | "figures";
   // Isolate and exclude IDs

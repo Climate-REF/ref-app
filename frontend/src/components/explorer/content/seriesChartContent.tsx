@@ -25,7 +25,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       },
       query: {
         ...contentItem.otherFilters,
-        type: "series",
+        value_type: "series",
         ...(isolateIdsParam ? { isolate_ids: isolateIdsParam } : {}),
         ...(excludeIdsParam ? { exclude_ids: excludeIdsParam } : {}),
       },

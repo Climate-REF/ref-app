@@ -4,7 +4,7 @@ import {
   EmptyEnsembleChart,
   EnsembleChart,
 } from "@/components/diagnostics/ensembleChart";
-import type { Facet, MetricValue } from "@/components/execution/values/types";
+import type { Facet, ScalarValue } from "@/components/execution/values/types";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
 import {
   extractAvailableDimensions,
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface ValuesFigureProps {
-  values: MetricValue[];
+  values: ScalarValue[];
   facets: Facet[];
   defaultGroupby: string;
   loading?: boolean; // Add loading as an optional prop

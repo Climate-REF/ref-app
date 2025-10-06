@@ -31,7 +31,7 @@ def flag_outliers_iqr(values: Sequence[float], factor: float = 5.0, min_n: int =
 
 
 def detect_outliers_in_scalar_values(
-    scalar_values: list[models.ScalarMetricValue],
+    scalar_values: Sequence[models.ScalarMetricValue],
     factor: float = 3.0,
     min_n: int = 4,
     group_by: Sequence[str] = ("statistic", "metric"),

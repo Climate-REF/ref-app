@@ -598,10 +598,13 @@ export const ExecutionSchema = {
             },
             type: 'array',
             title: 'Outputs'
+        },
+        execution_group: {
+            '$ref': '#/components/schemas/ExecutionGroupSummary'
         }
     },
     type: 'object',
-    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at', 'outputs'],
+    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at', 'outputs', 'execution_group'],
     title: 'Execution'
 } as const;
 
@@ -621,7 +624,7 @@ export const ExecutionGroupSchema = {
         },
         executions: {
             items: {
-                '$ref': '#/components/schemas/Execution'
+                '$ref': '#/components/schemas/ExecutionSummary'
             },
             type: 'array',
             title: 'Executions'
@@ -629,7 +632,7 @@ export const ExecutionGroupSchema = {
         latest_execution: {
             anyOf: [
                 {
-                    '$ref': '#/components/schemas/Execution'
+                    '$ref': '#/components/schemas/ExecutionSummary'
                 },
                 {
                     type: 'null'
@@ -673,6 +676,59 @@ export const ExecutionGroupSchema = {
     type: 'object',
     required: ['id', 'key', 'dirty', 'executions', 'latest_execution', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
     title: 'ExecutionGroup'
+} as const;
+
+export const ExecutionGroupSummarySchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        dirty: {
+            type: 'boolean',
+            title: 'Dirty'
+        },
+        selectors: {
+            additionalProperties: {
+                items: {
+                    prefixItems: [
+                        {
+                            type: 'string'
+                        },
+                        {
+                            type: 'string'
+                        }
+                    ],
+                    type: 'array',
+                    maxItems: 2,
+                    minItems: 2
+                },
+                type: 'array'
+            },
+            type: 'object',
+            title: 'Selectors'
+        },
+        diagnostic: {
+            '$ref': '#/components/schemas/DiagnosticSummary'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'key', 'dirty', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
+    title: 'ExecutionGroupSummary'
 } as const;
 
 export const ExecutionOutputSchema = {
@@ -767,6 +823,51 @@ export const ExecutionStatsSchema = {
     description: 'Statistics for execution groups and their success rates.'
 } as const;
 
+export const ExecutionSummarySchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        dataset_hash: {
+            type: 'string',
+            title: 'Dataset Hash'
+        },
+        dataset_count: {
+            type: 'integer',
+            title: 'Dataset Count'
+        },
+        successful: {
+            type: 'boolean',
+            title: 'Successful'
+        },
+        retracted: {
+            type: 'boolean',
+            title: 'Retracted'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        outputs: {
+            items: {
+                '$ref': '#/components/schemas/ExecutionOutput'
+            },
+            type: 'array',
+            title: 'Outputs'
+        }
+    },
+    type: 'object',
+    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at', 'outputs'],
+    title: 'ExecutionSummary'
+} as const;
+
 export const FacetSchema = {
     properties: {
         key: {
@@ -839,101 +940,13 @@ The order of the dimensions matter as that determines how the executions are nes
     }
 } as const;
 
-export const MetricValueSchema = {
-    properties: {
-        dimensions: {
-            additionalProperties: {
-                type: 'string'
-            },
-            type: 'object',
-            title: 'Dimensions'
-        },
-        value: {
-            anyOf: [
-                {
-                    type: 'number'
-                },
-                {
-                    type: 'integer'
-                }
-            ],
-            title: 'Value'
-        },
-        attributes: {
-            anyOf: [
-                {
-                    additionalProperties: {
-                        anyOf: [
-                            {
-                                type: 'string'
-                            },
-                            {
-                                type: 'number'
-                            },
-                            {
-                                type: 'integer'
-                            }
-                        ]
-                    },
-                    type: 'object'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Attributes'
-        },
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        execution_group_id: {
-            type: 'integer',
-            title: 'Execution Group Id'
-        },
-        execution_id: {
-            type: 'integer',
-            title: 'Execution Id'
-        },
-        is_outlier: {
-            anyOf: [
-                {
-                    type: 'boolean'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Is Outlier'
-        },
-        verification_status: {
-            anyOf: [
-                {
-                    type: 'string',
-                    enum: ['verified', 'unverified']
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Verification Status'
-        }
-    },
-    type: 'object',
-    required: ['dimensions', 'value', 'id', 'execution_group_id', 'execution_id'],
-    title: 'MetricValue',
-    description: `A flattened representation of a scalar diagnostic value
-
-This includes the dimensions and the value of the diagnostic`
-} as const;
-
 export const MetricValueCollectionSchema = {
     properties: {
         data: {
             items: {
                 anyOf: [
                     {
-                        '$ref': '#/components/schemas/MetricValue'
+                        '$ref': '#/components/schemas/ScalarValue'
                     },
                     {
                         '$ref': '#/components/schemas/SeriesValue'
@@ -989,21 +1002,6 @@ export const MetricValueCollectionSchema = {
     title: 'MetricValueCollection'
 } as const;
 
-export const MetricValueComparisonSchema = {
-    properties: {
-        source: {
-            '$ref': '#/components/schemas/MetricValueCollection'
-        },
-        ensemble: {
-            '$ref': '#/components/schemas/MetricValueCollection'
-        }
-    },
-    type: 'object',
-    required: ['source', 'ensemble'],
-    title: 'MetricValueComparison',
-    description: 'A comparison of metric values for a specific source against n ensemble.'
-} as const;
-
 export const MetricValueFacetSummarySchema = {
     properties: {
         dimensions: {
@@ -1025,6 +1023,13 @@ export const MetricValueFacetSummarySchema = {
     required: ['dimensions', 'count'],
     title: 'MetricValueFacetSummary',
     description: 'Summary of the dimensions used in a metric value collection.'
+} as const;
+
+export const MetricValueTypeSchema = {
+    type: 'string',
+    enum: ['scalar', 'series'],
+    title: 'MetricValueType',
+    description: 'Type of metric values to query.'
 } as const;
 
 export const ProviderSummarySchema = {
@@ -1108,6 +1113,94 @@ export const ResultOutputTypeSchema = {
     description: `Types of supported outputs
 
 These map to the categories of output in the CMEC output bundle`
+} as const;
+
+export const ScalarValueSchema = {
+    properties: {
+        dimensions: {
+            additionalProperties: {
+                type: 'string'
+            },
+            type: 'object',
+            title: 'Dimensions'
+        },
+        value: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'integer'
+                }
+            ],
+            title: 'Value'
+        },
+        attributes: {
+            anyOf: [
+                {
+                    additionalProperties: {
+                        anyOf: [
+                            {
+                                type: 'string'
+                            },
+                            {
+                                type: 'number'
+                            },
+                            {
+                                type: 'integer'
+                            }
+                        ]
+                    },
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Attributes'
+        },
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        execution_group_id: {
+            type: 'integer',
+            title: 'Execution Group Id'
+        },
+        execution_id: {
+            type: 'integer',
+            title: 'Execution Id'
+        },
+        is_outlier: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Outlier'
+        },
+        verification_status: {
+            anyOf: [
+                {
+                    type: 'string',
+                    enum: ['verified', 'unverified']
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Verification Status'
+        }
+    },
+    type: 'object',
+    required: ['dimensions', 'value', 'id', 'execution_group_id', 'execution_id'],
+    title: 'ScalarValue',
+    description: `A flattened representation of a scalar diagnostic value
+
+This includes the dimensions and the value of the diagnostic`
 } as const;
 
 export const SeriesValueSchema = {

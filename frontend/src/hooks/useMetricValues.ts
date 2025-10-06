@@ -2,19 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import type { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { diagnosticsListMetricValues } from "@/client";
-import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
 import type {
-  MetricValue,
   MetricValueCollection,
+  ScalarValue,
   SeriesValue,
 } from "@/components/execution/values/types.ts";
 
-interface UseDiagnosticValuesTabOptions {
-  providerSlug: string;
-  diagnosticSlug: string;
+// Define flexible API function types using any for compatibility
+type FetchQueryOptions = (options: any) => any;
+type FetchDownloadFunction = (options: any) => Promise<any>;
+
+interface UseValuesTabOptions<
+  TPath extends Record<string, any> = Record<string, any>,
+> {
+  // Path parameters - flexible to support different route patterns
+  pathParams: TPath;
   search: Record<string, any>;
   valueType: "scalar" | "series";
   navigate: ReturnType<typeof useNavigate>;
+
+  fetchQueryOptions: FetchQueryOptions;
+  fetchDownload: FetchDownloadFunction;
+
+  getDownloadFilename: (pathParams: TPath, valueType: string) => string;
 }
 
 // Parameters that should not be treated as facet filters
@@ -33,16 +43,18 @@ const EXCLUDED_FROM_FACET_FILTERS = [
 const EXCLUDED_FROM_API = ["tab", "groupBy", "hue", "style"];
 
 /**
- * Shared hook for diagnostic values tabs (series and scalars).
+ * Shared hook for values tabs (series and scalars).
  * Handles data fetching, filter management, and CSV downloads.
  */
-export function useDiagnosticValuesTab({
-  providerSlug,
-  diagnosticSlug,
+export function useMetricValues<TPath extends Record<string, any>>({
+  pathParams,
   search,
   valueType,
   navigate,
-}: UseDiagnosticValuesTabOptions) {
+  fetchQueryOptions,
+  fetchDownload = diagnosticsListMetricValues,
+  getDownloadFilename,
+}: UseValuesTabOptions<TPath>) {
   // Extract search values to prevent unnecessary callback recreation
   const {
     tab: searchTab,
@@ -53,13 +65,10 @@ export function useDiagnosticValuesTab({
     include_unverified: searchIncludeUnverified,
   } = search;
 
-  // Fetch metric values
+  // Fetch metric values using the provided query options function
   const { data: metricValues, isLoading } = useQuery(
-    diagnosticsListMetricValuesOptions({
-      path: {
-        provider_slug: providerSlug,
-        diagnostic_slug: diagnosticSlug,
-      },
+    fetchQueryOptions({
+      path: pathParams,
       query: {
         ...Object.fromEntries(
           Object.entries(search).filter(
@@ -67,7 +76,7 @@ export function useDiagnosticValuesTab({
               value !== undefined && !EXCLUDED_FROM_API.includes(key),
           ),
         ),
-        type: valueType,
+        value_type: valueType,
       },
     }),
   );
@@ -94,7 +103,7 @@ export function useDiagnosticValuesTab({
 
   // State for filtered data (used by series tab)
   const [filteredData, setFilteredData] = useState<
-    (MetricValue | SeriesValue)[]
+    (ScalarValue | SeriesValue)[]
   >([]);
 
   // Build initial filters from URL search params
@@ -245,7 +254,7 @@ export function useDiagnosticValuesTab({
 
   // Handle filtered data changes (for series tab)
   const handleFilteredDataChange = useCallback(
-    (data: (MetricValue | SeriesValue)[]) => {
+    (data: (ScalarValue | SeriesValue)[]) => {
       setFilteredData(data);
     },
     [],
@@ -253,13 +262,11 @@ export function useDiagnosticValuesTab({
 
   // Handle CSV download
   const handleDownload = useCallback(async () => {
-    const response = await diagnosticsListMetricValues({
-      path: {
-        provider_slug: providerSlug,
-        diagnostic_slug: diagnosticSlug,
-      },
+    const response = await fetchDownload({
+      path: pathParams,
       query: {
         format: "csv",
+        value_type: valueType,
         ...Object.fromEntries(
           Object.entries(search).filter(
             ([key, value]) =>
@@ -277,10 +284,10 @@ export function useDiagnosticValuesTab({
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `metric-values-${providerSlug}-${diagnosticSlug}.csv`;
+    a.download = getDownloadFilename(pathParams, valueType);
     a.click();
     window.URL.revokeObjectURL(url);
-  }, [providerSlug, diagnosticSlug, search]);
+  }, [pathParams, valueType, search, fetchDownload, getDownloadFilename]);
 
   // Extract isolate/exclude IDs from search params
   const isolateIds = search.isolate_ids

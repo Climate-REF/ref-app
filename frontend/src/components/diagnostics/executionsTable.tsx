@@ -6,25 +6,25 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
-import type { Execution } from "@/client";
-import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
+import type { ExecutionSummary } from "@/client";
+import { DataTable } from "@/components/dataTable/dataTable";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { Route } from "@/routes/_app/executions.$groupId.tsx";
+} from "@/components/ui/card";
+import { Route } from "@/routes/_app/executions.$groupId/index";
 
-const columnHelper = createColumnHelper<Execution>();
+const columnHelper = createColumnHelper<ExecutionSummary>();
 
 function OpenCell({
   row: {
     original: { id },
   },
-}: CellContext<Execution, unknown>) {
+}: CellContext<ExecutionSummary, unknown>) {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <button
@@ -46,9 +46,10 @@ function OpenCell({
   );
 }
 
-function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
+function LatestSelectedCell({ row }: CellContext<ExecutionSummary, unknown>) {
   const rowIndex = row.index;
-  const { executionId } = Route.useSearch();
+  // const { executionId } = Route.useSearch();
+  const executionId = undefined;
   if (executionId && row.original.id.toString() === executionId) {
     return (
       <Badge variant="default" title="This execution is currently selected.">
@@ -66,7 +67,7 @@ function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
   return null;
 }
 
-export const columns: ColumnDef<Execution>[] = [
+export const columns: ColumnDef<ExecutionSummary>[] = [
   {
     accessorKey: "dataset_hash",
     header: () => (
@@ -116,7 +117,7 @@ export const columns: ColumnDef<Execution>[] = [
 ];
 
 interface ResultListTableProps {
-  results: Execution[];
+  results: ExecutionSummary[];
 }
 
 function ExecutionsTable({ results }: ResultListTableProps) {

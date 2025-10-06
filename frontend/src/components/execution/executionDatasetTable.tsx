@@ -50,7 +50,7 @@ interface ExecutionDatasetTableProps {
   executionId?: string;
 }
 
-function ExecutionDatasetTable({
+export function ExecutionDatasetTable({
   groupId,
   executionId,
 }: ExecutionDatasetTableProps) {
@@ -62,4 +62,3 @@ function ExecutionDatasetTable({
   );
   return <DataTable data={data?.data ?? []} columns={columns} />;
 }
-export default ExecutionDatasetTable;

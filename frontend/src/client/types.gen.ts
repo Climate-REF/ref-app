@@ -161,14 +161,30 @@ export type Execution = {
     created_at: string;
     updated_at: string;
     outputs: Array<ExecutionOutput>;
+    execution_group: ExecutionGroupSummary;
 };
 
 export type ExecutionGroup = {
     id: number;
     key: string;
     dirty: boolean;
-    executions: Array<Execution>;
-    latest_execution: Execution | null;
+    executions: Array<ExecutionSummary>;
+    latest_execution: ExecutionSummary | null;
+    selectors: {
+        [key: string]: Array<[
+            string,
+            string
+        ]>;
+    };
+    diagnostic: DiagnosticSummary;
+    created_at: string;
+    updated_at: string;
+};
+
+export type ExecutionGroupSummary = {
+    id: number;
+    key: string;
+    dirty: boolean;
     selectors: {
         [key: string]: Array<[
             string,
@@ -223,6 +239,17 @@ export type ExecutionStatsWritable = {
     total_files: number;
 };
 
+export type ExecutionSummary = {
+    id: number;
+    dataset_hash: string;
+    dataset_count: number;
+    successful: boolean;
+    retracted: boolean;
+    created_at: string;
+    updated_at: string;
+    outputs: Array<ExecutionOutput>;
+};
+
 export type Facet = {
     key: string;
     values: Array<string>;
@@ -247,41 +274,13 @@ export type MetricDimensions = {
     [key: string]: unknown;
 };
 
-/**
- * A flattened representation of a scalar diagnostic value
- *
- * This includes the dimensions and the value of the diagnostic
- */
-export type MetricValue = {
-    dimensions: {
-        [key: string]: string;
-    };
-    value: number | number;
-    attributes?: {
-        [key: string]: string | number | number;
-    } | null;
-    id: number;
-    execution_group_id: number;
-    execution_id: number;
-    is_outlier?: boolean | null;
-    verification_status?: ('verified' | 'unverified') | null;
-};
-
 export type MetricValueCollection = {
-    data: Array<MetricValue | SeriesValue>;
+    data: Array<ScalarValue | SeriesValue>;
     count: number;
     facets: Array<Facet>;
     types: Array<string>;
     had_outliers?: boolean | null;
     outlier_count?: number | null;
-};
-
-/**
- * A comparison of metric values for a specific source against n ensemble.
- */
-export type MetricValueComparison = {
-    source: MetricValueCollection;
-    ensemble: MetricValueCollection;
 };
 
 /**
@@ -293,6 +292,11 @@ export type MetricValueFacetSummary = {
     };
     count: number;
 };
+
+/**
+ * Type of metric values to query.
+ */
+export type MetricValueType = 'scalar' | 'series';
 
 /**
  * Summary information about a Metric Provider.
@@ -342,6 +346,26 @@ export type ReferenceDatasetLink = {
  * These map to the categories of output in the CMEC output bundle
  */
 export type ResultOutputType = 'plot' | 'data' | 'html';
+
+/**
+ * A flattened representation of a scalar diagnostic value
+ *
+ * This includes the dimensions and the value of the diagnostic
+ */
+export type ScalarValue = {
+    dimensions: {
+        [key: string]: string;
+    };
+    value: number | number;
+    attributes?: {
+        [key: string]: string | number | number;
+    } | null;
+    id: number;
+    execution_group_id: number;
+    execution_id: number;
+    is_outlier?: boolean | null;
+    verification_status?: ('verified' | 'unverified') | null;
+};
 
 /**
  * A flattened representation of a series diagnostic value
@@ -597,51 +621,6 @@ export type DiagnosticsListExecutionGroupsResponses = {
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
 
-export type DiagnosticsComparisonData = {
-    body?: never;
-    path: {
-        provider_slug: string;
-        diagnostic_slug: string;
-    };
-    query: {
-        /**
-         * JSON string for source filters
-         */
-        source_filters: string;
-        /**
-         * Type of metric values to compare: 'scalar', 'series', or 'all'
-         */
-        type?: string;
-        /**
-         * Comma-separated list of metric value IDs to isolate
-         */
-        isolate_ids?: string | null;
-        /**
-         * Comma-separated list of metric value IDs to exclude
-         */
-        exclude_ids?: string | null;
-    };
-    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/comparison';
-};
-
-export type DiagnosticsComparisonErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DiagnosticsComparisonError = DiagnosticsComparisonErrors[keyof DiagnosticsComparisonErrors];
-
-export type DiagnosticsComparisonResponses = {
-    /**
-     * Successful Response
-     */
-    200: MetricValueComparison;
-};
-
-export type DiagnosticsComparisonResponse = DiagnosticsComparisonResponses[keyof DiagnosticsComparisonResponses];
-
 export type DiagnosticsListExecutionsData = {
     body?: never;
     path: {
@@ -676,12 +655,12 @@ export type DiagnosticsListMetricValuesData = {
         provider_slug: string;
         diagnostic_slug: string;
     };
-    query?: {
-        format?: string | null;
+    query: {
         /**
-         * Type of metric values to return: 'scalar', 'series', or 'all'
+         * Type of metric values to return
          */
-        type?: string;
+        value_type: MetricValueType;
+        format?: string | null;
         /**
          * Outlier detection method: 'off' or 'iqr'
          */
@@ -715,8 +694,10 @@ export type DiagnosticsListMetricValuesResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetricValueCollection;
 };
+
+export type DiagnosticsListMetricValuesResponse = DiagnosticsListMetricValuesResponses[keyof DiagnosticsListMetricValuesResponses];
 
 export type ExecutionsGetExecutionStatisticsData = {
     body?: never;
@@ -908,18 +889,18 @@ export type ExecutionsMetricBundleResponses = {
 
 export type ExecutionsMetricBundleResponse = ExecutionsMetricBundleResponses[keyof ExecutionsMetricBundleResponses];
 
-export type ExecutionsMetricValuesData = {
+export type ExecutionsListMetricValuesData = {
     body?: never;
     path: {
         group_id: string;
     };
-    query?: {
+    query: {
         execution_id?: string | null;
-        format?: string | null;
         /**
-         * Type of metric values to return: 'scalar', 'series', or 'all'
+         * Type of metric values to return
          */
-        type?: string;
+        value_type: MetricValueType;
+        format?: string | null;
         /**
          * Outlier detection method: 'off' or 'iqr'
          */
@@ -940,21 +921,23 @@ export type ExecutionsMetricValuesData = {
     url: '/api/v1/executions/{group_id}/values';
 };
 
-export type ExecutionsMetricValuesErrors = {
+export type ExecutionsListMetricValuesErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ExecutionsMetricValuesError = ExecutionsMetricValuesErrors[keyof ExecutionsMetricValuesErrors];
+export type ExecutionsListMetricValuesError = ExecutionsListMetricValuesErrors[keyof ExecutionsListMetricValuesErrors];
 
-export type ExecutionsMetricValuesResponses = {
+export type ExecutionsListMetricValuesResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetricValueCollection;
 };
+
+export type ExecutionsListMetricValuesResponse = ExecutionsListMetricValuesResponses[keyof ExecutionsListMetricValuesResponses];
 
 export type ExecutionsExecutionArchiveData = {
     body?: never;

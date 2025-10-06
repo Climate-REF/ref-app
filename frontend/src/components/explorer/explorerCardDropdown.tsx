@@ -28,16 +28,6 @@ export function ExplorerCardDropdown({
     ...(contentItem?.otherFilters ?? {}),
     detect_outliers: "iqr",
     include_unverified: String(includeUnverified),
-    // Disable grouping for table view
-    // ...(contentItem.groupingConfig?.groupBy
-    //   ? { groupBy: contentItem.groupingConfig.groupBy }
-    //   : {}),
-    // ...(contentItem.groupingConfig?.hue
-    //   ? { hue: contentItem.groupingConfig.hue }
-    //   : {}),
-    // ...(contentItem.groupingConfig?.style
-    //   ? { style: contentItem.groupingConfig.style }
-    //   : {}),
   };
 
   const uri = contentItem.type === "box-whisker-chart" ? "scalars" : "series";
@@ -63,36 +53,26 @@ export function ExplorerCardDropdown({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={async () => {
+            // TODO: replace with generic fetchDownload from useMetricValues when available
             try {
-              const query: Record<string, string | boolean> = {
-                ...(contentItem.otherFilters ?? {}),
-                detect_outliers: "iqr",
-                include_unverified: includeUnverified ?? false,
-                // ...(contentItem.groupingConfig?.groupBy
-                //   ? { groupBy: contentItem.groupingConfig.groupBy }
-                //   : {}),
-                // ...(contentItem.groupingConfig?.hue
-                //   ? { hue: contentItem.groupingConfig.hue }
-                //   : {}),
-                // ...(contentItem.groupingConfig?.style
-                //   ? { style: contentItem.groupingConfig.style }
-                //   : {}),
-                type: "scalar",
-                format: "csv",
-              };
-
               const { data, error } = await diagnosticsListMetricValues({
                 path: {
                   provider_slug: contentItem.provider,
                   diagnostic_slug: contentItem.diagnostic,
                 },
-                query,
+                query: {
+                  ...(contentItem.otherFilters ?? {}),
+                  detect_outliers: "iqr",
+                  include_unverified: includeUnverified ?? false,
+                  value_type: "scalar",
+                  format: "csv",
+                },
                 parseAs: "blob",
               });
 
               if (error) throw error;
               const filename = `${contentItem.provider}-${contentItem.diagnostic}-values.csv`;
-              downloadBlob(data as Blob, filename);
+              downloadBlob(data as unknown as Blob, filename);
             } catch (err) {
               console.error("Download failed:", err);
               alert("Failed to download data. Please try again.");
