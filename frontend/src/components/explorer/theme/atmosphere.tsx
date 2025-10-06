@@ -4,7 +4,7 @@ import { ExplorerThemeLayout } from "../explorerThemeLayout";
 
 const cards: ExplorerCard[] = [
   {
-    title: "Extratropcial Modes of Variability",
+    title: "Extratropical Modes of Variability",
     description: (
       <>
         Spatial comparison of simulated vs. observed leading EOF patterns
