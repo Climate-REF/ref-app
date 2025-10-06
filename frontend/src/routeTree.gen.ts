@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/_app/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as ContentTermsOfUseImport } from './routes/content/terms-of-use'
 import { Route as ContentPrivacyImport } from './routes/content/privacy'
+import { Route as ContentIntroductionImport } from './routes/content/introduction'
 import { Route as ContentAboutImport } from './routes/content/about'
 import { Route as AppExplorerRouteImport } from './routes/_app/explorer/route'
 import { Route as AppExplorerIndexImport } from './routes/_app/explorer/index'
@@ -68,6 +69,12 @@ const ContentTermsOfUseRoute = ContentTermsOfUseImport.update({
 const ContentPrivacyRoute = ContentPrivacyImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => ContentRouteRoute,
+} as any)
+
+const ContentIntroductionRoute = ContentIntroductionImport.update({
+  id: '/introduction',
+  path: '/introduction',
   getParentRoute: () => ContentRouteRoute,
 } as any)
 
@@ -258,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/content/about'
       preLoaderRoute: typeof ContentAboutImport
+      parentRoute: typeof ContentRouteImport
+    }
+    '/content/introduction': {
+      id: '/content/introduction'
+      path: '/introduction'
+      fullPath: '/content/introduction'
+      preLoaderRoute: typeof ContentIntroductionImport
       parentRoute: typeof ContentRouteImport
     }
     '/content/privacy': {
@@ -521,12 +535,14 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 
 interface ContentRouteRouteChildren {
   ContentAboutRoute: typeof ContentAboutRoute
+  ContentIntroductionRoute: typeof ContentIntroductionRoute
   ContentPrivacyRoute: typeof ContentPrivacyRoute
   ContentTermsOfUseRoute: typeof ContentTermsOfUseRoute
 }
 
 const ContentRouteRouteChildren: ContentRouteRouteChildren = {
   ContentAboutRoute: ContentAboutRoute,
+  ContentIntroductionRoute: ContentIntroductionRoute,
   ContentPrivacyRoute: ContentPrivacyRoute,
   ContentTermsOfUseRoute: ContentTermsOfUseRoute,
 }
@@ -541,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/content': typeof ContentRouteRouteWithChildren
   '/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
   '/content/privacy': typeof ContentPrivacyRoute
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
@@ -571,6 +588,7 @@ export interface FileRoutesByTo {
   '': typeof AppRouteRouteWithChildren
   '/content': typeof ContentRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
   '/content/privacy': typeof ContentPrivacyRoute
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
@@ -601,6 +619,7 @@ export interface FileRoutesById {
   '/content': typeof ContentRouteRouteWithChildren
   '/_app/explorer': typeof AppExplorerRouteRouteWithChildren
   '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
   '/content/privacy': typeof ContentPrivacyRoute
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
@@ -634,6 +653,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/explorer'
     | '/content/about'
+    | '/content/introduction'
     | '/content/privacy'
     | '/content/terms-of-use'
     | '/executions/$groupId'
@@ -663,6 +683,7 @@ export interface FileRouteTypes {
     | ''
     | '/content'
     | '/content/about'
+    | '/content/introduction'
     | '/content/privacy'
     | '/content/terms-of-use'
     | '/datasets/$slug'
@@ -691,6 +712,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/_app/explorer'
     | '/content/about'
+    | '/content/introduction'
     | '/content/privacy'
     | '/content/terms-of-use'
     | '/_app/executions/$groupId'
@@ -764,6 +786,7 @@ export const routeTree = rootRoute
       "filePath": "content/route.tsx",
       "children": [
         "/content/about",
+        "/content/introduction",
         "/content/privacy",
         "/content/terms-of-use"
       ]
@@ -778,6 +801,10 @@ export const routeTree = rootRoute
     },
     "/content/about": {
       "filePath": "content/about.tsx",
+      "parent": "/content"
+    },
+    "/content/introduction": {
+      "filePath": "content/introduction.tsx",
       "parent": "/content"
     },
     "/content/privacy": {

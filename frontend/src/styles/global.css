@@ -4,6 +4,8 @@
 @plugin "@tailwindcss/typography";
 @plugin 'tailwindcss-animate';
 
+@config "./tailwind.config.ts";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -99,7 +101,7 @@
   ESMO IPO branding
   */
   --color-oceanBlue: #1c68a5;
-  --color-icyBlue: #7af6e9;
+  --color-icyBlue: #02fae9;
   --color-atmosphere-yellow: #f2eaa4;
   --color-land-green: #85e885;
 }
@@ -108,6 +110,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

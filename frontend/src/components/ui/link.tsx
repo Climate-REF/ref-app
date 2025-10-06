@@ -3,7 +3,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const common =
-  "color-oceanBlue dark:color-icyBlue hover:underline font-medium underline-offset-2";
+  "text-oceanBlue dark:text-icyBlue underline font-medium underline-offset-2";
 
 function Link({
   className,

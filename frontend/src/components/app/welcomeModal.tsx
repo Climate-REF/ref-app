@@ -8,7 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Link, LinkExternal } from "../ui/link";
+import { Link, LinkExternal } from "@/components/ui/link";
+import { Disclaimer } from "./disclaimer";
 
 const VERSION = "v1";
 const STORAGE_KEY = `climate-ref-welcome-seen-${VERSION}`;
@@ -49,7 +50,7 @@ export function WelcomeModal() {
             <img
               src="/logos/logo_cmip_ref.png"
               alt="CMIP Rapid Evaluation Framework"
-              className="size-10 min-w-10"
+              className="h-10 w-12"
             />
           </DialogTitle>
           <DialogDescription>
@@ -81,20 +82,8 @@ export function WelcomeModal() {
           </p>
 
           <section>
-            <h3 className="text-sm font-semibold mb-2">Disclaimer</h3>
-            <p className="text-sm text-muted-foreground ">
-              The content of the Rapid Evaluation Framework is under
-              development. This experimental research tool is provided in its
-              current state to solicit user feedback, with no guarantee of
-              quality, performance, stability or functionality. Every effort is
-              being made to identify and address errors and bugs. Users can
-              assist by reporting these on the dedicated GitHub repo. WCRP and
-              CMIP governing bodies, the CMIP International Project Office, the
-              developers, and funders of the REF accept no responsibility for
-              any injury, loss, damage, or delay - direct, indirect or
-              consequential - that may result from the use of the tool or
-              reliance on its results.
-            </p>
+            <h3 className="font-semibold mb-2">Disclaimer</h3>
+            <Disclaimer />
           </section>
         </div>
 

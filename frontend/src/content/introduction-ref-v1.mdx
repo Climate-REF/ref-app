@@ -1,0 +1,56 @@
+import { DataHealthWarning } from "@/components/app/dataHealthWarning";
+import Glossary from "./glossary.mdx"
+
+# Introduction
+
+The CMIP Rapid Evaluation Framework version 1 was tested on CMIP6 and CMIP6Plus data.
+It is designed to provide diagnostics for characterising climate model performance and understanding the climate system.
+The REF is an open-source tool aligned with the [FAIR Principles](https://www.go-fair.org/fair-principles/) (Findable, Accessible, Interoperable, Reusable),
+likely to attract a broader set of users.
+
+The [REF diagnostic collections](http://10.0.20.161/zenodo.14284374) have been developed for the [CMIP7 Assessment Fast Track](https://wcrp-cmip.org/cmip-phases/cmip7/) simulations.
+The current version of REF (v1) has been applied to CMIP6 and CMIP6 plus data.
+They were devised  by the [CMIP Model Benchmarking Task Team](https://wcrp-cmip.org/cmip7-task-teams/model-benchmarking/)
+after extensive community consultation and have been authorised for use in the REF by the [CMIP Panel](https://wcrp-cmip.org/cmip-governance/cmip-panel/).
+
+Relative model performance across diagnostics is not, however, a ranking of models as “good” or “bad”,
+but rather an indication of their differences.
+All models have trade-offs in their strengths and weaknesses for particular research applications and may represent some components of the Earth system with more fidelity than others.
+REF outputs also need to be interpreted in the context of fundamental challenges such as limited observational data and observational dataset uncertainties.
+The assumption that historical model “fidelity” ([Shukla et al. 2006](https://doi.org/10.1029/2005GL025579), aka “performance”) is an appropriate marker of future fidelity  ([Räisänen 2007](https://a.tellusjournals.se/articles/10.1111/j.1600-0870.2006.00211.x); [McSweeney et al. 2015](https://link.springer.com/article/10.1007/s00382-014-2418-8)) remains impossible to prove.
+
+The REF functions best as an entry point for deeper investigation into CMIP models.
+It serves three primary purposes for the CMIP user community:
+
+*	REF diagnostics give a broad overview of the spread across models in terms of global metrics.
+*	REF diagnostics can be useful for identifying a subset of models to answer a specific research question, by examining diagnostic criteria related to model performance in key processes or regions relevant to the study.
+*	REF outputs can be used to inform model selection for downscaling applications ([Sobolowski et al. 2025](https://doi.org/10.1175/BAMS-D-23-0189.1.))
+    and multi-model weighting schemes ([Merrifield et al. 2023](https://doi.org/10.5194/gmd-16-4715-2023)),
+    but this requires matching evaluation metrics to the specific variables and processes that are most relevant to the user’s intended use.
+
+The REF version 1 provides an open-source and community driven systematic comparison to help assess the degree to which CMIP models conform to technical standards and scientific benchmarks. It can help identify relative model strengths and weaknesses across CMIP participating models and across CMIP6 and CMIP6Plus. The diversity in software and data ensemble allows users to make informed decisions about which models to include for their analyses.
+
+For  users outside of the immediate CMIP community,
+guidance is being prepared by the Joint CMIP – RIfS [Responsible Data Use Task Team](https://www.wcrp-rifs.org/activities/working-groups/responsible-data-use/)
+to support users in how best to make use of the REF.
+
+
+<DataHealthWarning />
+
+
+<small>
+This introductory text has been prepared by members of the [CMIP Panel](https://wcrp-cmip.org/cmip-governance/cmip-panel/), [CMIP Model Benchmarking Task Team](https://wcrp-cmip.org/cmip7-task-teams/model-benchmarking/) and the joint [CMIP-RIfS Responsible Data Use Task Team](https://www.wcrp-rifs.org/activities/working-groups/responsible-data-use/).
+<i>All contributing authors are listed here: Helene Hewitt, John Dunne, Robert Pincus, Monica Ainhorn Morrison, Demiso Daba, Ranjini Swaminathan, Swen Brands, Forrest M. Hoffman, Christine Chung, Briony Turner and Eleanor O’Rourke </i>
+</small>
+
+[Further Reading](/content/about)
+
+<Glossary />
+
+
+## Suggested reading
+
+Hassler, B., Hoffman, F.M., Beadling, R. et al. Systematic Benchmarking of Climate Models: Methodologies, Applications, and New Directions [preprint]. ESS Open Archive. March 14, 2025.
+DOI: [https://doi.org/10.22541/essoar.174196646.65056548/v1]()
+
+Hoffman, F. M., Hassler, B., Swaminathan, R., Lewis, J., Andela, B., Collier, N., Hegedűs, D., Lee, J., Pascoe, C., Pflüger, M., Stockhause, M., Ullrich, P., Xu, M., Bock, L., Chun, F., Gier, B. K., Kelley, D. I., Lauer, A., Lenhardt, J., Schlund, M., Sreeush, M. G., Weigel, K., Blockley, E., Beadling, R., Beucher, R., Dugassa, D. D., Lembo, V., Lu, J., Brands, S., Tjiputra, J., Malinina, E., Mederios, B., Scoccimarro, E., Walton, J., Kershaw, P., Marquez, A. L., Roberts, M. J., O’Rourke, E., Dingley, E., Turner, B., Hewitt, H., and Dunne, J. P.: Rapid Evaluation Framework for the CMIP7 Assessment Fast Track, EGUsphere [preprint], [https://doi.org/10.5194/egusphere-2025-2685](), 2025.

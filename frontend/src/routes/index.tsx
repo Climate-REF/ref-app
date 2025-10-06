@@ -6,11 +6,12 @@ import {
   datasetsListOptions,
   executionsListRecentExecutionGroupsOptions,
 } from "@/client/@tanstack/react-query.gen.ts";
-import { ExecutionStats } from "@/components/dashboard/executionStats.tsx";
-import { RecentDatasets } from "@/components/dashboard/recentDatasets.tsx";
-import { RecentExecutions } from "@/components/dashboard/recentExecutions.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import IndexContent from "./index.mdx";
+import { DataHealthWarning } from "@/components/app/dataHealthWarning";
+import { ExecutionStats } from "@/components/dashboard/executionStats";
+import { RecentDatasets } from "@/components/dashboard/recentDatasets";
+import { RecentExecutions } from "@/components/dashboard/recentExecutions";
+import { Button } from "@/components/ui/button";
+import IndexContent from "@/content/index.mdx";
 
 const CTA = () => {
   return (
@@ -19,6 +20,9 @@ const CTA = () => {
         <a href="/explorer">
           Explore Data <ArrowRight className="ml-2 h-4 w-4" />
         </a>
+      </Button>
+      <Button variant="outline" asChild size="lg">
+        <Link to="/content/introduction">Introduction</Link>
       </Button>
       <Button variant="outline" asChild size="lg">
         <Link to="/content/about">Learn More</Link>
@@ -59,6 +63,9 @@ const Dashboard = () => {
             <IndexContent />
           </article>
         </MDXProvider>
+        <div className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
+          <DataHealthWarning />
+        </div>
         <div className="flex justify-center">
           <CTA />
         </div>

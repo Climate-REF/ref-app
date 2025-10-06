@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import About from "./about.mdx";
+import About from "@/content/about.mdx";
 
 export const Route = createFileRoute("/content/about")({
   component: About,
