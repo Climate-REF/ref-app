@@ -2,6 +2,7 @@
 export const API_ENDPOINTS = {
   NESRC: "https://api.climate-ref.org",
   ALCF: "https://api-alcf.climate-ref.org",
+  LOCAL: "/",
 } as const;
 
 export type ApiEndpointKey = keyof typeof API_ENDPOINTS;
@@ -14,7 +15,7 @@ export const API_ENDPOINT_STORAGE_KEY = "climate-ref-api-endpoint";
  * Falls back to VITE_BASE_URL environment variable if no selection exists
  */
 export function getStoredApiEndpoint(): string {
-  const defaultEndpoint = import.meta.env.VITE_BASE_URL || API_ENDPOINTS.NESRC;
+  const defaultEndpoint = import.meta.env.VITE_BASE_URL ?? "/";
 
   if (typeof window === "undefined") {
     // Server-side rendering fallback
@@ -103,6 +104,8 @@ export function getEndpointDisplayName(key: ApiEndpointKey): string {
       return "NESRC";
     case "ALCF":
       return "ALCF";
+    case "LOCAL":
+      return "Localhost";
     default:
       return "Unknown";
   }

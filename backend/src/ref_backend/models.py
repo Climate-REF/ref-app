@@ -144,18 +144,19 @@ class DiagnosticSummary(BaseModel):
     _metadata_cache: ClassVar[dict[str, DiagnosticMetadata] | None] = None
 
     @staticmethod
-    def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
-        # Import here to avoid circular import issues
-        from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic
-
-        # Load metadata YAML on first use (cached)
+    def _ensure_metadata_cache(app_context: "AppContext") -> dict[str, DiagnosticMetadata]:
+        """Ensure metadata cache is loaded and return it."""
         if DiagnosticSummary._metadata_cache is None:
             metadata_path = app_context.settings.diagnostic_metadata_path_resolved
             DiagnosticSummary._metadata_cache = load_diagnostic_metadata(metadata_path)
             logger.debug(
                 f"Loaded diagnostic metadata cache with {len(DiagnosticSummary._metadata_cache)} entries"
             )
+        return DiagnosticSummary._metadata_cache
 
+    @staticmethod
+    def _build_group_by_summary(diagnostic: models.Diagnostic, app_context: "AppContext") -> list[GroupBy]:
+        """Extract and build group_by information from diagnostic data requirements."""
         concrete_diagnostic = app_context.provider_registry.get_metric(
             diagnostic.provider.slug, diagnostic.slug
         )
@@ -163,6 +164,7 @@ class DiagnosticSummary(BaseModel):
             list(concrete_diagnostic.data_requirements),
             key=lambda dr: (dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value),  # type: ignore
         )
+
         group_by_summary: list[GroupBy] = []
         for dr in data_requirements:
             if isinstance(dr, tuple):
@@ -177,6 +179,47 @@ class DiagnosticSummary(BaseModel):
                     group_by=gb,
                 )
             )
+        return group_by_summary
+
+    @staticmethod
+    def _get_aft_link(diagnostic: models.Diagnostic) -> "AFTDiagnosticDetail | None":
+        """Get AFT diagnostic link for the given diagnostic."""
+        from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic
+
+        aft_id = get_aft_for_ref_diagnostic(diagnostic.provider.slug, diagnostic.slug)
+        if aft_id:
+            return get_aft_diagnostic_by_id(aft_id)
+        else:
+            logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
+            return None
+
+    @staticmethod
+    def _apply_metadata_overrides(
+        summary: "DiagnosticSummary",
+        diagnostic: models.Diagnostic,
+        metadata_cache: dict[str, DiagnosticMetadata],
+    ) -> None:
+        """Apply metadata overrides from YAML to the summary."""
+        diagnostic_key = f"{diagnostic.provider.slug}/{diagnostic.slug}"
+        if diagnostic_key in metadata_cache:
+            metadata = metadata_cache[diagnostic_key]
+
+            # Apply overrides: YAML values override database values
+            if metadata.display_name is not None:
+                summary.name = metadata.display_name
+            if metadata.reference_datasets is not None:
+                summary.reference_datasets = metadata.reference_datasets
+            if metadata.tags is not None:
+                summary.tags = metadata.tags
+
+            logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
+
+    @staticmethod
+    def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
+        """Build a DiagnosticSummary with individual database queries."""
+        metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
+        group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
+        aft = DiagnosticSummary._get_aft_link(diagnostic)
 
         # Efficient existence check for both scalar and series metric values for this diagnostic
         has_scalar_values = (
@@ -223,9 +266,7 @@ class DiagnosticSummary(BaseModel):
             .count()
         )
 
-        # Count execution groups whose latest execution is successful.
-        # We define "currently successful" as groups
-        # with at least one execution and the last (max id) successful.
+        # Count execution groups whose latest execution is successful
         ExecutionGroup = models.ExecutionGroup
         Execution = models.Execution
 
@@ -252,13 +293,9 @@ class DiagnosticSummary(BaseModel):
             .count()
         )
 
-        aft_id = get_aft_for_ref_diagnostic(diagnostic.provider.slug, diagnostic.slug)
-
-        if aft_id:
-            aft = get_aft_diagnostic_by_id(aft_id)
-        else:
-            logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
-            aft = None
+        concrete_diagnostic = app_context.provider_registry.get_metric(
+            diagnostic.provider.slug, diagnostic.slug
+        )
 
         # Build the base diagnostic summary
         summary = DiagnosticSummary(
@@ -280,19 +317,52 @@ class DiagnosticSummary(BaseModel):
         )
 
         # Apply metadata overrides from YAML if available
-        diagnostic_key = f"{diagnostic.provider.slug}/{diagnostic.slug}"
-        if diagnostic_key in DiagnosticSummary._metadata_cache:
-            metadata = DiagnosticSummary._metadata_cache[diagnostic_key]
+        DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
 
-            # Apply overrides: YAML values override database values
-            if metadata.display_name is not None:
-                summary.name = metadata.display_name
-            if metadata.reference_datasets is not None:
-                summary.reference_datasets = metadata.reference_datasets
-            if metadata.tags is not None:
-                summary.tags = metadata.tags
+        return summary
 
-            logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
+    @staticmethod
+    def build_with_stats(  # noqa: PLR0913
+        diagnostic: models.Diagnostic,
+        app_context: "AppContext",
+        *,
+        has_scalar_values: bool,
+        has_series_values: bool,
+        execution_stats: dict[str, int],
+        execution_group_count: int,
+        successful_execution_group_count: int,
+    ) -> "DiagnosticSummary":
+        """Build a DiagnosticSummary with pre-computed statistics to avoid N+1 queries."""
+        metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
+        group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
+        aft = DiagnosticSummary._get_aft_link(diagnostic)
+
+        has_metric_values = has_scalar_values or has_series_values
+        concrete_diagnostic = app_context.provider_registry.get_metric(
+            diagnostic.provider.slug, diagnostic.slug
+        )
+
+        # Build the base diagnostic summary
+        summary = DiagnosticSummary(
+            id=diagnostic.id,
+            provider=ProviderSummary.build(diagnostic.provider),
+            slug=diagnostic.slug,
+            name=diagnostic.name,
+            description=concrete_diagnostic.__doc__ or "",
+            execution_groups=[e.id for e in diagnostic.execution_groups],
+            has_metric_values=has_metric_values,
+            has_scalar_values=has_scalar_values,
+            has_series_values=has_series_values,
+            execution_count=execution_stats["total"],
+            successful_execution_count=execution_stats["successful"],
+            execution_group_count=execution_group_count,
+            successful_execution_group_count=successful_execution_group_count,
+            group_by=group_by_summary,
+            aft_link=aft,
+        )
+
+        # Apply metadata overrides from YAML if available
+        DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
 
         return summary
 

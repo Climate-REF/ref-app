@@ -5,7 +5,7 @@ from collections.abc import Generator
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import and_, not_, text
+from sqlalchemy import Integer, and_, func, not_, text
 from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
@@ -63,7 +63,111 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
 
     diagnostics = diagnostics_query.all()
 
-    return Collection(data=[DiagnosticSummary.build(m, app_context) for m in diagnostics])
+    if not diagnostics:
+        return Collection(data=[])
+
+    # Batch fetch all diagnostic statistics to avoid N+1 queries
+    diagnostic_ids = [d.id for d in diagnostics]
+
+    # Check for scalar values existence
+    scalar_values_exist = (
+        app_context.session.query(models.ExecutionGroup.diagnostic_id)
+        .join(models.Execution)
+        .join(models.ScalarMetricValue)
+        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .distinct()
+        .all()
+    )
+    scalar_diagnostic_ids = {row[0] for row in scalar_values_exist}
+
+    # Check for series values existence
+    series_values_exist = (
+        app_context.session.query(models.ExecutionGroup.diagnostic_id)
+        .join(models.Execution)
+        .join(models.SeriesMetricValue)
+        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .distinct()
+        .all()
+    )
+    series_diagnostic_ids = {row[0] for row in series_values_exist}
+
+    # Count executions per diagnostic
+    execution_counts = (
+        app_context.session.query(
+            models.ExecutionGroup.diagnostic_id,
+            func.count(models.Execution.id).label("total_count"),
+            func.sum(func.cast(models.Execution.successful, Integer)).label("successful_count"),
+        )
+        .join(models.Execution)
+        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .group_by(models.ExecutionGroup.diagnostic_id)
+        .all()
+    )
+    execution_stats = {row[0]: {"total": row[1], "successful": row[2] or 0} for row in execution_counts}
+
+    # Count execution groups per diagnostic
+    execution_group_counts = (
+        app_context.session.query(
+            models.ExecutionGroup.diagnostic_id, func.count(models.ExecutionGroup.id).label("group_count")
+        )
+        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .group_by(models.ExecutionGroup.diagnostic_id)
+        .all()
+    )
+    group_counts = {row[0]: row[1] for row in execution_group_counts}
+
+    # Count successful execution groups (latest execution successful)
+    # Use a window function approach instead of subquery to avoid correlation issues
+    latest_executions = (
+        app_context.session.query(
+            models.Execution.execution_group_id, func.max(models.Execution.id).label("max_exec_id")
+        )
+        .filter(
+            models.Execution.execution_group_id.in_(
+                app_context.session.query(models.ExecutionGroup.id).filter(
+                    models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids)
+                )
+            )
+        )
+        .group_by(models.Execution.execution_group_id)
+        .subquery()
+    )
+
+    successful_group_counts = (
+        app_context.session.query(
+            models.ExecutionGroup.diagnostic_id,
+            func.count(func.distinct(models.ExecutionGroup.id)).label("successful_count"),
+        )
+        .join(models.Execution, models.Execution.execution_group_id == models.ExecutionGroup.id)
+        .join(
+            latest_executions,
+            and_(
+                models.Execution.execution_group_id == latest_executions.c.execution_group_id,
+                models.Execution.id == latest_executions.c.max_exec_id,
+            ),
+        )
+        .filter(
+            models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids), models.Execution.successful.is_(True)
+        )
+        .group_by(models.ExecutionGroup.diagnostic_id)
+        .all()
+    )
+    successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
+
+    return Collection(
+        data=[
+            DiagnosticSummary.build_with_stats(
+                m,
+                app_context,
+                has_scalar_values=m.id in scalar_diagnostic_ids,
+                has_series_values=m.id in series_diagnostic_ids,
+                execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
+                execution_group_count=group_counts.get(m.id, 0),
+                successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
+            )
+            for m in diagnostics
+        ]
+    )
 
 
 @router.get("/facets", name="facets")

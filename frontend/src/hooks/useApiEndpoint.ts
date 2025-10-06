@@ -40,7 +40,7 @@ export function useApiEndpoint() {
    */
   const clearEndpoint = () => {
     clearStoredApiEndpoint();
-    setCurrentEndpoint(import.meta.env.VITE_BASE_URL || API_ENDPOINTS.NESRC);
+    setCurrentEndpoint(getStoredApiEndpoint());
     setCurrentKey(null);
 
     // Reload the page to apply the default endpoint
