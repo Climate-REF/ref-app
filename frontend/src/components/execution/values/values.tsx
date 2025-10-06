@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
   type Filter,
-  type ProcessedMetricValue,
+  type ProcessedScalarValue,
   type ProcessedSeriesValue,
   useValuesProcessor,
 } from "@/hooks/useValuesProcessor";
@@ -160,7 +160,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
 
           {valueType === "scalars" ? (
             <ScalarDataTable
-              values={finalDisplayedValues as ProcessedMetricValue[]}
+              values={finalDisplayedValues as ProcessedScalarValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}
