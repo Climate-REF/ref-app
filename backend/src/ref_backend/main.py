@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request, Response
 from fastapi.exception_handlers import (
     http_exception_handler as fasthttp_exception_handler,
 )
+from loguru import logger
 
 from climate_ref.config import Config as RefConfig
 from climate_ref.database import Database
@@ -60,7 +61,5 @@ if settings.USE_TEST_DATA:
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
-    from loguru import logger
-
     logger.error(f"HTTP Exception: {exc.detail}")
     return await fasthttp_exception_handler(request, exc)

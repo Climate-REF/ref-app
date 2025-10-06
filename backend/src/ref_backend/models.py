@@ -184,7 +184,7 @@ class DiagnosticSummary(BaseModel):
     @staticmethod
     def _get_aft_link(diagnostic: models.Diagnostic) -> "AFTDiagnosticDetail | None":
         """Get AFT diagnostic link for the given diagnostic."""
-        from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic
+        from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic  # noqa: PLC0415
 
         aft_id = get_aft_for_ref_diagnostic(diagnostic.provider.slug, diagnostic.slug)
         if aft_id:
