@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { Card, CardContent } from "@/components/ui/card";
+import DataHealthWarning from "@/content/data-health-warning.mdx";
 
 const ExplorerLayout = () => {
   return (
@@ -12,6 +13,19 @@ const ExplorerLayout = () => {
             Explore and visualize climate model evaluation diagnostics across
             different Earth system components and scientific themes.
           </p>
+
+          <DataHealthWarning
+            components={{
+              p(props) {
+                return (
+                  <p
+                    {...props}
+                    className="text-sm font-semibold text-muted-foreground"
+                  />
+                );
+              },
+            }}
+          />
 
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">

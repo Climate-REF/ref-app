@@ -6,11 +6,11 @@ import {
   datasetsListOptions,
   executionsListRecentExecutionGroupsOptions,
 } from "@/client/@tanstack/react-query.gen.ts";
-import { DataHealthWarning } from "@/components/app/dataHealthWarning";
 import { ExecutionStats } from "@/components/dashboard/executionStats";
 import { RecentDatasets } from "@/components/dashboard/recentDatasets";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions";
 import { Button } from "@/components/ui/button";
+import DataHealthWarning from "@/content/data-health-warning.mdx";
 import IndexContent from "@/content/index.mdx";
 
 const CTA = () => {
