@@ -91,7 +91,7 @@ export function DiagnosticCard({
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Executions:</span>
             <span className="text-foreground">
-              {diagnostic.successful_execution_count}/
+              {diagnostic.successful_execution_group_count}/
               {diagnostic.execution_group_count}
               {note && (
                 <Tooltip>
