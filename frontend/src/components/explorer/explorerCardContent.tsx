@@ -60,14 +60,13 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
   const spanClass = contentItem.span === 2 ? "lg:col-span-2" : "lg:col-span-1";
 
   return (
-    <div
-      className={cn(
-        "relative group",
-        spanClass,
-        contentItem.placeholder ? "border-red-500" : "",
-      )}
-    >
-      <Card className="h-full flex flex-col">
+    <div className={cn("relative group", spanClass)}>
+      <Card
+        className={cn(
+          "h-full flex flex-col",
+          contentItem.placeholder ? "border-red-500" : "",
+        )}
+      >
         <CardHeader className="flex items-start justify-between">
           <div className="flex flex-col gap-2">
             <CardTitle>
