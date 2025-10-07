@@ -9,7 +9,7 @@ class TestFlagOutliersIQR:
     def test_outlier_detection_with_factor_3(self):
         """Test outlier detection with factor=3.0 on controlled data."""
         values = [1, 2, 2, 2, 100]
-        result = flag_outliers_iqr(values, factor=3.0)
+        result = flag_outliers_iqr(values, factor=3.0, min_n=4)
         expected = [True, False, False, False, True]
         assert result == expected
 
@@ -23,7 +23,7 @@ class TestFlagOutliersIQR:
         - Any value outside [2, 2] is an outlier, so 100 is flagged
         """
         values = [1, 2, 2, 2, 100]
-        result = flag_outliers_iqr(values, factor=1.5)
+        result = flag_outliers_iqr(values, factor=1.5, min_n=4)
         expected = [True, False, False, False, True]
         assert result == expected
 
