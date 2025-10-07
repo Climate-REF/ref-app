@@ -102,6 +102,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           region: "global",
           metric: "Bias",
+          statistic: "Bias",
         },
       },
       {
@@ -117,6 +118,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           region: "global",
           metric: "Bias",
+          statistic: "Bias",
         },
       },
       {
@@ -132,6 +134,7 @@ const cards: ExplorerCard[] = [
         otherFilters: {
           region: "global",
           metric: "Bias",
+          statistic: "Bias",
         },
       },
     ],

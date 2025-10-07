@@ -81,7 +81,7 @@ export function WelcomeModal() {
             <Link to="/diagnostics">Diagnostic Catalog</Link>.
           </p>
 
-          <section>
+          <section className="space-y-4">
             <h3 className="font-semibold mb-2">Disclaimer</h3>
             <Disclaimer />
           </section>

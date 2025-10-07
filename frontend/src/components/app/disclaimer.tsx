@@ -1,4 +1,4 @@
-import { Link } from "../ui/link";
+import { Link, LinkExternal } from "../ui/link";
 
 export function Disclaimer() {
   return (
@@ -17,6 +17,15 @@ export function Disclaimer() {
         the developers, and funders of the REF accept no responsibility for any
         injury, loss, damage, or delay - direct, indirect or consequential -
         that may result from the use of the tool or reliance on its results.
+      </p>
+      <p className="text-sm text-red-600 dark:text-red-400">
+        The results here are in the process of being regenerated at ORNL so will
+        be replaced in the coming weeks as we resolve some outstanding issues.
+        See{" "}
+        <LinkExternal href="https://github.com/Climate-REF/climate-ref/issues/456">
+          this issue
+        </LinkExternal>{" "}
+        for more information.
       </p>
     </div>
   );
