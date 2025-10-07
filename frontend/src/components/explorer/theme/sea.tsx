@@ -84,7 +84,7 @@ const cards: ExplorerCard[] = [
         title: "Sea Ice Area Seasonal Cycle (Southern Hemisphere)",
         description:
           "20-year average seasonal cycle of the sea ice area in the Southern Hemisphere  (OSISAF-CCI reference data currently missing).",
-        span: 1,
+        span: 2,
         metricUnits: "1e6 km^2",
         otherFilters: {
           region: "Southern Hemisphere",
@@ -104,7 +104,7 @@ const cards: ExplorerCard[] = [
         title: "Sea Ice Area Seasonal Cycle (Northern Hemisphere)",
         description:
           "20-year average seasonal cycle of the sea ice area in the Northern Hemisphere (OSISAF-CCI reference data currently missing).",
-        span: 1,
+        span: 2,
         metricUnits: "1e6 km^2",
         otherFilters: {
           statistic: "20-year average seasonal cycle of the sea ice area",
