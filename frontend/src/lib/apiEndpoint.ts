@@ -2,6 +2,7 @@
 export const API_ENDPOINTS = {
   NESRC: "https://api.climate-ref.org",
   ALCF: "https://api-alcf.climate-ref.org",
+  CR: "https://api-cr.climate-ref.org",
   LOCAL: "/",
 } as const;
 
@@ -106,6 +107,8 @@ export function getEndpointDisplayName(key: ApiEndpointKey): string {
       return "ALCF";
     case "LOCAL":
       return "Localhost";
+    case "CR":
+      return "Climate Resource";
     default:
       return "Unknown";
   }
