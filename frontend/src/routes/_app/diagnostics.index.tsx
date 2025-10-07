@@ -26,6 +26,18 @@ const diagnosticNotes = [
     slug: "transient-climate-response-emissions",
     note: "Waiting on regenerated results",
   },
+  {
+    slug: "regional-historical-annual-cycle",
+    note: "Waiting on regenerated results",
+  },
+  {
+    slug: "regional-historical-timeseries",
+    note: "Waiting on regenerated results",
+  },
+  {
+    slug: "regional-historical-trend",
+    note: "Waiting on regenerated results",
+  },
 ];
 
 // Define search params schema for URL filtering

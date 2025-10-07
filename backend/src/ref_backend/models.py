@@ -285,12 +285,8 @@ class DiagnosticSummary(BaseModel):
 
         # Join back to executions to check success of latest
         successful_execution_group_count = (
-            app_context.session.query(ExecutionGroup)
-            .join(Execution, Execution.execution_group_id == ExecutionGroup.id)
-            .join(
-                latest_exec_per_group,
-                Execution.id == latest_exec_per_group.c.latest_exec_id,
-            )
+            app_context.session.query(latest_exec_per_group.c.egid)
+            .join(Execution, Execution.id == latest_exec_per_group.c.latest_exec_id)
             .filter(Execution.successful.is_(True))
             .count()
         )
