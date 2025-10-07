@@ -9,18 +9,6 @@ const cards: ExplorerCard[] = [
     placeholder: true,
     content: [
       {
-        type: "box-whisker-chart",
-        provider: "ilamb",
-        diagnostic: "gpp-fluxnet2015",
-        title: "Gross Primary Production (GPP)",
-        metricUnits: "kgC/m^2/s",
-        otherFilters: { region: "global" },
-        groupingConfig: {
-          groupBy: "statistic",
-          hue: "statistic",
-        },
-      },
-      {
         type: "series-chart",
         provider: "ilamb",
         diagnostic: "gpp-fluxnet2015",
@@ -35,6 +23,20 @@ const cards: ExplorerCard[] = [
           groupBy: "source_id",
           hue: "source_id",
         },
+        placeholder: true,
+      },
+      {
+        type: "taylor-diagram",
+        provider: "ilamb",
+        diagnostic: "gpp-fluxnet2015",
+        title: "GPP Spatial Performance",
+        description:
+          "Model performance in reproducing spatial patterns of Gross Primary Production (GPP) compared to FLUXNET2015 observations.",
+        interpretation:
+          "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
+        span: 1,
+        otherFilters: { region: "global" },
+        referenceStddev: 1.0,
         placeholder: true,
       },
       {
@@ -64,26 +66,6 @@ const cards: ExplorerCard[] = [
           groupBy: "region",
           hue: "region",
         },
-      },
-    ],
-  },
-  {
-    title: "Terrestrial Model Performance",
-    description:
-      "Taylor diagram showing correlation and normalized standard deviation for model spatial distributions. A taylor diagram is a polar plot that graphically summarizes how closely a pattern (or a set of patterns) matches observations. The radial distance from the origin represents the normalized standard deviation, while the angle represents the correlation coefficient.",
-    content: [
-      {
-        type: "taylor-diagram",
-        provider: "ilamb",
-        diagnostic: "gpp-fluxnet2015",
-        title: "GPP Spatial Performance",
-        description:
-          "Model performance in reproducing spatial patterns of Gross Primary Production (GPP) compared to FLUXNET2015 observations.",
-        interpretation:
-          "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
-        span: 1,
-        otherFilters: { region: "global" },
-        referenceStddev: 1.0,
       },
     ],
   },
