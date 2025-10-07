@@ -92,7 +92,7 @@ def process_scalar_values(
 
     if detect_outliers == "iqr" and scalar_values:
         detection_ran = True
-        annotated_scalar_values, outlier_count = detect_outliers_in_scalar_values(scalar_values)
+        annotated_scalar_values, outlier_count = detect_outliers_in_scalar_values(scalar_values, factor=10.0)
         had_outliers = outlier_count > 0
         if not include_unverified:
             annotated_scalar_values = [item for item in annotated_scalar_values if not item.is_outlier]
