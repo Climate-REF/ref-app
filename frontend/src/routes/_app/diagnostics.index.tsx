@@ -18,6 +18,14 @@ const diagnosticNotes = [
     note: "Known issue with an invalid dataset",
     noteUrl: "https://github.com/Climate-REF/climate-ref/issues/425",
   },
+  {
+    slug: "zero-emission-commitment",
+    note: "Waiting on regenerated results",
+  },
+  {
+    slug: "transient-climate-response-emissions",
+    note: "Waiting on regenerated results",
+  },
 ];
 
 // Define search params schema for URL filtering
