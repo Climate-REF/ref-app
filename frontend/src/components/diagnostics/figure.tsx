@@ -9,7 +9,7 @@ const figureVariants = cva(
     variants: {
       size: {
         default: "max-h-96",
-        large: "h-[800px] max-h-full",
+        large: "h-[600px] max-h-full",
       },
     },
     defaultVariants: {
@@ -24,9 +24,9 @@ export function Figure({
   size,
 }: ExecutionOutput & VariantProps<typeof figureVariants>) {
   return (
-    <div className="flex flex-col items-center gap-2 overflow-hidden">
+    <div className="flex flex-col items-center gap-2">
       <img src={url} alt={long_name} className={cn(figureVariants({ size }))} />
-      <small className="text-muted-foreground">{long_name}</small>
+      <small className="text-muted-foreground line-clamp-3">{long_name}</small>
     </div>
   );
 }

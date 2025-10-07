@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import Integer, and_, func, text
+from sqlalchemy import Integer, func, text
 from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
@@ -116,38 +116,30 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     group_counts = {row[0]: row[1] for row in execution_group_counts}
 
     # Count successful execution groups (latest execution successful)
-    # Use a window function approach instead of subquery to avoid correlation issues
-    latest_executions = (
+    # Subquery: latest execution id per group
+    latest_exec_per_group = (
         app_context.session.query(
-            models.Execution.execution_group_id, func.max(models.Execution.id).label("max_exec_id")
+            models.Execution.execution_group_id.label("egid"),
+            func.max(models.Execution.id).label("latest_exec_id"),
         )
-        .filter(
-            models.Execution.execution_group_id.in_(
-                app_context.session.query(models.ExecutionGroup.id).filter(
-                    models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids)
-                )
-            )
-        )
+        .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
+        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
         .group_by(models.Execution.execution_group_id)
         .subquery()
     )
 
+    # Join back to executions to check success of latest
     successful_group_counts = (
         app_context.session.query(
             models.ExecutionGroup.diagnostic_id,
-            func.count(func.distinct(models.ExecutionGroup.id)).label("successful_count"),
+            func.count(models.Execution.id).label("successful_count"),
         )
         .join(models.Execution, models.Execution.execution_group_id == models.ExecutionGroup.id)
         .join(
-            latest_executions,
-            and_(
-                models.Execution.execution_group_id == latest_executions.c.execution_group_id,
-                models.Execution.id == latest_executions.c.max_exec_id,
-            ),
+            latest_exec_per_group,
+            models.Execution.id == latest_exec_per_group.c.latest_exec_id,
         )
-        .filter(
-            models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids), models.Execution.successful.is_(True)
-        )
+        .filter(models.Execution.successful.is_(True))
         .group_by(models.ExecutionGroup.diagnostic_id)
         .all()
     )

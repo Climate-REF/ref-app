@@ -83,7 +83,6 @@ export function FigureGalleryModal({
             <Figure {...figures[selectedIndex].figure} size="large" />
             <div className="mt-4 text-sm text-muted-foreground">
               <p>Group: {figures[selectedIndex].executionGroup.key}</p>
-              <p>Description: {figures[selectedIndex].figure.description}</p>
             </div>
           </>
         )}
