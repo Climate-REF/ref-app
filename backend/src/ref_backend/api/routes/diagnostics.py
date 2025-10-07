@@ -132,7 +132,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     successful_group_counts = (
         app_context.session.query(
             models.ExecutionGroup.diagnostic_id,
-            func.count(models.Execution.id).label("successful_count"),
+            func.count(models.ExecutionGroup.id).label("successful_count"),
         )
         .join(models.Execution, models.Execution.execution_group_id == models.ExecutionGroup.id)
         .join(
