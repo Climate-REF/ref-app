@@ -563,7 +563,6 @@ class MetricValueCollection(BaseModel):
 
         # Process scalar values
         for item in scalar_values:
-            print(item)
             v = item.value
             for key, value in v.dimensions.items():
                 if key in facets:
