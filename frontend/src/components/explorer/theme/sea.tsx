@@ -119,6 +119,42 @@ const cards: ExplorerCard[] = [
     ],
     placeholder: true,
   },
+  {
+    title: "Surface Ocean Salinity",
+    content: [
+      {
+        type: "box-whisker-chart",
+        provider: "ilamb",
+        diagnostic: "so-woa2023-surface",
+        title: "Bias",
+        description: "Bias in Surface Ocean Salinity with respect to WOA2023",
+        span: 1,
+        metricUnits: "psu",
+        otherFilters: {
+          statistic: "Bias",
+        },
+        groupingConfig: {
+          groupBy: "source_id",
+          hue: "source_id",
+        },
+      },
+      {
+        type: "taylor-diagram",
+        provider: "ilamb",
+        diagnostic: "so-woa2023-surface",
+        title: "Taylor Diagram",
+        description:
+          "Taylor diagram showing the performance of global surface ocean salinity against WOA2023 observations. ",
+        interpretation:
+          "Points closer to the reference (black square) indicate better model performance. Distance from the origin represents RMSE.",
+        otherFilters: {
+          region: "None",
+          metric: "Spatial Distribution",
+        },
+      },
+    ],
+    placeholder: true,
+  },
 ];
 
 export function SeaTheme() {

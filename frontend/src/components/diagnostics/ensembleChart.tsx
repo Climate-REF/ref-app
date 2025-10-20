@@ -77,10 +77,9 @@ const renderKV = (k: string, v: string) => (
   </div>
 );
 
-const chartHeight = 320;
+const chartHeight = 500;
 const marginTop = 24;
 const marginBottom = 10;
-const chartInnerHeight = chartHeight - marginTop - marginBottom;
 
 export const EnsembleChart = ({
   data,
@@ -272,12 +271,21 @@ export const EnsembleChart = ({
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
+  // Hide x-axis when there are too many items (threshold: 6)
+  const shouldShowXAxis = chartData.length <= 6;
+
+  // Adjust spacing based on number of items
+  // make them closer together when there are many
+  const barCategoryGap =
+    chartData.length > 20 ? "2%" : chartData.length > 10 ? "5%" : "20%";
+
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
           data={chartData}
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
+          barCategoryGap={barCategoryGap}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
@@ -285,6 +293,7 @@ export const EnsembleChart = ({
             tickLine={false}
             axisLine={{ stroke: "#E5E7EB" }}
             tickMargin={10}
+            hide={!shouldShowXAxis}
           />
           <YAxis
             width={64}
@@ -544,7 +553,6 @@ export const EnsembleChart = ({
                       ? highlightedPoint?.point
                       : null
                   }
-                  background={{ height: chartInnerHeight }}
                 />
               }
             />

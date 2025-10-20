@@ -16,6 +16,10 @@ interface TaylorDiagramProps {
   width?: number;
   height?: number;
   referenceStddev?: number; // defaults to 1.0
+  marginTop?: number; // defaults to 50
+  marginBottom?: number; // defaults to 50
+  marginLeft?: number; // defaults to 50
+  marginRight?: number; // defaults to 50
 }
 
 /**
@@ -32,6 +36,10 @@ export function TaylorDiagramContent({
   width = 500,
   height = 500,
   referenceStddev = 1.0,
+  marginTop = 50,
+  marginBottom = 50,
+  marginLeft = 50,
+  marginRight = 50,
 }: TaylorDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredModel, setHoveredModel] = useState<TaylorDiagramModel | null>(
@@ -84,9 +92,11 @@ export function TaylorDiagramContent({
     const currentSvg = svgRef.current;
 
     const svg = d3.select(svgRef.current);
-    const margin = 50;
-    const radius = Math.min(width, height) - margin * 2;
-    const center = { x: margin, y: height - margin }; // bottom-left origin
+    const radius = Math.min(
+      width - marginLeft - marginRight,
+      height - marginTop - marginBottom,
+    );
+    const center = { x: marginLeft, y: height - marginBottom }; // bottom-left origin
 
     // Define the maximum standard deviation for the diagram
     const stddevMax = 1.6;
@@ -343,7 +353,16 @@ export function TaylorDiagramContent({
         currentSvg.removeEventListener("mousemove", handleMouseMove);
       }
     };
-  }, [models, width, height, referenceStddev]);
+  }, [
+    models,
+    width,
+    height,
+    referenceStddev,
+    marginTop,
+    marginBottom,
+    marginLeft,
+    marginRight,
+  ]);
 
   // Handle empty state
   if (models.length === 0) {

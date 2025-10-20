@@ -67,7 +67,7 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
 
 export function TaylorDiagramContentWrapper({
   contentItem,
-  height = 500,
+  height = 460,
   width = 500,
 }: TaylorDiagramContentWrapperProps) {
   const { data } = useSuspenseQuery(
@@ -105,11 +105,14 @@ export function TaylorDiagramContentWrapper({
   }
 
   return (
-    <TaylorDiagramContent
-      models={models}
-      width={width}
-      height={height}
-      referenceStddev={contentItem.referenceStddev}
-    />
+    <div className="mx-auto">
+      <TaylorDiagramContent
+        models={models}
+        width={width}
+        height={height}
+        referenceStddev={contentItem.referenceStddev}
+        marginTop={0}
+      />
+    </div>
   );
 }
