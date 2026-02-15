@@ -23,6 +23,10 @@ pmp/annual-cycle:
       description: "CERES Energy Balanced and Filled v4.2 - Radiation fields (rlds, rlus, rsds, rsus, rlut, rsut)"
       type: "primary"
   display_name: "Annual Cycle Analysis"
+  description: >-
+    Calculate the annual cycle for a dataset. Variables provided include surface temperature (ts),
+    precipitation (pr), winds (uas, vas), sea level pressure (psl), and radiation fields
+    (rlds, rlus, rsds, rsus, rlut, rsut).
   tags: ["atmosphere", "seasonal-cycle", "climatology"]
 
 pmp/enso_perf:
@@ -37,6 +41,9 @@ pmp/enso_perf:
       description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1 - SST reference"
       type: "primary"
   display_name: "ENSO Performance Metrics"
+  description: >-
+    Calculate the ENSO performance metrics for a dataset. These metrics evaluate
+    how well a model simulates key aspects of El Nino-Southern Oscillation variability.
   tags: ["ocean", "atmosphere", "enso", "variability"]
 
 pmp/enso_tel:
@@ -51,6 +58,10 @@ pmp/enso_tel:
       description: "Hadley Centre Sea Ice and SST v1.1 - SST teleconnections"
       type: "primary"
   display_name: "ENSO Teleconnections"
+  description: >-
+    Calculate the ENSO teleconnection metrics for a dataset. Teleconnection metrics
+    assess how well a model captures the remote climate impacts of ENSO events
+    on temperature and precipitation patterns worldwide.
   tags: ["ocean", "atmosphere", "enso", "teleconnections"]
 
 pmp/enso_proc:
@@ -68,6 +79,10 @@ pmp/enso_proc:
       description: "CERES Energy Balanced and Filled v4.2 - Radiation fluxes"
       type: "primary"
   display_name: "ENSO Processes"
+  description: >-
+    Calculate the ENSO process-oriented metrics for a dataset. These metrics evaluate
+    the physical processes that drive ENSO, including ocean-atmosphere coupling,
+    thermocline feedbacks, and energy balance.
   tags: ["ocean", "atmosphere", "enso", "energy-balance"]
 
 # Extratropical Modes of Variability (Sea Surface Temperature modes)
@@ -77,6 +92,9 @@ pmp/extratropical-modes-of-variability-pdo:
       description: "Hadley Centre Sea Ice and SST v1.1 - SST for Pacific Decadal Oscillation"
       type: "primary"
   display_name: "Pacific Decadal Oscillation (PDO)"
+  description: >-
+    Calculate the extratropical modes of variability for the Pacific Decadal Oscillation (PDO),
+    a pattern of Pacific climate variability characterized by SST anomalies in the North Pacific.
   tags: ["ocean", "variability", "pacific", "decadal"]
 
 pmp/extratropical-modes-of-variability-npgo:
@@ -85,6 +103,9 @@ pmp/extratropical-modes-of-variability-npgo:
       description: "Hadley Centre Sea Ice and SST v1.1 - SST for North Pacific Gyre Oscillation"
       type: "primary"
   display_name: "North Pacific Gyre Oscillation (NPGO)"
+  description: >-
+    Calculate the extratropical modes of variability for the North Pacific Gyre Oscillation (NPGO),
+    which tracks changes in the strength of the North Pacific subtropical and subpolar gyres.
   tags: ["ocean", "variability", "pacific"]
 
 pmp/extratropical-modes-of-variability-amo:
@@ -93,6 +114,9 @@ pmp/extratropical-modes-of-variability-amo:
       description: "Hadley Centre Sea Ice and SST v1.1 - SST for Atlantic Multidecadal Oscillation"
       type: "primary"
   display_name: "Atlantic Multidecadal Oscillation (AMO)"
+  description: >-
+    Calculate the extratropical modes of variability for the Atlantic Multidecadal Oscillation (AMO),
+    a coherent pattern of variability in North Atlantic SSTs with a period of 60-80 years.
   tags: ["ocean", "variability", "atlantic", "decadal"]
 
 # Extratropical Modes of Variability (Sea Level Pressure modes)
@@ -102,6 +126,9 @@ pmp/extratropical-modes-of-variability-nao:
       description: "20th Century Reanalysis - Sea level pressure for North Atlantic Oscillation"
       type: "primary"
   display_name: "North Atlantic Oscillation (NAO)"
+  description: >-
+    Calculate the extratropical modes of variability for the North Atlantic Oscillation (NAO),
+    a large-scale pattern of sea level pressure variability between the Icelandic Low and Azores High.
   tags: ["atmosphere", "variability", "atlantic", "pressure"]
 
 pmp/extratropical-modes-of-variability-nam:
@@ -110,6 +137,9 @@ pmp/extratropical-modes-of-variability-nam:
       description: "20th Century Reanalysis - Sea level pressure for Northern Annular Mode"
       type: "primary"
   display_name: "Northern Annular Mode (NAM)"
+  description: >-
+    Calculate the extratropical modes of variability for the Northern Annular Mode (NAM),
+    the dominant mode of sea level pressure variability in the Northern Hemisphere extratropics.
   tags: ["atmosphere", "variability", "hemispheric", "pressure"]
 
 pmp/extratropical-modes-of-variability-pna:
@@ -118,6 +148,9 @@ pmp/extratropical-modes-of-variability-pna:
       description: "20th Century Reanalysis - Sea level pressure for Pacific North American Pattern"
       type: "primary"
   display_name: "Pacific North American Pattern (PNA)"
+  description: >-
+    Calculate the extratropical modes of variability for the Pacific North American (PNA) pattern,
+    a prominent mode of atmospheric variability influencing weather over the Pacific and North America.
   tags: ["atmosphere", "variability", "pacific", "pressure"]
 
 pmp/extratropical-modes-of-variability-npo:
@@ -126,6 +159,9 @@ pmp/extratropical-modes-of-variability-npo:
       description: "20th Century Reanalysis - Sea level pressure for North Pacific Oscillation"
       type: "primary"
   display_name: "North Pacific Oscillation (NPO)"
+  description: >-
+    Calculate the extratropical modes of variability for the North Pacific Oscillation (NPO),
+    defined by sea level pressure variability over the North Pacific.
   tags: ["atmosphere", "variability", "pacific", "pressure"]
 
 pmp/extratropical-modes-of-variability-sam:
@@ -134,6 +170,9 @@ pmp/extratropical-modes-of-variability-sam:
       description: "20th Century Reanalysis - Sea level pressure for Southern Annular Mode"
       type: "primary"
   display_name: "Southern Annular Mode (SAM)"
+  description: >-
+    Calculate the extratropical modes of variability for the Southern Annular Mode (SAM),
+    the dominant mode of sea level pressure variability in the Southern Hemisphere extratropics.
   tags: ["atmosphere", "variability", "southern-hemisphere", "pressure"]
 
 # ============================================================================
@@ -152,6 +191,9 @@ esmvaltool/cloud-radiative-effects:
       description: "ISCCP cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "Cloud Radiative Effects"
+  description: >-
+    Plot climatologies and zonal mean profiles of cloud radiative effects
+    (shortwave + longwave) for a dataset.
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-cli-ta:
@@ -163,6 +205,10 @@ esmvaltool/cloud-scatterplots-cli-ta:
       description: "Ice Cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
+  description: >-
+    Scatterplot of ice water content of cloud (cli) vs air temperature (ta).
+    Observational scatterplots for reference datasets are provided in the separate
+    "Cloud Scatterplots for Reference dataset" diagnostic.
   tags: ["atmosphere", "clouds", "temperature"]
 
 esmvaltool/cloud-scatterplots-clivi-lwcre:
@@ -174,6 +220,7 @@ esmvaltool/cloud-scatterplots-clivi-lwcre:
       description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
+  description: "Scatterplot of ice water path (clivi) vs longwave cloud radiative effect (lwcre)."
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-clt-swcre:
@@ -185,6 +232,7 @@ esmvaltool/cloud-scatterplots-clt-swcre:
       description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
+  description: "Scatterplot of total cloud fraction (clt) vs shortwave cloud radiative effect (swcre)."
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-clwvi-pr:
@@ -199,6 +247,7 @@ esmvaltool/cloud-scatterplots-clwvi-pr:
       description: "CERES - Reference cloud-radiation relationships"
       type: "primary"
   display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
+  description: "Scatterplot of condensed water path (clwvi) vs precipitation (pr)."
   tags: ["atmosphere", "clouds", "precipitation"]
 
 esmvaltool/cloud-scatterplots-reference:
@@ -210,6 +259,9 @@ esmvaltool/cloud-scatterplots-reference:
       description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "Cloud Scatterplots for Reference dataset"
+  description: >-
+    Reference scatterplots of two cloud-relevant variables from observational datasets.
+    These provide the observational baseline for comparison with model cloud scatterplot diagnostics.
   tags: ["atmosphere", "clouds"]
 
 esmvaltool/enso-basic-climatology:
@@ -224,6 +276,9 @@ esmvaltool/enso-basic-climatology:
       description: "Ice Cloud properties (planned to move to obs4MIPs)"
       type: "secondary"
   display_name: "ENSO Basic Climatology"
+  description: >-
+    Calculate the ENSO CLIVAR metrics for background climatology, assessing the
+    mean state of the tropical Pacific upon which ENSO events develop.
   tags: ["ocean", "enso", "climatology"]
 
 esmvaltool/enso-characteristics:
@@ -235,26 +290,46 @@ esmvaltool/enso-characteristics:
       description: "TROPFLUX - Air-sea fluxes"
       type: "secondary"
   display_name: "ENSO Characteristics"
+  description: >-
+    Calculate the ENSO CLIVAR metrics for basic ENSO characteristics,
+    evaluating the amplitude, frequency, and spatial structure of ENSO events.
   tags: ["ocean", "enso", "variability"]
 
 esmvaltool/equilibrium-climate-sensitivity:
   reference_datasets: []
   display_name: "Equilibrium Climate Sensitivity (ECS)"
+  description: >-
+    Calculate the global mean equilibrium climate sensitivity for a dataset.
+    ECS is defined as the long-term global mean surface temperature change
+    in response to a doubling of atmospheric CO2 concentration, estimated
+    using the Gregory regression method from abrupt-4xCO2 experiments.
   tags: ["climate-sensitivity", "feedback"]
 
 esmvaltool/transient-climate-response:
   reference_datasets: []
   display_name: "Transient Climate Response (TCR)"
+  description: >-
+    Calculate the global mean transient climate response for a dataset.
+    TCR is defined as the global mean surface temperature change at the time
+    of CO2 doubling in a 1pctCO2 experiment (1% per year CO2 increase).
   tags: ["climate-sensitivity", "transient"]
 
 esmvaltool/transient-climate-response-emissions:
   reference_datasets: []
   display_name: "Transient Climate Response to Emissions (TCRE)"
+  description: >-
+    Calculate the global mean Transient Climate Response to Cumulative CO2 Emissions.
+    TCRE quantifies the relationship between global warming and total cumulative
+    carbon emissions, a key metric for carbon budget estimation.
   tags: ["climate-sensitivity", "carbon-cycle"]
 
 esmvaltool/zero-emission-commitment:
   reference_datasets: []
   display_name: "Zero Emission Commitment (ZEC)"
+  description: >-
+    Calculate the global mean Zero Emission Commitment (ZEC) temperature.
+    ZEC measures the additional warming (or cooling) that occurs after all
+    CO2 emissions cease, reflecting the committed warming from past emissions.
   tags: ["climate-sensitivity", "commitment"]
 
 esmvaltool/regional-historical-annual-cycle:
@@ -263,6 +338,10 @@ esmvaltool/regional-historical-annual-cycle:
       description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
       type: "primary"
   display_name: "Regional Historical Annual Cycle"
+  description: >-
+    Plot the regional historical annual cycle of climate variables. Currently limited to
+    near-surface air temperature (tas) and precipitation (pr). Regions are defined using
+    IPCC AR6 reference regions as described by Iturbide et al. (2020).
   tags: ["regional", "seasonal-cycle", "historical"]
 
 esmvaltool/regional-historical-timeseries:
@@ -271,6 +350,10 @@ esmvaltool/regional-historical-timeseries:
       description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
       type: "primary"
   display_name: "Regional Historical Timeseries"
+  description: >-
+    Plot the regional historical mean and anomaly timeseries of climate variables. Currently
+    limited to near-surface air temperature (tas) and precipitation (pr). Regions are defined
+    using IPCC AR6 reference regions as described by Iturbide et al. (2020).
   tags: ["regional", "timeseries", "historical"]
 
 esmvaltool/regional-historical-trend:
@@ -279,6 +362,10 @@ esmvaltool/regional-historical-trend:
       description: "ERA-5 - Regional winds (uas, vas), and sea level pressure (psl)"
       type: "primary"
   display_name: "Regional Historical Trends"
+  description: >-
+    Plot the regional historical trend of climate variables. Currently limited to near-surface
+    air temperature (tas) and precipitation (pr). Regions are defined using IPCC AR6 reference
+    regions as described by Iturbide et al. (2020).
   tags: ["regional", "trends", "historical"]
 
 esmvaltool/sea-ice-area-basic:
@@ -287,6 +374,9 @@ esmvaltool/sea-ice-area-basic:
       description: "OSI-450 - Sea ice area observations"
       type: "primary"
   display_name: "Sea Ice Area Basic Metrics"
+  description: >-
+    Calculate the seasonal cycle and time series of Northern Hemisphere and
+    Southern Hemisphere sea ice area.
   tags: ["sea-ice", "cryosphere"]
 
 esmvaltool/sea-ice-sensitivity:
@@ -295,16 +385,19 @@ esmvaltool/sea-ice-sensitivity:
       description: "OSI-450 - Sea ice area observations"
       type: "primary"
   display_name: "Sea Ice Sensitivity"
+  description: "Calculate sea ice sensitivity, quantifying the relationship between sea ice area and global temperature change."
   tags: ["sea-ice", "cryosphere", "sensitivity"]
 
 esmvaltool/climate-at-global-warming-levels:
   reference_datasets: []
   display_name: "Climate at Global Warming Levels"
+  description: "Calculate climate variables at global warming levels (e.g. 1.5C, 2C, 3C, 4C above pre-industrial)."
   tags: ["scenarios", "warming-levels"]
 
 esmvaltool/climate-drivers-for-fire:
   reference_datasets: []
   display_name: "Climate Drivers for Fire"
+  description: "Calculate diagnostics regarding climate drivers for fire, including temperature, precipitation, and humidity conditions that influence fire risk."
   tags: ["fire", "climate-drivers", "impacts"]
 
 # ============================================================================
@@ -323,6 +416,7 @@ ilamb/gpp-wecann:
       description: "CRU TS v4.02 - Temperature relationship"
       type: "secondary"
   display_name: "Gross Primary Productivity (WECANN)"
+  description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the WECANN reference dataset."
   tags: ["land", "carbon-cycle", "vegetation"]
 
 ilamb/gpp-fluxnet2015:
@@ -331,6 +425,7 @@ ilamb/gpp-fluxnet2015:
       description: "FLUXNET2015 - Tower-based GPP measurements"
       type: "primary"
   display_name: "Gross Primary Productivity (FLUXNET2015)"
+  description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the FLUXNET2015 tower-based reference dataset."
   tags: ["land", "carbon-cycle", "vegetation", "flux-towers"]
 
 ilamb/mrro-lora:
@@ -339,6 +434,7 @@ ilamb/mrro-lora:
       description: "LORA dataset - Runoff observations"
       type: "primary"
   display_name: "Runoff (LORA)"
+  description: "Apply the standard ILAMB analysis of total runoff (mrro) with respect to the LORA reference dataset."
   tags: ["land", "hydrology", "runoff"]
 
 ilamb/mrsos-wangmao:
@@ -347,6 +443,7 @@ ilamb/mrsos-wangmao:
       description: "Wang-Mao dataset - Surface soil moisture"
       type: "primary"
   display_name: "Surface Soil Moisture (WangMao)"
+  description: "Apply the standard ILAMB analysis of moisture in upper portion of soil column (mrsos) with respect to the WangMao reference dataset."
   tags: ["land", "hydrology", "soil-moisture"]
 
 ilamb/csoil-hwsd2:
@@ -355,6 +452,7 @@ ilamb/csoil-hwsd2:
       description: "Harmonized World Soil Database v2 - Soil carbon content"
       type: "primary"
   display_name: "Soil Carbon (HWSD2)"
+  description: "Apply the standard ILAMB analysis of carbon mass in soil pool (cSoil) with respect to the HWSD2 reference dataset."
   tags: ["land", "carbon-cycle", "soil"]
 
 ilamb/lai-avh15c1:
@@ -363,6 +461,7 @@ ilamb/lai-avh15c1:
       description: "AVHRR - Leaf area index observations"
       type: "primary"
   display_name: "Leaf Area Index (AVH15C1)"
+  description: "Apply the standard ILAMB analysis of leaf area index (lai) with respect to the AVH15C1 (AVHRR) reference dataset."
   tags: ["land", "vegetation", "remote-sensing"]
 
 ilamb/nbp-hoffman:
@@ -371,6 +470,7 @@ ilamb/nbp-hoffman:
       description: "Hoffman dataset - Net biome productivity"
       type: "primary"
   display_name: "Net Biome Productivity (Hoffman)"
+  description: "Apply the standard ILAMB analysis of net biome productivity (nbp) with respect to the Hoffman reference dataset."
   tags: ["land", "carbon-cycle", "net-flux"]
 
 ilamb/snc-esacci:
@@ -379,6 +479,7 @@ ilamb/snc-esacci:
       description: "ESA CCI Snow - Snow cover fraction"
       type: "primary"
   display_name: "Snow Cover (ESA CCI)"
+  description: "Apply the standard ILAMB analysis of snow cover fraction (snc) with respect to the ESA CCI CryoClim fractional snow cover reference dataset."
   tags: ["land", "cryosphere", "snow"]
 
 ilamb/burntfractionall-gfed:
@@ -387,6 +488,7 @@ ilamb/burntfractionall-gfed:
       description: "Global Fire Emissions Database - Burnt area fraction"
       type: "primary"
   display_name: "Burnt Fraction (GFED)"
+  description: "Apply the standard ILAMB analysis of burnt area fraction (burntFractionAll) with respect to the GFED reference dataset."
   tags: ["land", "fire", "disturbance"]
 
 # ============================================================================
@@ -399,6 +501,7 @@ ilamb/thetao-woa2023-surface:
       description: "World Ocean Atlas 2023 - Sea water potential temperature (surface)"
       type: "primary"
   display_name: "Sea Water Temperature (WOA2023 Surface)"
+  description: "Apply the standard ILAMB analysis of sea water potential temperature (thetao) at the surface with respect to the WOA2023 reference dataset."
   tags: ["ocean", "temperature", "surface"]
 
 ilamb/so-woa2023-surface:
@@ -407,6 +510,7 @@ ilamb/so-woa2023-surface:
       description: "World Ocean Atlas 2023 - Sea water salinity (surface)"
       type: "primary"
   display_name: "Sea Water Salinity (WOA2023 Surface)"
+  description: "Apply the standard ILAMB analysis of sea water salinity (so) at the surface with respect to the WOA2023 reference dataset."
   tags: ["ocean", "salinity", "surface"]
 
 ilamb/amoc-rapid:
@@ -415,6 +519,7 @@ ilamb/amoc-rapid:
       description: "RAPID array - Atlantic Meridional Overturning Circulation observations"
       type: "primary"
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
+  description: "Apply the standard ILAMB analysis of the Atlantic Meridional Overturning Circulation (AMOC) with respect to the RAPID array reference dataset."
   tags: ["ocean", "circulation", "amoc"]
 
 ilamb/ohc-noaa:
@@ -423,4 +528,5 @@ ilamb/ohc-noaa:
       description: "NOAA - Ocean heat content (0-2000m)"
       type: "primary"
   display_name: "Ocean Heat Content (NOAA)"
+  description: "Apply the standard ILAMB analysis of ocean heat content (ohc, 0-2000m) with respect to the NOAA reference dataset."
   tags: ["ocean", "heat-content", "climate-change"]

@@ -208,6 +208,8 @@ class DiagnosticSummary(BaseModel):
             # Apply overrides: YAML values override database values
             if metadata.display_name is not None:
                 summary.name = metadata.display_name
+            if metadata.description is not None:
+                summary.description = metadata.description
             if metadata.reference_datasets is not None:
                 summary.reference_datasets = metadata.reference_datasets
             if metadata.tags is not None:

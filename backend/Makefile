@@ -41,3 +41,7 @@ test: ## Run pytest
 .PHONY: mypy
 mypy: ## Run mypy type checker
 	uv run mypy src
+
+.PHONY: generate-metadata
+generate-metadata: ## Generate diagnostic metadata YAML from provider registry
+	uv run python scripts/generate_metadata.py
