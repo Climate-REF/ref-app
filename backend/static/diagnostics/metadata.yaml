@@ -286,13 +286,16 @@ esmvaltool/sea-ice-area-basic:
     - slug: "esmvaltool.OSI-450"
       description: "OSI-450 - Sea ice area observations"
       type: "primary"
-  display_name: "Sea Ice Area Basic Metrics"
+  display_name: "Arctic and Antarctic Sea Ice Area Seasonal Cycle"
   tags: ["sea-ice", "cryosphere"]
 
 esmvaltool/sea-ice-sensitivity:
   reference_datasets:
     - slug: "esmvaltool.OSI-450"
       description: "OSI-450 - Sea ice area observations"
+      type: "primary"
+    - slug: "esmvaltool.HadCRUT5"
+      description: "HadCRUT5 - Global mean surface temperature for sensitivity regression"
       type: "primary"
   display_name: "Sea Ice Sensitivity"
   tags: ["sea-ice", "cryosphere", "sensitivity"]
