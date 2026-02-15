@@ -6,7 +6,13 @@ from climate_ref.config import Config
 from ref_backend.core.config import Settings
 from ref_backend.core.ref import get_ref_config
 
-EXAMPLE_DIR = Path(__file__).parents[2] / "tests" / "test-data" / "example"
+EXAMPLE_DIR = (
+    Path(__file__).parents[2]
+    / "tests"
+    / "test-data"
+    / "tests.integration.test_cmip7_aft"
+    / "test_solve_cmip7_aft"
+)
 
 
 @functools.lru_cache

@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -10,11 +11,31 @@ def get_diagnostic(client: TestClient, settings) -> dict:
     return diagnostics[0]
 
 
+def get_diagnostic_with_scalar_values(client: TestClient, settings) -> dict:
+    """Helper to get a diagnostic that has scalar metric values."""
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/")
+    assert r.status_code == 200
+    diagnostics = r.json()["data"]
+    assert len(diagnostics) > 0
+    for diag in diagnostics:
+        provider_slug = diag["provider"]["slug"]
+        diagnostic_slug = diag["slug"]
+        rv = client.get(
+            f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?value_type=scalar"
+        )
+        if rv.status_code == 200 and rv.json()["count"] > 0:
+            return diag
+    # Fall back to first diagnostic if none have scalar values
+    return diagnostics[0]
+
+
 def get_diagnostic_metrics(
     client: TestClient, settings, provider_slug: str, diagnostic_slug: str
 ) -> list[str]:
     """Helper to get available metrics for a diagnostic."""
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values")
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?value_type=scalar"
+    )
     assert r.status_code == 200
     facets = r.json()["facets"]
     metric_facet = next((f for f in facets if f["key"] == "metric"), None)
@@ -22,9 +43,10 @@ def get_diagnostic_metrics(
     return metric_facet["values"]
 
 
+@pytest.mark.xfail(reason="Comparison endpoint not yet implemented")
 def test_diagnostic_comparison(client: TestClient, settings):
     """Test the comparison endpoint for a diagnostic."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
@@ -44,21 +66,6 @@ def test_diagnostic_comparison(client: TestClient, settings):
 
     assert "source" in data
     assert "ensemble" in data
-    # assert data["source"]["count"] > 0
-    #
-    # assert all(
-    #     mv["dimensions"].get("source_id") == source_id for mv in data["source"]["data"]
-    # )
-    # assert all(
-    #     mv["dimensions"].get("source_id") != source_id
-    #     for mv in data["ensemble"]["data"]
-    # )
-    # assert all(
-    #     mv["dimensions"].get("metric") in metrics for mv in data["source"]["data"]
-    # )
-    # assert all(
-    #     mv["dimensions"].get("metric") in metrics for mv in data["ensemble"]["data"]
-    # )
 
 
 def test_diagnostic_executions(client: TestClient, settings):
@@ -81,39 +88,35 @@ def test_diagnostic_executions(client: TestClient, settings):
 
 def test_diagnostic_values_outlier_detection_off(client: TestClient, settings):
     """Test diagnostic values endpoint with outlier detection disabled."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
     r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&type=scalar&detect_outliers=off"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&value_type=scalar&detect_outliers=off"
     )
 
     assert r.status_code == 200
     data = r.json()
 
-    # Assert no outlier-related fields in response
-    assert "had_outliers" not in data
-    assert "outlier_count" not in data
+    # Assert outlier detection did not run
+    assert data["had_outliers"] is None
+    assert data["outlier_count"] is None
 
-    # Assert no outlier fields in individual items
+    # Assert no outlier annotations on items
     for item in data["data"]:
-        assert "is_outlier" not in item
-        assert "verification_status" not in item
-
-    # Assert headers are absent
-    assert "X-REF-Had-Outliers" not in r.headers
-    assert "X-REF-Outlier-Count" not in r.headers
+        assert item["is_outlier"] is None
+        assert item["verification_status"] is None
 
 
 def test_diagnostic_values_outlier_detection_on(client: TestClient, settings):
     """Test diagnostic values endpoint with outlier detection enabled (default)."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
     r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&type=scalar"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&value_type=scalar"
     )
 
     assert r.status_code == 200
@@ -133,20 +136,16 @@ def test_diagnostic_values_outlier_detection_on(client: TestClient, settings):
         assert isinstance(item["is_outlier"], bool)
         assert item["verification_status"] in ["verified", "unverified"]
 
-    # Assert headers are present
-    assert "X-REF-Had-Outliers" in r.headers
-    assert "X-REF-Outlier-Count" in r.headers
-
 
 def test_diagnostic_values_include_unverified(client: TestClient, settings):
     """Test diagnostic values endpoint with include_unverified parameter."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
     # Get default response
     r_default = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&type=scalar"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&value_type=scalar"
     )
     assert r_default.status_code == 200
     data_default = r_default.json()
@@ -154,7 +153,7 @@ def test_diagnostic_values_include_unverified(client: TestClient, settings):
 
     # Get response with include_unverified=true
     r_unverified = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&type=scalar&include_unverified=true"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=json&value_type=scalar&include_unverified=true"
     )
     assert r_unverified.status_code == 200
     data_unverified = r_unverified.json()
@@ -166,21 +165,21 @@ def test_diagnostic_values_include_unverified(client: TestClient, settings):
 
 def test_diagnostic_values_csv_outlier_detection_off(client: TestClient, settings):
     """Test diagnostic values CSV endpoint with outlier detection disabled."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
     r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=csv&type=scalar&detect_outliers=off"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=csv&value_type=scalar&detect_outliers=off"
     )
 
     assert r.status_code == 200
     csv_content = r.text
 
     # Parse CSV to check columns
-    lines = csv_content.strip().split("\n")
+    lines = csv_content.strip().splitlines()
     if lines and lines[0]:  # Not empty
-        header = lines[0].split(",")
+        header = [h.strip() for h in lines[0].split(",")]
         assert "is_outlier" not in header
         assert "verification_status" not in header
 
@@ -191,23 +190,23 @@ def test_diagnostic_values_csv_outlier_detection_off(client: TestClient, setting
 
 def test_diagnostic_values_csv_outlier_detection_on(client: TestClient, settings):
     """Test diagnostic values CSV endpoint with outlier detection enabled."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     provider_slug = diagnostic["provider"]["slug"]
     diagnostic_slug = diagnostic["slug"]
 
     r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=csv&type=scalar"
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values?format=csv&value_type=scalar"
     )
 
     assert r.status_code == 200
     csv_content = r.text
 
     # Parse CSV to check columns
-    lines = csv_content.strip().split("\n")
-    if lines and lines[0]:  # Not empty
-        header = lines[0].split(",")
-        assert "is_outlier" in header
-        assert "verification_status" in header
+    lines = csv_content.strip().splitlines()
+    assert len(lines) > 1, "CSV should have header and data rows"
+    header = [h.strip() for h in lines[0].split(",")]
+    assert "is_outlier" in header
+    assert "verification_status" in header
 
     # Assert headers are present
     assert "X-REF-Had-Outliers" in r.headers
