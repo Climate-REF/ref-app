@@ -26,7 +26,7 @@ export function SeriesTooltip({
 
   // Filter visible entries
   const visibleEntries = payload.filter((entry) => {
-    const seriesIdx = Number.parseInt(entry.dataKey.replace("series_", ""));
+    const seriesIdx = Number.parseInt(entry.dataKey.replace("series_", ""), 10);
     const metadata = seriesMetadata[seriesIdx];
     return metadata && !hiddenLabels.has(metadata.label);
   });
@@ -39,7 +39,10 @@ export function SeriesTooltip({
   let displayEntry = visibleEntries[0];
   if (hoveredLabel) {
     const hoveredEntry = visibleEntries.find((entry) => {
-      const seriesIdx = Number.parseInt(entry.dataKey.replace("series_", ""));
+      const seriesIdx = Number.parseInt(
+        entry.dataKey.replace("series_", ""),
+        10,
+      );
       const metadata = seriesMetadata[seriesIdx];
       return metadata?.label === hoveredLabel;
     });
@@ -50,6 +53,7 @@ export function SeriesTooltip({
 
   const seriesIdx = Number.parseInt(
     displayEntry.dataKey.replace("series_", ""),
+    10,
   );
   const metadata = seriesMetadata[seriesIdx];
 
