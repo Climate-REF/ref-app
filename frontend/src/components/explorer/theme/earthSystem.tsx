@@ -14,7 +14,7 @@ const cards: ExplorerCard[] = [
         description:
           "ECS represents the long-term change in global mean surface temperature following a doubling of atmospheric CO2 concentrations. It is a key metric for understanding the sensitivity of Earth's climate system to radiative forcing and is crucial for predicting future climate change and informing policy decisions. ECS is influenced by various feedback mechanisms, including water vapor, clouds, and ice-albedo feedbacks, which can amplify or dampen the initial warming response.",
         interpretation:
-          "Higher ECS values indicate a more sensitive climate system, leading to greater warming for a given increase in CO2. This has significant implications for global temperature projections, sea level rise, and the frequency and intensity of extreme weather events. Understanding ECS helps policymakers set emission reduction targets to mitigate the impacts of climate change.",
+          "Higher ECS values indicate a more sensitive climate system, leading to greater warming for a given increase in CO2.",
         metricUnits: "",
         clipMax: 10,
         otherFilters: { metric: "ecs" },
@@ -31,7 +31,7 @@ const cards: ExplorerCard[] = [
         description:
           "Climate feedback parameter (λ) quantifies the sensitivity of Earth's climate system to radiative forcing, representing the change in global mean surface temperature per unit of radiative forcing (W/m²). It is a key metric for understanding the balance between incoming solar radiation and outgoing terrestrial radiation, influencing how the climate responds to factors such as greenhouse gas concentrations and aerosols. ",
         interpretation:
-          "A more negative λ value indicates that the climate system has stronger stabilizing feedbacks, which help to counteract warming and maintain equilibrium. Conversely, a less negative or positive λ suggests that the climate system is more sensitive to perturbations, potentially leading to amplified warming in response to increased greenhouse gas concentrations. Understanding λ is essential for improving climate models and informing policy decisions related to climate change mitigation and adaptation.",
+          "A more negative λ value indicates that the climate system has stronger stabilizing feedbacks, which help to counteract warming and maintain equilibrium. Conversely, a less negative or positive λ suggests that the climate system is more sensitive to perturbations, potentially leading to amplified warming in response to increased greenhouse gas concentrations.",
         metricUnits: "W/m²/K",
         clipMax: 10,
         otherFilters: { metric: "lambda" },
@@ -48,7 +48,7 @@ const cards: ExplorerCard[] = [
         description:
           "TCR measures the immediate warming response of the climate system to a sustained increase in CO2 concentrations. It is a key metric for understanding the short-term impacts of greenhouse gas emissions on global temperatures and is critical for informing climate policy and adaptation strategies.",
         interpretation:
-          "Higher TCR values indicate a more sensitive climate system, leading to greater warming in the near term for a given increase in CO2. This has significant implications for global temperature projections, sea level rise, and the frequency and intensity of extreme weather events.",
+          "Higher TCR values indicate a more sensitive climate system, leading to greater warming in the near term for a given increase in CO2.",
         metricUnits: "K",
         groupingConfig: {
           groupBy: "metric",
@@ -76,7 +76,7 @@ const cards: ExplorerCard[] = [
           </>
         ),
         interpretation:
-          "Higher TCRE values indicate a more sensitive climate system, leading to greater warming for a given amount of CO2 emissions. This has significant implications for global temperature projections, sea level rise, and the frequency and intensity of extreme weather events.",
+          "Higher TCRE values indicate a more sensitive climate system, leading to greater warming for a given amount of CO2 emissions.",
         metricUnits: "K/EgC",
         groupingConfig: {
           groupBy: "metric",
@@ -103,7 +103,7 @@ const cards: ExplorerCard[] = [
           </>
         ),
         interpretation:
-          "A negative ZEC indicates that the climate system has stabilizing feedbacks that help to counteract warming after emissions cease. Conversely, a positive ZEC suggests that the climate system may continue to warm even after emissions stop, highlighting the importance of early and sustained emission reductions to mitigate long-term climate impacts.",
+          "A negative ZEC indicates that the climate system has stabilizing feedbacks that help to counteract warming after emissions cease. Conversely, a positive ZEC suggests that the climate system may continue to warm even after emissions stop.",
         metricUnits: "K",
         groupingConfig: {
           groupBy: "metric",
