@@ -37,4 +37,9 @@ def test_ref_config() -> Config:
     )
     config.db.database_url = "sqlite:///" + str(EXAMPLE_DIR / "db" / "climate_ref.db")
 
+    # Override paths that may contain hardcoded CI runner paths from ref.toml
+    config.paths.log = EXAMPLE_DIR / "log"
+    config.paths.scratch = EXAMPLE_DIR / "scratch"
+    config.paths.software = EXAMPLE_DIR / "software"
+
     return config
