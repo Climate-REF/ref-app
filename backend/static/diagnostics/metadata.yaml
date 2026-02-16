@@ -295,6 +295,14 @@ esmvaltool/enso-characteristics:
     evaluating the amplitude, frequency, and spatial structure of ENSO events.
   tags: ["ocean", "enso", "variability"]
 
+esmvaltool/global-mean-timeseries:
+  reference_datasets: []
+  display_name: "Global Mean Temperature and Precipitation Timeseries"
+  description: >-
+    Plot global mean timeseries of near-surface air temperature (tas) and
+    precipitation (pr) for historical simulations.
+  tags: ["atmosphere", "timeseries", "global-mean"]
+
 esmvaltool/equilibrium-climate-sensitivity:
   reference_datasets: []
   display_name: "Equilibrium Climate Sensitivity (ECS)"
@@ -302,7 +310,8 @@ esmvaltool/equilibrium-climate-sensitivity:
     Calculate the global mean equilibrium climate sensitivity for a dataset.
     ECS is defined as the long-term global mean surface temperature change
     in response to a doubling of atmospheric CO2 concentration, estimated
-    using the Gregory regression method from abrupt-4xCO2 experiments.
+    using the Gregory regression method (Gregory et al., 2004,
+    doi:10.1029/2003GL018747) from abrupt-4xCO2 experiments.
   tags: ["climate-sensitivity", "feedback"]
 
 esmvaltool/transient-climate-response:
@@ -341,7 +350,10 @@ esmvaltool/regional-historical-annual-cycle:
   description: >-
     Plot the regional historical annual cycle of climate variables. Currently limited to
     near-surface air temperature (tas) and precipitation (pr). Regions are defined using
-    IPCC AR6 reference regions as described by Iturbide et al. (2020).
+    IPCC AR6 reference regions as described by Iturbide, M., Gutierrez, J. M., Alves, L. M.,
+    et al. (2020). An update of IPCC climate reference regions for subcontinental analysis
+    of climate model data: Definition and aggregated datasets. Earth System Science Data,
+    12(4), 2959-2970. https://doi.org/10.5194/essd-12-2959-2020
   tags: ["regional", "seasonal-cycle", "historical"]
 
 esmvaltool/regional-historical-timeseries:
@@ -353,7 +365,10 @@ esmvaltool/regional-historical-timeseries:
   description: >-
     Plot the regional historical mean and anomaly timeseries of climate variables. Currently
     limited to near-surface air temperature (tas) and precipitation (pr). Regions are defined
-    using IPCC AR6 reference regions as described by Iturbide et al. (2020).
+    using IPCC AR6 reference regions as described by Iturbide, M., Gutierrez, J. M., Alves, L. M.,
+    et al. (2020). An update of IPCC climate reference regions for subcontinental analysis
+    of climate model data: Definition and aggregated datasets. Earth System Science Data,
+    12(4), 2959-2970. https://doi.org/10.5194/essd-12-2959-2020
   tags: ["regional", "timeseries", "historical"]
 
 esmvaltool/regional-historical-trend:
@@ -365,7 +380,10 @@ esmvaltool/regional-historical-trend:
   description: >-
     Plot the regional historical trend of climate variables. Currently limited to near-surface
     air temperature (tas) and precipitation (pr). Regions are defined using IPCC AR6 reference
-    regions as described by Iturbide et al. (2020).
+    regions as described by Iturbide, M., Gutierrez, J. M., Alves, L. M.,
+    et al. (2020). An update of IPCC climate reference regions for subcontinental analysis
+    of climate model data: Definition and aggregated datasets. Earth System Science Data,
+    12(4), 2959-2970. https://doi.org/10.5194/essd-12-2959-2020
   tags: ["regional", "trends", "historical"]
 
 esmvaltool/sea-ice-area-basic:
