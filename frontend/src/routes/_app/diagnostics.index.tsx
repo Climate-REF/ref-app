@@ -117,7 +117,6 @@ const Diagnostics = () => {
         metricValues:
           metricValues === null ? undefined : metricValues ? "true" : "false",
       },
-      replace: true,
     });
   };
 
