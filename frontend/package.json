@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "biome check --write .",
     "preview": "vite preview",
-    "openapi-ts": "openapi-ts"
+    "openapi-ts": "openapi-ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
@@ -44,7 +45,7 @@
     "d3": "^7.9.0",
     "d3-array": "^3.2.4",
     "date-fns": "^4.1.0",
-    "lucide-react": "^0.507.0",
+    "lucide-react": "^0.564.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
@@ -60,6 +61,9 @@
     "@tailwindcss/typography": "^0.5.18",
     "@tanstack/react-router-devtools": "^1.115.3",
     "@tanstack/router-plugin": "^1.115.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/d3": "^7.4.3",
     "@types/node": "^22.13.8",
     "@types/react": "^19.0.10",
@@ -67,7 +71,9 @@
     "@vitejs/plugin-react-swc": "^3.8.0",
     "@welldone-software/why-did-you-render": "^10.0.1",
     "globals": "^15.15.0",
-    "typescript": "~5.7.2",
-    "vite": ">=6.3.4"
+    "jsdom": "^28.1.0",
+    "typescript": "~5.8.0",
+    "vite": ">=6.3.4",
+    "vitest": "^4.0.18"
   }
 }

@@ -580,6 +580,7 @@ class MetricValueCollection(BaseModel):
                     execution_group_id=v.execution.execution_group_id,
                     execution_id=v.execution_id,
                     is_outlier=item.is_outlier,
+                    verification_status=item.verification_status,
                 )
             )
 

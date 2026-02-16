@@ -6,7 +6,13 @@ from climate_ref.config import Config
 from ref_backend.core.config import Settings
 from ref_backend.core.ref import get_ref_config
 
-EXAMPLE_DIR = Path(__file__).parents[2] / "tests" / "test-data" / "example"
+EXAMPLE_DIR = (
+    Path(__file__).parents[2]
+    / "tests"
+    / "test-data"
+    / "tests.integration.test_cmip7_aft"
+    / "test_solve_cmip7_aft"
+)
 
 
 @functools.lru_cache
@@ -30,5 +36,10 @@ def test_ref_config() -> Config:
         str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
     )
     config.db.database_url = "sqlite:///" + str(EXAMPLE_DIR / "db" / "climate_ref.db")
+
+    # Override paths that may contain hardcoded CI runner paths from ref.toml
+    config.paths.log = EXAMPLE_DIR / "log"
+    config.paths.scratch = EXAMPLE_DIR / "scratch"
+    config.paths.software = EXAMPLE_DIR / "software"
 
     return config
