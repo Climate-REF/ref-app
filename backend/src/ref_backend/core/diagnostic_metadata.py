@@ -50,6 +50,7 @@ class DiagnosticMetadata(BaseModel):
         None, description="Reference datasets used by this diagnostic"
     )
     display_name: str | None = Field(None, description="Display name override for the diagnostic")
+    description: str | None = Field(None, description="Description override for the diagnostic")
     tags: list[str] | None = Field(None, description="Tags for categorizing the diagnostic")
 
 

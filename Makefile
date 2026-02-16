@@ -46,6 +46,10 @@ setup: ## Setup the backend and frontend
 	@echo "==> Installing pre-commit hooks"
 	uvx pre-commit install --config .pre-commit-config.yaml
 
+.PHONY: generate-metadata
+generate-metadata: ## Generate diagnostic metadata YAML from provider registry
+	$(MAKE) -C backend generate-metadata
+
 # Consistent alias with python-only projects
 .PHONY: virtual-environment
 virtual-environment: setup ## Install backend and frontend dependencies
