@@ -211,3 +211,43 @@ def test_diagnostic_values_csv_outlier_detection_on(client: TestClient, settings
     # Assert headers are present
     assert "X-REF-Had-Outliers" in r.headers
     assert "X-REF-Outlier-Count" in r.headers
+
+
+def test_diagnostics_list_returns_data(client: TestClient, settings) -> None:
+    """Test that diagnostics list endpoint returns data."""
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/")
+    assert r.status_code == 200
+    data = r.json()
+    assert "count" in data
+    assert "data" in data
+    assert data["count"] > 0
+    assert len(data["data"]) > 0
+
+
+def test_diagnostic_get_by_provider_slug(client: TestClient, settings) -> None:
+    """Test getting a specific diagnostic by provider and diagnostic slug."""
+    diagnostic = get_diagnostic(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}")
+    assert r.status_code == 200
+    result = r.json()
+    assert result["provider"]["slug"] == provider_slug
+    assert result["slug"] == diagnostic_slug
+
+
+def test_diagnostic_404_invalid_provider(client: TestClient, settings) -> None:
+    """Test that requesting a nonexistent diagnostic returns 404."""
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/nonexistent-provider/nonexistent-diagnostic")
+    assert r.status_code == 404
+
+
+def test_diagnostics_facets(client: TestClient, settings) -> None:
+    """Test that diagnostics facets endpoint returns dimension summary."""
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
+    assert r.status_code == 200
+    data = r.json()
+    assert "dimensions" in data
+    assert "count" in data
+    assert isinstance(data["dimensions"], dict)
+    assert isinstance(data["count"], int)

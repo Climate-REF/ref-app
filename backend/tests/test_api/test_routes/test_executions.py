@@ -137,3 +137,59 @@ def test_execution_values_csv_outlier_detection_on(client: TestClient, settings)
     # Assert headers are present
     assert "X-REF-Had-Outliers" in r.headers
     assert "X-REF-Outlier-Count" in r.headers
+
+
+def test_execution_get_by_id(client: TestClient, settings) -> None:
+    """Test getting a specific execution group by ID."""
+    # Get an execution group ID from the list
+    r = client.get(f"{settings.API_V1_STR}/executions")
+    assert r.status_code == 200
+    data = r.json()
+    if not data["data"]:
+        pytest.skip("No execution groups available")
+    group_id = data["data"][0]["id"]
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}")
+    assert r.status_code == 200
+    result = r.json()
+    assert result["id"] == group_id
+
+
+def test_execution_404_invalid_id(client: TestClient, settings) -> None:
+    """Test that requesting a nonexistent execution returns 404."""
+    r = client.get(f"{settings.API_V1_STR}/executions/nonexistent-id-12345")
+    assert r.status_code == 404
+
+
+def test_execution_datasets(client: TestClient, settings) -> None:
+    """Test getting datasets for an execution group."""
+    # Get an execution group ID from the list
+    r = client.get(f"{settings.API_V1_STR}/executions")
+    assert r.status_code == 200
+    data = r.json()
+    if not data["data"]:
+        pytest.skip("No execution groups available")
+    group_id = data["data"][0]["id"]
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/datasets")
+    assert r.status_code == 200
+    result = r.json()
+    assert "data" in result
+    assert isinstance(result["data"], list)
+
+
+def test_execution_statistics(client: TestClient, settings) -> None:
+    """Test getting execution statistics."""
+    r = client.get(f"{settings.API_V1_STR}/executions/statistics")
+    assert r.status_code == 200
+    data = r.json()
+    assert "total_execution_groups" in data
+    assert "successful_execution_groups" in data
+    assert "failed_execution_groups" in data
+    assert "scalar_value_count" in data
+    assert "series_value_count" in data
+    assert "total_datasets" in data
+    assert "total_files" in data
+    assert isinstance(data["total_execution_groups"], int)
+    assert isinstance(data["successful_execution_groups"], int)
+    assert isinstance(data["failed_execution_groups"], int)
