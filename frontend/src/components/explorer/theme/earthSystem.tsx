@@ -55,61 +55,61 @@ const cards: ExplorerCard[] = [
           hue: "metric",
         },
       },
-      {
-        type: "box-whisker-chart",
-        provider: "esmvaltool",
-        diagnostic: "transient-climate-response-emissions",
-        title: "Transient Climate Response to Emissions (TCRE)",
-        description: (
-          <>
-            TCRE quantifies the change in global mean surface temperature per
-            1000 GtC of cumulative CO2 emissions. It reflects the near-linear
-            relationship between cumulative carbon emissions and global warming,
-            highlighting the direct impact of human activities on climate
-            change. TCRE is a crucial metric for setting carbon budgets and
-            informing climate policy, as it helps estimate the allowable
-            emissions to limit global temperature rise to specific targets, such
-            as those outlined in the Paris Agreement.
-            <span className="text-red-500">
-              Data to be available in next week
-            </span>
-          </>
-        ),
-        interpretation:
-          "Higher TCRE values indicate a more sensitive climate system, leading to greater warming for a given amount of CO2 emissions.",
-        metricUnits: "K/EgC",
-        groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
-        },
-      },
-      {
-        type: "box-whisker-chart",
-        provider: "esmvaltool",
-        diagnostic: "zero-emission-commitment",
-        title: "Zero Emission Commitment (ZEC)",
-        description: (
-          <>
-            ZEC represents the long-term change in global mean surface
-            temperature following the cessation of CO2 emissions after a
-            sustained period of increase. It reflects the balance between
-            ongoing ocean heat uptake and the reduction in radiative forcing due
-            to decreasing atmospheric CO2 levels. This metric is important for
-            understanding the long-term climate implications of emission
-            scenarios and for informing climate policy.
-            <span className="text-red-500">
-              Data to be available in next week
-            </span>
-          </>
-        ),
-        interpretation:
-          "A negative ZEC indicates that the climate system has stabilizing feedbacks that help to counteract warming after emissions cease. Conversely, a positive ZEC suggests that the climate system may continue to warm even after emissions stop.",
-        metricUnits: "K",
-        groupingConfig: {
-          groupBy: "metric",
-          hue: "metric",
-        },
-      },
+      // {
+      //   type: "box-whisker-chart",
+      //   provider: "esmvaltool",
+      //   diagnostic: "transient-climate-response-emissions",
+      //   title: "Transient Climate Response to Emissions (TCRE)",
+      //   description: (
+      //     <>
+      //       TCRE quantifies the change in global mean surface temperature per
+      //       1000 GtC of cumulative CO2 emissions. It reflects the near-linear
+      //       relationship between cumulative carbon emissions and global warming,
+      //       highlighting the direct impact of human activities on climate
+      //       change. TCRE is a crucial metric for setting carbon budgets and
+      //       informing climate policy, as it helps estimate the allowable
+      //       emissions to limit global temperature rise to specific targets, such
+      //       as those outlined in the Paris Agreement.
+      //       <span className="text-red-500">
+      //         Data to be available in next week
+      //       </span>
+      //     </>
+      //   ),
+      //   interpretation:
+      //     "Higher TCRE values indicate a more sensitive climate system, leading to greater warming for a given amount of CO2 emissions.",
+      //   metricUnits: "K/EgC",
+      //   groupingConfig: {
+      //     groupBy: "metric",
+      //     hue: "metric",
+      //   },
+      // },
+      // {
+      //   type: "box-whisker-chart",
+      //   provider: "esmvaltool",
+      //   diagnostic: "zero-emission-commitment",
+      //   title: "Zero Emission Commitment (ZEC)",
+      //   description: (
+      //     <>
+      //       ZEC represents the long-term change in global mean surface
+      //       temperature following the cessation of CO2 emissions after a
+      //       sustained period of increase. It reflects the balance between
+      //       ongoing ocean heat uptake and the reduction in radiative forcing due
+      //       to decreasing atmospheric CO2 levels. This metric is important for
+      //       understanding the long-term climate implications of emission
+      //       scenarios and for informing climate policy.
+      //       <span className="text-red-500">
+      //         Data to be available in next week
+      //       </span>
+      //     </>
+      //   ),
+      //   interpretation:
+      //     "A negative ZEC indicates that the climate system has stabilizing feedbacks that help to counteract warming after emissions cease. Conversely, a positive ZEC suggests that the climate system may continue to warm even after emissions stop.",
+      //   metricUnits: "K",
+      //   groupingConfig: {
+      //     groupBy: "metric",
+      //     hue: "metric",
+      //   },
+      // },
     ],
   },
   {
