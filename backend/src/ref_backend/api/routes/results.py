@@ -20,13 +20,13 @@ async def get_result(session: SessionDep, config: REFConfigDep, result_id: int) 
         raise HTTPException(status_code=404, detail="Result not found")
 
     file_path = config.paths.results / result.execution.output_fragment / result.filename
-    mime_type, encoding = mimetypes.guess_type(file_path)
+    mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Result file not found")
 
     return StreamingResponse(
-        file_iterator(file_path),
+        file_iterator(str(file_path)),
         media_type=mime_type,
         headers={"Content-Disposition": f"attachment; filename={result.filename}"},
     )

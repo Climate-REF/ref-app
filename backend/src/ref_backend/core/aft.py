@@ -73,11 +73,11 @@ def load_official_aft_diagnostics() -> list[AFTDiagnosticBase]:
 
         # Clean data: strip whitespace and convert empty strings to None
         for key in df.columns:
-            df[key] = df[key].astype(str).str.strip().replace({"": None})
+            df[key] = df[key].astype(str).str.strip().replace({"": None})  # type: ignore
 
         for _, row in df.iterrows():  # Start at 2 since row 1 is headers
             try:
-                diagnostic = AFTDiagnosticBase(**row.to_dict())
+                diagnostic = AFTDiagnosticBase(**row.to_dict())  # type: ignore
                 diagnostics.append(diagnostic)
             except ValidationError as e:
                 raise ValueError(f"Validation error at row {row}: {e}") from e

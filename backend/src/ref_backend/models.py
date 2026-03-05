@@ -158,12 +158,18 @@ class DiagnosticSummary(BaseModel):
     @staticmethod
     def _build_group_by_summary(diagnostic: models.Diagnostic, app_context: "AppContext") -> list[GroupBy]:
         """Extract and build group_by information from diagnostic data requirements."""
-        concrete_diagnostic = app_context.provider_registry.get_metric(
-            diagnostic.provider.slug, diagnostic.slug
-        )
+        try:
+            concrete_diagnostic = app_context.provider_registry.get_metric(
+                diagnostic.provider.slug, diagnostic.slug
+            )
+        except KeyError:
+            logger.warning(
+                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
+            )
+            return []
         data_requirements = sorted(
             list(concrete_diagnostic.data_requirements),
-            key=lambda dr: (dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value),  # type: ignore
+            key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,  # type: ignore
         )
 
         group_by_summary: list[GroupBy] = []
@@ -338,9 +344,16 @@ class DiagnosticSummary(BaseModel):
         aft = DiagnosticSummary._get_aft_link(diagnostic)
 
         has_metric_values = has_scalar_values or has_series_values
-        concrete_diagnostic = app_context.provider_registry.get_metric(
-            diagnostic.provider.slug, diagnostic.slug
-        )
+        try:
+            concrete_diagnostic = app_context.provider_registry.get_metric(
+                diagnostic.provider.slug, diagnostic.slug
+            )
+            description = concrete_diagnostic.__doc__ or ""
+        except KeyError:
+            logger.warning(
+                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
+            )
+            description = ""
 
         # Build the base diagnostic summary
         summary = DiagnosticSummary(
@@ -348,7 +361,7 @@ class DiagnosticSummary(BaseModel):
             provider=ProviderSummary.build(diagnostic.provider),
             slug=diagnostic.slug,
             name=diagnostic.name,
-            description=concrete_diagnostic.__doc__ or "",
+            description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
             has_metric_values=has_metric_values,
             has_scalar_values=has_scalar_values,

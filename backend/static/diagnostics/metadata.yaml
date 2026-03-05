@@ -524,12 +524,3 @@ ilamb/amoc-rapid:
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
   description: "Apply the standard ILAMB analysis of the Atlantic Meridional Overturning Circulation (AMOC) with respect to the RAPID array reference dataset."
   tags: ["ocean", "circulation", "amoc"]
-
-ilamb/ohc-noaa:
-  reference_datasets:
-    - slug: "obs4REF.NOAA-OHC"
-      description: "NOAA - Ocean heat content (0-2000m)"
-      type: "primary"
-  display_name: "Ocean Heat Content (NOAA)"
-  description: "Apply the standard ILAMB analysis of ocean heat content (ohc, 0-2000m) with respect to the NOAA reference dataset."
-  tags: ["ocean", "heat-content", "climate-change"]

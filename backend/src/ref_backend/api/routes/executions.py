@@ -71,7 +71,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
             models.Execution,
             models.Execution.id == latest_execution_subquery.c.max_id,
         )
-        .filter(models.Execution.successful)
+        .filter(models.Execution.successful.is_(True))
         .count()
     )
 
@@ -262,7 +262,7 @@ async def execution_logs(
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
     file_path = app_context.ref_config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
-    mime_type, encoding = mimetypes.guess_type(file_path)
+    mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
         logger.warning(f"Log file not found: {file_path}")

@@ -19,9 +19,6 @@
   - provider_slug: ilamb
     diagnostic_slug: thetao-woa2023-surface
 
-1.5:
-  - provider_slug: ilamb
-    diagnostic_slug: ohc-noaa
 1.6:
   - provider_slug: esmvaltool
     diagnostic_slug: sea-ice-area-basic
