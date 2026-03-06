@@ -1,0 +1,58 @@
+id: "2.2"
+name: "Gross primary production (GPP)"
+theme: "Land and land ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "FLUXNET2015-1-0, WECANN-1-0, CRU-4-9 (source_id not confirmed)"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    Gross primary production is the process by which plants "fix" atmospheric or
+    aqueous carbon dioxide through photosynthetic reduction into organic compounds, and
+    it is affected by increases in atmospheric carbon dioxide (CO2) levels and warming
+    (Anav et al., 2015). A fraction of gross primary productivity supports plant
+    respiration and the rest is stored as biomass in stems, leaves, roots, or other
+    plant parts. Land use change, heat and drought stress due to anthropogenic warming,
+    and rising atmospheric CO2 will differentially influence gross primary production
+    in ecosystems and alter the global carbon cycle. Thus, models must be evaluated to
+    ensure they capture the observed responses to these changes.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model gross primary production (GPP)
+    with reference data from FLUXNET2015-1-0 and WECANN-1-0
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: gpp-wecann
+  - provider_slug: ilamb
+    diagnostic_slug: gpp-fluxnet2015
+explorer_cards:
+  - title: "Gross Primary Production"
+    placeholder: true
+    content:
+      - type: series-chart
+        provider: ilamb
+        diagnostic: gpp-fluxnet2015
+        title: "Gross Primary Production (GPP) Annual Cycle"
+        description: "Calculated as the mean seasonal cycle over 2001-2010."
+        span: 2
+        metric_units: "kgC/m^2/s"
+        other_filters:
+          metric: cycle_global
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+        placeholder: true
+      - type: taylor-diagram
+        provider: ilamb
+        diagnostic: gpp-fluxnet2015
+        title: "GPP Spatial Performance"
+        description: >-
+          Model performance in reproducing spatial patterns of Gross Primary Production
+          (GPP) compared to FLUXNET2015 observations.
+        interpretation: >-
+          Points closer to the reference (black square) indicate better model
+          performance. Distance from the origin represents RMSE.
+        span: 1
+        other_filters:
+          region: global
+        reference_stddev: 1.0
+        placeholder: true

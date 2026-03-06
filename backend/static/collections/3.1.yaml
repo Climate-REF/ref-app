@@ -1,0 +1,16 @@
+id: "3.1"
+name: "Annual cycle and seasonal mean of multiple variables"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "C3S-GTO-ECV-9-0, SAGE-CCI-OMPS-v0008, ERA-5"
+provider_link: "http://pcmdi.github.io/pcmdi_metrics/examples/Demo_1b_mean_climate.html"
+content:
+  short_description: >-
+    Maps of seasonal and annual climatology are generated for the reference datasets
+    and model output on a target grid (2.5x2.5 deg), then calculate diverse metrics
+    including bias, RMSE, spatial pattern correlation, and standard deviation.
+diagnostics:
+  - provider_slug: pmp
+    diagnostic_slug: annual-cycle
+explorer_cards: []

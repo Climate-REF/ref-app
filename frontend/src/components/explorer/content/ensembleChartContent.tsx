@@ -90,6 +90,8 @@ export function EnsembleChartContent({
         metricUnits={contentItem.metricUnits ?? "unitless"}
         clipMin={contentItem.clipMin}
         clipMax={contentItem.clipMax}
+        yMin={contentItem.yMin}
+        yMax={contentItem.yMax}
         groupingConfig={contentItem.groupingConfig}
         showZeroLine={contentItem.showZeroLine ?? true}
         symmetricalAxes={contentItem.symmetricalAxes ?? false}

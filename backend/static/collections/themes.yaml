@@ -1,0 +1,24 @@
+atmosphere:
+  title: "Atmosphere"
+  description: "Atmospheric diagnostics including variability modes, clouds, and radiation."
+  collections: ["3.1", "3.2", "3.3", "3.6", "3.7"]
+
+earth-system:
+  title: "Earth System"
+  description: "Earth system diagnostics including climate sensitivity and ENSO."
+  collections: ["1.3", "4.1", "4.2", "4.3", "4.4", "4.5"]
+
+impact-and-adaptation:
+  title: "Impact and Adaptation"
+  description: "Diagnostics related to climate impacts, adaptation, and warming levels."
+  collections: ["5.3", "5.4"]
+
+land:
+  title: "Land and Land Ice"
+  description: "Land surface diagnostics including carbon cycle, hydrology, and vegetation."
+  collections: ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7"]
+
+ocean:
+  title: "Ocean and Sea Ice"
+  description: "Ocean and sea ice diagnostics including circulation, temperature, and ice area."
+  collections: ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6"]

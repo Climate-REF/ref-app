@@ -1,0 +1,135 @@
+id: "3.3"
+name: "Climate variability modes (e.g., ENSO, Madden-Julian Oscillation (MJO), Extratropical modes of variability, monsoon)"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "20CR-V2, HadISST-1-1"
+provider_link: "http://pcmdi.github.io/pcmdi_metrics/metrics.html"
+content:
+  short_description: >-
+    For extratropical modes of variability, maps of variability mode pattern and their
+    principal component time series are generated from the reference dataset and model
+    output. Then maps are compared to calculate bias, RMSE, and spatial pattern
+    correlation, and time series are compared to calculate the ratio from their standard
+    deviations.
+diagnostics:
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-nam
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-nao
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-npgo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-npo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-pdo
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-pna
+  - provider_slug: pmp
+    diagnostic_slug: extratropical-modes-of-variability-sam
+explorer_cards:
+  - title: "Extratropical Modes of Variability"
+    description: >-
+      Spatial comparison of simulated vs. observed leading EOF patterns representing
+      the main modes of low-frequency variability in the extra-tropical atmosphere and
+      ocean, based on seasonal-mean sea level pressure and monthly-mean sea surface
+      temperature anomalies in the spatial domains defined in
+      [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4), Table 1. Simulated
+      EOFs are obtained with the "Common Basis Function" (CBF) approach described in
+      the appendix of this article. The considered time-period is 1901-2005 for the NH
+      modes and 1951-2005 for the SAM.
+    content:
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-nam
+        title: "Northern Annular Mode (NAM) RMSE"
+        description: >-
+          Northern Annular Mode (NAM) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: season
+        y_min: 0
+        y_max: 1.5
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-sam
+        title: "Southern Annual Mode (SAM) RMSE"
+        description: >-
+          Southern Annual Mode (SAM) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: season
+        y_min: 0
+        y_max: 1.5
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-pna
+        title: "Pacific-North American (PNA) RMSE"
+        description: >-
+          Pacific-North American (PNA) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: season
+        y_min: 0
+        y_max: 1.5
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-nao
+        title: "North Atlantic Oscillation (NAO) RMSE"
+        description: >-
+          North Atlantic Oscillation (NAO) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: season
+        y_min: 0
+        y_max: 1.5
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-pdo
+        title: "Pacific-Decadal Oscillation (PDO) RMSE"
+        description: >-
+          Pacific-Decadal Oscillation (PDO) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: season
+        y_min: 0
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: extratropical-modes-of-variability-npgo
+        title: "North Pacific Gyre Oscillation (NPGO) RMSE"
+        description: >-
+          North Pacific Gyre Oscillation (NPGO) individual-model pattern RMSE, see
+          [Lee et al. 2019](https://doi.org/10.1007/s00382-018-4355-4)
+        other_filters:
+          method: cbf
+          statistic: rms
+          experiment_id: historical
+        grouping_config:
+          group_by: season
+          hue: experiment_id
+        y_min: 0

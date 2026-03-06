@@ -1,0 +1,18 @@
+id: "4.5"
+name: "Historical changes in climate variables (time series, trends)"
+theme: "Earth System"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "HadCRUT5-0-2-0, CERES-EBAF-4-2, ERA-5, GPCP-SG-2-3, HadISST-1-1"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
+content:
+  short_description: >-
+    Time series, linear trend, and annual cycle for IPCC regions
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-annual-cycle
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-timeseries
+  - provider_slug: esmvaltool
+    diagnostic_slug: regional-historical-trend
+explorer_cards: []

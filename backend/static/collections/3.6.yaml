@@ -1,0 +1,28 @@
+id: "3.6"
+name: "Cloud radiative effects"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "CALIPSO-ICECLOUD-1-0, ESACCI-CLOUD-AVHRR-AMPM-3-0, CERES-EBAF-4-2, ERA-5, GPCP-SG-2-3"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
+content:
+  short_description: >-
+    Maps and zonal means of longwave and shortwave cloud radiative effect
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-radiative-effects
+explorer_cards:
+  - title: "Cloud & Radiation"
+    description: "Cloud properties and their effect on the Earth's energy balance."
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: cloud-radiative-effects
+        title: "Cloud Radiative Effects"
+        description: "Not sure"
+        other_filters:
+          statistic: bias
+        grouping_config:
+          group_by: metric
+          hue: metric

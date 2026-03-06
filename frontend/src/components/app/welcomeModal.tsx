@@ -75,7 +75,7 @@ export function WelcomeModal() {
           </p>
           <p className="text-sm text-muted-foreground">
             The results presented here focus on CMIP6 datasets, but this will be
-            updated as new CMIP7 datasets become available We have some example
+            updated as new CMIP7 datasets become available. We have some example
             figures available in the <Link to="/explorer">Data Explorer</Link>{" "}
             or you can browse the full{" "}
             <Link to="/diagnostics">Diagnostic Catalog</Link>.

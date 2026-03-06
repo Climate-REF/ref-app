@@ -1,0 +1,23 @@
+id: "4.4"
+name: "Zero emissions commitment (ZEC)"
+theme: "Earth System"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: ""
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_zec.html"
+content:
+  short_description: >-
+    The Zero Emissions Commitment (ZEC) quantifies the change in global mean temperature
+    expected to occur after net carbon dioxide (CO2) emissions cease. ZEC is therefore
+    important to consider when estimating the remaining carbon budget. Calculation of
+    ZEC requires dedicated simulations with emissions set to zero, branching off a base
+    simulation with emissions. In CMIP6 the simulations were part of ZECMIP, with the
+    simulations called esm-1pct-brch-xPgC branching off the 1pctCO2 simulation when
+    emissions reach x PgC. The default x was 1000PgC, with additional simulations for
+    750PgC and 2000PgC. In CMIP7, ZEC simulations (esm-flat10-zec) are part of the
+    fast track and branch off (esm-flat10) with constant emissions of 10GtC/yr at year
+    100 (Sanderson 2024).
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: zero-emission-commitment
+explorer_cards: []

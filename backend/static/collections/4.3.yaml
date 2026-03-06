@@ -1,0 +1,23 @@
+id: "4.3"
+name: "Transient climate response to cumulative emissions of carbon dioxide (TCRE)"
+theme: "Earth System"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: ""
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_tcre.html"
+content:
+  short_description: >-
+    The idea that global temperature rise is directly proportional to the total amount
+    of carbon dioxide (CO2) released into the atmosphere is fundamental to climate
+    policy. The concept stems from research showing a clear linear relationship between
+    cumulative CO2 emissions and global temperature change in climate models (Allen et
+    al. 2009; Matthews et al. 2009; Zickfeld et al. 2009). This relationship is called
+    the Transient Climate Response to Cumulative CO2 Emissions (TCRE), which represents
+    the amount of global warming caused by each trillion tonnes of carbon emitted. This
+    simple yet powerful tool allows policymakers to directly link emission budgets to
+    specific temperature targets and compare the long-term effects of different
+    emissions scenarios.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: transient-climate-response-emissions
+explorer_cards: []

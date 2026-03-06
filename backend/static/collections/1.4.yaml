@@ -1,0 +1,100 @@
+id: "1.4"
+name: "Sea surface temperature (SST) bias, Sea surface salinity (SSS) bias"
+theme: "Oceans and sea ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "WOA2023"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    The Sea surface temperature (SST) bias, Sea surface salinity (SSS) distributions
+    provide large scale patterns of surface ocean circulation as well as reflecting
+    dynamical air-sea interactions and ocean-sea ice interactions in the polar regions.
+    SST and SSS biases have a significant impact on the coupling of ESM's two major
+    components, the atmosphere and the ocean. Satellite data products and localized
+    moored sensors are used to produce measurements that are incorporated into reference
+    data to calculate SST and SSS biases in models
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model sea surface temperature (SST)
+    and sea surface salinity (SSS) with reference data from WOA2023
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: so-woa2023-surface
+  - provider_slug: ilamb
+    diagnostic_slug: thetao-woa2023-surface
+explorer_cards:
+  - title: "SST & SSS"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Sea Surface Salinity"
+        metric_units: "psu"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: "None"
+          metric: Bias
+          statistic: "Period Mean"
+        placeholder: true
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: thetao-woa2023-surface
+        title: "Sea Surface Temperature"
+        metric_units: "K"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: "None"
+          metric: Bias
+          statistic: "Period Mean"
+        placeholder: true
+      - type: taylor-diagram
+        provider: ilamb
+        diagnostic: thetao-woa2023-surface
+        title: "Sea Surface Temperature (Taylor Diagram)"
+        description: >-
+          Taylor diagram showing the performance of global sea surface temperatures
+          against WOA2023 observations. Taylor diagrams summarize how closely models
+          match observations in terms of correlation, standard deviation, and
+          root-mean-square difference.
+        interpretation: >-
+          Points closer to the reference (black square) indicate better model
+          performance. Distance from the origin represents RMSE.
+        other_filters:
+          region: "None"
+          metric: "Spatial Distribution"
+        placeholder: true
+  - title: "Surface Ocean Salinity"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Bias"
+        description: "Bias in Surface Ocean Salinity with respect to WOA2023"
+        span: 1
+        metric_units: "psu"
+        other_filters:
+          statistic: Bias
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+        placeholder: true
+      - type: taylor-diagram
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Taylor Diagram"
+        description: >-
+          Taylor diagram showing the performance of global surface ocean salinity
+          against WOA2023 observations.
+        interpretation: >-
+          Points closer to the reference (black square) indicate better model
+          performance. Distance from the origin represents RMSE.
+        other_filters:
+          region: "None"
+          metric: "Spatial Distribution"
+        placeholder: true
