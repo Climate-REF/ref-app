@@ -1,11 +1,12 @@
 from dataclasses import asdict
 
 import sentry_sdk
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
+from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
