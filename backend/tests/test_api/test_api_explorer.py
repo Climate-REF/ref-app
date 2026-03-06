@@ -108,19 +108,17 @@ def collections_dir(tmp_path: Path, monkeypatch):
     # themes.yaml
     _write_yaml(
         cols_dir / "themes.yaml",
-        [
-            {
-                "slug": "ocean",
+        {
+            "ocean": {
                 "title": "Ocean Theme",
                 "description": "Ocean diagnostics",
                 "collections": ["2.1"],
             },
-            {
-                "slug": "earth-system",
+            "earth-system": {
                 "title": "Earth System Theme",
                 "collections": ["1.2", "3.1"],
             },
-        ],
+        },
     )
 
     monkeypatch.setattr(

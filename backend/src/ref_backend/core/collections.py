@@ -135,14 +135,15 @@ def load_all_collections() -> dict[str, AFTCollectionDetail]:
             collection = AFTCollectionDetail(**data)
 
             if collection.id in result:
-                raise ValueError(f"Duplicate collection ID '{collection.id}' found in {yaml_file.name}")
+                logger.warning(f"Duplicate collection ID '{collection.id}' in {yaml_file.name}, skipping")
+                continue
 
             result[collection.id] = collection
 
         except ValidationError as e:
             logger.warning(f"Skipping {yaml_file.name}: validation error: {e}")
         except Exception as e:
-            logger.warning(f"Skipping {yaml_file.name}: parse error: {e}")
+            logger.warning(f"Skipping {yaml_file.name}: unexpected error: {e}")
 
     return result
 
@@ -175,7 +176,7 @@ def load_theme_mapping() -> dict[str, ThemeDetail]:
 
     try:
         with open(themes_path, encoding="utf-8") as f:
-            data = yaml.safe_load(f) or []
+            data = yaml.safe_load(f) or {}
     except Exception as e:
         logger.warning(f"Error loading themes.yaml: {e}")
         return {}
@@ -183,9 +184,12 @@ def load_theme_mapping() -> dict[str, ThemeDetail]:
     all_collections = load_all_collections()
     result: dict[str, ThemeDetail] = {}
 
-    for theme_data in data:
+    for slug, theme_data in data.items():
         try:
-            slug = theme_data["slug"]
+            if not isinstance(theme_data, dict):
+                logger.warning(f"Skipping theme '{slug}': expected a mapping")
+                continue
+
             title = theme_data["title"]
             description = theme_data.get("description")
             collection_ids: list[str] = theme_data.get("collections", [])
@@ -209,8 +213,8 @@ def load_theme_mapping() -> dict[str, ThemeDetail]:
                 explorer_cards=explorer_cards,
             )
 
-        except Exception as e:
-            logger.warning(f"Skipping theme entry: {e}")
+        except (KeyError, TypeError) as e:
+            logger.warning(f"Skipping theme '{slug}': {e}")
 
     return result
 

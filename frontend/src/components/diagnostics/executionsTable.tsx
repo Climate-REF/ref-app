@@ -47,17 +47,7 @@ function OpenCell({
 }
 
 function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
-  const rowIndex = row.index;
-  // const { executionId } = Route.useSearch();
-  const executionId = undefined;
-  if (executionId && row.original.id.toString() === executionId) {
-    return (
-      <Badge variant="default" title="This execution is currently selected.">
-        Selected
-      </Badge>
-    );
-  }
-  if (rowIndex === 0) {
+  if (row.index === 0) {
     return (
       <Badge variant="outline" title="This is the most recent execution.">
         Latest

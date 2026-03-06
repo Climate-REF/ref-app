@@ -55,6 +55,7 @@ def clear_aft_caches():
     yield
     for fn in [
         load_official_aft_diagnostics,
+        get_aft_diagnostics_index,
         get_aft_diagnostic_by_id,
         get_aft_for_ref_diagnostic,
     ]:

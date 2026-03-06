@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from ref_backend.core.aft import (
     get_aft_diagnostic_by_id,
+    get_aft_diagnostics_index,
     get_aft_for_ref_diagnostic,
     load_official_aft_diagnostics,
 )
@@ -17,11 +18,21 @@ from ref_backend.core.collections import (
 @pytest.fixture(autouse=True)
 def clear_caches():
     """Clear all caches before and after each test."""
-    for fn in [load_official_aft_diagnostics, get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic]:
+    for fn in [
+        load_official_aft_diagnostics,
+        get_aft_diagnostics_index,
+        get_aft_diagnostic_by_id,
+        get_aft_for_ref_diagnostic,
+    ]:
         fn.cache_clear()
     load_all_collections.cache_clear()
     yield
-    for fn in [load_official_aft_diagnostics, get_aft_diagnostic_by_id, get_aft_for_ref_diagnostic]:
+    for fn in [
+        load_official_aft_diagnostics,
+        get_aft_diagnostics_index,
+        get_aft_diagnostic_by_id,
+        get_aft_for_ref_diagnostic,
+    ]:
         fn.cache_clear()
     load_all_collections.cache_clear()
 

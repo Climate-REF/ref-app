@@ -42,7 +42,7 @@ def _write_collection(tmp_path: Path, filename: str, data: dict) -> Path:
     return p
 
 
-def _write_themes(tmp_path: Path, data: list) -> Path:
+def _write_themes(tmp_path: Path, data: dict) -> Path:
     """Write a themes.yaml file and return its path."""
     p = tmp_path / "themes.yaml"
     with open(p, "w") as f:
@@ -378,14 +378,13 @@ class TestLoadThemeMapping:
         col2 = {**_MINIMAL_COLLECTION, "id": "1.2", "name": "Second Collection"}
         _write_collection(tmp_path, "1.2.yaml", col2)
 
-        themes = [
-            {
-                "slug": "ocean",
+        themes = {
+            "ocean": {
                 "title": "Ocean Theme",
                 "description": "Ocean diagnostics",
                 "collections": ["1.1", "1.2"],
             }
-        ]
+        }
         _write_themes(tmp_path, themes)
 
         with (
@@ -424,7 +423,7 @@ class TestLoadThemeMapping:
         _write_collection(tmp_path, "c1.yaml", col1)
         _write_collection(tmp_path, "c2.yaml", col2)
 
-        themes = [{"slug": "climate", "title": "Climate", "collections": ["c1", "c2"]}]
+        themes = {"climate": {"title": "Climate", "collections": ["c1", "c2"]}}
         _write_themes(tmp_path, themes)
 
         with (
@@ -442,13 +441,12 @@ class TestLoadThemeMapping:
     def test_unknown_collection_id_in_themes_logs_warning(self, tmp_path: Path, caplog):
         """Unknown collection ID in themes.yaml is skipped with a warning."""
         _write_collection(tmp_path, "1.1.yaml", _MINIMAL_COLLECTION)
-        themes = [
-            {
-                "slug": "ocean",
+        themes = {
+            "ocean": {
                 "title": "Ocean",
                 "collections": ["1.1", "nonexistent-id"],
             }
-        ]
+        }
         _write_themes(tmp_path, themes)
 
         with (
@@ -466,10 +464,10 @@ class TestLoadThemeMapping:
         """A collection referenced in two themes appears in both theme details."""
         _write_collection(tmp_path, "shared.yaml", {**_MINIMAL_COLLECTION, "id": "shared"})
 
-        themes = [
-            {"slug": "theme-a", "title": "Theme A", "collections": ["shared"]},
-            {"slug": "theme-b", "title": "Theme B", "collections": ["shared"]},
-        ]
+        themes = {
+            "theme-a": {"title": "Theme A", "collections": ["shared"]},
+            "theme-b": {"title": "Theme B", "collections": ["shared"]},
+        }
         _write_themes(tmp_path, themes)
 
         with (
@@ -498,7 +496,7 @@ class TestLoadThemeMapping:
         _write_collection(tmp_path, "t1.yaml", col1)
         _write_collection(tmp_path, "t2.yaml", col2)
 
-        themes = [{"slug": "big-theme", "title": "Big Theme", "collections": ["t1", "t2"]}]
+        themes = {"big-theme": {"title": "Big Theme", "collections": ["t1", "t2"]}}
         _write_themes(tmp_path, themes)
 
         with (

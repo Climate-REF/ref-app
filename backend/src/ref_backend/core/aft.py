@@ -37,6 +37,7 @@ def load_official_aft_diagnostics() -> list[AFTDiagnosticBase]:
     return diagnostics
 
 
+@lru_cache(maxsize=1)
 def get_aft_diagnostics_index() -> list[AFTDiagnosticSummary]:
     """
     Get all AFT diagnostics as summaries.
