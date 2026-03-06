@@ -1,13 +1,15 @@
 from dataclasses import asdict
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
+from starlette.types import Scope
 
 from climate_ref.config import Config
 from climate_ref.database import Database
@@ -72,6 +74,21 @@ def register_cv_dimensions(ref_config: Config) -> None:
     MetricValue.register_cv_dimensions(CV.load_from_file(cv_path))
 
 
+class SPAStaticFiles(StaticFiles):
+    """
+    Static file handler with SPA fallback.
+
+    Serves static files normally, but falls back to index.html for paths
+    that don't match a real file (enabling client-side routing).
+    """
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException:
+            return await super().get_response(".", scope)
+
+
 def build_app(settings: Settings, ref_config: Config, database: Database) -> FastAPI:
     """
     Build the FastAPI application with the necessary configurations and middlewares.
@@ -124,7 +141,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         logger.info(f"Serving static files from {settings.STATIC_DIR}")
         app.mount(
             "/",
-            StaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
+            SPAStaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
             name="static",
         )
 
