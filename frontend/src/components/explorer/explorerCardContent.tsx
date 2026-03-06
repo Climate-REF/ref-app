@@ -73,7 +73,7 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
               {contentItem.placeholder ? "PLACEHOLDER: " : ""}{" "}
               {contentItem.title}
             </CardTitle>
-            <div className="h-min-32">
+            <div className="min-h-8">
               {contentItem.description && (
                 <CardDescription>{contentItem.description}</CardDescription>
               )}
@@ -95,7 +95,7 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         <CardContent className="flex-auto flex flex-col justify-end">
           <ExplorerCardContentInner contentItem={contentItem} />
         </CardContent>
-        <CardFooter className="h-min-32 flex-none">
+        <CardFooter className="min-h-8 flex-none">
           {contentItem.interpretation && (
             <div className="text-sm text-muted-foreground">
               <span className="text-sm text-muted-foreground font-semibold">

@@ -34,6 +34,9 @@ export type AftCollectionCardContent = {
 export type AftCollectionContent = {
     description?: string | null;
     short_description?: string | null;
+    why_it_matters?: string | null;
+    takeaway?: string | null;
+    plain_language?: AftCollectionPlainLanguage | null;
 };
 
 export type AftCollectionDetail = {
@@ -52,12 +55,19 @@ export type AftCollectionDetail = {
 export type AftCollectionDiagnosticLink = {
     provider_slug: string;
     diagnostic_slug: string;
+    provider_link?: string | null;
 };
 
 export type AftCollectionGroupingConfig = {
     group_by: string;
     hue: string;
     style?: string | null;
+};
+
+export type AftCollectionPlainLanguage = {
+    description?: string | null;
+    why_it_matters?: string | null;
+    takeaway?: string | null;
 };
 
 export type AftCollectionSummary = {

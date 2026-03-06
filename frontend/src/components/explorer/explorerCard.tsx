@@ -73,7 +73,7 @@ export function ExplorerCard({ card }: ExplorerCardProps) {
             )}
           </Button>
         </div>
-        <div className="h-min-32">
+        <div className="min-h-8">
           {card.description && (
             <CardDescription>{card.description}</CardDescription>
           )}

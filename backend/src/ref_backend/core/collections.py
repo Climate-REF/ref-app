@@ -61,6 +61,7 @@ class AFTCollectionContent(BaseModel):
 class AFTCollectionDiagnosticLink(BaseModel):
     provider_slug: str
     diagnostic_slug: str
+    provider_link: HttpUrl | None = None
 
 
 class AFTCollectionSummary(BaseModel):

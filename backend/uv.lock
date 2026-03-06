@@ -352,7 +352,7 @@ wheels = [
 
 [[package]]
 name = "climate-ref"
-version = "0.12.0"
+version = "0.12.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -371,9 +371,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/99/61a08a649842d61af054f652d21827441c53cef80e85244116cd1bdd5903/climate_ref-0.12.0.tar.gz", hash = "sha256:01b03c50b437626d12a7ca83b4b60c4b9eda391c0fbef55ac1e2be9f42594a92", size = 262084, upload-time = "2026-03-03T10:48:30.624Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/97/c34988406577bf058e8da7e44233dc70cf84839006ba48e291fa1101ed2c/climate_ref-0.12.2.tar.gz", hash = "sha256:b54216a8359bb68ab5a3bfaabd05763694d806ad64b5c0beb158b15ac66534b4", size = 262109, upload-time = "2026-03-06T04:25:20.36Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/12/697c06649c762ef76623515e7855dc537f8d5df96323bcc901567316f02a/climate_ref-0.12.0-py3-none-any.whl", hash = "sha256:9998d6d7f7d79474ad9a0961b4d7b16537dc4704f286d4ef2bb76d534f440e5b", size = 162062, upload-time = "2026-03-03T10:48:29.303Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/bc/9543965269e1369a4ad34b86daffb98e1c9d07b3d3f4aa7311185b22ef28/climate_ref-0.12.2-py3-none-any.whl", hash = "sha256:8c149855a758c7c62e27564afbc51d6409cc12183bfd097e852ba6e603011680", size = 162065, upload-time = "2026-03-06T04:25:18.893Z" },
 ]
 
 [package.optional-dependencies]
@@ -2022,16 +2022,16 @@ name = "parsl"
 version = "2026.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill" },
-    { name = "filelock" },
-    { name = "psutil" },
-    { name = "pyzmq" },
-    { name = "requests" },
-    { name = "setproctitle" },
-    { name = "sortedcontainers" },
-    { name = "tblib" },
-    { name = "typeguard" },
-    { name = "typing-extensions" },
+    { name = "dill", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "filelock", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "psutil", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "pyzmq", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "requests", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "setproctitle", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "sortedcontainers", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "tblib", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typeguard", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ee/25/c870b421fa5a703689883a7df104bb0728024400b0f62709c086ad6b4123/parsl-2026.3.2.tar.gz", hash = "sha256:5775edbdb3ef62b61dc6f4480fae50d454d414f3b439747b1f8d6e5e39238889", size = 375527, upload-time = "2026-03-02T22:50:18.961Z" }
 wheels = [
@@ -2847,7 +2847,7 @@ name = "pyzmq"
 version = "27.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "implementation_name == 'pypy'" },
+    { name = "cffi", marker = "(implementation_name == 'pypy' and platform_machine != 'ARM64') or (implementation_name == 'pypy' and sys_platform != 'win32')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/04/0b/3c9baedbdf613ecaa7aa07027780b8867f57b6293b6ee50de316c9f3222b/pyzmq-27.1.0.tar.gz", hash = "sha256:ac0765e3d44455adb6ddbf4417dcce460fc40a05978c08efdf2948072f6db540", size = 281750, upload-time = "2025-09-08T23:10:18.157Z" }
 wheels = [
@@ -2918,7 +2918,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "climate-ref", extras = ["aft-providers", "postgres"], specifier = ">=0.12.0" },
+    { name = "climate-ref", extras = ["aft-providers", "postgres"], specifier = ">=0.12.2" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "fastapi-sqlalchemy-monitor", specifier = ">=1.1.3" },
     { name = "loguru" },
@@ -3633,7 +3633,7 @@ name = "typeguard"
 version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/e8/66e25efcc18542d58706ce4e50415710593721aae26e794ab1dec34fb66f/typeguard-4.5.1.tar.gz", hash = "sha256:f6f8ecbbc819c9bc749983cc67c02391e16a9b43b8b27f15dc70ed7c4a007274", size = 80121, upload-time = "2026-02-19T16:09:03.392Z" }
 wheels = [

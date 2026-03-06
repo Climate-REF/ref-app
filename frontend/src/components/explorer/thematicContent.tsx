@@ -1,13 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import { BookOpen, FlaskConical } from "lucide-react";
+import { useState } from "react";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
 import type {
   AftCollectionCard,
   AftCollectionCardContent,
+  AftCollectionDetail,
   AftCollectionGroupingConfig,
   ThemeDetail,
 } from "@/client/types.gen";
 import { Button } from "@/components/ui/button.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Route } from "@/routes/_app/explorer/themes.tsx";
 import { ExplorerThemeLayout } from "./explorerThemeLayout";
 import type { ChartGroupingConfig } from "./grouping/types";
@@ -16,10 +20,12 @@ import type { ExplorerCard, ExplorerCardContent } from "./types";
 const themes = [
   { name: "atmosphere", title: "Atmosphere" },
   { name: "earth-system", title: "Earth System" },
-  { name: "impact-and-adaptation", title: "Impact and Adaptation" },
-  { name: "land", title: "Land and Land Ice" },
-  { name: "ocean", title: "Ocean and Sea Ice" },
-];
+  { name: "impact-and-adaptation", title: "Impact & Adaptation" },
+  { name: "land", title: "Land & Land Ice" },
+  { name: "ocean", title: "Ocean & Sea Ice" },
+] as const;
+
+type ThemeName = (typeof themes)[number]["name"];
 
 function toChartGroupingConfig(
   apiConfig: AftCollectionGroupingConfig,
@@ -84,8 +90,10 @@ function toExplorerCardContent(
   }
 }
 
-function themeToExplorerCards(theme: ThemeDetail): ExplorerCard[] {
-  return theme.explorer_cards.map((card: AftCollectionCard) => ({
+function collectionToExplorerCards(
+  collection: AftCollectionDetail,
+): ExplorerCard[] {
+  return collection.explorer_cards.map((card: AftCollectionCard) => ({
     title: card.title,
     description: card.description ?? undefined,
     placeholder: card.placeholder ?? undefined,
@@ -93,38 +101,100 @@ function themeToExplorerCards(theme: ThemeDetail): ExplorerCard[] {
   }));
 }
 
-function ThemeContent({ slug }: { slug: string }) {
+function buildCollectionGroups(theme: ThemeDetail) {
+  return theme.collections
+    .map((collection) => ({
+      collection,
+      cards: collectionToExplorerCards(collection),
+    }))
+    .filter((group) => group.cards.length > 0);
+}
+
+function hasPlainLanguageContent(theme: ThemeDetail): boolean {
+  return theme.collections.some((c) => {
+    const pl = c.content?.plain_language;
+    return pl?.description || pl?.why_it_matters || pl?.takeaway;
+  });
+}
+
+function ThemeContent({
+  slug,
+  plainLanguage,
+}: {
+  slug: string;
+  plainLanguage: boolean;
+}) {
   const { data: theme } = useSuspenseQuery(
     explorerGetThemeOptions({ path: { theme_slug: slug } }),
   );
-  const cards = themeToExplorerCards(theme);
-  return <ExplorerThemeLayout cards={cards} />;
+  const collectionGroups = buildCollectionGroups(theme);
+  return (
+    <ExplorerThemeLayout
+      collectionGroups={collectionGroups}
+      plainLanguage={plainLanguage}
+    />
+  );
 }
 
 export function ThematicContent() {
   const { theme } = Route.useSearch();
+  const navigate = useNavigate();
   const themeObj = themes.find((t) => t.name === theme);
+  const [plainLanguage, setPlainLanguage] = useState(false);
+
+  const { data: themeData } = useSuspenseQuery(
+    explorerGetThemeOptions({ path: { theme_slug: theme } }),
+  );
+  const showPlainLanguageToggle = hasPlainLanguageContent(themeData);
+
   return (
     <>
       <title>{`${themeObj?.title} Explorer - Climate REF`}</title>
-      <div className="space-x-2">
-        {themes.map((item) => (
-          <Link
-            key={item.name}
-            to={Route.fullPath}
-            // @ts-expect-error Incorrect type for search
-            search={{ theme: item.name }}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <Tabs<ThemeName>
+            value={theme}
+            onValueChange={(value) => {
+              navigate({
+                to: Route.fullPath,
+                search: { theme: value },
+              });
+            }}
           >
+            <TabsList className="overflow-x-auto">
+              {themes.map((item) => (
+                <TabsTrigger<ThemeName> key={item.name} value={item.name}>
+                  {item.title}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          {showPlainLanguageToggle && (
             <Button
-              key={item.title}
-              variant={item.name === theme ? "default" : "outline"}
+              variant={plainLanguage ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPlainLanguage(!plainLanguage)}
+              className="gap-2 shrink-0"
             >
-              {item.title}
+              {plainLanguage ? (
+                <BookOpen className="h-4 w-4" />
+              ) : (
+                <FlaskConical className="h-4 w-4" />
+              )}
+              {plainLanguage ? "Plain Language" : "Technical"}
             </Button>
-          </Link>
-        ))}
+          )}
+        </div>
+        {showPlainLanguageToggle && (
+          <p className="text-xs text-muted-foreground">
+            Toggle between technical descriptions and plain language summaries
+            using the button above.
+          </p>
+        )}
       </div>
-      <div>{theme && <ThemeContent slug={theme} />}</div>
+      <div className="mt-6">
+        {theme && <ThemeContent slug={theme} plainLanguage={plainLanguage} />}
+      </div>
     </>
   );
 }

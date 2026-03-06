@@ -257,6 +257,38 @@ export const AFTCollectionContentSchema = {
                 }
             ],
             title: 'Short Description'
+        },
+        why_it_matters: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Why It Matters'
+        },
+        takeaway: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Takeaway'
+        },
+        plain_language: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/AFTCollectionPlainLanguage'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -320,7 +352,10 @@ export const AFTCollectionDetailSchema = {
         provider_link: {
             anyOf: [
                 {
-                    type: 'string'
+                    type: 'string',
+                    maxLength: 2083,
+                    minLength: 1,
+                    format: 'uri'
                 },
                 {
                     type: 'null'
@@ -367,6 +402,20 @@ export const AFTCollectionDiagnosticLinkSchema = {
         diagnostic_slug: {
             type: 'string',
             title: 'Diagnostic Slug'
+        },
+        provider_link: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 2083,
+                    minLength: 1,
+                    format: 'uri'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Provider Link'
         }
     },
     type: 'object',
@@ -399,6 +448,46 @@ export const AFTCollectionGroupingConfigSchema = {
     type: 'object',
     required: ['group_by', 'hue'],
     title: 'AFTCollectionGroupingConfig'
+} as const;
+
+export const AFTCollectionPlainLanguageSchema = {
+    properties: {
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        why_it_matters: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Why It Matters'
+        },
+        takeaway: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Takeaway'
+        }
+    },
+    type: 'object',
+    title: 'AFTCollectionPlainLanguage'
 } as const;
 
 export const AFTCollectionSummarySchema = {
