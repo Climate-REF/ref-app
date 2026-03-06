@@ -103,7 +103,7 @@ class TestLoadAllCollections:
         assert col.endorser == "WCRP"
         assert col.version_control == "1.0"
         assert col.reference_dataset == "ERA5"
-        assert col.provider_link == "https://example.com"
+        assert str(col.provider_link) == "https://example.com/"
         assert col.content is not None
         assert col.content.description == "Full description"
         assert col.content.short_description == "Short"

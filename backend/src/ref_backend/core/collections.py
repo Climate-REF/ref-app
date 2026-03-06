@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, HttpUrl, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class AFTCollectionDetail(BaseModel):
     endorser: str | None = None
     version_control: str | None = None
     reference_dataset: str | None = None
-    provider_link: str | None = None
+    provider_link: HttpUrl | None = None
     content: AFTCollectionContent | None = None
     diagnostics: list[AFTCollectionDiagnosticLink]
     explorer_cards: list[AFTCollectionCard]
