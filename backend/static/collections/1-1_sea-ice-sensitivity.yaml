@@ -1,0 +1,36 @@
+id: "1.1"
+name: "Sea ice sensitivity to warming"
+theme: "Oceans and sea ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "OSI SAF/CCI, HadCRUT"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_seaice_sensitivity.html"
+content:
+  description: >-
+    This metric evaluates the rate of sea ice loss per degree of global warming,
+    following the approach used for sea ice benchmarking within the Sea Ice Model
+    Intercomparison Project analysis (Notz and SIMIP Community, 2020; Roach et al.,
+    2020). The metric is calculated by regressing the time-series of sea ice area on
+    global mean temperature. This is done on an annual basis using the annual-mean
+    for Antarctic sea ice and the September-mean for Arctic sea ice.
+  short_description: >-
+    Rate of sea ice area loss per degree of warming, as in plot 1d of Notz et al.
+    and figure 3e of Roach et al.
+  why_it_matters: >-
+    The rapid decline in Arctic summer sea ice areal extent is a highly visible
+    indicator of climate change.
+
+    Previous sea ice benchmarking assessments have
+    highlighted the fact that CMIP models systematically underestimate the amount of
+    Arctic sea ice area loss per degree of global warming. Very few CMIP models are
+    able to simulate both a plausible sea ice loss and a plausible change in global
+    mean temperature over the satellite period.
+  takeaway: >-
+    Sea ice responds strongly to climate forcing and so sea ice decline should be
+    considered relative to global warming. Considering the rate of change of sea ice
+    area with warming allows us to consider whether the sea ice is responding to the
+    forcing in the right way.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: sea-ice-sensitivity
+explorer_cards: []

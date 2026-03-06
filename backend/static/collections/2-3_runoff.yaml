@@ -1,0 +1,46 @@
+id: "2.3"
+name: "Runoff"
+theme: "Land and land ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "LORA-1-1"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    The diagnostic shows total runoff per grid cell expressed in kg/m^2/s and compares
+    it with the Linear Optimal Runoff Aggregate (LORA) (Hobeichi et al, 2019)
+    observation-based product. The diagnostics calculates metrics following the
+    standard methodology from the ILAMB project (Collier et al. 2018). For each model
+    run, maps of total runoff, month of maximum, root-mean squared error (RMSE), bias,
+    bias score, phase shift, cycle score with respect to LORA are produced, as well as
+    time series and Taylor diagrams for both global and tropical domain.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model surface runoff with reference
+    data from LORA-1-1
+  why_it_matters: >-
+    Runoff is important for the whole terrestrial hydrological cycle. In the coastal
+    regions, the biases in runoff could also influence the fresh water and nutrient
+    supply to the ocean.
+  plain_language:
+    why_it_matters: >-
+      Runoff is a variable which is indicative of the fresh water supply and drought
+      metrics. Thus understanding the biases in the models would be beneficial in
+      particular for future planning.
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: mrro-lora
+explorer_cards:
+  - title: "Total Runoff"
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: mrro-lora
+        title: "Total Runoff"
+        metric_units: "kg/m^2/s"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: global
+          metric: Bias
+          statistic: Bias

@@ -44,9 +44,18 @@ class AFTCollectionCard(BaseModel):
     content: list[AFTCollectionCardContent]
 
 
+class AFTCollectionPlainLanguage(BaseModel):
+    description: str | None = None
+    why_it_matters: str | None = None
+    takeaway: str | None = None
+
+
 class AFTCollectionContent(BaseModel):
     description: str | None = None
     short_description: str | None = None
+    why_it_matters: str | None = None
+    takeaway: str | None = None
+    plain_language: AFTCollectionPlainLanguage | None = None
 
 
 class AFTCollectionDiagnosticLink(BaseModel):

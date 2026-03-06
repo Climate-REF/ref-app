@@ -6,10 +6,22 @@ version_control: "version 1 - 24-11-04 REF launch"
 reference_dataset: "C3S-GTO-ECV-9-0, SAGE-CCI-OMPS-v0008, ERA-5"
 provider_link: "http://pcmdi.github.io/pcmdi_metrics/examples/Demo_1b_mean_climate.html"
 content:
+  description: >-
+    Mean state metrics quantify how well models simulate observed climatological
+    fields at a large scale, gauged by a suite of well-established statistics such as
+    RMSE, mean absolute error (MAE), and pattern correlation. The seasonally and
+    annually averaged fields of multiple variables from large-scale observationally
+    based datasets and results from model simulations are compared.
   short_description: >-
     Maps of seasonal and annual climatology are generated for the reference datasets
     and model output on a target grid (2.5x2.5 deg), then calculate diverse metrics
     including bias, RMSE, spatial pattern correlation, and standard deviation.
+  why_it_matters: >-
+    These metrics quantify how well models simulate observed climatological fields at
+    a large scale.
+  plain_language:
+    why_it_matters: >-
+      These metrics provide an entry-level high-level overview for model performance.
 diagnostics:
   - provider_slug: pmp
     diagnostic_slug: annual-cycle

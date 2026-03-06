@@ -1,0 +1,24 @@
+id: "1.5"
+name: "Ocean heat content (OHC)"
+theme: "Oceans and sea ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "MGOHCTA-WOA09"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    The OHC diagnostic displays a time series of global ocean heat content from 0 to
+    2000 m depth from 2005 to 2015. The diagnostic is computed using each model's 3D
+    ocean potential temperature field (thetao) and grid cell volume (volcello; which
+    may be static or time evolving). OHC is computed as thetao multiplied by the heat
+    capacity of seawater in J/(kg K) and the average in-situ density of seawater
+    (approximated to be 1026 kg/m3). The OHC is then integrated over the upper 2000 m
+    of the water column by identifying the grid cell closest to 2000 m in each model's
+    vertical coordinate. The value is then referenced to year 1 to create the time
+    series. Simulated OHC is compared against MGOHCTA-WOA09 - Monthly Global Ocean
+    Heat Content and Temperature Anomalies in-situ (basin averages) from NOAA.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model ocean heat content (OHC) with
+    reference data from MGOHCTA-WOA09
+diagnostics: []
+explorer_cards: []

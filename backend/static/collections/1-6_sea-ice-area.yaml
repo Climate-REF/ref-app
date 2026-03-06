@@ -7,19 +7,34 @@ reference_dataset: "OSISAF-V3"
 provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
 content:
   description: >-
-    The sea ice area, calculated as the sum over the Northern (Arctic) and Southern
+    The sea ice area is calculated as the sum over the Northern (Arctic) and Southern
     (Antarctic) Hemisphere grid cell areas multiplied by the sea ice fraction within
-    each cell, exhibits a distinct seasonal cycle. Arctic sea ice area typically has
-    minimum values in September, while Antarctic sea ice area is lowest in February.
-    The seasonal cycle is driven by the seasonal cycle of the insolation, sea ice
-    processes, as well as the exchange with the atmosphere and ocean and can be seen as
-    an overview metric for the general state of the sea ice in a model. In addition to
-    the multi-year average seasonal cycle of Arctic and Antarctic sea ice area, the
-    diagnostic produces time series of the September (Arctic) and February (Antarctic)
-    sea ice area.
+    each cell.
+
+    This is done throughout the year to assess the seasonal cycle. Arctic
+    sea ice area typically has minimum values in September, while Antarctic sea ice
+    area is lowest in February. The seasonal cycle is the result of several important
+    melting and growth processes and so can be seen as an overview metric for the
+    general state of the sea ice in a model.
+
+    In addition to the multi-year average
+    seasonal cycle of NH (Arctic) and SH (Antarctic) sea ice area, the diagnostic
+    produces time series of the September (Arctic) and February (Antarctic) sea ice
+    area.
   short_description: >-
     Seasonal cycle of Arctic (NH) and Antarctic (SH) sea ice area, time series of
     Arctic September (NH) and Antarctic February (SH) sea ice area
+  why_it_matters: >-
+    Sea ice is an important component of the Earth system. Since sea ice has a much
+    higher albedo than the ocean surface, sea ice area plays an important role in the
+    surface energy and radiation budgets, particularly in summer. Its low thermal
+    conductivity means that sea ice insulates the relatively warm ocean from the cold
+    atmosphere above in winter. Sea ice also presents a physical barrier to the
+    exchange of moisture, gases, and aerosols between the ocean and atmosphere.
+  takeaway: >-
+    The seasonal cycle of sea ice area is the result of several important melting and
+    growth processes and so can be seen as an overview metric for the general state of
+    the sea ice in a climate model.
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: sea-ice-area-basic

@@ -1,0 +1,43 @@
+id: "3.2"
+name: "Radiative and heat fluxes at the surface and top of atmosphere (TOA)"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "CERES-EBAF-4-2"
+provider_link: "http://pcmdi.github.io/pcmdi_metrics/examples/Demo_1a_compute_climatologies.html"
+content:
+  description: >-
+    This diagnostic computes and compares simulated radiative fluxes (shortwave and
+    longwave, up and down) and turbulent heat fluxes (sensible and latent) at the
+    surface and TOA against observational datasets such as CERES-EBAF. Multi-year
+    climatological means are computed for each flux component, and the
+    model-observation differences (biases) are mapped globally. Metrics include
+    spatial RMSE, pattern correlation, and global/regional mean biases.
+  short_description: >-
+    Maps of seasonal and annual climatology are generated for the reference dataset
+    and model output on a target grid (2.5x2.5 deg), then calculate diverse metrics
+    including bias, RMSE, spatial pattern correlation, and standard deviation.
+  why_it_matters: >-
+    The global energy budget is a fundamental constraint on the climate system. TOA
+    radiative imbalance determines the rate of climate change, while surface fluxes
+    drive ocean-atmosphere heat exchange and hydrological processes. Biases in these
+    fluxes propagate into errors in temperature, precipitation, and circulation
+    patterns.
+  takeaway: >-
+    Comparison against CERES-EBAF provides a well-constrained benchmark for model
+    radiative performance. Systematic biases in net TOA flux indicate potential issues
+    with cloud representation, aerosol forcing, or surface albedo. Regional flux
+    biases often correlate with biases in other fields (e.g., SST, precipitation).
+  plain_language:
+    description: >-
+      This diagnostic checks whether models correctly simulate how much energy enters
+      and leaves the Earth system at different levels -- at the top of the atmosphere
+      and at the surface.
+    why_it_matters: >-
+      The Earth's energy balance determines how fast the planet warms. Getting these
+      fluxes right is essential for accurate climate projections.
+    takeaway: >-
+      Models that accurately simulate energy flows are more trustworthy for projecting
+      future warming.
+diagnostics: []
+explorer_cards: []

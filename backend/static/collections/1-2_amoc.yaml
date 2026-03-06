@@ -1,0 +1,53 @@
+id: "1.2"
+name: "Atlantic meridional overturning circulation (AMOC)"
+theme: "Oceans and sea ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "RAPID-v2023-1"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    In this diagnostic the AMOC is represented by a two-dimensional streamfunction
+    field, in which the streamfunction at any latitude and any depth equals the
+    vertical integration from the surface to that depth of the zonally-integrated
+    meridional velocity from the western boundary to the eastern boundary of the
+    Atlantic at that latitude.
+  short_description: >-
+    Comparison of the model Atlantic meridional ocean circulation (AMOC) circulation
+    strength with reference data from RAPID-v2023-1
+  why_it_matters: >-
+    The AMOC is one of the major components in the global climate system of the Earth.
+    By the transport of heat, salinity, and nutrients, the AMOC influences the global
+    pattern of climate system and ecosystem. The strengthening, weakening or collapse
+    of the AMOC are usually associated with an abrupt change of the climate system.
+    The possible weakening or even collapse of the AMOC with global warming is still
+    under debate. Historical evidence confirms the existence of multiple states of
+    AMOC, but when and how its sudden transition might occur is still uncertain.
+  takeaway: >-
+    Both the mean condition and the variability of AMOC are important fingerprints of
+    the global climate system. A smaller bias of AMOC relative to the observation may
+    be indicative of better performance of a coupled ESM.
+  plain_language:
+    why_it_matters: >-
+      The AMOC is widely considered a major possible tipping element in the global
+      climate system, and the approach to the AMOC's tipping point with global
+      warming may result in severe consequences to the world.
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: amoc-rapid
+explorer_cards:
+  - title: "AMOC"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: amoc-rapid
+        title: "AMOC Strength"
+        metric_units: "Sv"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: "None"
+          metric: timeseries
+          statistic: "Period Mean"

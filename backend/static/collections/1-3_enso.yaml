@@ -19,6 +19,24 @@ content:
     projections.
   short_description: >-
     ENSO CLIVAR metrics - reproducing background climatology and ENSO characteristics
+  why_it_matters: >-
+    ENSO is a dominant mode of interannual climate variability across the globe
+    affecting precipitation, temperature and seasons. It is important to understand
+    performance, physical processes and teleconnections in models.
+  takeaway: >-
+    Values closer to 0 can indicate better performance in that characteristic. Models
+    simulate ENSO though some can represent the different aspects of climatology,
+    characteristics and teleconnections, processes better.
+  plain_language:
+    description: >-
+      This diagnostic checks how well the models simulate the El Nino Southern
+      Oscillation (ENSO) in the tropical Pacific.
+    why_it_matters: >-
+      Weather and climate extremes are strongly modulated by ENSO and can have severe
+      impacts on the regional scale.
+    takeaway: >-
+      Models simulate ENSO though there are some model biases that influence weather
+      projections.
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: enso-basic-climatology

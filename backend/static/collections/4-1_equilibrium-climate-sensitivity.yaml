@@ -6,11 +6,24 @@ version_control: "version 1 - 24-11-04 REF launch"
 reference_dataset: ""
 provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ecs.html"
 content:
+  description: >-
+    Equilibrium climate sensitivity is defined as the change in global mean temperature
+    as a result of a doubling of the atmospheric CO2 concentration compared to
+    pre-industrial times after the climate system has reached a new equilibrium. This
+    recipe uses a regression method based on Gregory et al. (2004) to calculate it for
+    several CMIP models.
   short_description: >-
     Equilibrium climate sensitivity is defined as the change in global mean temperature
     as a result of a doubling of the atmospheric CO2 concentration compared to
     pre-industrial times after the climate system has reached a new equilibrium. This
     diagnostic uses a regression method based on Gregory et al. (2004).
+  why_it_matters: >-
+    Equilibrium climate sensitivity is the temperature change realized after allowing
+    the climate system to equilibrate with a value of CO2 doubled compared to
+    pre-industrial values. Therefore, it accounts for the response of the climate
+    system after the deep oceans had time to equilibrate. Even though it is less
+    relevant than TCR for the assessment of changes that are set to be observed in the
+    21st Century, they are fundamental for inter-comparison of model performances.
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: equilibrium-climate-sensitivity

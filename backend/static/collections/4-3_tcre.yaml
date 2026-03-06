@@ -6,7 +6,7 @@ version_control: "version 1 - 24-11-04 REF launch"
 reference_dataset: ""
 provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_tcre.html"
 content:
-  short_description: >-
+  description: >-
     The idea that global temperature rise is directly proportional to the total amount
     of carbon dioxide (CO2) released into the atmosphere is fundamental to climate
     policy. The concept stems from research showing a clear linear relationship between
@@ -17,6 +17,24 @@ content:
     simple yet powerful tool allows policymakers to directly link emission budgets to
     specific temperature targets and compare the long-term effects of different
     emissions scenarios.
+  short_description: >-
+    This diagnostic calculates the linear trend in global mean surface temperature warming (since
+    the preindustrial) to respective cumulative anthropogenic CO2 emissions, usually
+    presented in units of degrees C per GtCO2. This relationship is usually calculated
+    from historical followed by future scenarios simulations.
+  why_it_matters: >-
+    It provides a valuable metric linking the physical climate system response to CO2
+    emissions that reflects climate sensitivity and the models' carbon cycle response
+    to emissions.
+  takeaway: >-
+    The inter-model spread reflects uncertainty associated with Zero Emissions
+    Commitment warming and uncertainty in carbon cycle feedback among the models.
+  plain_language:
+    why_it_matters: >-
+      TCRE is one of the few metrics that directly link climate change (global warming)
+      and policy planning (CO2 emissions). For instance, it quantifies how much total
+      CO2 emissions can be emitted to keep global warming at a certain threshold, such
+      as the Paris Agreement.
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: transient-climate-response-emissions

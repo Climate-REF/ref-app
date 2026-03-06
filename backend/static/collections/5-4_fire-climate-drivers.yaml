@@ -1,0 +1,39 @@
+id: "5.4"
+name: "Climate drivers for fire (fire burnt area, fire weather and fuel continuity)"
+theme: "Impacts and Adaptation"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "GFED-5 (source_id not confirmed)"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref_fire.html"
+content:
+  description: >-
+    This diagnostic computes burnt area from the climate models using Bayesian model
+    ConFire, which in turn is based on the observational data. To show the predominant
+    drivers of the burn areas the diagnostic also computes contribution of fire
+    controls: weather or fuel load/moisture.
+  short_description: >-
+    The diagnostic relies on the processing of fire climate drivers through the ConFire
+    model and is based on Jones et al. (2024). The diagnostic computes the burnt
+    fraction for each grid cell based on a number of drivers. Additionally, the
+    respective controls due to fire weather and fuel load/continuity are computed. The
+    stochastic control corresponds to the unmodelled processed influencing to fire
+    occurrence.
+  why_it_matters: >-
+    Wildfires are becoming an extremely important hazard, in particular in the changing
+    climate. However, depending on the region, the exact wildfires and hence burnt area
+    can be driven by different factors. By computing the burnt area one can determine
+    the wildfire extent over the globe and which factor -- weather or fuel -- has
+    primary responsibility in which region.
+  takeaway: >-
+    The spread of burnt area in different climates, and uneven contribution of
+    different drivers in different forested areas.
+  plain_language:
+    why_it_matters: >-
+      The results are important for the adaptation community to predict the amount of
+      burnt area in different climates to sufficiently distribute resources.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: climate-drivers-for-fire
+  - provider_slug: ilamb
+    diagnostic_slug: burntfractionall-gfed
+explorer_cards: []

@@ -6,8 +6,17 @@ version_control: "version 1 - 24-11-04 REF launch"
 reference_dataset: "HadCRUT5-0-2-0, CERES-EBAF-4-2, ERA-5, GPCP-SG-2-3, HadISST-1-1"
 provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
 content:
+  description: >-
+    These metrics quantify how well models simulate observed state and trends at the
+    large scale. In addition to the global mean, time series and trends of key climate
+    variables like temperature, pressure, wind and humidity must be investigated
+    locally.
   short_description: >-
     Time series, linear trend, and annual cycle for IPCC regions
+  why_it_matters: >-
+    To assess the ability of climate models to look into the future, it is important to
+    evaluate them on the past climate state and changes, which have been observed in
+    recent decades, where observations and reanalysis data provide a reference.
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: regional-historical-annual-cycle
