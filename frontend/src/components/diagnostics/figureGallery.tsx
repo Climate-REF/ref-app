@@ -25,6 +25,10 @@ import {
 } from "@/components/ui/select.tsx";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
+import {
+  matchesSelectorFilters,
+  SelectorFilterPanel,
+} from "./selectorFilterPanel.tsx";
 
 interface DiagnosticFigureGalleryProps {
   providerSlug: string;
@@ -71,6 +75,9 @@ export function FigureGallery({
 }: DiagnosticFigureGalleryProps) {
   const [filter, setFilter] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectorFilters, setSelectorFilters] = useState<
+    Record<string, string[]>
+  >({});
   const [selectedFigureIndex, setSelectedFigureIndex] = useState<number | null>(
     null,
   );
@@ -115,6 +122,9 @@ export function FigureGallery({
       selectedGroup !== "all" &&
       selectedGroup !== executionGroup.id.toString()
     ) {
+      return false;
+    }
+    if (!matchesSelectorFilters(executionGroup.selectors, selectorFilters)) {
       return false;
     }
     if (filter) {
@@ -188,6 +198,12 @@ export function FigureGallery({
           />
         </div>
       </div>
+
+      <SelectorFilterPanel
+        executionGroups={executionGroups?.data ?? []}
+        filters={selectorFilters}
+        onFiltersChange={setSelectorFilters}
+      />
 
       {filteredFigures.length > 0 ? (
         <div
