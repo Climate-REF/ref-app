@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { CardTemplateGenerator } from "@/components/diagnostics/cardTemplateGenerator";
 import { Values } from "@/components/execution/values";
 import { useDiagnosticMetricValues } from "@/hooks/useDiagnosticMetricValues";
 
@@ -22,22 +21,14 @@ export const ScalarsValuesTab = () => {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const {
-    metricValues,
-    isLoading,
-    currentFilters,
-    currentGroupingConfig,
-    initialFilters,
-    isolateIds,
-    excludeIds,
-    handlers,
-  } = useDiagnosticMetricValues({
-    providerSlug,
-    diagnosticSlug,
-    search,
-    valueType: "scalar",
-    navigate,
-  });
+  const { metricValues, isLoading, initialFilters, handlers } =
+    useDiagnosticMetricValues({
+      providerSlug,
+      diagnosticSlug,
+      search,
+      valueType: "scalar",
+      navigate,
+    });
 
   return (
     <div className="space-y-4">
@@ -57,26 +48,6 @@ export const ScalarsValuesTab = () => {
         onCurrentGroupingChange={handlers.onCurrentGroupingChange}
         onDownload={handlers.onDownload}
       />
-
-      {/* Card Template Generator - Inline for visibility */}
-      <div className="mt-4 p-4 border rounded-lg bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800">
-        <h3 className="text-lg font-semibold mb-2">
-          Generate Card Template - For MBTT
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-muted-foreground mb-4">
-          Create a template for this diagnostic to include in the data explorer.
-        </p>
-        <CardTemplateGenerator
-          providerSlug={providerSlug}
-          diagnosticSlug={diagnosticSlug}
-          currentFilters={currentFilters}
-          currentGroupingConfig={currentGroupingConfig}
-          availableData={metricValues?.data ?? []}
-          currentTab="scalars"
-          isolateIds={isolateIds}
-          excludeIds={excludeIds}
-        />
-      </div>
     </div>
   );
 };
