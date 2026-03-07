@@ -1,15 +1,9 @@
 import { useEffect } from "react";
 import type { AftCollectionDetail } from "@/client/types.gen";
 import { CollectionHeader } from "@/components/explorer/collectionHeader";
-import { ExplorerCard } from "@/components/explorer/explorerCard";
+import { ExplorerCardGroup } from "@/components/explorer/explorerCardGroup";
 import type { ExplorerCard as ExplorerCardType } from "@/components/explorer/types";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
-
-// Re-export types for backward compatibility
-export type {
-  ExplorerCard as ExplorerCardType,
-  ExplorerCardContent,
-} from "@/components/explorer/types";
 
 interface CollectionGroup {
   collection: AftCollectionDetail;
@@ -40,9 +34,12 @@ export const ExplorerThemeLayout = ({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-12 min-h-0">
-        {collectionGroups.map((group) => (
-          <section key={group.collection.id}>
+      <div className="flex flex-col gap-16 min-h-0">
+        {collectionGroups.map((group, index) => (
+          <section
+            key={group.collection.id}
+            className={index > 0 ? "border-t pt-12" : ""}
+          >
             <div className="pb-4">
               <CollectionHeader
                 collection={group.collection}
@@ -52,7 +49,7 @@ export const ExplorerThemeLayout = ({
             <div className="flex flex-col gap-4">
               {group.cards.map((card) => (
                 <div key={card.title} className="flex-1">
-                  <ExplorerCard card={card} />
+                  <ExplorerCardGroup card={card} />
                 </div>
               ))}
             </div>
