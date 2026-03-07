@@ -177,6 +177,81 @@ class TestLoadDiagnosticMetadata:
         assert refs[1].type == "secondary"
         assert refs[2].type == "comparison"
 
+    def test_directory_loading(self, tmp_path: Path):
+        """Test that loading from a directory merges all YAML files."""
+        pmp_content = {
+            "pmp/annual-cycle": {
+                "display_name": "Annual Cycle",
+                "reference_datasets": [
+                    {"slug": "obs4mips.ERA-5", "type": "primary"},
+                ],
+            },
+        }
+        ilamb_content = {
+            "ilamb/gpp-wecann": {
+                "display_name": "GPP (WECANN)",
+                "reference_datasets": [
+                    {"slug": "obs4REF.WECANN", "type": "primary"},
+                ],
+            },
+        }
+
+        metadata_dir = tmp_path / "diagnostics"
+        metadata_dir.mkdir()
+        with open(metadata_dir / "pmp.yaml", "w") as f:
+            yaml.dump(pmp_content, f)
+        with open(metadata_dir / "ilamb.yaml", "w") as f:
+            yaml.dump(ilamb_content, f)
+
+        result = load_diagnostic_metadata(metadata_dir)
+
+        assert len(result) == 2
+        assert "pmp/annual-cycle" in result
+        assert "ilamb/gpp-wecann" in result
+        assert result["pmp/annual-cycle"].display_name == "Annual Cycle"
+        assert result["ilamb/gpp-wecann"].display_name == "GPP (WECANN)"
+
+    def test_directory_with_no_yaml_files(self, tmp_path: Path):
+        """Test that an empty directory returns an empty dict."""
+        metadata_dir = tmp_path / "empty_dir"
+        metadata_dir.mkdir()
+
+        result = load_diagnostic_metadata(metadata_dir)
+
+        assert result == {}
+
+    def test_directory_duplicate_keys_warns(self, tmp_path: Path, caplog):
+        """Test that duplicate keys across files produce a warning and last file wins."""
+        file1_content = {
+            "pmp/annual-cycle": {
+                "display_name": "From File 1",
+                "reference_datasets": [
+                    {"slug": "dataset1", "type": "primary"},
+                ],
+            },
+        }
+        file2_content = {
+            "pmp/annual-cycle": {
+                "display_name": "From File 2",
+                "reference_datasets": [
+                    {"slug": "dataset2", "type": "secondary"},
+                ],
+            },
+        }
+
+        metadata_dir = tmp_path / "diagnostics"
+        metadata_dir.mkdir()
+        # Files are loaded in sorted order, so b.yaml overrides a.yaml
+        with open(metadata_dir / "a.yaml", "w") as f:
+            yaml.dump(file1_content, f)
+        with open(metadata_dir / "b.yaml", "w") as f:
+            yaml.dump(file2_content, f)
+
+        result = load_diagnostic_metadata(metadata_dir)
+
+        assert len(result) == 1
+        assert result["pmp/annual-cycle"].display_name == "From File 2"
+
     def test_optional_fields(self, tmp_path: Path):
         """Test that optional fields (display_name, tags, description) work correctly."""
         yaml_content = {

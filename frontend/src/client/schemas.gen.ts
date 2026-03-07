@@ -227,6 +227,20 @@ export const AFTCollectionCardContentSchema = {
                     type: 'null'
                 }
             ]
+        },
+        reference_datasets: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/ReferenceDatasetLink'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Datasets'
         }
     },
     type: 'object',

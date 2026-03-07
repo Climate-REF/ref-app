@@ -63,25 +63,26 @@ class Settings(BaseSettings):
 
     DIAGNOSTIC_METADATA_PATH: Path | None = None
     """
-    Path to the diagnostic metadata YAML file.
+    Path to the diagnostic metadata YAML file or directory.
 
-    This file provides additional metadata for diagnostics that can override or supplement
-    the default values from diagnostic implementations. If not provided, defaults to
-    'static/diagnostics/metadata.yaml' relative to the backend directory.
+    Provides additional metadata for diagnostics that can override or supplement
+    the default values from diagnostic implementations. Accepts either a single
+    YAML file or a directory of YAML files (one per provider). If not provided,
+    defaults to 'static/diagnostics/' relative to the backend directory.
     """
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def diagnostic_metadata_path_resolved(self) -> Path:
         """
-        Get the resolved path to the diagnostic metadata file.
+        Get the resolved path to the diagnostic metadata file or directory.
 
         Returns the configured path or the default location.
         """
         if self.DIAGNOSTIC_METADATA_PATH is not None:
             return self.DIAGNOSTIC_METADATA_PATH
-        # Default to static/diagnostics/metadata.yaml relative to backend directory
-        return Path(__file__).parent.parent.parent.parent / "static" / "diagnostics" / "metadata.yaml"
+        # Default to static/diagnostics/ directory relative to backend directory
+        return Path(__file__).parent.parent.parent.parent / "static" / "diagnostics"
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":

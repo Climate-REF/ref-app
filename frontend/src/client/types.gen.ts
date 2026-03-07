@@ -29,6 +29,7 @@ export type AftCollectionCardContent = {
         [key: string]: string;
     } | null;
     grouping_config?: AftCollectionGroupingConfig | null;
+    reference_datasets?: Array<ReferenceDatasetLink> | null;
 };
 
 export type AftCollectionContent = {

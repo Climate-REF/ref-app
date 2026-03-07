@@ -2,9 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from ref_backend.core.aft import (
+    _build_ref_to_aft_index,
     get_aft_diagnostic_by_id,
     get_aft_diagnostics_index,
-    get_aft_for_ref_diagnostic,
     load_official_aft_diagnostics,
 )
 from ref_backend.core.collections import (
@@ -22,7 +22,7 @@ def clear_caches():
         load_official_aft_diagnostics,
         get_aft_diagnostics_index,
         get_aft_diagnostic_by_id,
-        get_aft_for_ref_diagnostic,
+        _build_ref_to_aft_index,
     ]:
         fn.cache_clear()
     load_all_collections.cache_clear()
@@ -31,7 +31,7 @@ def clear_caches():
         load_official_aft_diagnostics,
         get_aft_diagnostics_index,
         get_aft_diagnostic_by_id,
-        get_aft_for_ref_diagnostic,
+        _build_ref_to_aft_index,
     ]:
         fn.cache_clear()
     load_all_collections.cache_clear()

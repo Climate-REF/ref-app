@@ -1,4 +1,6 @@
+import type { ReferenceDatasetLink } from "@/client/types.gen";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 import {
   Card,
   CardContent,
@@ -7,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
   EnsembleChartContent,
   FigureGalleryContent,
@@ -95,7 +98,7 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
         <CardContent className="flex-auto flex flex-col justify-end">
           <ExplorerCardContentInner contentItem={contentItem} />
         </CardContent>
-        <CardFooter className="min-h-8 flex-none">
+        <CardFooter className="min-h-8 flex-none flex-col items-start gap-2">
           {contentItem.interpretation && (
             <div className="text-sm text-muted-foreground">
               <span className="text-sm text-muted-foreground font-semibold">
@@ -104,6 +107,40 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
               {contentItem.interpretation}
             </div>
           )}
+          {contentItem.referenceDatasets &&
+            contentItem.referenceDatasets.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs text-muted-foreground">
+                  Reference datasets:
+                </span>
+                {contentItem.referenceDatasets.map(
+                  (ref: ReferenceDatasetLink) => (
+                    <Tooltip key={ref.slug}>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant={
+                            ref.type === "primary" ? "outline" : "secondary"
+                          }
+                          className="text-xs cursor-help"
+                        >
+                          {ref.slug.split(".").pop()}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <div className="text-sm space-y-1">
+                          <div className="font-semibold">{ref.slug}</div>
+                          {ref.description && (
+                            <div className="text-muted-foreground">
+                              {ref.description}
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ),
+                )}
+              </div>
+            )}
         </CardFooter>
       </Card>
     </div>

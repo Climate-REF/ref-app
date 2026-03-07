@@ -1,0 +1,134 @@
+# ILAMB Diagnostic Metadata
+#
+# Reference datasets and display metadata for ILAMB (International Land Model
+# Benchmarking) and IOMB (International Ocean Model Benchmarking) diagnostics.
+
+# Land diagnostics
+
+ilamb/gpp-wecann:
+  reference_datasets:
+    - slug: "obs4REF.WECANN"
+      description: "WECANN GPP dataset - Primary gross primary productivity reference"
+      type: "primary"
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation relationship"
+      type: "secondary"
+    - slug: "obs4MIPs.CRU4.02"
+      description: "CRU TS v4.02 - Temperature relationship"
+      type: "secondary"
+  display_name: "Gross Primary Productivity (WECANN)"
+  description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the WECANN reference dataset."
+  tags: ["land", "carbon-cycle", "vegetation"]
+
+ilamb/gpp-fluxnet2015:
+  reference_datasets:
+    - slug: "obs4REF.FLUXNET2015"
+      description: "FLUXNET2015 - Tower-based GPP measurements"
+      type: "primary"
+  display_name: "Gross Primary Productivity (FLUXNET2015)"
+  description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the FLUXNET2015 tower-based reference dataset."
+  tags: ["land", "carbon-cycle", "vegetation", "flux-towers"]
+
+ilamb/mrro-lora:
+  reference_datasets:
+    - slug: "obs4REF.LORA"
+      description: "LORA dataset - Runoff observations"
+      type: "primary"
+  display_name: "Runoff (LORA)"
+  description: "Apply the standard ILAMB analysis of total runoff (mrro) with respect to the LORA reference dataset."
+  tags: ["land", "hydrology", "runoff"]
+
+ilamb/mrsos-wangmao:
+  reference_datasets:
+    - slug: "obs4REF.WangMao"
+      description: "Wang-Mao dataset - Surface soil moisture"
+      type: "primary"
+  display_name: "Surface Soil Moisture (WangMao)"
+  description: "Apply the standard ILAMB analysis of moisture in upper portion of soil column (mrsos) with respect to the WangMao reference dataset."
+  tags: ["land", "hydrology", "soil-moisture"]
+
+ilamb/csoil-hwsd2:
+  reference_datasets:
+    - slug: "obs4REF.HWSD2"
+      description: "Harmonized World Soil Database v2 - Soil carbon content"
+      type: "primary"
+  display_name: "Soil Carbon (HWSD2)"
+  description: "Apply the standard ILAMB analysis of carbon mass in soil pool (cSoil) with respect to the HWSD2 reference dataset."
+  tags: ["land", "carbon-cycle", "soil"]
+
+ilamb/lai-avh15c1:
+  reference_datasets:
+    - slug: "obs4REF.AVH15C1"
+      description: "AVHRR - Leaf area index observations"
+      type: "primary"
+  display_name: "Leaf Area Index (AVH15C1)"
+  description: "Apply the standard ILAMB analysis of leaf area index (lai) with respect to the AVH15C1 (AVHRR) reference dataset."
+  tags: ["land", "vegetation", "remote-sensing"]
+
+ilamb/nbp-hoffman:
+  reference_datasets:
+    - slug: "obs4REF.Hoffman"
+      description: "Hoffman dataset - Net biome productivity"
+      type: "primary"
+  display_name: "Net Biome Productivity (Hoffman)"
+  description: "Apply the standard ILAMB analysis of net biome productivity (nbp) with respect to the Hoffman reference dataset."
+  tags: ["land", "carbon-cycle", "net-flux"]
+
+ilamb/snc-esacci:
+  reference_datasets:
+    - slug: "obs4REF.CCI-CryoClim-FSC"
+      description: "ESA CCI Snow - Snow cover fraction"
+      type: "primary"
+  display_name: "Snow Cover (ESA CCI)"
+  description: "Apply the standard ILAMB analysis of snow cover fraction (snc) with respect to the ESA CCI CryoClim fractional snow cover reference dataset."
+  tags: ["land", "cryosphere", "snow"]
+
+ilamb/burntfractionall-gfed:
+  reference_datasets:
+    - slug: "obs4REF.GFED"
+      description: "Global Fire Emissions Database - Burnt area fraction"
+      type: "primary"
+  display_name: "Burnt Fraction (GFED)"
+  description: "Apply the standard ILAMB analysis of burnt area fraction (burntFractionAll) with respect to the GFED reference dataset."
+  tags: ["land", "fire", "disturbance"]
+
+ilamb/emp-gleamgpcp:
+  reference_datasets:
+    - slug: "obs4REF.GLEAMv3.3a"
+      description: "GLEAM v3.3a - Evapotranspiration (et)"
+      type: "primary"
+    - slug: "obs4REF.GPCP-2-3"
+      description: "GPCP v2.3 - Precipitation (pr)"
+      type: "primary"
+  display_name: "Evaporation minus Precipitation (GLEAM/GPCP)"
+  description: "Apply the standard ILAMB analysis of evaporation minus precipitation (E-P) using GLEAMv3.3a evapotranspiration and GPCP v2.3 precipitation reference datasets."
+  tags: ["land", "hydrology", "water-balance"]
+
+# Ocean diagnostics (IOMB)
+
+ilamb/thetao-woa2023-surface:
+  reference_datasets:
+    - slug: "obs4REF.WOA2023"
+      description: "World Ocean Atlas 2023 - Sea water potential temperature (surface)"
+      type: "primary"
+  display_name: "Sea Water Temperature (WOA2023 Surface)"
+  description: "Apply the standard ILAMB analysis of sea water potential temperature (thetao) at the surface with respect to the WOA2023 reference dataset."
+  tags: ["ocean", "temperature", "surface"]
+
+ilamb/so-woa2023-surface:
+  reference_datasets:
+    - slug: "obs4REF.WOA2023"
+      description: "World Ocean Atlas 2023 - Sea water salinity (surface)"
+      type: "primary"
+  display_name: "Sea Water Salinity (WOA2023 Surface)"
+  description: "Apply the standard ILAMB analysis of sea water salinity (so) at the surface with respect to the WOA2023 reference dataset."
+  tags: ["ocean", "salinity", "surface"]
+
+ilamb/amoc-rapid:
+  reference_datasets:
+    - slug: "obs4REF.RAPID"
+      description: "RAPID array - Atlantic Meridional Overturning Circulation observations"
+      type: "primary"
+  display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
+  description: "Apply the standard ILAMB analysis of the Atlantic Meridional Overturning Circulation (AMOC) with respect to the RAPID array reference dataset."
+  tags: ["ocean", "circulation", "amoc"]

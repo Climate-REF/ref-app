@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { ReferenceDatasetLink } from "@/client/types.gen";
 import type { ChartGroupingConfig } from "./grouping";
 
 // Base properties shared across all card types
@@ -10,12 +11,12 @@ export type BaseCardContent = {
   interpretation?: string;
   span?: 1 | 2;
   placeholder?: boolean;
+  referenceDatasets?: ReferenceDatasetLink[];
 };
 
 // Card-specific content types
 export type BoxWhiskerChartContent = BaseCardContent & {
   type: "box-whisker-chart";
-  interpretation?: string;
   metricUnits?: string;
   otherFilters?: Record<string, string>;
   clipMin?: number;

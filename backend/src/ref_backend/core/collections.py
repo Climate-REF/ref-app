@@ -6,6 +6,12 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, HttpUrl, ValidationError
 
+from ref_backend.core.diagnostic_metadata import (
+    DiagnosticMetadata,
+    ReferenceDatasetLink,
+    load_diagnostic_metadata,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +41,7 @@ class AFTCollectionCardContent(BaseModel):
     label_template: str | None = None
     other_filters: dict[str, str] | None = None
     grouping_config: AFTCollectionGroupingConfig | None = None
+    reference_datasets: list[ReferenceDatasetLink] | None = None
 
 
 class AFTCollectionCard(BaseModel):
@@ -101,12 +108,33 @@ class ThemeDetail(BaseModel):
     explorer_cards: list[AFTCollectionCard]
 
 
+def get_diagnostics_dir() -> Path:
+    return Path(__file__).parents[3] / "static" / "diagnostics"
+
+
 def get_collections_dir() -> Path:
     return Path(__file__).parents[3] / "static" / "collections"
 
 
 def get_themes_path() -> Path:
     return get_collections_dir() / "themes.yaml"
+
+
+def _enrich_card_content_with_ref_datasets(
+    collection: AFTCollectionDetail,
+    metadata: dict[str, DiagnosticMetadata],
+) -> None:
+    """Populate reference_datasets on each card content item from diagnostic metadata."""
+    for card in collection.explorer_cards:
+        for content in card.content:
+            key = f"{content.provider}/{content.diagnostic}"
+            if key in metadata and metadata[key].reference_datasets:
+                content.reference_datasets = metadata[key].reference_datasets
+
+
+@lru_cache(maxsize=1)
+def _load_diagnostic_metadata_cached() -> dict[str, DiagnosticMetadata]:
+    return load_diagnostic_metadata(get_diagnostics_dir())
 
 
 @lru_cache(maxsize=1)
@@ -117,6 +145,7 @@ def load_all_collections() -> dict[str, AFTCollectionDetail]:
         logger.warning(f"Collections directory not found: {collections_dir}")
         return {}
 
+    diagnostic_metadata = _load_diagnostic_metadata_cached()
     result: dict[str, AFTCollectionDetail] = {}
 
     yaml_files = sorted(
@@ -134,6 +163,7 @@ def load_all_collections() -> dict[str, AFTCollectionDetail]:
                 continue
 
             collection = AFTCollectionDetail(**data)
+            _enrich_card_content_with_ref_datasets(collection, diagnostic_metadata)
 
             if collection.id in result:
                 logger.warning(f"Duplicate collection ID '{collection.id}' in {yaml_file.name}, skipping")

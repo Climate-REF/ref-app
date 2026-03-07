@@ -35,7 +35,8 @@ Display metadata for each AFT diagnostic collection (descriptions, explanations,
 is maintained in YAML files under [`backend/static/collections/`](backend/static/collections/).
 See the [collections README](backend/static/collections/README.md) for the full schema and instructions.
 
-Diagnostic-level metadata overrides (display names, reference datasets, tags) are in `backend/static/diagnostics/metadata.yaml`,
+Diagnostic-level metadata overrides (display names, reference datasets, tags) are split into per-provider
+YAML files under `backend/static/diagnostics/` (e.g. `pmp.yaml`, `esmvaltool.yaml`, `ilamb.yaml`),
 which can be regenerated from the provider registry with `make generate-metadata`.
 
 After changing content fields or adding new collections, regenerate the frontend TypeScript client with `make generate-client`.

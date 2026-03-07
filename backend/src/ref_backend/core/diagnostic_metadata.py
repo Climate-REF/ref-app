@@ -54,13 +54,9 @@ class DiagnosticMetadata(BaseModel):
     tags: list[str] | None = Field(None, description="Tags for categorizing the diagnostic")
 
 
-def load_diagnostic_metadata(yaml_path: Path) -> dict[str, DiagnosticMetadata]:
+def _load_metadata_from_file(yaml_path: Path) -> dict[str, DiagnosticMetadata]:
     """
-    Load diagnostic metadata from a YAML file.
-
-    This function loads metadata overrides from a YAML file, which should follow
-    the structure defined in DiagnosticMetadata. The file uses diagnostic keys
-    in the format "provider-slug/diagnostic-slug" to map metadata to diagnostics.
+    Load diagnostic metadata from a single YAML file.
 
     Args:
         yaml_path: Path to the YAML metadata file
@@ -68,27 +64,8 @@ def load_diagnostic_metadata(yaml_path: Path) -> dict[str, DiagnosticMetadata]:
     Returns
     -------
         Dictionary mapping diagnostic keys (provider/diagnostic) to their metadata.
-        Returns an empty dict if the file doesn't exist or cannot be parsed.
-
-    Example YAML structure:
-        ```yaml
-        pmp/annual-cycle:
-          reference_datasets:
-            - slug: "obs4mips.CERES-EBAF.v4.2"
-              description: "CERES Energy Balanced and Filled"
-              type: "primary"
-          display_name: "Annual Cycle Analysis"
-          tags: ["atmosphere", "seasonal-cycle"]
-        ```
+        Returns an empty dict if the file cannot be parsed.
     """
-    if not yaml_path.exists():
-        logger.warning(
-            f"Diagnostic metadata file not found at {yaml_path}. "
-            "No metadata overrides will be applied. This is expected if you haven't "
-            "created the metadata file yet."
-        )
-        return {}
-
     try:
         with open(yaml_path) as f:
             raw_data = yaml.safe_load(f)
@@ -97,7 +74,6 @@ def load_diagnostic_metadata(yaml_path: Path) -> dict[str, DiagnosticMetadata]:
             logger.info(f"Diagnostic metadata file at {yaml_path} is empty.")
             return {}
 
-        # Parse each diagnostic's metadata
         metadata_dict: dict[str, DiagnosticMetadata] = {}
         for diagnostic_key, metadata_raw in raw_data.items():
             try:
@@ -117,3 +93,65 @@ def load_diagnostic_metadata(yaml_path: Path) -> dict[str, DiagnosticMetadata]:
     except Exception as e:
         logger.error(f"Unexpected error loading diagnostic metadata from {yaml_path}: {e}")
         return {}
+
+
+def load_diagnostic_metadata(path: Path) -> dict[str, DiagnosticMetadata]:
+    """
+    Load diagnostic metadata from a YAML file or a directory of YAML files.
+
+    When given a directory, all ``*.yaml`` and ``*.yml`` files in it are loaded
+    and merged. When given a single file, it is loaded directly (backwards
+    compatible with the old single-file layout).
+
+    The YAML files should follow the structure defined in DiagnosticMetadata,
+    using diagnostic keys in the format ``provider-slug/diagnostic-slug``.
+
+    Args:
+        path: Path to a YAML file or a directory containing YAML files
+
+    Returns
+    -------
+        Dictionary mapping diagnostic keys (provider/diagnostic) to their metadata.
+        Returns an empty dict if the path doesn't exist or cannot be parsed.
+
+    Example YAML structure::
+
+        pmp/annual-cycle:
+          reference_datasets:
+            - slug: "obs4mips.CERES-EBAF.v4.2"
+              description: "CERES Energy Balanced and Filled"
+              type: "primary"
+          display_name: "Annual Cycle Analysis"
+          tags: ["atmosphere", "seasonal-cycle"]
+    """
+    if not path.exists():
+        logger.warning(
+            f"Diagnostic metadata path not found at {path}. "
+            "No metadata overrides will be applied. This is expected if you haven't "
+            "created the metadata files yet."
+        )
+        return {}
+
+    if path.is_file():
+        return _load_metadata_from_file(path)
+
+    # Load all YAML files from the directory
+    yaml_files = sorted(path.glob("*.yaml")) + sorted(path.glob("*.yml"))
+    if not yaml_files:
+        logger.info(f"No YAML files found in directory {path}.")
+        return {}
+
+    merged: dict[str, DiagnosticMetadata] = {}
+    for yaml_file in yaml_files:
+        file_metadata = _load_metadata_from_file(yaml_file)
+        # Check for duplicate keys across files
+        duplicates = set(merged.keys()) & set(file_metadata.keys())
+        if duplicates:
+            logger.warning(
+                f"Duplicate diagnostic keys found in {yaml_file.name}: "
+                f"{', '.join(sorted(duplicates))}. Later values will override earlier ones."
+            )
+        merged.update(file_metadata)
+
+    logger.info(f"Loaded metadata for {len(merged)} diagnostics from {len(yaml_files)} files in {path}")
+    return merged

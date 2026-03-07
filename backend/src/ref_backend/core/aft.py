@@ -75,7 +75,23 @@ def get_aft_diagnostic_by_id(aft_id: str) -> AFTDiagnosticDetail | None:
     return AFTDiagnosticDetail(**base.model_dump(), diagnostics=refs)
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=1)
+def _build_ref_to_aft_index() -> dict[tuple[str, str], str]:
+    """Build a reverse index from (provider_slug, diagnostic_slug) to AFT collection ID."""
+    index: dict[tuple[str, str], str] = {}
+    for col_id, col in load_all_collections().items():
+        for diag in col.diagnostics:
+            key = (diag.provider_slug, diag.diagnostic_slug)
+            if key in index:
+                logger.warning(
+                    f"Multiple AFT IDs for {diag.provider_slug}/{diag.diagnostic_slug}: "
+                    f"{index[key]} and {col_id}, keeping first"
+                )
+                continue
+            index[key] = col_id
+    return index
+
+
 def get_aft_for_ref_diagnostic(provider_slug: str, diagnostic_slug: str) -> str | None:
     """
     Get AFT diagnostic ID associated with a REF diagnostic.
@@ -88,17 +104,4 @@ def get_aft_for_ref_diagnostic(provider_slug: str, diagnostic_slug: str) -> str 
     -------
         The AFT diagnostic ID if found, None otherwise
     """
-    collections = load_all_collections()
-    aft_ids = []
-
-    for col_id, col in collections.items():
-        for diag in col.diagnostics:
-            if diag.provider_slug == provider_slug and diag.diagnostic_slug == diagnostic_slug:
-                aft_ids.append(col_id)
-
-    if len(aft_ids) == 1:
-        return aft_ids[0]
-    if len(aft_ids) > 1:
-        logger.warning(f"Multiple AFT IDs found for {provider_slug}/{diagnostic_slug}: {aft_ids}")
-        return aft_ids[0]
-    return None
+    return _build_ref_to_aft_index().get((provider_slug, diagnostic_slug))

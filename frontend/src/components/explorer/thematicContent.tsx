@@ -48,6 +48,7 @@ function toExplorerCardContent(
     interpretation: apiContent.interpretation ?? undefined,
     span: apiContent.span ?? undefined,
     placeholder: apiContent.placeholder ?? undefined,
+    referenceDatasets: apiContent.reference_datasets ?? undefined,
   };
   switch (apiContent.type) {
     case "box-whisker-chart":
@@ -118,15 +119,12 @@ function hasPlainLanguageContent(theme: ThemeDetail): boolean {
 }
 
 function ThemeContent({
-  slug,
+  theme,
   plainLanguage,
 }: {
-  slug: string;
+  theme: ThemeDetail;
   plainLanguage: boolean;
 }) {
-  const { data: theme } = useSuspenseQuery(
-    explorerGetThemeOptions({ path: { theme_slug: slug } }),
-  );
   const collectionGroups = buildCollectionGroups(theme);
   return (
     <ExplorerThemeLayout
@@ -193,7 +191,9 @@ export function ThematicContent() {
         )}
       </div>
       <div className="mt-6">
-        {theme && <ThemeContent slug={theme} plainLanguage={plainLanguage} />}
+        {theme && (
+          <ThemeContent theme={themeData} plainLanguage={plainLanguage} />
+        )}
       </div>
     </>
   );
