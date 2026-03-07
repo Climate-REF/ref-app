@@ -48,4 +48,47 @@ diagnostics:
     diagnostic_slug: cloud-scatterplots-clwvi-pr
   - provider_slug: esmvaltool
     diagnostic_slug: cloud-scatterplots-reference
-explorer_cards: []
+explorer_cards:
+  - title: "Cloud Scatterplots"
+    description: >-
+      2D histograms comparing cloud-relevant variable pairs in models and
+      observations, revealing whether models capture regime-dependent cloud
+      behaviour.
+    content:
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-reference
+        title: "Reference Observations"
+        description: >-
+          Observed relationships between paired cloud-relevant variables from
+          satellite data (CERES, CALIPSO, ERA5, GPCP), providing the benchmark
+          against which model scatterplots are compared.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clt-swcre
+        title: "Cloud Fraction vs. Shortwave CRE"
+        description: >-
+          Scatterplots of total cloud fraction (clt) against shortwave cloud
+          radiative effect (SW CRE) for individual models, testing whether models
+          reproduce the observed relationship between cloud amount and its
+          radiative impact.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clivi-lwcre
+        title: "Ice Water Path vs. Longwave CRE"
+        description: >-
+          Scatterplots of cloud ice water path (clivi) against longwave cloud
+          radiative effect (LW CRE), assessing how well models capture the
+          warming effect of high ice clouds.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clwvi-pr
+        title: "Liquid Water Path vs. Precipitation"
+        description: >-
+          Scatterplots of cloud liquid water path (clwvi) against precipitation
+          (pr), evaluating the modelled relationship between cloud water content
+          and precipitation efficiency.
+        span: 2

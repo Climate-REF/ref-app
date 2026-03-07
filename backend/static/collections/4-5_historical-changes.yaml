@@ -24,4 +24,63 @@ diagnostics:
     diagnostic_slug: regional-historical-timeseries
   - provider_slug: esmvaltool
     diagnostic_slug: regional-historical-trend
-explorer_cards: []
+explorer_cards:
+  - title: "Historical Changes"
+    description: >-
+      Regional trends and annual cycles of key climate variables, comparing
+      model simulations against observations and reanalysis for IPCC reference
+      regions.
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: regional-historical-trend
+        title: "Regional Temperature Trends"
+        description: >-
+          Linear trends in near-surface air temperature (tas) across IPCC
+          reference regions. Comparing modelled and observed trends reveals
+          whether models reproduce the spatial pattern of recent warming.
+        metric_units: "K/decade"
+        other_filters:
+          variable_id: tas
+          metric: trend
+        grouping_config:
+          group_by: region
+          hue: region
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: regional-historical-trend
+        title: "Regional Precipitation Trends"
+        description: >-
+          Linear trends in precipitation (pr) across IPCC reference regions.
+          Precipitation trends are harder for models to capture due to large
+          internal variability and complex regional drivers.
+        metric_units: "mm/day/decade"
+        other_filters:
+          variable_id: pr
+          metric: trend
+        grouping_config:
+          group_by: region
+          hue: region
+      - type: series-chart
+        provider: esmvaltool
+        diagnostic: regional-historical-annual-cycle
+        title: "Annual Cycle of Temperature (Global)"
+        description: >-
+          Monthly climatology of near-surface air temperature for the global
+          mean, comparing individual models with reanalysis data.
+        span: 2
+        metric_units: "K"
+        other_filters:
+          region: Global
+          statistic: tas regional mean
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: regional-historical-trend
+        title: "Regional Trend Maps"
+        description: >-
+          Maps of linear trends across IPCC reference regions for temperature,
+          precipitation, and other variables.
+        span: 2

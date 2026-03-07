@@ -38,4 +38,37 @@ content:
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: transient-climate-response-emissions
-explorer_cards: []
+explorer_cards:
+  - title: "TCRE"
+    description: >-
+      Transient Climate Response to Cumulative Emissions -- the warming per
+      trillion tonnes of carbon emitted, linking emissions budgets to
+      temperature targets.
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: transient-climate-response-emissions
+        title: "Transient Climate Response to Cumulative Emissions (TCRE)"
+        description: >-
+          TCRE quantifies the global mean surface temperature increase per unit
+          of cumulative CO2 emissions. It combines the physical climate
+          sensitivity with the carbon cycle response and is central to estimating
+          remaining carbon budgets consistent with temperature targets such as
+          the Paris Agreement.
+        interpretation: >-
+          Higher TCRE values mean less cumulative CO2 can be emitted before
+          reaching a given warming threshold.
+        metric_units: "K/TtC"
+        other_filters:
+          metric: tcre
+        grouping_config:
+          group_by: metric
+          hue: metric
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: transient-climate-response-emissions
+        title: "TCRE Regression Plots"
+        description: >-
+          Scatter plots of cumulative CO2 emissions against global mean
+          temperature change, with regression lines used to derive TCRE.
+        span: 2

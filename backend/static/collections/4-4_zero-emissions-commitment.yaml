@@ -33,4 +33,36 @@ content:
 diagnostics:
   - provider_slug: esmvaltool
     diagnostic_slug: zero-emission-commitment
-explorer_cards: []
+explorer_cards:
+  - title: "Zero Emissions Commitment"
+    description: >-
+      Temperature change expected after CO2 emissions cease, informing carbon
+      budget estimates and net-zero policy planning.
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: zero-emission-commitment
+        title: "Zero Emissions Commitment (ZEC)"
+        description: >-
+          ZEC represents the additional global warming (or cooling) that occurs
+          after anthropogenic CO2 emissions are set to zero. Positive values
+          indicate continued warming; negative values indicate the climate system
+          begins to cool once emissions stop.
+        interpretation: >-
+          A positive ZEC means that even after emissions cease, temperatures
+          continue to rise, implying a stricter carbon budget is needed.
+        metric_units: "K"
+        show_zero_line: true
+        other_filters:
+          metric: zec
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: zero-emission-commitment
+        title: "ZEC Temperature Evolution"
+        description: >-
+          Time series and scatter plots showing the temperature response after
+          emissions cessation for each model.
+        span: 2
