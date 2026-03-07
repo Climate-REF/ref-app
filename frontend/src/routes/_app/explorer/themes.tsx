@@ -19,7 +19,7 @@ const Themes = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Theme Explorer</h1>
+        <h2 className="text-2xl font-bold tracking-tight">Theme Explorer</h2>
         <p className="text-muted-foreground mt-1">
           Browse climate model evaluation results organized by scientific theme.
         </p>

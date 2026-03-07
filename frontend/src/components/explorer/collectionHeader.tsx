@@ -43,14 +43,6 @@ function getTakeaway(
   return content.takeaway;
 }
 
-/** Format a slug like "enso" into "Enso" or "annual-cycle" into "Annual Cycle" */
-function formatSlug(slug: string): string {
-  return slug
-    .split(/[-_]/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
 export function CollectionHeader({
   collection,
   plainLanguage,
@@ -118,7 +110,7 @@ export function CollectionHeader({
               variant="outline"
               className="text-xs font-normal hover:bg-accent cursor-pointer"
             >
-              {formatSlug(d.provider_slug)} / {formatSlug(d.diagnostic_slug)}
+              {d.provider_slug} / {d.diagnostic_slug}
             </Badge>
           </Link>
         ))}
