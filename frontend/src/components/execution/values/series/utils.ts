@@ -1,7 +1,18 @@
 import type { SeriesMetadata, SeriesValue } from "../types";
 
-interface ChartData {
+export interface ChartDataPoint {
   [key: string]: number | string | null;
+}
+
+export function isIntegerAxis(indexName: string): boolean {
+  const lower = indexName.toLowerCase();
+  return (
+    lower.includes("year") ||
+    lower.includes("month") ||
+    lower.includes("day") ||
+    lower === "time" ||
+    lower === "index"
+  );
 }
 
 export function createScaledTickFormatter(
@@ -77,50 +88,64 @@ function applyLabelTemplate(series: SeriesValue, template?: string): string {
   return result;
 }
 
+// 20-color perceptually distinct palette
 const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00ff00",
-  "#0088fe",
-  "#00c49f",
-  "#ffbb28",
-  "#ff8042",
-  "#8dd1e1",
+  "#4e79a7",
+  "#f28e2b",
+  "#e15759",
+  "#76b7b2",
+  "#59a14f",
+  "#edc948",
+  "#b07aa1",
+  "#ff9da7",
+  "#9c755f",
+  "#bab0ac",
+  "#af7aa1",
+  "#d37295",
+  "#1b9e77",
+  "#d95f02",
+  "#7570b3",
+  "#e7298a",
+  "#66a61e",
+  "#e6ab02",
+  "#a6761d",
+  "#666666",
 ];
 
 /**
  * Get consistent color for a label using hash-based assignment
- * @param label - The label string
- * @returns Hex color code
  */
 function getLabelColor(label: string): string {
   const hash = label.split("").reduce((acc, char) => {
     const newAcc = (acc << 5) - acc + char.charCodeAt(0);
-    return newAcc & newAcc;
+    return newAcc | 0;
   }, 0);
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
 /**
  * Create chart data structure with all series
- * @param seriesValues - Array of regular series values
- * @param referenceSeriesValues - Array of reference series values
- * @param labelTemplate - Optional template for generating labels
- * @returns Chart data and series metadata
  */
 export function createChartData(
   seriesValues: SeriesValue[],
   referenceSeriesValues: SeriesValue[],
   labelTemplate?: string,
 ): {
-  chartData: ChartData[];
+  chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
   indexName: string;
 } {
-  // Combine regular and reference series
-  const allSeries = [...seriesValues, ...referenceSeriesValues];
+  // Deduplicate reference series by label (same observational data repeated across executions)
+  const seenRefLabels = new Set<string>();
+  const dedupedReferenceSeries = referenceSeriesValues.filter((series) => {
+    const label = applyLabelTemplate(series, labelTemplate);
+    if (seenRefLabels.has(label)) return false;
+    seenRefLabels.add(label);
+    return true;
+  });
+
+  // Combine regular and deduplicated reference series
+  const allSeries = [...seriesValues, ...dedupedReferenceSeries];
 
   if (allSeries.length === 0) {
     return { chartData: [], seriesMetadata: [], indexName: "index" };
@@ -135,20 +160,21 @@ export function createChartData(
   // Create series metadata
   const seriesMetadata: SeriesMetadata[] = allSeries.map((series, idx) => {
     const label = applyLabelTemplate(series, labelTemplate);
-    const isReference = idx >= seriesValues.length; // Reference series come after regular series
+    const isReference = idx >= seriesValues.length; // Deduplicated reference series come after regular series
     const color = isReference ? "#000000" : getLabelColor(label);
     return {
       seriesIndex: idx,
       label,
       color,
       isReference,
+      dimensions: series.dimensions,
     };
   });
 
   // Build chart data
-  const chartData: ChartData[] = [];
+  const chartData: ChartDataPoint[] = [];
   for (let i = 0; i < maxLength; i++) {
-    const dataPoint: ChartData = {
+    const dataPoint: ChartDataPoint = {
       [indexName]: allSeries[0]?.index?.[i] ?? i,
     };
 
@@ -162,4 +188,17 @@ export function createChartData(
   }
 
   return { chartData, seriesMetadata, indexName };
+}
+
+/**
+ * Collect all unique dimension keys from series metadata
+ */
+export function getDimensionKeys(seriesMetadata: SeriesMetadata[]): string[] {
+  const keys = new Set<string>();
+  for (const meta of seriesMetadata) {
+    for (const key of Object.keys(meta.dimensions)) {
+      keys.add(key);
+    }
+  }
+  return Array.from(keys).sort();
 }

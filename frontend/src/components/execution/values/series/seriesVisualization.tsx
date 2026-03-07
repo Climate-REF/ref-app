@@ -1,26 +1,27 @@
-import { useCallback, useMemo, useState } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTheme } from "@/hooks/useTheme";
 import type { SeriesValue } from "../types";
+import { CanvasTooltip } from "./canvasTooltip";
+import { type CrosshairPosition, SeriesCanvas } from "./seriesCanvas";
 import { SeriesLegend } from "./seriesLegend";
-import { SeriesTooltip } from "./seriesToolip";
-import { createChartData, createScaledTickFormatter } from "./utils";
+import { useChartScales } from "./useChartScales";
+import type { NearestResult } from "./useSpatialIndex";
+import { useSpatialIndex } from "./useSpatialIndex";
+import { createChartData, getDimensionKeys } from "./utils";
 
 interface SimpleSeriesVisualizationProps {
   seriesValues: SeriesValue[];
   referenceSeriesValues?: SeriesValue[];
-  labelTemplate?: string; // e.g., "{variable_id} - {source_id}"
+  labelTemplate?: string;
   maxSeriesLimit?: number;
   symmetricalAxes?: boolean;
+  metricName?: string;
+  units?: string;
 }
+
+const CHART_HEIGHT = 700;
 
 export function SeriesVisualization({
   seriesValues,
@@ -28,33 +29,78 @@ export function SeriesVisualization({
   labelTemplate,
   maxSeriesLimit = 500,
   symmetricalAxes = false,
+  metricName,
+  units,
 }: SimpleSeriesVisualizationProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const hoveredLabelRef = useRef<string | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+  const [soloedLabel, setSoloedLabel] = useState<string | null>(null);
+  const [legendVisible, setLegendVisible] = useState(true);
+  const [groupByDimension, setGroupByDimension] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const crosshairRef = useRef<CrosshairPosition | null>(null);
+  const [containerWidth, setContainerWidth] = useState(800);
 
-  // Create chart data and metadata
+  // Tooltip state
+  const [tooltipState, setTooltipState] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    nearest: NearestResult | null;
+    allAtX: NearestResult[];
+  }>({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
+  const tooltipRafRef = useRef<number>(0);
+
+  // Observe container width for responsive sizing
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Create chart data and metadata (stable unless data/props change)
   const { chartData, seriesMetadata, indexName } = useMemo(
     () => createChartData(seriesValues, referenceSeriesValues, labelTemplate),
     [seriesValues, referenceSeriesValues, labelTemplate],
   );
 
-  // State for hidden labels - initialize with all non-reference series hidden
-  const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(() => {
-    const hidden = new Set<string>();
-    seriesMetadata.forEach((meta) => {
-      if (!meta.isReference) {
-        hidden.add(meta.label);
-      }
-    });
-    return hidden;
-  });
+  // Available dimension keys for grouping
+  const availableDimensions = useMemo(
+    () => getDimensionKeys(seriesMetadata),
+    [seriesMetadata],
+  );
 
-  // Get unique labels with their colors and counts, sorted alphabetically with Reference at top
+  // Map from label to its dimensions
+  const labelDimensionMap = useMemo(() => {
+    const map = new Map<string, Record<string, string>>();
+    for (const meta of seriesMetadata) {
+      if (!map.has(meta.label)) {
+        map.set(meta.label, meta.dimensions);
+      }
+    }
+    return map;
+  }, [seriesMetadata]);
+
+  // State for hidden labels
+  const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+
+  // Get unique labels with their colors and counts
   const uniqueLabels = useMemo(() => {
     const labelMap = new Map<
       string,
       { color: string; count: number; isReference: boolean }
     >();
-    seriesMetadata.forEach((meta) => {
+    for (const meta of seriesMetadata) {
       const existing = labelMap.get(meta.label);
       if (existing) {
         existing.count += 1;
@@ -65,7 +111,7 @@ export function SeriesVisualization({
           isReference: meta.isReference,
         });
       }
-    });
+    }
     return Array.from(labelMap.entries())
       .map(([label, { color, count, isReference }]) => ({
         label,
@@ -74,54 +120,189 @@ export function SeriesVisualization({
         isReference,
       }))
       .sort((a, b) => {
-        // Reference series always at the top
         if (a.isReference && !b.isReference) return -1;
         if (!a.isReference && b.isReference) return 1;
-        // Otherwise alphabetical
         return a.label.localeCompare(b.label);
       });
   }, [seriesMetadata]);
 
-  // Toggle label visibility
-  const toggleLabel = useCallback((label: string) => {
-    setHiddenLabels((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(label)) {
-        newSet.delete(label);
-      } else {
-        newSet.add(label);
+  // Effective hidden labels accounting for solo mode
+  const effectiveHiddenLabels = useMemo(() => {
+    if (!soloedLabel) return hiddenLabels;
+    const hidden = new Set<string>();
+    for (const item of uniqueLabels) {
+      if (item.label !== soloedLabel && !item.isReference) {
+        hidden.add(item.label);
       }
-      return newSet;
-    });
-  }, []);
-
-  // Handle label hover
-  const handleLabelHover = useCallback((label: string | null) => {
-    setHoveredLabel(label);
-  }, []);
-
-  // Calculate Y domain from all data values for intelligent tick formatting
-  const yDomain = useMemo(() => {
-    const allValues = chartData.flatMap((d) =>
-      Object.values(d).filter((v) => typeof v === "number"),
-    ) as number[];
-
-    if (allValues.length === 0) return [0, 1];
-
-    if (symmetricalAxes) {
-      const maxAbs = Math.max(...allValues.map(Math.abs));
-      return [-maxAbs, maxAbs];
     }
+    return hidden;
+  }, [soloedLabel, hiddenLabels, uniqueLabels]);
 
-    const min = Math.min(...allValues);
-    const max = Math.max(...allValues);
-    return [min, max];
-  }, [chartData, symmetricalAxes]);
+  // Compute scales
+  const { xScale, yScale, innerWidth, innerHeight, margins } = useChartScales(
+    chartData,
+    seriesMetadata,
+    effectiveHiddenLabels,
+    indexName,
+    containerWidth,
+    CHART_HEIGHT,
+    symmetricalAxes,
+  );
 
-  // Create intelligent tick formatter based on data range
-  const tickFormatter = useMemo(
-    () => createScaledTickFormatter(yDomain),
-    [yDomain],
+  // Spatial index for fast nearest-point lookup
+  const spatialIndex = useSpatialIndex(
+    chartData,
+    seriesMetadata,
+    indexName,
+    xScale,
+    yScale,
+  );
+
+  // Toggle label visibility
+  const toggleLabel = useCallback(
+    (label: string) => {
+      if (soloedLabel) {
+        setSoloedLabel(null);
+        return;
+      }
+      setHiddenLabels((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(label)) {
+          newSet.delete(label);
+        } else {
+          newSet.add(label);
+        }
+        return newSet;
+      });
+    },
+    [soloedLabel],
+  );
+
+  // Solo mode
+  const handleSolo = useCallback((label: string) => {
+    setSoloedLabel((prev) => (prev === label ? null : label));
+  }, []);
+
+  // Bulk actions
+  const showAll = useCallback(() => {
+    setSoloedLabel(null);
+    setHiddenLabels(new Set());
+  }, []);
+
+  const hideAll = useCallback(() => {
+    setSoloedLabel(null);
+    const allNonRef = new Set<string>();
+    for (const item of uniqueLabels) {
+      if (!item.isReference) {
+        allNonRef.add(item.label);
+      }
+    }
+    setHiddenLabels(allNonRef);
+  }, [uniqueLabels]);
+
+  // Handle label hover from legend -- triggers canvas redraw via ref, not React re-render of canvas
+  const handleLabelHover = useCallback((label: string | null) => {
+    hoveredLabelRef.current = label;
+    setHoveredLabel(label);
+    // Trigger canvas redraw without React re-render
+    const canvas = containerRef.current?.querySelector("canvas") as
+      | (HTMLCanvasElement & { redraw?: () => void })
+      | null;
+    canvas?.redraw?.();
+  }, []);
+
+  // Canvas mouse handlers
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      // Capture values synchronously — React pools events, so currentTarget
+      // and coordinates become null inside requestAnimationFrame.
+      const canvas = e.currentTarget as HTMLCanvasElement & {
+        redraw?: () => void;
+      };
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - margins.left;
+      const mouseY = e.clientY - rect.top - margins.top;
+
+      cancelAnimationFrame(tooltipRafRef.current);
+      tooltipRafRef.current = requestAnimationFrame(() => {
+        const nearest = spatialIndex.findNearest(
+          mouseX,
+          mouseY,
+          effectiveHiddenLabels,
+        );
+
+        if (nearest) {
+          const allAtX = spatialIndex.findNearestAtX(
+            mouseX,
+            mouseY,
+            effectiveHiddenLabels,
+          );
+
+          hoveredLabelRef.current = nearest.metadata.label;
+
+          // Set crosshair at the snapped X data position
+          crosshairRef.current = {
+            dataPixelX: nearest.point.pixelX,
+            nearestPixelX: nearest.point.pixelX,
+            nearestPixelY: nearest.point.pixelY,
+            nearestColor: nearest.metadata.isReference
+              ? "#000000"
+              : nearest.metadata.color,
+          };
+
+          canvas.redraw?.();
+
+          setTooltipState({
+            visible: true,
+            x: margins.left + nearest.point.pixelX,
+            y: margins.top + nearest.point.pixelY,
+            nearest,
+            allAtX,
+          });
+        } else {
+          crosshairRef.current = null;
+          if (hoveredLabelRef.current !== null) {
+            hoveredLabelRef.current = null;
+          }
+          canvas.redraw?.();
+          setTooltipState((prev) =>
+            prev.visible
+              ? { visible: false, x: 0, y: 0, nearest: null, allAtX: [] }
+              : prev,
+          );
+        }
+      });
+    },
+    [spatialIndex, effectiveHiddenLabels, margins],
+  );
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    cancelAnimationFrame(tooltipRafRef.current);
+    hoveredLabelRef.current = null;
+    crosshairRef.current = null;
+    setTooltipState({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
+    const canvas = containerRef.current?.querySelector("canvas") as
+      | (HTMLCanvasElement & { redraw?: () => void })
+      | null;
+    canvas?.redraw?.();
+  }, []);
+
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - margins.left;
+      const mouseY = e.clientY - rect.top - margins.top;
+
+      const nearest = spatialIndex.findNearest(
+        mouseX,
+        mouseY,
+        effectiveHiddenLabels,
+      );
+      if (nearest) {
+        handleSolo(nearest.metadata.label);
+      }
+    },
+    [spatialIndex, effectiveHiddenLabels, handleSolo, margins],
   );
 
   // Performance safeguard
@@ -159,129 +340,70 @@ export function SeriesVisualization({
   return (
     <div className="flex gap-4">
       {/* Chart */}
-      <div className="flex-1">
-        <ResponsiveContainer width="100%" height={700}>
-          <LineChart
-            data={chartData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      <div className="flex-1 min-w-0" ref={containerRef}>
+        <div className="flex justify-end mb-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLegendVisible(!legendVisible)}
+            className="h-7 text-xs text-muted-foreground"
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey={indexName}
-              label={{
-                value: indexName,
-                position: "insideBottom",
-                offset: -5,
-              }}
-              type="number"
-              scale="linear"
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
-            <YAxis
-              domain={
-                symmetricalAxes
-                  ? (data) => {
-                      const values = data.flatMap((d) =>
-                        Object.values(d).filter((v) => typeof v === "number"),
-                      ) as number[];
-                      if (values.length === 0) return [0, 1];
-                      const maxAbs = Math.max(...values.map(Math.abs));
-                      return [-maxAbs, maxAbs];
-                    }
-                  : ["dataMin - 0.1", "dataMax + 0.1"]
-              }
-              label={{
-                value: "Value",
-                angle: -90,
-                position: "insideLeft",
-              }}
-              tickFormatter={tickFormatter}
-            />
-            <Tooltip
-              content={
-                <SeriesTooltip
-                  hiddenLabels={hiddenLabels}
-                  hoveredLabel={hoveredLabel}
-                  seriesMetadata={seriesMetadata}
-                />
-              }
-              cursor={{ stroke: "#94A3B8", strokeDasharray: "4 4" }}
-            />
-            {/* Render all series with proper visual hierarchy */}
-            {seriesMetadata
-              .sort((a, b) => {
-                // Visual hierarchy: hidden lines (bottom), visible regular lines (middle), reference lines (top)
-                const aHidden = hiddenLabels.has(a.label);
-                const bHidden = hiddenLabels.has(b.label);
-
-                // Reference series always on top
-                if (a.isReference && !b.isReference) return 1;
-                if (!a.isReference && b.isReference) return -1;
-
-                // Hidden series go to bottom
-                if (aHidden && !bHidden) return -1;
-                if (!aHidden && bHidden) return 1;
-
-                return 0;
-              })
-              .map((meta) => {
-                const isLabelHidden = hiddenLabels.has(meta.label);
-                const isOtherLabelHovered =
-                  hoveredLabel !== null && hoveredLabel !== meta.label;
-
-                // Determine opacity: 0.4 for hidden, 1.0 for visible (or 0.3 when other label hovered)
-                let opacity = 1;
-                if (isLabelHidden) {
-                  opacity = 0.4;
-                } else if (isOtherLabelHovered) {
-                  opacity = 0.3;
-                }
-
-                // Determine stroke color and width
-                const strokeColor = isLabelHidden
-                  ? "#9CA3AF"
-                  : meta.isReference
-                    ? "#000000"
-                    : meta.color;
-                const strokeWidth = isLabelHidden
-                  ? 1
-                  : meta.isReference
-                    ? 4
-                    : 2;
-
-                return (
-                  <Line
-                    key={meta.seriesIndex}
-                    type="monotone"
-                    dataKey={`series_${meta.seriesIndex}`}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    strokeOpacity={opacity}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                    name={meta.label}
-                    onClick={() => toggleLabel(meta.label)}
-                    onMouseEnter={() => handleLabelHover(meta.label)}
-                    onMouseLeave={() => handleLabelHover(null)}
-                    style={{ cursor: "pointer" }}
-                    isAnimationActive={false}
-                  />
-                );
-              })}
-          </LineChart>
-        </ResponsiveContainer>
+            {legendVisible ? "Hide Legend" : "Show Legend"}
+          </Button>
+        </div>
+        <div className="relative">
+          <SeriesCanvas
+            chartData={chartData}
+            seriesMetadata={seriesMetadata}
+            indexName={indexName}
+            hiddenLabels={effectiveHiddenLabels}
+            hoveredLabelRef={hoveredLabelRef}
+            crosshairRef={crosshairRef}
+            xScale={xScale}
+            yScale={yScale}
+            margins={margins}
+            width={containerWidth}
+            height={CHART_HEIGHT}
+            innerWidth={innerWidth}
+            innerHeight={innerHeight}
+            isDark={isDark}
+            metricName={metricName}
+            units={units}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseLeave={handleCanvasMouseLeave}
+            onClick={handleCanvasClick}
+          />
+          <CanvasTooltip
+            visible={tooltipState.visible}
+            x={tooltipState.x}
+            y={tooltipState.y}
+            nearest={tooltipState.nearest}
+            allAtX={tooltipState.allAtX}
+            containerWidth={containerWidth}
+            indexName={indexName}
+            units={units}
+          />
+        </div>
       </div>
 
       {/* Legend Sidebar */}
-      <SeriesLegend
-        uniqueLabels={uniqueLabels}
-        hiddenLabels={hiddenLabels}
-        hoveredLabel={hoveredLabel}
-        onToggleLabel={toggleLabel}
-        onHoverLabel={handleLabelHover}
-      />
+      {legendVisible && (
+        <SeriesLegend
+          uniqueLabels={uniqueLabels}
+          hiddenLabels={effectiveHiddenLabels}
+          hoveredLabel={hoveredLabel}
+          soloedLabel={soloedLabel}
+          onToggleLabel={toggleLabel}
+          onHoverLabel={handleLabelHover}
+          onSoloLabel={handleSolo}
+          onShowAll={showAll}
+          onHideAll={hideAll}
+          groupByDimension={groupByDimension}
+          onGroupByDimensionChange={setGroupByDimension}
+          availableDimensions={availableDimensions}
+          labelDimensionMap={labelDimensionMap}
+        />
+      )}
     </div>
   );
 }

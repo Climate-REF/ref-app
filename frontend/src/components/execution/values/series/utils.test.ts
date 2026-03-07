@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { SeriesValue } from "../types";
-import { createChartData, createScaledTickFormatter } from "./utils";
+import {
+  createChartData,
+  createScaledTickFormatter,
+  getDimensionKeys,
+} from "./utils";
 
 const mockSeriesValue: SeriesValue = {
   id: 1,
@@ -100,6 +104,15 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[0].color).not.toBe("#000000");
   });
 
+  it("includes dimensions in series metadata", () => {
+    const result = createChartData([mockSeriesValue], []);
+    expect(result.seriesMetadata[0].dimensions).toEqual({
+      source_id: "ModelA",
+      experiment_id: "exp1",
+      metric: "rmse",
+    });
+  });
+
   it("creates reference series metadata with black color", () => {
     const result = createChartData([], [mockReferenceSeriesValue]);
     expect(result.seriesMetadata).toHaveLength(1);
@@ -117,6 +130,57 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[0].isReference).toBe(false);
     expect(result.seriesMetadata[1].isReference).toBe(true);
     expect(result.seriesMetadata[1].color).toBe("#000000");
+  });
+
+  it("deduplicates reference series with the same label", () => {
+    const refSeries2: SeriesValue = {
+      id: 10,
+      execution_group_id: 101,
+      execution_id: 210,
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.5, 2.5, 3.5],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const result = createChartData(
+      [mockSeriesValue],
+      [mockReferenceSeriesValue, refSeries2],
+    );
+    // Should only have 2 series: 1 regular + 1 deduplicated reference
+    expect(result.seriesMetadata).toHaveLength(2);
+    expect(result.seriesMetadata[0].isReference).toBe(false);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("keeps reference series with different labels", () => {
+    const refSeriesDifferentMetric: SeriesValue = {
+      id: 11,
+      execution_group_id: 101,
+      execution_id: 211,
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "bias",
+      },
+      values: [0.1, 0.2, 0.3],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const result = createChartData(
+      [mockSeriesValue],
+      [mockReferenceSeriesValue, refSeriesDifferentMetric],
+    );
+    // Should have 3 series: 1 regular + 2 distinct reference
+    expect(result.seriesMetadata).toHaveLength(3);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+    expect(result.seriesMetadata[2].isReference).toBe(true);
+    expect(result.seriesMetadata[1].label).not.toBe(
+      result.seriesMetadata[2].label,
+    );
   });
 
   it("uses index name from first series", () => {
@@ -251,5 +315,55 @@ describe("createChartData", () => {
     };
     const result = createChartData([mockSeriesValue, emptySeries], []);
     expect(result.seriesMetadata).toHaveLength(2);
+  });
+});
+
+describe("getDimensionKeys", () => {
+  it("returns empty array for empty metadata", () => {
+    expect(getDimensionKeys([])).toEqual([]);
+  });
+
+  it("collects unique dimension keys sorted alphabetically", () => {
+    const metadata = [
+      {
+        seriesIndex: 0,
+        label: "A",
+        color: "#000",
+        isReference: false,
+        dimensions: { source_id: "ModelA", experiment_id: "exp1" },
+      },
+      {
+        seriesIndex: 1,
+        label: "B",
+        color: "#000",
+        isReference: false,
+        dimensions: { source_id: "ModelB", metric: "rmse" },
+      },
+    ];
+    expect(getDimensionKeys(metadata)).toEqual([
+      "experiment_id",
+      "metric",
+      "source_id",
+    ]);
+  });
+
+  it("deduplicates keys across series", () => {
+    const metadata = [
+      {
+        seriesIndex: 0,
+        label: "A",
+        color: "#000",
+        isReference: false,
+        dimensions: { source_id: "ModelA" },
+      },
+      {
+        seriesIndex: 1,
+        label: "B",
+        color: "#000",
+        isReference: false,
+        dimensions: { source_id: "ModelB" },
+      },
+    ];
+    expect(getDimensionKeys(metadata)).toEqual(["source_id"]);
   });
 });
