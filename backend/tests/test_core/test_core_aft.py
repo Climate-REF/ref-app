@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from ref_backend.core.aft import (
+    _build_ref_to_aft_index,
     get_aft_diagnostic_by_id,
     get_aft_diagnostics_index,
     get_aft_for_ref_diagnostic,
@@ -58,6 +59,7 @@ def clear_aft_caches():
         get_aft_diagnostics_index,
         get_aft_diagnostic_by_id,
         get_aft_for_ref_diagnostic,
+        _build_ref_to_aft_index,
     ]:
         if hasattr(fn, "cache_clear"):
             fn.cache_clear()

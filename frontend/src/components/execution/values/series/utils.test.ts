@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SeriesValue } from "../types";
+import type { SeriesMetadata, SeriesValue } from "../types";
 import {
   createChartData,
   createScaledTickFormatter,
@@ -324,7 +324,7 @@ describe("getDimensionKeys", () => {
   });
 
   it("collects unique dimension keys sorted alphabetically", () => {
-    const metadata = [
+    const metadata: SeriesMetadata[] = [
       {
         seriesIndex: 0,
         label: "A",
