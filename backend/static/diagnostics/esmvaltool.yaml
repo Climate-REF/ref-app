@@ -5,7 +5,7 @@
 esmvaltool/cloud-radiative-effects:
   reference_datasets:
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned to move to obs4MIPs)"
+      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (rlut, rlutcs, rsut, rsutcs) (planned to move to obs4MIPs)"
       type: "primary"
     - slug: "esmvaltool.ESACCI-CLOUD"
       description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
@@ -25,7 +25,7 @@ esmvaltool/cloud-scatterplots-cli-ta:
       description: "ERA5 - Air temperature (ta)"
       type: "primary"
     - slug: "esmvaltool.CALIPSO-ICECLOUD"
-      description: "Ice Cloud properties (planned to move to obs4MIPs)"
+      description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
       type: "secondary"
   display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
   description: >-
@@ -37,10 +37,10 @@ esmvaltool/cloud-scatterplots-cli-ta:
 esmvaltool/cloud-scatterplots-clivi-lwcre:
   reference_datasets:
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned)"
+      description: "CERES Energy Balanced and Filled - Longwave radiation (rlut, rlutcs; lwcre derived), baked into recipe"
       type: "primary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      description: "ESA CCI Cloud properties - Ice water path (clivi), baked into recipe"
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
   description: "Scatterplot of ice water path (clivi) vs longwave cloud radiative effect (lwcre)."
@@ -49,10 +49,10 @@ esmvaltool/cloud-scatterplots-clivi-lwcre:
 esmvaltool/cloud-scatterplots-clt-swcre:
   reference_datasets:
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (planned to move to obs4MIPs)"
+      description: "CERES Energy Balanced and Filled - Shortwave radiation (rsut, rsutcs; swcre derived), baked into recipe"
       type: "primary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      description: "ESA CCI Cloud properties - Total cloud fraction (clt), baked into recipe"
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
   description: "Scatterplot of total cloud fraction (clt) vs shortwave cloud radiative effect (swcre)."
@@ -61,13 +61,13 @@ esmvaltool/cloud-scatterplots-clt-swcre:
 esmvaltool/cloud-scatterplots-clwvi-pr:
   reference_datasets:
     - slug: "obs4MIPs.GPCPv2.3"
-      description: "GPCP v2.3 - Precipitation relationship"
+      description: "GPCP v2.3 - Precipitation (pr)"
       type: "secondary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      description: "ESA CCI Cloud properties (clwvi, planned to move to obs4MIPs)"
       type: "secondary"
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES - Reference cloud-radiation relationships"
+      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
       type: "primary"
   display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
   description: "Scatterplot of condensed water path (clwvi) vs precipitation (pr)."
@@ -79,10 +79,13 @@ esmvaltool/cloud-scatterplots-reference:
       description: "ERA5 - Air temperature (ta), ingested via REF"
       type: "primary"
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES - Reference cloud-radiation relationships, baked into recipe"
+      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
       type: "primary"
+    - slug: "esmvaltool.CALIPSO-ICECLOUD"
+      description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
+      type: "secondary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (clt, clwvi, clivi), baked into recipe (planned to move to obs4MIPs)"
+      description: "ESA CCI Cloud properties (clt, clwvi, clivi), baked into recipe"
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
       description: "GPCP v2.3 - Precipitation (pr), hardcoded in update_recipe"
@@ -96,10 +99,10 @@ esmvaltool/cloud-scatterplots-reference:
 esmvaltool/enso-basic-climatology:
   reference_datasets:
     - slug: "esmvaltool.GPCP-V2.3"
-      description: "GPCP v2.3 - Precipitation (pr), baked into ESMValTool recipe"
+      description: "GPCP v2.3 - Precipitation (pr), baked into recipe"
       type: "secondary"
     - slug: "esmvaltool.TROPFLUX"
-      description: "TROPFLUX - Sea surface temperature (tos) and wind stress (tauu), baked into ESMValTool recipe"
+      description: "TROPFLUX (OBS6) - Sea surface temperature (tos) and wind stress (tauu), baked into recipe"
       type: "secondary"
   display_name: "ENSO Basic Climatology"
   description: >-
@@ -110,7 +113,7 @@ esmvaltool/enso-basic-climatology:
 esmvaltool/enso-characteristics:
   reference_datasets:
     - slug: "esmvaltool.TROPFLUX"
-      description: "TROPFLUX - Sea surface temperature (tos), hardcoded in update_recipe"
+      description: "TROPFLUX (OBS6) - Sea surface temperature (tos), hardcoded in update_recipe"
       type: "primary"
   display_name: "ENSO Characteristics"
   description: >-

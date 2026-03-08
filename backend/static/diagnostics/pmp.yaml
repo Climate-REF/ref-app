@@ -24,13 +24,13 @@ pmp/annual-cycle:
 pmp/enso_perf:
   reference_datasets:
     - slug: "obs4mips.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2 - Precipitation patterns"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation (pr)"
       type: "primary"
     - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Tropical flux data"
+      description: "TropFlux v1.0 - Wind stress (tauu)"
       type: "primary"
     - slug: "obs4mips.HadISST-1-1"
-      description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1 - SST reference"
+      description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1 - Sea surface temperature (ts)"
       type: "primary"
   display_name: "ENSO Performance Metrics"
   description: >-
@@ -41,13 +41,13 @@ pmp/enso_perf:
 pmp/enso_tel:
   reference_datasets:
     - slug: "obs4mips.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2 - Precipitation teleconnections"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation teleconnections (pr)"
       type: "primary"
     - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Tropical flux data"
+      description: "TropFlux v1.0 - Wind stress (tauu)"
       type: "primary"
     - slug: "obs4mips.HadISST-1-1"
-      description: "Hadley Centre Sea Ice and SST v1.1 - SST teleconnections"
+      description: "Hadley Centre Sea Ice and SST v1.1 - Sea surface temperature teleconnections (ts)"
       type: "primary"
   display_name: "ENSO Teleconnections"
   description: >-
@@ -59,13 +59,13 @@ pmp/enso_tel:
 pmp/enso_proc:
   reference_datasets:
     - slug: "obs4mips.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2"
+      description: "Global Precipitation Climatology Project v3.2 - Precipitation (pr)"
       type: "primary"
     - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Surface fluxes"
+      description: "TropFlux v1.0 - Wind stress (tauu)"
       type: "primary"
     - slug: "obs4mips.HadISST-1-1"
-      description: "Hadley Centre Sea Ice and SST v1.1"
+      description: "Hadley Centre Sea Ice and SST v1.1 - Sea surface temperature (ts)"
       type: "primary"
     - slug: "obs4mips.CERES-EBAF-4-2"
       description: "CERES Energy Balanced and Filled v4.2 - Surface and TOA radiation fluxes (hfls, hfss, rlds, rlus, rsds, rsus)"

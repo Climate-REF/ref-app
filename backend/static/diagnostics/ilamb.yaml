@@ -8,13 +8,13 @@
 ilamb/gpp-wecann:
   reference_datasets:
     - slug: "obs4REF.WECANN"
-      description: "WECANN GPP dataset - Primary gross primary productivity reference"
+      description: "WECANN GPP dataset - Gross primary productivity (gpp)"
       type: "primary"
-    - slug: "obs4MIPs.GPCPv2.3"
-      description: "GPCP v2.3 - Precipitation relationship"
+    - slug: "obs4REF.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation (pr), relationship dataset"
       type: "secondary"
-    - slug: "obs4MIPs.CRU4.02"
-      description: "CRU TS v4.02 - Temperature relationship"
+    - slug: "ilamb.CRU4.02"
+      description: "CRU TS v4.02 - Near-surface air temperature (tas), relationship dataset"
       type: "secondary"
   display_name: "Gross Primary Productivity (WECANN)"
   description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the WECANN reference dataset."
@@ -41,7 +41,7 @@ ilamb/mrro-lora:
 ilamb/mrsos-wangmao:
   reference_datasets:
     - slug: "obs4REF.WangMao"
-      description: "Wang-Mao dataset - Surface soil moisture"
+      description: "Wang-Mao dataset - Soil moisture (mrsos)"
       type: "primary"
   display_name: "Surface Soil Moisture (WangMao)"
   description: "Apply the standard ILAMB analysis of moisture in upper portion of soil column (mrsos) with respect to the WangMao reference dataset."
@@ -98,7 +98,7 @@ ilamb/emp-gleamgpcp:
       description: "GLEAM v3.3a - Evapotranspiration (et)"
       type: "primary"
     - slug: "obs4REF.GPCP-2-3"
-      description: "GPCP v2.3 - Precipitation (pr)"
+      description: "GPCP v2.3 (obs4REF) - Precipitation (pr)"
       type: "primary"
   display_name: "Evaporation minus Precipitation (GLEAM/GPCP)"
   description: "Apply the standard ILAMB analysis of evaporation minus precipitation (E-P) using GLEAMv3.3a evapotranspiration and GPCP v2.3 precipitation reference datasets."
@@ -109,7 +109,7 @@ ilamb/emp-gleamgpcp:
 ilamb/thetao-woa2023-surface:
   reference_datasets:
     - slug: "obs4REF.WOA2023"
-      description: "World Ocean Atlas 2023 - Sea water potential temperature (surface)"
+      description: "World Ocean Atlas 2023 - Sea water potential temperature (thetao, surface, mapped to tos)"
       type: "primary"
   display_name: "Sea Water Temperature (WOA2023 Surface)"
   description: "Apply the standard ILAMB analysis of sea water potential temperature (thetao) at the surface with respect to the WOA2023 reference dataset."
@@ -118,7 +118,7 @@ ilamb/thetao-woa2023-surface:
 ilamb/so-woa2023-surface:
   reference_datasets:
     - slug: "obs4REF.WOA2023"
-      description: "World Ocean Atlas 2023 - Sea water salinity (surface)"
+      description: "World Ocean Atlas 2023 - Sea water salinity (so, surface)"
       type: "primary"
   display_name: "Sea Water Salinity (WOA2023 Surface)"
   description: "Apply the standard ILAMB analysis of sea water salinity (so) at the surface with respect to the WOA2023 reference dataset."
@@ -127,7 +127,7 @@ ilamb/so-woa2023-surface:
 ilamb/amoc-rapid:
   reference_datasets:
     - slug: "obs4REF.RAPID"
-      description: "RAPID array - Atlantic Meridional Overturning Circulation observations"
+      description: "RAPID array - Atlantic Meridional Overturning Circulation (amoc, from msftmz)"
       type: "primary"
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
   description: "Apply the standard ILAMB analysis of the Atlantic Meridional Overturning Circulation (AMOC) with respect to the RAPID array reference dataset."
