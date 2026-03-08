@@ -14,29 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const diagnosticNotes = [
   {
-    slug: "sea-ice-sensitivity",
-    note: "Known issue with an invalid dataset",
-    noteUrl: "https://github.com/Climate-REF/climate-ref/issues/425",
-  },
-  {
-    slug: "zero-emission-commitment",
-    note: "Waiting on regenerated results",
-  },
-  {
     slug: "transient-climate-response-emissions",
-    note: "Waiting on regenerated results",
-  },
-  {
-    slug: "regional-historical-annual-cycle",
-    note: "Waiting on regenerated results",
-  },
-  {
-    slug: "regional-historical-timeseries",
-    note: "Waiting on regenerated results",
-  },
-  {
-    slug: "regional-historical-trend",
-    note: "Waiting on regenerated results",
+    note: "Minimal available data",
   },
 ];
 
