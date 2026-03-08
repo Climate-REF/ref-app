@@ -11,6 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 from starlette.types import Scope
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from climate_ref.config import Config
 from climate_ref.database import Database
@@ -135,6 +136,8 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
