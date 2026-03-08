@@ -36,7 +36,8 @@ explorer_cards:
         span: 2
         metric_units: "kgC/m^2/s"
         other_filters:
-          metric: cycle_global
+          metric: cycle
+          region: global
         grouping_config:
           group_by: source_id
           hue: source_id

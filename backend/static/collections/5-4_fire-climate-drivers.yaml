@@ -82,7 +82,8 @@ explorer_cards:
           GFED reference data.
         span: 2
         other_filters:
-          metric: trace_global
+          metric: trace
+          region: global
         grouping_config:
           group_by: source_id
           hue: source_id
@@ -95,7 +96,8 @@ explorer_cards:
           and amplitude of fire activity across models and observations.
         span: 2
         other_filters:
-          metric: cycle_global
+          metric: cycle
+          region: global
         grouping_config:
           group_by: source_id
           hue: source_id
