@@ -22,6 +22,48 @@ import {
 import useMousePositionAndWidth from "@/hooks/useMousePosition";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
 
+// Well-known category orderings for common climate dimensions
+const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
+  // Meteorological seasons
+  season: ["DJF", "MAM", "JJA", "SON"],
+};
+
+/**
+ * Sort chart categories using a known ordering if one exists,
+ * otherwise preserve the original order.
+ */
+function sortCategories<T extends { name: string }>(
+  items: T[],
+  categoryOrder?: string[],
+): T[] {
+  const order = categoryOrder;
+  if (!order) {
+    // Auto-detect: check if all category names match a known ordering
+    const names = new Set(items.map((item) => item.name));
+    for (const knownOrder of Object.values(KNOWN_CATEGORY_ORDERS)) {
+      if (
+        names.size <= knownOrder.length &&
+        [...names].every((n) => knownOrder.includes(n))
+      ) {
+        return [...items].sort(
+          (a, b) => knownOrder.indexOf(a.name) - knownOrder.indexOf(b.name),
+        );
+      }
+    }
+    return items;
+  }
+
+  return [...items].sort((a, b) => {
+    const aIdx = order.indexOf(a.name);
+    const bIdx = order.indexOf(b.name);
+    // Items not in the order go to the end, preserving relative order
+    if (aIdx === -1 && bIdx === -1) return 0;
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+}
+
 // Color palette for different groups
 const COLORS = [
   "#8884d8",
@@ -51,6 +93,8 @@ interface EnsembleChartProps {
   symmetricalAxes?: boolean;
   yMin?: number;
   yMax?: number;
+  /** Explicit category ordering for the x-axis (e.g., ["DJF", "MAM", "JJA", "SON"]) */
+  categoryOrder?: string[];
 }
 
 interface GroupStatistics {
@@ -93,6 +137,7 @@ export const EnsembleChart = ({
   symmetricalAxes,
   yMin,
   yMax,
+  categoryOrder,
 }: EnsembleChartProps) => {
   const { mousePosition, windowSize } = useMousePositionAndWidth();
   const [highlightedPoint, setHighlightedPoint] = useState<{
@@ -208,19 +253,22 @@ export const EnsembleChart = ({
     },
   );
 
+  // Sort categories using explicit order or well-known orderings (e.g., seasons)
+  const sortedChartData = sortCategories(chartData, categoryOrder);
+
   // Get all unique group names for rendering multiple bars
   const allGroupNames = useMemo(() => {
     const names = new Set<string>();
-    chartData.forEach((d) => {
+    sortedChartData.forEach((d) => {
       Object.keys(d.groups).forEach((groupName) => {
         names.add(groupName);
       });
     });
     return Array.from(names).sort();
-  }, [chartData]);
+  }, [sortedChartData]);
 
   const scale = useMemo(() => {
-    const allFiniteValues = chartData
+    const allFiniteValues = sortedChartData
       .flatMap((d) =>
         Object.values(d.groups)
           .filter((group) => group !== null)
@@ -261,7 +309,7 @@ export const EnsembleChart = ({
         yMax !== undefined ? yMax : maxVal + padding,
       ])
       .nice();
-  }, [chartData, symmetricalAxes, yMin, yMax]);
+  }, [sortedChartData, symmetricalAxes, yMin, yMax]);
   const yDomain = scale.domain() as [number, number];
 
   // Get color for a group
@@ -272,18 +320,22 @@ export const EnsembleChart = ({
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
   // Hide x-axis when there are too many items (threshold: 6)
-  const shouldShowXAxis = chartData.length <= 6;
+  const shouldShowXAxis = sortedChartData.length <= 6;
 
   // Adjust spacing based on number of items
   // make them closer together when there are many
   const barCategoryGap =
-    chartData.length > 20 ? "2%" : chartData.length > 10 ? "5%" : "20%";
+    sortedChartData.length > 20
+      ? "2%"
+      : sortedChartData.length > 10
+        ? "5%"
+        : "20%";
 
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
-          data={chartData}
+          data={sortedChartData}
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
           barCategoryGap={barCategoryGap}
         >

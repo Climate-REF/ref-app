@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
-import type { ExecutionSummary } from "@/client";
+import type { Execution } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/card";
 import { Route } from "@/routes/_app/executions.$groupId/index";
 
-const columnHelper = createColumnHelper<ExecutionSummary>();
+const columnHelper = createColumnHelper<Execution>();
 
 function OpenCell({
   row: {
     original: { id },
   },
-}: CellContext<ExecutionSummary, unknown>) {
+}: CellContext<Execution, unknown>) {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <button
@@ -46,18 +46,8 @@ function OpenCell({
   );
 }
 
-function LatestSelectedCell({ row }: CellContext<ExecutionSummary, unknown>) {
-  const rowIndex = row.index;
-  // const { executionId } = Route.useSearch();
-  const executionId = undefined;
-  if (executionId && row.original.id.toString() === executionId) {
-    return (
-      <Badge variant="default" title="This execution is currently selected.">
-        Selected
-      </Badge>
-    );
-  }
-  if (rowIndex === 0) {
+function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
+  if (row.index === 0) {
     return (
       <Badge variant="outline" title="This is the most recent execution.">
         Latest
@@ -67,7 +57,7 @@ function LatestSelectedCell({ row }: CellContext<ExecutionSummary, unknown>) {
   return null;
 }
 
-export const columns: ColumnDef<ExecutionSummary>[] = [
+export const columns: ColumnDef<Execution>[] = [
   {
     accessorKey: "dataset_hash",
     header: () => (
@@ -117,7 +107,7 @@ export const columns: ColumnDef<ExecutionSummary>[] = [
 ];
 
 interface ResultListTableProps {
-  results: ExecutionSummary[];
+  results: Execution[];
 }
 
 function ExecutionsTable({ results }: ResultListTableProps) {

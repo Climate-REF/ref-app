@@ -12,14 +12,21 @@
       "!**/dist",
       "!**/src/client",
       "!**/*.gen.ts",
-      "!**/openapi.json"
+      "!**/openapi.json",
+      "!**/.omc"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space"
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {

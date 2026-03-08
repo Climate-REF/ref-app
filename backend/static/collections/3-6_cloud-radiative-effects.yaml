@@ -1,0 +1,58 @@
+id: "3.6"
+name: "Cloud radiative effects"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "CALIPSO-ICECLOUD-1-0, ESACCI-CLOUD-AVHRR-AMPM-3-0, CERES-EBAF-4-2, ERA-5, GPCP-SG-2-3"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
+content:
+  description: >-
+    This diagnostic computes shortwave and longwave cloud radiative effects (CRE) as
+    the difference between all-sky and clear-sky radiative fluxes at TOA.
+    Model-simulated CRE fields are compared against CERES-EBAF satellite
+    observations. Output includes global maps of SW CRE, LW CRE, and net CRE biases,
+    along with zonal mean profiles and summary statistics (RMSE, bias, pattern
+    correlation).
+  short_description: >-
+    Maps and zonal means of longwave and shortwave cloud radiative effect
+  why_it_matters: >-
+    Cloud feedbacks remain the largest source of uncertainty in climate sensitivity
+    estimates. SW CRE (cooling effect from reflected sunlight) and LW CRE (warming
+    effect from trapped infrared radiation) largely compensate globally but have
+    distinct regional patterns. Accurate CRE simulation is necessary for reliable
+    projections of future warming.
+  takeaway: >-
+    Most models show biases in subtropical stratocumulus regions (too little SW
+    cooling) and in the tropics (LW/SW compensation errors). The net CRE bias
+    indicates whether a model's cloud representation produces the correct radiative
+    impact. Persistent biases often relate to parameterized convection and
+    boundary-layer schemes.
+  plain_language:
+    description: >-
+      This diagnostic measures how clouds affect the Earth's energy balance by
+      comparing what satellites observe to what models simulate.
+    why_it_matters: >-
+      Clouds can either cool or warm the planet depending on their type and location.
+      How clouds change with warming is the biggest uncertainty in predicting future
+      climate.
+    takeaway: >-
+      Regions where models disagree with observations highlight where cloud processes
+      need improvement.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-radiative-effects
+explorer_cards:
+  - title: "Cloud & Radiation"
+    description: "Cloud properties and their effect on the Earth's energy balance."
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: cloud-radiative-effects
+        title: "Cloud Radiative Effects"
+        description: "Not sure"
+        other_filters:
+          statistic: bias
+        grouping_config:
+          group_by: metric
+          hue: metric

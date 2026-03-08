@@ -1,0 +1,47 @@
+id: "2.7"
+name: "Snow cover"
+theme: "Land and land ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "CCI-CryoClim-FSC-1"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    The diagnostic shows fractional snow cover per grid cell expressed in percent of
+    the grid cell area covered by snow and compares it with the CCI-CryoClim-FSC-1
+    (Solberg et al, 2014) observation-based product. The diagnostics calculates
+    metrics following the standard methodology from the ILAMB project (Collier et al.
+    2018). For each model run, maps of fractional snow cover, month of maximum,
+    root-mean squared error (RMSE), bias, bias score, phase shift, cycle score with
+    respect to CCI-CryoClim-FSC-1 are produced, as well as global time series and
+    Taylor diagrams.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model snow cover with reference data
+    from CCI-CryoClim-FSC-1
+  why_it_matters: >-
+    Snow cover is a variable which influences a lot of other variables, in particular
+    those related to land surface processes (e.g., runoff, soil temperature). Biases in
+    snow cover could also propagate into the radiative processes through the changes in
+    albedo.
+  plain_language:
+    why_it_matters: >-
+      Snow is an important metric for a lot of industries and Indigenous Arctic
+      communities. Assessing the model biases in snow cover would help in future
+      planning.
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: snc-esacci
+explorer_cards:
+  - title: "Snow Cover Extent"
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: snc-esacci
+        title: "Snow Cover Extent"
+        metric_units: "%"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: global
+          metric: Bias

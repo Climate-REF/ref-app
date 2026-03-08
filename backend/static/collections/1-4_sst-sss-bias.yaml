@@ -1,0 +1,120 @@
+id: "1.4"
+name: "Sea surface temperature (SST) bias, Sea surface salinity (SSS) bias"
+theme: "Oceans and sea ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "WOA2023"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    The SST bias period-mean map is calculated as the model's SST field (monthly tos)
+    time-averaged over the historical experiment minus the sea water potential
+    temperature field from the WOA 2023 gridded observational product. The SSS bias
+    map is calculated as the model's SSS field (monthly sos) time-averaged over the
+    historical experiment minus the sea water salinity field from the WOA 2023
+    gridded observational product. Prior to differencing all model output was regridded
+    to the 1-degree WOA23 horizontal grid. The resulting period-mean bias maps show
+    the magnitude of the difference (bias) between the observed and simulated values
+    (SSS or SST) at each model grid cell.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model sea surface temperature (SST)
+    and sea surface salinity (SSS) with reference data from WOA2023
+  why_it_matters: >-
+    The density of seawater and thus its stratification is set by a nonlinear relation
+    between temperature, salinity, and pressure. Thus, patterns of SSS and SST are
+    important in understanding a model's representation of the buoyancy structure of
+    the global ocean and also making sense of its air-sea heat and freshwater fluxes.
+    An accurate representation of SSS and SST are also critical for air-sea CO2 fluxes
+    and thus the global carbon budget. Biases in surface temperature and salinity have
+    the potential to propagate into the ocean interior via water mass transformation
+    processes and influence other climate metrics such as regional sea ice concentrations.
+  takeaway: >-
+    The global patterns of sea surface temperature and salinity are the result of
+    air-sea coupling (heat and freshwater exchange) as well as reflective of the
+    advection of heat and freshwater by large scale ocean circulation patterns and
+    mixing via the ocean mesoscale, particularly in higher resolution models. Achieving
+    accuracy in SSS and SST is vital for accurately representing air-sea heat and
+    carbon fluxes, water mass transformation processes, as well as representing climate
+    feedbacks that are important for a model's ability to accurately represent the
+    transient climate response.
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: so-woa2023-surface
+  - provider_slug: ilamb
+    diagnostic_slug: thetao-woa2023-surface
+explorer_cards:
+  - title: "SST & SSS"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Sea Surface Salinity"
+        metric_units: "psu"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: "None"
+          metric: Bias
+          statistic: "Period Mean"
+        placeholder: true
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: thetao-woa2023-surface
+        title: "Sea Surface Temperature"
+        metric_units: "K"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: "None"
+          metric: Bias
+          statistic: "Period Mean"
+        placeholder: true
+      - type: taylor-diagram
+        provider: ilamb
+        diagnostic: thetao-woa2023-surface
+        title: "Sea Surface Temperature (Taylor Diagram)"
+        description: >-
+          Taylor diagram showing the performance of global sea surface temperatures
+          against WOA2023 observations. Taylor diagrams summarize how closely models
+          match observations in terms of correlation, standard deviation, and
+          root-mean-square difference.
+        interpretation: >-
+          Points closer to the reference (black square) indicate better model
+          performance. Distance from the origin represents RMSE.
+        other_filters:
+          region: "None"
+          metric: "Spatial Distribution"
+        placeholder: true
+  - title: "Surface Ocean Salinity"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Bias"
+        description: "Bias in Surface Ocean Salinity with respect to WOA2023"
+        span: 1
+        metric_units: "psu"
+        other_filters:
+          statistic: Bias
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+        placeholder: true
+      - type: taylor-diagram
+        provider: ilamb
+        diagnostic: so-woa2023-surface
+        title: "Taylor Diagram"
+        description: >-
+          Taylor diagram showing the performance of global surface ocean salinity
+          against WOA2023 observations.
+        interpretation: >-
+          Points closer to the reference (black square) indicate better model
+          performance. Distance from the origin represents RMSE.
+        other_filters:
+          region: "None"
+          metric: "Spatial Distribution"
+        placeholder: true

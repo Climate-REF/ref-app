@@ -1,0 +1,42 @@
+id: "2.6"
+name: "Leaf area index (LAI)"
+theme: "Land and land ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "NOAA-NCEI-LAI-5-0, LAI4g-1-2"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  description: >-
+    This diagnostic computes gridpoint-wise Leaf Area Index (LAI) values and compares
+    them with the AVHRR-based 30-year LAI/FAPAR dataset (AVH15C1; Claverie et al.
+    2016). The diagnostics ingests the specific product from the ILAMB project
+    (Collier et al. 2018). For each model run, maps of LAI, month of maximum,
+    root-mean squared error (RMSE), bias, bias score, phase shift, and cycle score
+    with respect to AVH15C1 are produced, as well as time series and Taylor diagrams
+    for the Tropics and for the whole globe.
+  short_description: >-
+    Apply the ILAMB Methodology* to compare the model leaf area index (LAI) with
+    reference data from NOAA-NCEI-LAI-5-0, and LAI4g-1-2
+  why_it_matters: >-
+    LAI has fundamental implications for the closure of the biogeochemical cycle over
+    land and within ecosystems. With the main focus on emission-driven simulations,
+    these diagnostics are crucial to assess the reliability of carbon fluxes in future
+    climate scenarios.
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: lai-avh15c1
+explorer_cards:
+  - title: "Leaf Area Index"
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: lai-avh15c1
+        title: "Leaf Area Index"
+        metric_units: "1"
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        other_filters:
+          region: global
+          metric: Bias
+          statistic: Bias

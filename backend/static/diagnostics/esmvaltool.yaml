@@ -1,0 +1,260 @@
+# ESMValTool Diagnostic Metadata
+#
+# Reference datasets and display metadata for ESMValTool diagnostics.
+
+esmvaltool/cloud-radiative-effects:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (rlut, rlutcs, rsut, rsutcs) (planned to move to obs4MIPs)"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+    - slug: "esmvaltool.ISCCP-FH"
+      description: "ISCCP cloud properties (planned to move to obs4MIPs)"
+      type: "secondary"
+  display_name: "Cloud Radiative Effects"
+  description: >-
+    Plot climatologies and zonal mean profiles of cloud radiative effects
+    (shortwave + longwave) for a dataset.
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-cli-ta:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA5 - Air temperature (ta)"
+      type: "primary"
+    - slug: "esmvaltool.CALIPSO-ICECLOUD"
+      description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
+      type: "secondary"
+  display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
+  description: >-
+    Scatterplot of ice water content of cloud (cli) vs air temperature (ta).
+    Observational scatterplots for reference datasets are provided in the separate
+    "Cloud Scatterplots for Reference dataset" diagnostic.
+  tags: ["atmosphere", "clouds", "temperature"]
+
+esmvaltool/cloud-scatterplots-clivi-lwcre:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - Longwave radiation (rlut, rlutcs; lwcre derived), baked into recipe"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties - Ice water path (clivi), baked into recipe"
+      type: "secondary"
+  display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
+  description: "Scatterplot of ice water path (clivi) vs longwave cloud radiative effect (lwcre)."
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-clt-swcre:
+  reference_datasets:
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - Shortwave radiation (rsut, rsutcs; swcre derived), baked into recipe"
+      type: "primary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties - Total cloud fraction (clt), baked into recipe"
+      type: "secondary"
+  display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
+  description: "Scatterplot of total cloud fraction (clt) vs shortwave cloud radiative effect (swcre)."
+  tags: ["atmosphere", "clouds", "radiation"]
+
+esmvaltool/cloud-scatterplots-clwvi-pr:
+  reference_datasets:
+    - slug: "obs4MIPs.GPCPv2.3"
+      description: "GPCP v2.3 - Precipitation (pr)"
+      type: "secondary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (clwvi, planned to move to obs4MIPs)"
+      type: "secondary"
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
+      type: "primary"
+  display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
+  description: "Scatterplot of condensed water path (clwvi) vs precipitation (pr)."
+  tags: ["atmosphere", "clouds", "precipitation"]
+
+esmvaltool/cloud-scatterplots-reference:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA5 - Air temperature (ta), ingested via REF"
+      type: "primary"
+    - slug: "esmvaltool.CERES-EBAF"
+      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
+      type: "primary"
+    - slug: "esmvaltool.CALIPSO-ICECLOUD"
+      description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
+      type: "secondary"
+    - slug: "esmvaltool.ESACCI-CLOUD"
+      description: "ESA CCI Cloud properties (clt, clwvi, clivi), baked into recipe"
+      type: "secondary"
+    - slug: "esmvaltool.GPCP-V2.3"
+      description: "GPCP v2.3 - Precipitation (pr), hardcoded in update_recipe"
+      type: "secondary"
+  display_name: "Cloud Scatterplots for Reference dataset"
+  description: >-
+    Reference scatterplots of two cloud-relevant variables from observational datasets.
+    These provide the observational baseline for comparison with model cloud scatterplot diagnostics.
+  tags: ["atmosphere", "clouds"]
+
+esmvaltool/enso-basic-climatology:
+  reference_datasets:
+    - slug: "esmvaltool.GPCP-V2.3"
+      description: "GPCP v2.3 - Precipitation (pr), baked into recipe"
+      type: "secondary"
+    - slug: "esmvaltool.TROPFLUX"
+      description: "TROPFLUX (OBS6) - Sea surface temperature (tos) and wind stress (tauu), baked into recipe"
+      type: "secondary"
+  display_name: "ENSO Basic Climatology"
+  description: >-
+    Calculate the ENSO CLIVAR metrics for background climatology, assessing the
+    mean state of the tropical Pacific upon which ENSO events develop.
+  tags: ["ocean", "enso", "climatology"]
+
+esmvaltool/enso-characteristics:
+  reference_datasets:
+    - slug: "esmvaltool.TROPFLUX"
+      description: "TROPFLUX (OBS6) - Sea surface temperature (tos), hardcoded in update_recipe"
+      type: "primary"
+  display_name: "ENSO Characteristics"
+  description: >-
+    Calculate the ENSO CLIVAR metrics for basic ENSO characteristics,
+    evaluating the amplitude, frequency, and spatial structure of ENSO events.
+  tags: ["ocean", "enso", "variability"]
+
+esmvaltool/equilibrium-climate-sensitivity:
+  reference_datasets: []
+  display_name: "Equilibrium Climate Sensitivity (ECS)"
+  description: >-
+    Calculate the global mean equilibrium climate sensitivity for a dataset.
+    ECS is defined as the long-term global mean surface temperature change
+    in response to a doubling of atmospheric CO2 concentration, estimated
+    using the Gregory regression method from abrupt-4xCO2 experiments.
+  tags: ["climate-sensitivity", "feedback"]
+
+esmvaltool/transient-climate-response:
+  reference_datasets: []
+  display_name: "Transient Climate Response (TCR)"
+  description: >-
+    Calculate the global mean transient climate response for a dataset.
+    TCR is defined as the global mean surface temperature change at the time
+    of CO2 doubling in a 1pctCO2 experiment (1% per year CO2 increase).
+  tags: ["climate-sensitivity", "transient"]
+
+esmvaltool/transient-climate-response-emissions:
+  reference_datasets: []
+  display_name: "Transient Climate Response to Emissions (TCRE)"
+  description: >-
+    Calculate the global mean Transient Climate Response to Cumulative CO2 Emissions.
+    TCRE quantifies the relationship between global warming and total cumulative
+    carbon emissions, a key metric for carbon budget estimation.
+  tags: ["climate-sensitivity", "carbon-cycle"]
+
+esmvaltool/zero-emission-commitment:
+  reference_datasets: []
+  display_name: "Zero Emission Commitment (ZEC)"
+  description: >-
+    Calculate the global mean Zero Emission Commitment (ZEC) temperature.
+    ZEC measures the additional warming (or cooling) that occurs after all
+    CO2 emissions cease, reflecting the committed warming from past emissions.
+  tags: ["climate-sensitivity", "commitment"]
+
+esmvaltool/regional-historical-annual-cycle:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Sea level pressure (psl) and zonal wind (ua), ingested via REF"
+      type: "primary"
+    - slug: "esmvaltool.HadCRUT5"
+      description: "HadCRUT5 v5.0.1.0-analysis - Near-surface air temperature (tas), hardcoded in recipe"
+      type: "secondary"
+    - slug: "esmvaltool.GPCP-V2.3"
+      description: "GPCP v2.3 - Precipitation (pr), hardcoded in recipe (cannot be ingested, issue #260)"
+      type: "secondary"
+    - slug: "esmvaltool.ERA5-native6"
+      description: "ERA5 native6 - Specific humidity (hus), not yet on obs4MIPs"
+      type: "secondary"
+  display_name: "Regional Historical Annual Cycle"
+  description: >-
+    Plot the regional historical annual cycle of climate variables including
+    near-surface air temperature (tas), precipitation (pr), sea level pressure (psl),
+    zonal wind (ua), and specific humidity (hus). Regions are defined using
+    IPCC AR6 reference regions as described by Iturbide et al. (2020).
+  tags: ["regional", "seasonal-cycle", "historical"]
+
+esmvaltool/regional-historical-timeseries:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Sea level pressure (psl) and zonal wind (ua), ingested via REF"
+      type: "primary"
+    - slug: "esmvaltool.HadCRUT5"
+      description: "HadCRUT5 v5.0.1.0-analysis - Near-surface air temperature (tas), hardcoded in recipe"
+      type: "secondary"
+    - slug: "esmvaltool.GPCP-V2.3"
+      description: "GPCP v2.3 - Precipitation (pr), hardcoded in recipe (cannot be ingested, issue #260)"
+      type: "secondary"
+    - slug: "esmvaltool.ERA5-native6"
+      description: "ERA5 native6 - Specific humidity (hus), not yet on obs4MIPs"
+      type: "secondary"
+  display_name: "Regional Historical Timeseries"
+  description: >-
+    Plot the regional historical mean and anomaly timeseries of climate variables including
+    near-surface air temperature (tas), precipitation (pr), sea level pressure (psl),
+    zonal wind (ua), and specific humidity (hus). Regions are defined
+    using IPCC AR6 reference regions as described by Iturbide et al. (2020).
+  tags: ["regional", "timeseries", "historical"]
+
+esmvaltool/regional-historical-trend:
+  reference_datasets:
+    - slug: "obs4mips.ERA-5"
+      description: "ERA-5 - Sea level pressure (psl), near-surface air temperature (tas), and zonal wind (ua), ingested via REF"
+      type: "primary"
+    - slug: "esmvaltool.HadCRUT5"
+      description: "HadCRUT5 v5.0.1.0-analysis - Near-surface air temperature (tas), hardcoded in recipe"
+      type: "secondary"
+    - slug: "esmvaltool.GPCP-V2.3"
+      description: "GPCP v2.3 - Precipitation (pr), hardcoded in recipe (cannot be ingested, issue #260)"
+      type: "secondary"
+    - slug: "esmvaltool.ERA5-native6"
+      description: "ERA5 native6 - Specific humidity (hus) and precipitation (pr), hardcoded in recipe"
+      type: "secondary"
+  display_name: "Regional Historical Trends"
+  description: >-
+    Plot the regional historical trend of climate variables including near-surface
+    air temperature (tas), precipitation (pr), sea level pressure (psl),
+    zonal wind (ua), and specific humidity (hus). Regions are defined using IPCC AR6 reference
+    regions as described by Iturbide et al. (2020).
+  tags: ["regional", "trends", "historical"]
+
+esmvaltool/sea-ice-area-basic:
+  reference_datasets:
+    - slug: "esmvaltool.OSI-450-nh"
+      description: "OSI-450 v3 - Sea ice concentration (siconc), Northern Hemisphere, hardcoded in recipe"
+      type: "primary"
+    - slug: "esmvaltool.OSI-450-sh"
+      description: "OSI-450 v3 - Sea ice concentration (siconc), Southern Hemisphere, hardcoded in recipe"
+      type: "primary"
+  display_name: "Arctic and Antarctic Sea Ice Area Seasonal Cycle"
+  description: >-
+    Calculate the seasonal cycle and time series of Northern Hemisphere and
+    Southern Hemisphere sea ice area.
+  tags: ["sea-ice", "cryosphere"]
+
+esmvaltool/sea-ice-sensitivity:
+  reference_datasets: []
+  display_name: "Sea Ice Sensitivity"
+  description: >-
+    Calculate sea ice sensitivity, quantifying the relationship between sea ice area (siconc)
+    and global temperature change (tas). This is an inter-model comparison diagnostic
+    with no observational datasets ingested.
+  tags: ["sea-ice", "cryosphere", "sensitivity"]
+
+esmvaltool/climate-at-global-warming-levels:
+  reference_datasets: []
+  display_name: "Climate at Global Warming Levels"
+  description: "Calculate climate variables at global warming levels (e.g. 1.5C, 2C, 3C, 4C above pre-industrial)."
+  tags: ["scenarios", "warming-levels"]
+
+esmvaltool/climate-drivers-for-fire:
+  reference_datasets: []
+  display_name: "Climate Drivers for Fire"
+  description: "Calculate diagnostics regarding climate drivers for fire, including temperature, precipitation, and humidity conditions that influence fire risk."
+  tags: ["fire", "climate-drivers", "impacts"]

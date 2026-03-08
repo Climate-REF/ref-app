@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 
 const themesSchema = z.object({
   theme: z
@@ -18,11 +17,15 @@ const themesSchema = z.object({
 
 const Themes = () => {
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <ThematicContent />
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Theme Explorer</h2>
+        <p className="text-muted-foreground mt-1">
+          Browse climate model evaluation results organized by scientific theme.
+        </p>
+      </div>
+      <ThematicContent />
+    </div>
   );
 };
 

@@ -1,0 +1,51 @@
+id: "5.3"
+name: "Evaluation of key climate variables at global warming levels"
+theme: "Impacts and Adaptation"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "GPCP-SG-2-3, HadCRUT5-0-2-0"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_calculate_gwl_exceedance_stats.html"
+content:
+  description: >-
+    This recipe calculates years of Global Warming Level (GWL) as described in
+    Swaminathan et al (2022). Time series of the anomalies in annual global mean
+    surface air temperature (GSAT) are calculated with respect to the 1850-1900
+    time-mean of each individual time series. To limit the influence of short-term
+    variability, a 21-year centered running mean is applied to the time series. Once
+    the years of exceedance are calculated, the time averaged global mean and standard
+    deviation for the multimodel ensemble over the 21-year period around the year of
+    exceedance are plotted. By selecting specific scenarios, the multimodel mean and
+    spread for a single future scenario can be plotted. Multimodel mean and standard
+    deviation global maps of precipitation and temperature anomalies are plotted for
+    each available global warming level.
+  short_description: >-
+    This diagnostic calculates years of Global Warming Level (GWL) exceedances in CMIP
+    models as described in Swaminathan et al (2022). Time series of the anomalies in
+    annual global mean surface air temperature (GSAT) are calculated with respect to
+    the 1850-1900 time-mean of each individual time series. To limit the influence of
+    short-term variability, a 21-year centered running mean is applied to the time
+    series. The year at which the time series exceeds warming levels or temperatures
+    such as 1.5C is then recorded for the specific model ensemble member and future
+    scenario. Once the years of exceedance are calculated, the time averaged global
+    mean and standard deviation for the multimodel ensemble over the 21-year period
+    around the year of exceedance are plotted.
+  takeaway: >-
+    After the Paris agreements, the importance of setting the intensity and pattern of
+    anomalies for key climate variables has increased significantly. Furthermore,
+    overshoot experiments will be a substantial part of the CMIP7 effort, therefore it
+    is of paramount importance to assess the uncertainty among models on the projected
+    changes depending on the achieved warming level in different scenarios.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: climate-at-global-warming-levels
+explorer_cards:
+  - title: "Warming Levels"
+    description: >-
+      Climate conditions at different global warming levels, relevant to policy targets.
+    content:
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: climate-at-global-warming-levels
+        title: "Global Mean Temperature Change at Warming Levels"
+        span: 2
+        placeholder: true

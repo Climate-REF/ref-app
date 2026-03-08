@@ -5,14 +5,16 @@ import DataHealthWarning from "@/content/data-health-warning.mdx";
 
 const ExplorerLayout = () => {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mx-8">
       <Card className="md:col-span-2">
         <CardContent className="space-y-6">
-          <h1 className="text-3xl font-bold tracking-tight">Data Explorer</h1>
-          <p className="text-muted-foreground">
-            Explore and visualize climate model evaluation diagnostics across
-            different Earth system components and scientific themes.
-          </p>
+          <div className="max-w-prose">
+            <h1 className="text-3xl font-bold tracking-tight">Data Explorer</h1>
+            <p className="text-muted-foreground mt-2">
+              Explore and visualize climate model evaluation diagnostics across
+              different Earth system components and scientific themes.
+            </p>
+          </div>
 
           <DataHealthWarning
             components={{
@@ -20,14 +22,14 @@ const ExplorerLayout = () => {
                 return (
                   <p
                     {...props}
-                    className="text-sm font-semibold text-muted-foreground"
+                    className="text-sm font-semibold text-muted-foreground max-w-prose"
                   />
                 );
               },
             }}
           />
 
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-prose">
             <div className="text-sm text-muted-foreground">
               <h3 className="font-semibold text-foreground mb-2">
                 What's Available

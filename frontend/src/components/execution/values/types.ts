@@ -44,5 +44,6 @@ export interface SeriesMetadata {
   seriesIndex: number;
   label: string;
   color: string;
-  isReference: boolean; // NEW - track reference series
+  isReference: boolean;
+  dimensions: Record<string, string>;
 }

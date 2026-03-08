@@ -1,0 +1,94 @@
+id: "3.7"
+name: "Scatterplots of two cloud-relevant variables (for specific regions of the globe and specific cloud regimes)"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "CALIPSO-ICECLOUD-1-0, ESACCI-CLOUD-AVHRR-AMPM-3-0, CERES-EBAF-4-2, ERA-5, GPCP-SG-2-3"
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_ref.html"
+content:
+  description: >-
+    This diagnostic produces scatterplots of paired cloud-relevant variables (e.g.,
+    cloud fraction vs. estimated inversion strength, LWP vs. SST, CRE vs. lower
+    tropospheric stability) stratified by region and/or dynamical regime. Observed
+    relationships from satellite data (e.g., CERES, MODIS, ISCCP) are compared
+    against model output to assess whether models reproduce observed covariability and
+    regime-dependent cloud behaviour.
+  short_description: "2D histograms with focus on clouds"
+  why_it_matters: >-
+    Cloud-controlling factor relationships underpin emergent constraint approaches for
+    narrowing climate sensitivity. If models fail to reproduce observed relationships
+    between cloud properties and their meteorological drivers, their cloud feedbacks
+    may be unreliable. This diagnostic targets process-level evaluation rather than
+    mean-state biases alone.
+  takeaway: >-
+    The slope and scatter of these relationships reveal whether models capture the
+    correct physical sensitivities. Departures from observed relationships --
+    particularly in subtropical subsidence regions -- often indicate deficiencies in
+    boundary-layer or shallow convection parameterizations that affect cloud feedback
+    strength.
+  plain_language:
+    description: >-
+      This diagnostic tests whether models capture how cloud properties relate to
+      their environment -- for example, whether low clouds behave realistically in
+      regions of sinking air.
+    why_it_matters: >-
+      Understanding why clouds form where they do helps us predict how they'll change
+      in a warmer world.
+    takeaway: >-
+      Models that get these relationships right are more likely to produce reliable
+      predictions of cloud changes under warming.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-cli-ta
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clivi-lwcre
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clt-swcre
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-clwvi-pr
+  - provider_slug: esmvaltool
+    diagnostic_slug: cloud-scatterplots-reference
+explorer_cards:
+  - title: "Cloud Scatterplots"
+    description: >-
+      2D histograms comparing cloud-relevant variable pairs in models and
+      observations, revealing whether models capture regime-dependent cloud
+      behaviour.
+    content:
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-reference
+        title: "Reference Observations"
+        description: >-
+          Observed relationships between paired cloud-relevant variables from
+          satellite data (CERES, CALIPSO, ERA5, GPCP), providing the benchmark
+          against which model scatterplots are compared.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clt-swcre
+        title: "Cloud Fraction vs. Shortwave CRE"
+        description: >-
+          Scatterplots of total cloud fraction (clt) against shortwave cloud
+          radiative effect (SW CRE) for individual models, testing whether models
+          reproduce the observed relationship between cloud amount and its
+          radiative impact.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clivi-lwcre
+        title: "Ice Water Path vs. Longwave CRE"
+        description: >-
+          Scatterplots of cloud ice water path (clivi) against longwave cloud
+          radiative effect (LW CRE), assessing how well models capture the
+          warming effect of high ice clouds.
+        span: 2
+      - type: figure-gallery
+        provider: esmvaltool
+        diagnostic: cloud-scatterplots-clwvi-pr
+        title: "Liquid Water Path vs. Precipitation"
+        description: >-
+          Scatterplots of cloud liquid water path (clwvi) against precipitation
+          (pr), evaluating the modelled relationship between cloud water content
+          and precipitation efficiency.
+        span: 2

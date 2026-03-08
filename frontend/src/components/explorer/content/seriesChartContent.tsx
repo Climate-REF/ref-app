@@ -68,6 +68,8 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       maxSeriesLimit={500} // Limit for performance in preview
       symmetricalAxes={contentItem.symmetricalAxes ?? false}
       labelTemplate={contentItem.labelTemplate}
+      metricName={contentItem.title}
+      units={contentItem.metricUnits}
     />
   );
 }

@@ -1,0 +1,96 @@
+id: "3.1"
+name: "Annual cycle and seasonal mean of multiple variables"
+theme: "Atmosphere"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "C3S-GTO-ECV-9-0, SAGE-CCI-OMPS-v0008, ERA-5"
+provider_link: "http://pcmdi.github.io/pcmdi_metrics/examples/Demo_1b_mean_climate.html"
+content:
+  description: >-
+    Mean state metrics quantify how well models simulate observed climatological
+    fields at a large scale, gauged by a suite of well-established statistics such as
+    RMSE, mean absolute error (MAE), and pattern correlation. The seasonally and
+    annually averaged fields of multiple variables from large-scale observationally
+    based datasets and results from model simulations are compared.
+  short_description: >-
+    Maps of seasonal and annual climatology are generated for the reference datasets
+    and model output on a target grid (2.5x2.5 deg), then calculate diverse metrics
+    including bias, RMSE, spatial pattern correlation, and standard deviation.
+  why_it_matters: >-
+    These metrics quantify how well models simulate observed climatological fields at
+    a large scale.
+  plain_language:
+    why_it_matters: >-
+      These metrics provide an entry-level high-level overview for model performance.
+diagnostics:
+  - provider_slug: pmp
+    diagnostic_slug: annual-cycle
+explorer_cards:
+  - title: "Mean Climate Performance"
+    description: >-
+      Model skill at reproducing observed climatological patterns, assessed via
+      spatial correlation, RMSE, and bias for key atmospheric variables.
+    content:
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: annual-cycle
+        title: "Surface Temperature Spatial Correlation"
+        description: >-
+          Spatial pattern correlation between simulated and observed annual-mean
+          surface temperature (ts). Higher values indicate better agreement with
+          the observed climatological pattern.
+        metric_units: ""
+        other_filters:
+          variable_id: ts
+          statistic: cor_xy
+          region: global
+        grouping_config:
+          group_by: season
+          hue: season
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: annual-cycle
+        title: "Precipitation RMSE"
+        description: >-
+          Root mean square error of the spatial pattern of annual and seasonal
+          precipitation (pr) relative to GPCP observations. Lower values indicate
+          better performance.
+        metric_units: "mm/day"
+        other_filters:
+          variable_id: pr
+          statistic: rms_xy
+          region: global
+        grouping_config:
+          group_by: season
+          hue: season
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: annual-cycle
+        title: "Surface Temperature Bias"
+        description: >-
+          Global mean bias in surface temperature (ts) relative to ERA-5. Positive
+          values indicate the model is too warm; negative values indicate too cold.
+        metric_units: "K"
+        other_filters:
+          variable_id: ts
+          statistic: bias_xy
+          region: global
+        show_zero_line: true
+        grouping_config:
+          group_by: season
+          hue: season
+      - type: box-whisker-chart
+        provider: pmp
+        diagnostic: annual-cycle
+        title: "TOA Outgoing Longwave Radiation RMSE"
+        description: >-
+          Spatial RMSE of outgoing longwave radiation at the top of atmosphere
+          (rlut) compared to CERES-EBAF observations.
+        metric_units: "W/m^2"
+        other_filters:
+          variable_id: rlut
+          statistic: rms_xy
+          region: global
+        grouping_config:
+          group_by: season
+          hue: season

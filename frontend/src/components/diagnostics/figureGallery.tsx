@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { Download, ExternalLink, MoreHorizontal } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Figure } from "@/components/diagnostics/figure.tsx";
@@ -16,13 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
 import {
@@ -74,7 +67,6 @@ export function FigureGallery({
   diagnosticSlug,
 }: DiagnosticFigureGalleryProps) {
   const [filter, setFilter] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectorFilters, setSelectorFilters] = useState<
     Record<string, string[]>
   >({});
@@ -108,48 +100,62 @@ export function FigureGallery({
     };
   }, [getColumns]);
 
-  const allFigures: FigureWithGroup[] = (executionGroups?.data ?? []).flatMap(
-    (group) =>
-      (group.executions ?? []).flatMap((execution) =>
-        (execution.outputs ?? [])
-          .filter((output) => output.output_type === "plot")
-          .map((figure) => ({ figure, executionGroup: group })),
+  const groups = executionGroups?.data ?? [];
+
+  const allFigures = useMemo<FigureWithGroup[]>(
+    () =>
+      groups.flatMap((group) =>
+        (group.executions ?? []).flatMap((execution) =>
+          (execution.outputs ?? [])
+            .filter((output) => output.output_type === "plot")
+            .map((figure) => ({ figure, executionGroup: group })),
+        ),
       ),
+    [groups],
   );
 
-  const filteredFigures = allFigures.filter(({ figure, executionGroup }) => {
-    if (
-      selectedGroup !== "all" &&
-      selectedGroup !== executionGroup.id.toString()
-    ) {
-      return false;
-    }
-    if (!matchesSelectorFilters(executionGroup.selectors, selectorFilters)) {
-      return false;
-    }
-    if (filter) {
-      try {
-        const regex = new RegExp(filter, "i");
-        return regex.test(figure.description) || regex.test(figure.filename);
-      } catch {
-        // Invalid regex, don't filter
-        return true;
-      }
-    }
-    return true;
-  });
+  const filteredFigures = useMemo(() => {
+    const filterRegex = filter
+      ? (() => {
+          try {
+            return new RegExp(filter, "i");
+          } catch {
+            return null;
+          }
+        })()
+      : null;
 
-  const uniqueGroups = Array.from(
-    new Set(allFigures.map(({ executionGroup }) => executionGroup.id)),
-  )
-    .map((id) => executionGroups?.data?.find((g) => g.id === id))
-    .filter(Boolean);
+    return allFigures.filter(({ figure, executionGroup }) => {
+      if (!matchesSelectorFilters(executionGroup.selectors, selectorFilters)) {
+        return false;
+      }
+      if (filterRegex) {
+        return (
+          filterRegex.test(figure.description) ||
+          filterRegex.test(figure.filename)
+        );
+      }
+      return true;
+    });
+  }, [allFigures, selectorFilters, filter]);
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: filteredFigures.length triggers re-measurement when filter changes affect layout position
+  useEffect(() => {
+    if (listRef.current) {
+      const rect = listRef.current.getBoundingClientRect();
+      setScrollMargin(rect.top + window.scrollY);
+    }
+  }, [filteredFigures.length]);
 
   const totalRows = Math.ceil(filteredFigures.length / columns);
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
     estimateSize: () => 400,
     overscan: 9,
+    scrollMargin,
   });
 
   const goToPrevious = useCallback(() => {
@@ -171,32 +177,14 @@ export function FigureGallery({
   const items = rowVirtualizer.getVirtualItems();
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="group-filter">Filter by Execution Group</Label>
-          <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-            <SelectTrigger>
-              <SelectValue placeholder="All groups" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Groups</SelectItem>
-              {uniqueGroups.map((group) => (
-                <SelectItem key={group!.id} value={group!.id.toString()}>
-                  {group!.key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="figure-filter">Filter by Figure Name (regex)</Label>
-          <Input
-            id="figure-filter"
-            placeholder="Filter figures by name..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="figure-filter">Filter by Figure Name</Label>
+        <Input
+          id="figure-filter"
+          placeholder="Filter figures by name..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </div>
 
       <SelectorFilterPanel
@@ -207,6 +195,7 @@ export function FigureGallery({
 
       {filteredFigures.length > 0 ? (
         <div
+          ref={listRef}
           className="relative"
           style={{
             height: rowVirtualizer.getTotalSize(),
@@ -215,7 +204,7 @@ export function FigureGallery({
           <div
             className="absolute top-0 left-0 w-full"
             style={{
-              transform: `translateY(${items[0]?.start ?? 0}px)`,
+              transform: `translateY(${(items[0]?.start ?? 0) - rowVirtualizer.options.scrollMargin}px)`,
             }}
           >
             {items.map((virtualRow) => (
@@ -245,13 +234,13 @@ export function FigureGallery({
                           <div className="mt-4 flex items-center justify-between">
                             <div className="flex flex-col space-y-2">
                               <small className="text-sm text-muted-foreground">
-                                <span className="font-semibold">
-                                  Execution Group:
-                                </span>{" "}
+                                <span className="font-semibold">Group:</span>{" "}
                                 {executionGroup.key}
                               </small>
                               <small className="text-sm text-muted-foreground truncate">
-                                <span className="font-semibold">Filename:</span>{" "}
+                                <span className="font-semibold truncate">
+                                  Filename:
+                                </span>{" "}
                                 {figure.filename}
                               </small>
                             </div>

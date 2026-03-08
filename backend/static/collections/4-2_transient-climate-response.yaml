@@ -1,0 +1,49 @@
+id: "4.2"
+name: "Transient climate response (TCR)"
+theme: "Earth System"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: ""
+provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_tcr.html"
+content:
+  description: >-
+    The transient climate response (TCR) is defined as the global and annual mean
+    surface air temperature anomaly in the 1pctCO2 scenario (1% CO2 increase per year)
+    for a 20 year period centered at the time of CO2 doubling, i.e. using the years 61
+    to 80 after the start of the simulation. We calculate the temperature anomaly by
+    subtracting a linear fit of the piControl run for all 140 years of the 1pctCO2
+    experiment prior to the TCR calculation (see Gregory and Forster, 2008).
+  short_description: >-
+    The transient climate response (TCR) is defined as the global and annual mean
+    surface air temperature anomaly in the 1pctCO2 scenario (1% CO2 increase per year)
+    for a 20 year period centered at the time of CO2 doubling, i.e. using the years 61
+    to 80 after the start of the simulation. We calculate the temperature anomaly by
+    subtracting a linear fit of the piControl run for all 140 years of the 1pctCO2
+    experiment prior to the TCR calculation (see Gregory and Forster, 2008).
+  why_it_matters: >-
+    Unlike Equilibrium Climate Sensitivity (ECS), TCR is important in order to account
+    for the response of the climate at the timescales relevant for climate mitigation
+    policies (i.e. multidecadal to centennial). The parameter is set to immediately
+    compare the climate response among different models.
+diagnostics:
+  - provider_slug: esmvaltool
+    diagnostic_slug: transient-climate-response
+explorer_cards:
+  - title: "Transient Climate Response"
+    content:
+      - type: box-whisker-chart
+        provider: esmvaltool
+        diagnostic: transient-climate-response
+        title: "Transient Climate Response (TCR)"
+        description: >-
+          TCR measures the immediate warming response of the climate system to a
+          sustained increase in CO2 concentrations. It is a key metric for understanding
+          the short-term impacts of greenhouse gas emissions on global temperatures and
+          is critical for informing climate policy and adaptation strategies.
+        interpretation: >-
+          Higher TCR values indicate a more sensitive climate system, leading to greater
+          warming in the near term for a given increase in CO2.
+        metric_units: "K"
+        grouping_config:
+          group_by: metric
+          hue: metric

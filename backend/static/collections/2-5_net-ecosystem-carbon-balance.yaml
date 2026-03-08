@@ -1,0 +1,30 @@
+id: "2.5"
+name: "Net ecosystem carbon balance"
+theme: "Land and land ice"
+endorser: "CMIP Model Benchmarking Task Team"
+version_control: "version 1 - 24-11-04 REF launch"
+reference_dataset: "HOFFMAN-1-0"
+provider_link: "https://doi.org/10.1029/2018MS001354"
+content:
+  short_description: >-
+    Comparison of the model integrated land net ecosystem carbon balance with reference
+    data from HOFFMAN-1-0
+diagnostics:
+  - provider_slug: ilamb
+    diagnostic_slug: nbp-hoffman
+explorer_cards:
+  - title: "Net Biome Production"
+    placeholder: true
+    content:
+      - type: box-whisker-chart
+        provider: ilamb
+        diagnostic: nbp-hoffman
+        title: "Net Biome Production"
+        description: >-
+          Bias in Net Biome Production (NBP) compared to Hoffman et al. (2020) estimates
+        metric_units: "PgC/yr"
+        clip_max: 2000
+        grouping_config:
+          group_by: statistic
+          hue: statistic
+        placeholder: true

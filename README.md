@@ -3,10 +3,11 @@
 This repository contains the API and Frontend for the Climate Rapid Evaluation Framework (REF). This system enables comprehensive benchmarking and evaluation of Earth system models against observational data, integrating with the `climate-ref` core library.
 
 This is a full-stack application that consists of a:
-*   **Backend**: FastAPI API (Python 3.11+)
-    *   FastAPI, Pydantic, SQLAlchemy, OpenAPI documentation
-*   **Frontend**: React frontend (React 19, TypeScript)
-    *   Vite, Tanstack Router, Tanstack Query, Tailwind CSS, Shadcn/ui, Recharts
+
+* **Backend**: FastAPI API (Python 3.11+)
+  * FastAPI, Pydantic, SQLAlchemy, OpenAPI documentation
+* **Frontend**: React frontend (React 19, TypeScript)
+  * Vite, Tanstack Router, Tanstack Query, Tailwind CSS, Shadcn/ui, Recharts
 
 **Status**: Alpha
 
@@ -15,29 +16,41 @@ This is a full-stack application that consists of a:
 [![Last Commit](https://img.shields.io/github/last-commit/Climate-REF/ref-app.svg)](https://github.com/Climate-REF/climate-ref/commits/main)
 [![Contributors](https://img.shields.io/github/contributors/Climate-REF/ref-app.svg)](https://github.com/Climate-REF/ref-app/graphs/contributors)
 
-
 ## Overview
 
 The Climate REF Web Application provides researchers and scientists with tools to:
--   Enable rapid model evaluation and near real-time assessment of climate model performance.
--   Provide standardized, reproducible evaluation metrics across different models and datasets.
--   Make complex climate model diagnostics accessible through an intuitive web interface.
--   Ensure evaluation processes are transparent and results are traceable.
--   Consolidate various diagnostic tools into a unified framework.
--   Automate the execution of diagnostics when new datasets are available.
--   Help researchers find and understand available datasets and their evaluation status.
--   Enable easy comparison of model performance across different versions and experiments.
+
+* Enable rapid model evaluation and near real-time assessment of climate model performance.
+* Provide standardized, reproducible evaluation metrics across different models and datasets.
+* Make complex climate model diagnostics accessible through an intuitive web interface.
+* Ensure evaluation processes are transparent and results are traceable.
+* Consolidate various diagnostic tools into a unified framework.
+* Automate the execution of diagnostics when new datasets are available.
+* Help researchers find and understand available datasets and their evaluation status.
+* Enable easy comparison of model performance across different versions and experiments.
+
+## Updating Diagnostic Content
+
+Display metadata for each AFT diagnostic collection (descriptions, explanations, plain-language summaries)
+is maintained in YAML files under [`backend/static/collections/`](backend/static/collections/).
+See the [collections README](backend/static/collections/README.md) for the full schema and instructions.
+
+Diagnostic-level metadata overrides (display names, reference datasets, tags) are split into per-provider
+YAML files under `backend/static/diagnostics/` (e.g. `pmp.yaml`, `esmvaltool.yaml`, `ilamb.yaml`),
+which can be regenerated from the provider registry with `make generate-metadata`.
+
+After changing content fields or adding new collections, regenerate the frontend TypeScript client with `make generate-client`.
 
 ## Getting Started
 
 ### Prerequisites
 
--   Python 3.11+ (with `uv` for package management)
--   Node.js v20 and npm (for frontend)
--   Database: SQLite (development/test) or PostgreSQL (production)
--   Docker and Docker Compose (optional, for containerized deployment)
+* Python 3.11+ (with `uv` for package management)
+* Node.js v20 and npm (for frontend)
+* Database: SQLite (development/test) or PostgreSQL (production)
+* Docker and Docker Compose (optional, for containerized deployment)
 
-1.  **Clone the repository**
+1. **Clone the repository**
 
     ```bash
     git clone https://github.com/Climate-REF/ref-app.git
@@ -46,7 +59,7 @@ The Climate REF Web Application provides researchers and scientists with tools t
 
 ### Backend Setup
 
-2.  **Set up environment variables**
+1. **Set up environment variables**
 
     Create a `.env` file in the project root by copying the `.env.example` file.
 
@@ -56,14 +69,14 @@ The Climate REF Web Application provides researchers and scientists with tools t
 
     Modify the `.env` to your needs. The `REF_CONFIGURATION` variable should point to the configuration directory for the REF, which defines the database connection string and other REF-specific settings.
 
-3.  **Install dependencies**
+2. **Install dependencies**
 
     ```bash
     cd backend
     make virtual-environment
     ```
 
-4.  **Start the backend server**
+3. **Start the backend server**
 
     ```bash
     make dev
@@ -71,20 +84,20 @@ The Climate REF Web Application provides researchers and scientists with tools t
 
 ### Frontend Setup
 
-1.  **Generate Client**
+1. **Generate Client**
 
     ```bash
     make generate-client
     ```
 
-2.  **Install dependencies**
+2. **Install dependencies**
 
     ```bash
     cd frontend
     npm install
     ```
 
-3.  **Start the frontend server**
+3. **Start the frontend server**
 
     ```bash
     npm run dev
@@ -104,6 +117,9 @@ ref-app/
 │   │       │   └── main.py  # API router aggregation
 │   │       ├── core/        # Core application logic (config, file handling, REF initialization)
 │   │       └── models.py    # Pydantic models for API responses
+│   ├── static/
+│   │   ├── collections/     # Per-collection YAML metadata (see collections/README.md)
+│   │   └── diagnostics/     # Diagnostic metadata overrides
 │   ├── tests/               # Backend test suite
 │   ├── pyproject.toml       # Python dependencies and project metadata
 │   └── uv.lock              # uv lock file for reproducible dependencies
@@ -125,6 +141,7 @@ ref-app/
 ## API Documentation
 
 When the backend is running, API documentation is available at:
--   Swagger UI: http://localhost:8001/docs
--   ReDoc: http://localhost:8001/redoc
--   OpenAPI JSON: http://localhost:8001/openapi.json
+
+* Swagger UI: <http://localhost:8001/docs>
+* ReDoc: <http://localhost:8001/redoc>
+* OpenAPI JSON: <http://localhost:8001/openapi.json>
