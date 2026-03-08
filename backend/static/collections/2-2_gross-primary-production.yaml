@@ -41,7 +41,6 @@ explorer_cards:
         grouping_config:
           group_by: source_id
           hue: source_id
-        placeholder: true
       - type: taylor-diagram
         provider: ilamb
         diagnostic: gpp-fluxnet2015
@@ -56,4 +55,3 @@ explorer_cards:
         other_filters:
           region: global
         reference_stddev: 1.0
-        placeholder: true
