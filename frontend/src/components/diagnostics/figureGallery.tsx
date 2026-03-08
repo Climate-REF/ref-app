@@ -16,15 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
+import {
+  matchesSelectorFilters,
+  SelectorFilterPanel,
+} from "./selectorFilterPanel.tsx";
 
 interface DiagnosticFigureGalleryProps {
   providerSlug: string;
@@ -65,38 +62,13 @@ const FigureDropDown = ({ figure, executionGroup }: FigureWithGroup) => {
   );
 };
 
-/**
- * Extract unique selector dimensions and their values from execution groups.
- * Returns only dimensions with more than one unique value (single-value dimensions
- * aren't useful as filters).
- */
-function extractSelectorDimensions(groups: ExecutionGroup[]) {
-  const dimensionValues: Record<string, Set<string>> = {};
-
-  for (const group of groups) {
-    for (const pairs of Object.values(group.selectors)) {
-      for (const [key, value] of pairs) {
-        if (!dimensionValues[key]) dimensionValues[key] = new Set();
-        dimensionValues[key].add(value);
-      }
-    }
-  }
-
-  return Object.entries(dimensionValues)
-    .filter(([, values]) => values.size > 1)
-    .map(([key, values]) => ({
-      key,
-      values: [...values].sort(),
-    }));
-}
-
 export function FigureGallery({
   providerSlug,
   diagnosticSlug,
 }: DiagnosticFigureGalleryProps) {
   const [filter, setFilter] = useState("");
   const [selectorFilters, setSelectorFilters] = useState<
-    Record<string, string>
+    Record<string, string[]>
   >({});
   const [selectedFigureIndex, setSelectedFigureIndex] = useState<number | null>(
     null,
@@ -129,10 +101,6 @@ export function FigureGallery({
   }, [getColumns]);
 
   const groups = executionGroups?.data ?? [];
-  const selectorDimensions = useMemo(
-    () => extractSelectorDimensions(groups),
-    [groups],
-  );
 
   const allFigures = useMemo<FigureWithGroup[]>(
     () =>
@@ -158,14 +126,8 @@ export function FigureGallery({
       : null;
 
     return allFigures.filter(({ figure, executionGroup }) => {
-      for (const [key, filterValue] of Object.entries(selectorFilters)) {
-        if (filterValue === "all") continue;
-        const groupValues = Object.values(executionGroup.selectors).flatMap(
-          (pairs) => pairs.filter(([k]) => k === key).map(([, v]) => v),
-        );
-        if (groupValues.length > 0 && !groupValues.includes(filterValue)) {
-          return false;
-        }
+      if (!matchesSelectorFilters(executionGroup.selectors, selectorFilters)) {
+        return false;
       }
       if (filterRegex) {
         return (
@@ -215,40 +177,21 @@ export function FigureGallery({
   const items = rowVirtualizer.getVirtualItems();
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {selectorDimensions.map((dim) => (
-          <div className="space-y-2" key={dim.key}>
-            <Label>{dim.key}</Label>
-            <Select
-              value={selectorFilters[dim.key] ?? "all"}
-              onValueChange={(value) =>
-                setSelectorFilters((prev) => ({ ...prev, [dim.key]: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All ({dim.values.length})</SelectItem>
-                {dim.values.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
-        <div className="space-y-2">
-          <Label htmlFor="figure-filter">Filter by Figure Name</Label>
-          <Input
-            id="figure-filter"
-            placeholder="Filter figures by name..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="figure-filter">Filter by Figure Name</Label>
+        <Input
+          id="figure-filter"
+          placeholder="Filter figures by name..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </div>
+
+      <SelectorFilterPanel
+        executionGroups={executionGroups?.data ?? []}
+        filters={selectorFilters}
+        onFiltersChange={setSelectorFilters}
+      />
 
       {filteredFigures.length > 0 ? (
         <div
