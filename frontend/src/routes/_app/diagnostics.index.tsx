@@ -12,7 +12,7 @@ import { ViewToggle } from "@/components/diagnostics/viewToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 
-const diagnosticNotes = [
+const diagnosticNotes: { slug: string; note: string; noteUrl?: string }[] = [
   {
     slug: "transient-climate-response-emissions",
     note: "Minimal available data",
