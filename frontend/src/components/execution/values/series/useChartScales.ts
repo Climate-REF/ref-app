@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { parseJSON } from "date-fns/parseJSON";
 import { useMemo } from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartDataPoint } from "./utils";
@@ -44,6 +45,17 @@ export function useChartScales(
     // X domain from index values
     const xValues = chartData
       .map((d) => d[indexName])
+      .map((v) => {
+        if (typeof v === "number" && Number.isFinite(v)) {
+          return v;
+        }
+        if (typeof v === "string") {
+          const parsed = parseJSON(v);
+          const ts = parsed.getTime();
+          return Number.isFinite(ts) ? ts : null;
+        }
+        return null;
+      })
       .filter((v): v is number => typeof v === "number");
 
     const xDomain: [number, number] =

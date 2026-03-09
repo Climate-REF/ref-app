@@ -73,20 +73,20 @@ explorer_cards:
         grouping_config:
           group_by: statistic
           hue: statistic
-      - type: series-chart
-        provider: ilamb
-        diagnostic: burntfractionall-gfed
-        title: "Global Burnt Fraction Time Series"
-        description: >-
-          Time series of global mean burnt fraction for each model compared with
-          GFED reference data.
-        span: 2
-        other_filters:
-          metric: trace
-          region: global
-        grouping_config:
-          group_by: source_id
-          hue: source_id
+      # - type: series-chart
+      #   provider: ilamb
+      #   diagnostic: burntfractionall-gfed
+      #   title: "Global Burnt Fraction Time Series"
+      #   description: >-
+      #     Time series of global mean burnt fraction for each model compared with
+      #     GFED reference data.
+      #   span: 2
+      #   other_filters:
+      #     metric: trace
+      #     region: global
+      #   grouping_config:
+      #     group_by: source_id
+      #     hue: source_id
       - type: series-chart
         provider: ilamb
         diagnostic: burntfractionall-gfed
@@ -118,3 +118,4 @@ explorer_cards:
           Spatial maps of burnt fraction bias, RMSE, and model-observation
           comparison for individual models.
         span: 2
+        filters: global_bias
