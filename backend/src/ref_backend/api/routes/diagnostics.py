@@ -35,6 +35,10 @@ async def _get_diagnostic(
         if provider_slug not in app_context.settings.DIAGNOSTIC_PROVIDERS:
             raise HTTPException(status_code=404, detail="Diagnostic not found")
 
+    if app_context.settings.DIAGNOSTIC_EXCLUDE:
+        if diagnostic_slug in app_context.settings.DIAGNOSTIC_EXCLUDE:
+            raise HTTPException(status_code=404, detail="Diagnostic not found")
+
     diagnostic = (
         app_context.session.query(models.Diagnostic)
         .join(models.Diagnostic.provider)
@@ -58,6 +62,10 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
         diagnostics_query = diagnostics_query.join(models.Provider).filter(
             models.Provider.slug.in_(app_context.settings.DIAGNOSTIC_PROVIDERS)
+        )
+    if app_context.settings.DIAGNOSTIC_EXCLUDE:
+        diagnostics_query = diagnostics_query.filter(
+            models.Diagnostic.slug.notin_(app_context.settings.DIAGNOSTIC_EXCLUDE)
         )
 
     diagnostics = diagnostics_query.all()

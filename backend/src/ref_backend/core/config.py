@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     If this is not set, all diagnostics will be returned.
     """
 
+    DIAGNOSTIC_EXCLUDE: list[str] | None = None
+    """
+    Exclude specific diagnostics by slug.
+
+    Diagnostics whose slug matches any entry in this list will be hidden
+    from the API. Example: ["ohc-noaa", "ozone-zonal"]
+    """
+
     BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = []
 
     @computed_field  # type: ignore[prop-decorator]

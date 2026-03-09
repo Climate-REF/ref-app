@@ -17,6 +17,7 @@ function computeScales(
   width: number,
   height: number,
   symmetricalAxes: boolean,
+  isTimeAxis = false,
   margins = { top: 10, right: 30, bottom: 60, left: 70 },
 ) {
   const innerWidth = Math.max(0, width - margins.left - margins.right);
@@ -24,7 +25,7 @@ function computeScales(
 
   const xValues = chartData
     .map((d) => d[indexName])
-    .filter((v): v is number => typeof v === "number");
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
 
   const xDomain: [number, number] =
     xValues.length > 0
@@ -61,10 +62,25 @@ function computeScales(
     yDomain = [yMin - padding, yMax + padding];
   }
 
-  const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+  const xScale = isTimeAxis
+    ? d3
+        .scaleTime()
+        .domain([new Date(xDomain[0]), new Date(xDomain[1])])
+        .range([0, innerWidth])
+    : d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+
   const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
 
-  return { xScale, yScale, xDomain, yDomain, innerWidth, innerHeight, margins };
+  return {
+    xScale,
+    yScale,
+    xDomain,
+    yDomain,
+    innerWidth,
+    innerHeight,
+    margins,
+    isTimeAxis,
+  };
 }
 
 const meta: SeriesMetadata[] = [
@@ -159,6 +175,7 @@ describe("computeScales", () => {
       800,
       600,
       false,
+      false,
       margins,
     );
     expect(innerWidth).toBe(700);
@@ -208,5 +225,109 @@ describe("computeScales", () => {
     );
     expect(result.innerWidth).toBe(0);
     expect(result.innerHeight).toBe(0);
+  });
+});
+
+describe("computeScales with time axis", () => {
+  const ts1 = new Date("2020-01-15T00:00:00Z").getTime();
+  const ts2 = new Date("2020-06-15T00:00:00Z").getTime();
+  const ts3 = new Date("2021-01-15T00:00:00Z").getTime();
+
+  const timeChartData: ChartDataPoint[] = [
+    { time: ts1, series_0: 1.0, series_1: -2.0 },
+    { time: ts2, series_0: 3.0, series_1: -1.0 },
+    { time: ts3, series_0: 2.0, series_1: 0.5 },
+  ];
+
+  it("computes X domain from timestamp values", () => {
+    const { xDomain } = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      true,
+    );
+    expect(xDomain[0]).toBe(ts1);
+    expect(xDomain[1]).toBe(ts3);
+  });
+
+  it("creates a time scale that maps timestamps to pixels", () => {
+    const margins = { top: 10, right: 30, bottom: 60, left: 70 };
+    const { xScale, innerWidth } = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      true,
+      margins,
+    );
+    expect(innerWidth).toBe(700);
+    // First timestamp maps to 0, last to innerWidth
+    expect(xScale(ts1)).toBe(0);
+    expect(xScale(ts3)).toBe(700);
+  });
+
+  it("produces Date ticks for time scale", () => {
+    const { xScale } = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      true,
+    );
+    const ticks = xScale.ticks(5);
+    // d3.scaleTime.ticks returns Date objects
+    expect(ticks.length).toBeGreaterThan(0);
+    expect(ticks[0]).toBeInstanceOf(Date);
+  });
+
+  it("maps midpoint timestamp to middle pixel range", () => {
+    const margins = { top: 10, right: 30, bottom: 60, left: 70 };
+    const { xScale } = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      true,
+      margins,
+    );
+    const midTs = (ts1 + ts3) / 2;
+    expect(xScale(midTs)).toBe(350);
+  });
+
+  it("Y domain is unaffected by time axis mode", () => {
+    const linearResult = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      false,
+    );
+    const timeResult = computeScales(
+      timeChartData,
+      meta,
+      new Set(),
+      "time",
+      800,
+      600,
+      false,
+      true,
+    );
+    expect(timeResult.yDomain).toEqual(linearResult.yDomain);
   });
 });

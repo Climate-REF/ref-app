@@ -67,7 +67,7 @@ export function SeriesVisualization({
   }, []);
 
   // Create chart data and metadata (stable unless data/props change)
-  const { chartData, seriesMetadata, indexName } = useMemo(
+  const { chartData, seriesMetadata, indexName, isTimeAxis } = useMemo(
     () => createChartData(seriesValues, referenceSeriesValues, labelTemplate),
     [seriesValues, referenceSeriesValues, labelTemplate],
   );
@@ -147,6 +147,7 @@ export function SeriesVisualization({
     containerWidth,
     CHART_HEIGHT,
     symmetricalAxes,
+    isTimeAxis,
   );
 
   // Spatial index for fast nearest-point lookup
@@ -367,6 +368,7 @@ export function SeriesVisualization({
             innerWidth={innerWidth}
             innerHeight={innerHeight}
             isDark={isDark}
+            isTimeAxis={isTimeAxis}
             metricName={metricName}
             units={units}
             onMouseMove={handleCanvasMouseMove}
@@ -381,6 +383,7 @@ export function SeriesVisualization({
             allAtX={tooltipState.allAtX}
             containerWidth={containerWidth}
             indexName={indexName}
+            isTimeAxis={isTimeAxis}
             units={units}
           />
         </div>

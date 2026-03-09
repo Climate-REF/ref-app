@@ -15,6 +15,37 @@ export function isIntegerAxis(indexName: string): boolean {
   );
 }
 
+/**
+ * Check if a value looks like an ISO 8601 datetime string
+ */
+function isDatetimeString(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  // Match ISO 8601 patterns: "2020-01-15", "2020-01-15T00:00:00", "2020-01-15T00:00:00Z", etc.
+  return /^\d{4}-\d{2}-\d{2}(T|\s)/.test(value);
+}
+
+/**
+ * Detect if the index values in a series are datetime strings
+ */
+export function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
+  if (indexValues.length === 0) return false;
+  // Check the first non-null value
+  for (const v of indexValues) {
+    if (v == null) continue;
+    return isDatetimeString(v);
+  }
+  return false;
+}
+
+/**
+ * Parse a datetime string to a millisecond timestamp.
+ * Returns null if the string is not a valid date.
+ */
+export function parseDatetimeToTimestamp(value: string): number | null {
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
 export function createScaledTickFormatter(
   values: number[],
 ): (value: number | string) => string {
@@ -134,6 +165,7 @@ export function createChartData(
   chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
   indexName: string;
+  isTimeAxis: boolean;
 } {
   // Deduplicate reference series by label (same observational data repeated across executions)
   const seenRefLabels = new Set<string>();
@@ -148,11 +180,20 @@ export function createChartData(
   const allSeries = [...seriesValues, ...dedupedReferenceSeries];
 
   if (allSeries.length === 0) {
-    return { chartData: [], seriesMetadata: [], indexName: "index" };
+    return {
+      chartData: [],
+      seriesMetadata: [],
+      indexName: "index",
+      isTimeAxis: false,
+    };
   }
 
   // Use the first series' index name
   const indexName = allSeries[0]?.index_name || "index";
+
+  // Detect if the index contains datetime strings
+  const firstIndex = allSeries[0]?.index ?? [];
+  const isTimeAxis = detectTimeAxis(firstIndex);
 
   // Find the maximum length across all series
   const maxLength = Math.max(...allSeries.map((s) => s.values?.length || 0));
@@ -174,8 +215,15 @@ export function createChartData(
   // Build chart data
   const chartData: ChartDataPoint[] = [];
   for (let i = 0; i < maxLength; i++) {
+    const rawIndex = allSeries[0]?.index?.[i] ?? i;
+    let indexValue: number | string | null;
+    if (isTimeAxis && typeof rawIndex === "string") {
+      indexValue = parseDatetimeToTimestamp(rawIndex);
+    } else {
+      indexValue = rawIndex;
+    }
     const dataPoint: ChartDataPoint = {
-      [indexName]: allSeries[0]?.index?.[i] ?? i,
+      [indexName]: indexValue,
     };
 
     allSeries.forEach((series, seriesIdx) => {
@@ -187,7 +235,7 @@ export function createChartData(
     chartData.push(dataPoint);
   }
 
-  return { chartData, seriesMetadata, indexName };
+  return { chartData, seriesMetadata, indexName, isTimeAxis };
 }
 
 /**

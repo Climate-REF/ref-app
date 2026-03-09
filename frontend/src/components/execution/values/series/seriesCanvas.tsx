@@ -1,7 +1,7 @@
-import type * as d3 from "d3";
+import * as d3 from "d3";
 import { memo, useCallback, useEffect, useRef } from "react";
 import type { SeriesMetadata } from "../types";
-import type { ChartMargins } from "./useChartScales";
+import type { ChartMargins, XScaleType } from "./useChartScales";
 import { type ChartDataPoint, isIntegerAxis } from "./utils";
 
 export interface CrosshairPosition {
@@ -18,7 +18,7 @@ interface SeriesCanvasProps {
   hiddenLabels: Set<string>;
   hoveredLabelRef: React.MutableRefObject<string | null>;
   crosshairRef: React.MutableRefObject<CrosshairPosition | null>;
-  xScale: d3.ScaleLinear<number, number>;
+  xScale: XScaleType;
   yScale: d3.ScaleLinear<number, number>;
   margins: ChartMargins;
   width: number;
@@ -26,6 +26,7 @@ interface SeriesCanvasProps {
   innerWidth: number;
   innerHeight: number;
   isDark: boolean;
+  isTimeAxis: boolean;
   metricName?: string;
   units?: string;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -48,6 +49,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
   innerWidth,
   innerHeight,
   isDark,
+  isTimeAxis,
   metricName,
   units,
   onMouseMove,
@@ -188,6 +190,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
       innerHeight,
       indexName,
       isDark,
+      isTimeAxis,
       metricName,
       units,
     );
@@ -206,6 +209,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     innerWidth,
     innerHeight,
     isDark,
+    isTimeAxis,
     metricName,
     units,
   ]);
@@ -243,7 +247,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
 
 function drawGrid(
   ctx: CanvasRenderingContext2D,
-  xScale: d3.ScaleLinear<number, number>,
+  xScale: XScaleType,
   yScale: d3.ScaleLinear<number, number>,
   innerWidth: number,
   innerHeight: number,
@@ -266,7 +270,7 @@ function drawGrid(
   // Vertical grid lines
   const xTicks = xScale.ticks(10);
   for (const tick of xTicks) {
-    const x = xScale(tick);
+    const x = xScale(+tick);
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, innerHeight);
@@ -304,15 +308,38 @@ function formatXTickValue(value: number, indexName: string): string {
   return value.toPrecision(6);
 }
 
+function formatTimeTick(date: Date): string {
+  if (
+    date.getMonth() === 0 &&
+    date.getDate() === 1 &&
+    date.getHours() === 0 &&
+    date.getMinutes() === 0
+  ) {
+    return d3.timeFormat("%Y")(date);
+  }
+  if (
+    date.getDate() === 1 &&
+    date.getHours() === 0 &&
+    date.getMinutes() === 0
+  ) {
+    return d3.timeFormat("%b %Y")(date);
+  }
+  if (date.getHours() === 0 && date.getMinutes() === 0) {
+    return d3.timeFormat("%b %d")(date);
+  }
+  return d3.timeFormat("%b %d %H:%M")(date);
+}
+
 function drawAxes(
   ctx: CanvasRenderingContext2D,
-  xScale: d3.ScaleLinear<number, number>,
+  xScale: XScaleType,
   yScale: d3.ScaleLinear<number, number>,
   margins: ChartMargins,
   innerWidth: number,
   innerHeight: number,
   indexName: string,
   isDark: boolean,
+  isTimeAxis: boolean,
   metricName?: string,
   units?: string,
 ) {
@@ -362,17 +389,25 @@ function drawAxes(
   ctx.lineTo(margins.left + innerWidth, margins.top + innerHeight);
   ctx.stroke();
 
-  const xTicksRaw = xScale.ticks(10);
-  const xTicks = isIntegerAxis(indexName)
-    ? xTicksRaw.filter((t) => Number.isInteger(t))
-    : xTicksRaw;
-  for (const tick of xTicks) {
-    const x = margins.left + xScale(tick);
-    ctx.fillText(
-      formatXTickValue(tick, indexName),
-      x,
-      margins.top + innerHeight + 8,
-    );
+  if (isTimeAxis) {
+    const timeTicks = (xScale as d3.ScaleTime<number, number>).ticks(10);
+    for (const tick of timeTicks) {
+      const x = margins.left + xScale(tick);
+      ctx.fillText(formatTimeTick(tick), x, margins.top + innerHeight + 8);
+    }
+  } else {
+    const xTicksRaw = (xScale as d3.ScaleLinear<number, number>).ticks(10);
+    const xTicks = isIntegerAxis(indexName)
+      ? xTicksRaw.filter((t) => Number.isInteger(t))
+      : xTicksRaw;
+    for (const tick of xTicks) {
+      const x = margins.left + xScale(tick);
+      ctx.fillText(
+        formatXTickValue(tick, indexName),
+        x,
+        margins.top + innerHeight + 8,
+      );
+    }
   }
 
   // X axis label

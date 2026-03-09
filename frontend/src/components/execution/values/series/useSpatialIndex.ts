@@ -1,6 +1,7 @@
 import type * as d3 from "d3";
 import { useMemo } from "react";
 import type { SeriesMetadata } from "../types";
+import type { XScaleType } from "./useChartScales";
 import type { ChartDataPoint } from "./utils";
 
 export interface IndexedPoint {
@@ -25,7 +26,7 @@ function buildGrid(
   chartData: ChartDataPoint[],
   seriesMetadata: SeriesMetadata[],
   indexName: string,
-  xScale: d3.ScaleLinear<number, number>,
+  xScale: XScaleType,
   yScale: d3.ScaleLinear<number, number>,
   cellSize: number,
 ): SpatialGrid {
@@ -95,7 +96,7 @@ export function useSpatialIndex(
   chartData: ChartDataPoint[],
   seriesMetadata: SeriesMetadata[],
   indexName: string,
-  xScale: d3.ScaleLinear<number, number>,
+  xScale: XScaleType,
   yScale: d3.ScaleLinear<number, number>,
 ): SpatialIndex {
   return useMemo(() => {

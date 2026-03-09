@@ -1,5 +1,4 @@
 import * as d3 from "d3";
-import { parseJSON } from "date-fns/parseJSON";
 import { useMemo } from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartDataPoint } from "./utils";
@@ -18,14 +17,23 @@ export const DEFAULT_MARGINS: ChartMargins = {
   left: 80,
 };
 
+/**
+ * Union of d3 continuous scale types used for the X axis.
+ * Both accept numeric inputs and return numeric pixel positions.
+ */
+export type XScaleType =
+  | d3.ScaleLinear<number, number>
+  | d3.ScaleTime<number, number>;
+
 export interface ChartScales {
-  xScale: d3.ScaleLinear<number, number>;
+  xScale: XScaleType;
   yScale: d3.ScaleLinear<number, number>;
   xDomain: [number, number];
   yDomain: [number, number];
   innerWidth: number;
   innerHeight: number;
   margins: ChartMargins;
+  isTimeAxis: boolean;
 }
 
 export function useChartScales(
@@ -36,27 +44,17 @@ export function useChartScales(
   width: number,
   height: number,
   symmetricalAxes: boolean,
+  isTimeAxis: boolean,
   margins: ChartMargins = DEFAULT_MARGINS,
 ): ChartScales {
   return useMemo(() => {
     const innerWidth = Math.max(0, width - margins.left - margins.right);
     const innerHeight = Math.max(0, height - margins.top - margins.bottom);
 
-    // X domain from index values
+    // X domain from index values (already numeric — timestamps for datetime axes)
     const xValues = chartData
       .map((d) => d[indexName])
-      .map((v) => {
-        if (typeof v === "number" && Number.isFinite(v)) {
-          return v;
-        }
-        if (typeof v === "string") {
-          const parsed = parseJSON(v);
-          const ts = parsed.getTime();
-          return Number.isFinite(ts) ? ts : null;
-        }
-        return null;
-      })
-      .filter((v): v is number => typeof v === "number");
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
 
     const xDomain: [number, number] =
       xValues.length > 0
@@ -94,7 +92,13 @@ export function useChartScales(
       yDomain = [yMin - padding, yMax + padding];
     }
 
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+    const xScale: XScaleType = isTimeAxis
+      ? d3
+          .scaleTime()
+          .domain([new Date(xDomain[0]), new Date(xDomain[1])])
+          .range([0, innerWidth])
+      : d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+
     const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
 
     return {
@@ -105,6 +109,7 @@ export function useChartScales(
       innerWidth,
       innerHeight,
       margins,
+      isTimeAxis,
     };
   }, [
     chartData,
@@ -114,6 +119,7 @@ export function useChartScales(
     width,
     height,
     symmetricalAxes,
+    isTimeAxis,
     margins,
   ]);
 }

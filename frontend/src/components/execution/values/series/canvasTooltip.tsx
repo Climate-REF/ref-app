@@ -11,10 +11,37 @@ interface CanvasTooltipProps {
   allAtX: NearestResult[];
   containerWidth: number;
   indexName: string;
+  isTimeAxis: boolean;
   units?: string;
 }
 
-export function formatXValue(value: number, indexName: string): string {
+export function formatXValue(
+  value: number,
+  indexName: string,
+  isTimeAxis = false,
+): string {
+  if (isTimeAxis) {
+    const date = new Date(value);
+    // Show full date, include time if not midnight
+    if (
+      date.getHours() === 0 &&
+      date.getMinutes() === 0 &&
+      date.getSeconds() === 0
+    ) {
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
   if (Number.isInteger(value) && isIntegerAxis(indexName)) {
     return value.toString();
   }
@@ -56,6 +83,7 @@ export function CanvasTooltip({
   allAtX,
   containerWidth,
   indexName,
+  isTimeAxis,
   units,
 }: CanvasTooltipProps) {
   if (!visible || !nearest || allAtX.length === 0) {
@@ -95,7 +123,7 @@ export function CanvasTooltip({
       <div className="flex items-baseline gap-2 mb-2">
         <span className="text-muted-foreground">{indexName}:</span>
         <span className="font-medium text-foreground font-mono tabular-nums">
-          {formatXValue(nearest.point.x, indexName)}
+          {formatXValue(nearest.point.x, indexName, isTimeAxis)}
         </span>
       </div>
 
