@@ -19,9 +19,8 @@ export function Disclaimer() {
         that may result from the use of the tool or reliance on its results.
       </p>
       <p className="text-sm text-red-600 dark:text-red-400">
-        The results here are in the process of being regenerated at ORNL so will
-        be replaced in the coming weeks as we resolve some outstanding issues.
-        See{" "}
+        The results here are in the process of being regenerated at ORNL and
+        CEDA so will be replaced as we resolve some outstanding issues. See{" "}
         <LinkExternal href="https://github.com/Climate-REF/climate-ref/issues/456">
           this issue
         </LinkExternal>{" "}
