@@ -46,13 +46,17 @@ explorer_cards:
     description: "Cloud properties and their effect on the Earth's energy balance."
     placeholder: true
     content:
-      - type: box-whisker-chart
+      - type: series-chart
         provider: esmvaltool
         diagnostic: cloud-radiative-effects
         title: "Cloud Radiative Effects"
-        description: "Not sure"
+        description: ""
+        span: 2
+        metric_units: "W m^-2"
         other_filters:
-          statistic: bias
+          variable_id: "lwcre"
+          reference_source_id: ""
+          statistic: zonal_mean
         grouping_config:
-          group_by: metric
-          hue: metric
+          group_by: source_id
+          hue: source_id

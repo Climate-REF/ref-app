@@ -71,4 +71,4 @@ explorer_cards:
         description: >-
           Scatter plots of cumulative CO2 emissions against global mean
           temperature change, with regression lines used to derive TCRE.
-        span: 2
+        span: 1

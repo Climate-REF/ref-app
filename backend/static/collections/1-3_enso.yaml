@@ -46,10 +46,10 @@ diagnostics:
     diagnostic_slug: enso_proc
   - provider_slug: pmp
     diagnostic_slug: enso_tel
-explorer_cards:
-  - title: "El Niño-Southern Oscillation (ENSO)"
-    description: >-
-      Characteristics of ENSO, the dominant mode of interannual climate variability,
-      which influences global weather patterns, precipitation, and temperature extremes.
-    content: []
-    placeholder: true
+# explorer_cards:
+#   - title: "El Niño-Southern Oscillation (ENSO)"
+#     description: >-
+#       Characteristics of ENSO, the dominant mode of interannual climate variability,
+#       which influences global weather patterns, precipitation, and temperature extremes.
+#     content: []
+#     placeholder: true
