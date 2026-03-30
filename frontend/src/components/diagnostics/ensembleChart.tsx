@@ -24,8 +24,8 @@ import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 // Well-known category orderings for common climate dimensions
 const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
-  // Meteorological seasons
-  season: ["DJF", "MAM", "JJA", "SON"],
+  // Meteorological seasons (Annual first, then chronological)
+  season: ["Annual", "annual", "ANN", "DJF", "MAM", "JJA", "SON"],
 };
 
 /**
@@ -319,8 +319,8 @@ export const EnsembleChart = ({
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
-  // Hide x-axis when there are too many items (threshold: 6)
-  const shouldShowXAxis = sortedChartData.length <= 6;
+  // Rotate x-axis labels when there are many items to keep them visible
+  const shouldRotateXAxis = sortedChartData.length > 6;
 
   // Adjust spacing based on number of items
   // make them closer together when there are many
@@ -345,7 +345,10 @@ export const EnsembleChart = ({
             tickLine={false}
             axisLine={{ stroke: "#E5E7EB" }}
             tickMargin={10}
-            hide={!shouldShowXAxis}
+            angle={shouldRotateXAxis ? -45 : 0}
+            textAnchor={shouldRotateXAxis ? "end" : "middle"}
+            height={shouldRotateXAxis ? 100 : 30}
+            interval={0}
           />
           <YAxis
             width={64}

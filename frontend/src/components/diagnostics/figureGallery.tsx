@@ -2,7 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { Download, ExternalLink, MoreHorizontal } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Figure } from "@/components/diagnostics/figure.tsx";
@@ -104,13 +111,14 @@ export function FigureGallery({
 
   const allFigures = useMemo<FigureWithGroup[]>(
     () =>
-      groups.flatMap((group) =>
-        (group.executions ?? []).flatMap((execution) =>
-          (execution.outputs ?? [])
-            .filter((output) => output.output_type === "plot")
-            .map((figure) => ({ figure, executionGroup: group })),
-        ),
-      ),
+      groups.flatMap((group) => {
+        // Only use the latest execution to avoid showing duplicate/outdated figures
+        const latestExecution = group.latest_execution;
+        if (!latestExecution) return [];
+        return (latestExecution.outputs ?? [])
+          .filter((output) => output.output_type === "plot")
+          .map((figure) => ({ figure, executionGroup: group }));
+      }),
     [groups],
   );
 
@@ -143,7 +151,7 @@ export function FigureGallery({
   const [scrollMargin, setScrollMargin] = useState(0);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: filteredFigures.length triggers re-measurement when filter changes affect layout position
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (listRef.current) {
       const rect = listRef.current.getBoundingClientRect();
       setScrollMargin(rect.top + window.scrollY);

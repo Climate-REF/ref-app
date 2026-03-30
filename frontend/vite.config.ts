@@ -10,6 +10,13 @@ import { defineConfig } from "vite";
 export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true, // Source map generation must be turned on
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          katex: ["katex"],
+        },
+      },
+    },
   },
   server: {
     proxy: {

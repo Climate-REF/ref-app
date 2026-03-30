@@ -94,12 +94,16 @@ function toExplorerCardContent(
 function collectionToExplorerCards(
   collection: AftCollectionDetail,
 ): ExplorerCard[] {
-  return collection.explorer_cards.map((card: AftCollectionCard) => ({
-    title: card.title,
-    description: card.description ?? undefined,
-    placeholder: card.placeholder ?? undefined,
-    content: card.content.map(toExplorerCardContent),
-  }));
+  return collection.explorer_cards
+    .filter((card: AftCollectionCard) => !card.placeholder)
+    .map((card: AftCollectionCard) => ({
+      title: card.title,
+      description: card.description ?? undefined,
+      placeholder: card.placeholder ?? undefined,
+      content: card.content
+        .filter((c: AftCollectionCardContent) => !c.placeholder)
+        .map(toExplorerCardContent),
+    }));
 }
 
 function buildCollectionGroups(theme: ThemeDetail) {
