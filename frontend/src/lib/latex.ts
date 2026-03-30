@@ -25,10 +25,15 @@ export function renderLatexToHtml(text: string): string {
     .map((part) => {
       if (part.startsWith("$") && part.endsWith("$")) {
         const latex = part.slice(1, -1);
-        return katex.renderToString(latex, {
-          throwOnError: false,
-          output: "html",
-        });
+        try {
+          return katex.renderToString(latex, {
+            throwOnError: false,
+            output: "html",
+          });
+        } catch {
+          // Guard against unexpected KaTeX internal errors
+          return escapeHtml(part);
+        }
       }
       return escapeHtml(part);
     })
