@@ -9,6 +9,10 @@ This is a full-stack application that consists of a:
 * **Frontend**: React frontend (React 19, TypeScript)
   * Vite, Tanstack Router, Tanstack Query, Tailwind CSS, Shadcn/ui, Recharts
 
+Currently this is coupled to the Assessment Fast Track version of the REF.
+This is a Proof of Concept, with the intention would be to provide a common plaform for REF deployments,
+but significant effort would be required to make this generic.
+
 **Status**: Alpha
 
 **Other info :**
