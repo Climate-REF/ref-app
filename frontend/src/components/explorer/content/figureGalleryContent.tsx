@@ -12,6 +12,7 @@ export function FigureGalleryContent({
     <FigureGallery
       providerSlug={contentItem.provider}
       diagnosticSlug={contentItem.diagnostic}
+      pageSize={12}
     />
   );
 }
