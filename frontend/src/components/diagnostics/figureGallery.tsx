@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { Download, ExternalLink, MoreHorizontal } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  MoreHorizontal,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -33,6 +39,8 @@ import {
 interface DiagnosticFigureGalleryProps {
   providerSlug: string;
   diagnosticSlug: string;
+  /** When set, display figures in paginated mode instead of infinite scroll */
+  pageSize?: number;
 }
 
 interface FigureWithGroup {
@@ -69,9 +77,77 @@ const FigureDropDown = ({ figure, executionGroup }: FigureWithGroup) => {
   );
 };
 
+function FigureCard({
+  figure,
+  executionGroup,
+  onClick,
+}: FigureWithGroup & { onClick: () => void }) {
+  return (
+    <Card
+      className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <Figure {...figure} />
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex flex-col space-y-2">
+            <small className="text-sm text-muted-foreground">
+              <span className="font-semibold">Group:</span> {executionGroup.key}
+            </small>
+            <small className="text-sm text-muted-foreground truncate">
+              <span className="font-semibold truncate">Filename:</span>{" "}
+              {figure.filename}
+            </small>
+          </div>
+          <FigureDropDown figure={figure} executionGroup={executionGroup} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PaginationControls({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-4">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 0}
+        className="gap-1"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Previous
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {currentPage + 1} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages - 1}
+        className="gap-1"
+      >
+        Next
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function FigureGallery({
   providerSlug,
   diagnosticSlug,
+  pageSize,
 }: DiagnosticFigureGalleryProps) {
   const [filter, setFilter] = useState("");
   const [selectorFilters, setSelectorFilters] = useState<
@@ -81,6 +157,7 @@ export function FigureGallery({
     null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const getColumns = useCallback(() => {
     const width = window.innerWidth;
@@ -147,23 +224,43 @@ export function FigureGallery({
     });
   }, [allFigures, selectorFilters, filter]);
 
+  // Reset page when filters change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset page on filter change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [filter, selectorFilters]);
+
+  const usePagination = pageSize !== undefined && pageSize > 0;
+  const totalPages = usePagination
+    ? Math.ceil(filteredFigures.length / pageSize)
+    : 1;
+
+  // Figures for the current page (paginated) or all figures (virtualized)
+  const visibleFigures = usePagination
+    ? filteredFigures.slice(
+        currentPage * pageSize,
+        (currentPage + 1) * pageSize,
+      )
+    : filteredFigures;
+
   const listRef = useRef<HTMLDivElement>(null);
   const [scrollMargin, setScrollMargin] = useState(0);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: filteredFigures.length triggers re-measurement when filter changes affect layout position
   useLayoutEffect(() => {
-    if (listRef.current) {
+    if (!usePagination && listRef.current) {
       const rect = listRef.current.getBoundingClientRect();
       setScrollMargin(rect.top + window.scrollY);
     }
-  }, [filteredFigures.length]);
+  }, [filteredFigures.length, usePagination]);
 
   const totalRows = Math.ceil(filteredFigures.length / columns);
   const rowVirtualizer = useWindowVirtualizer({
-    count: totalRows,
+    count: usePagination ? 0 : totalRows,
     estimateSize: () => 400,
     overscan: 9,
     scrollMargin,
+    enabled: !usePagination,
   });
 
   const goToPrevious = useCallback(() => {
@@ -181,6 +278,11 @@ export function FigureGallery({
   if (isLoading) {
     return <FigureGallerySkeleton nColumns={columns} nRows={2} />;
   }
+
+  const openFigure = (index: number) => {
+    setSelectedFigureIndex(index);
+    setIsModalOpen(true);
+  };
 
   const items = rowVirtualizer.getVirtualItems();
   return (
@@ -202,71 +304,75 @@ export function FigureGallery({
       />
 
       {filteredFigures.length > 0 ? (
-        <div
-          ref={listRef}
-          className="relative"
-          style={{
-            height: rowVirtualizer.getTotalSize(),
-          }}
-        >
+        usePagination ? (
+          <>
+            <div className="text-sm text-muted-foreground">
+              Showing {currentPage * pageSize + 1}–
+              {Math.min((currentPage + 1) * pageSize, filteredFigures.length)}{" "}
+              of {filteredFigures.length} figures
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {visibleFigures.map(({ figure, executionGroup }, index) => {
+                const globalIndex = currentPage * pageSize + index;
+                return (
+                  <FigureCard
+                    key={figure.id || globalIndex}
+                    figure={figure}
+                    executionGroup={executionGroup}
+                    onClick={() => openFigure(globalIndex)}
+                  />
+                );
+              })}
+            </div>
+            {totalPages > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
+        ) : (
           <div
-            className="absolute top-0 left-0 w-full"
+            ref={listRef}
+            className="relative"
             style={{
-              transform: `translateY(${(items[0]?.start ?? 0) - rowVirtualizer.options.scrollMargin}px)`,
+              height: rowVirtualizer.getTotalSize(),
             }}
           >
-            {items.map((virtualRow) => (
-              <div
-                key={virtualRow.index}
-                data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-                  {Array.from({ length: columns }, (_, colIndex) => {
-                    const globalIndex = virtualRow.index * columns + colIndex;
-                    if (globalIndex >= filteredFigures.length) return null;
-                    const { figure, executionGroup } =
-                      filteredFigures[globalIndex];
-                    return (
-                      <Card
-                        key={figure.id || globalIndex}
-                        className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => {
-                          setSelectedFigureIndex(globalIndex);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        <CardContent className="p-4">
-                          <Figure {...figure} />
-
-                          <div className="mt-4 flex items-center justify-between">
-                            <div className="flex flex-col space-y-2">
-                              <small className="text-sm text-muted-foreground">
-                                <span className="font-semibold">Group:</span>{" "}
-                                {executionGroup.key}
-                              </small>
-                              <small className="text-sm text-muted-foreground truncate">
-                                <span className="font-semibold truncate">
-                                  Filename:
-                                </span>{" "}
-                                {figure.filename}
-                              </small>
-                            </div>
-
-                            <FigureDropDown
-                              figure={figure}
-                              executionGroup={executionGroup}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+            <div
+              className="absolute top-0 left-0 w-full"
+              style={{
+                transform: `translateY(${(items[0]?.start ?? 0) - rowVirtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              {items.map((virtualRow) => (
+                <div
+                  key={virtualRow.index}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+                    {Array.from({ length: columns }, (_, colIndex) => {
+                      const globalIndex = virtualRow.index * columns + colIndex;
+                      if (globalIndex >= filteredFigures.length) return null;
+                      const { figure, executionGroup } =
+                        filteredFigures[globalIndex];
+                      return (
+                        <FigureCard
+                          key={figure.id || globalIndex}
+                          figure={figure}
+                          executionGroup={executionGroup}
+                          onClick={() => openFigure(globalIndex)}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )
       ) : (
         <div className="text-center text-sm text-muted-foreground py-8 min-h-[350px]">
           No figures found matching your filters.
