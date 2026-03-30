@@ -235,7 +235,6 @@ export function FigureGallery({
     ? Math.ceil(filteredFigures.length / pageSize)
     : 1;
 
-  // Figures for the current page (paginated) or all figures (virtualized)
   const visibleFigures = usePagination
     ? filteredFigures.slice(
         currentPage * pageSize,

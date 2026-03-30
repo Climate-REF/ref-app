@@ -1,6 +1,16 @@
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
+const LATEX_DELIMITER = /(\$[^$]+\$)/g;
+const LATEX_TEST = /\$[^$]+\$/;
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 /**
  * Render inline LaTeX math expressions (`$...$`) within a plain text string
  * to HTML. Non-math text is left as-is (HTML-escaped).
@@ -9,27 +19,18 @@ import "katex/dist/katex.min.css";
  * bloat the main bundle.
  */
 export function renderLatexToHtml(text: string): string {
-  // Split on $...$ math delimiters, preserving the groups
-  const parts = text.split(/(\$[^$]+\$)/g);
+  const parts = text.split(LATEX_DELIMITER);
 
   return parts
     .map((part) => {
       if (part.startsWith("$") && part.endsWith("$")) {
         const latex = part.slice(1, -1);
-        try {
-          return katex.renderToString(latex, {
-            throwOnError: false,
-            output: "html",
-          });
-        } catch {
-          return part;
-        }
+        return katex.renderToString(latex, {
+          throwOnError: false,
+          output: "html",
+        });
       }
-      // Escape HTML in plain text segments
-      return part
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      return escapeHtml(part);
     })
     .join("");
 }
@@ -38,5 +39,5 @@ export function renderLatexToHtml(text: string): string {
  * Check whether a string contains any LaTeX math delimiters.
  */
 export function containsLatex(text: string): boolean {
-  return /\$[^$]+\$/.test(text);
+  return LATEX_TEST.test(text);
 }

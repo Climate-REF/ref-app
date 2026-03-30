@@ -348,7 +348,11 @@ export const EnsembleChart = ({
             angle={shouldRotateXAxis ? -45 : 0}
             textAnchor={shouldRotateXAxis ? "end" : "middle"}
             height={shouldRotateXAxis ? 100 : 30}
-            interval={0}
+            interval={
+              sortedChartData.length > 20
+                ? Math.floor(sortedChartData.length / 20)
+                : 0
+            }
           />
           <YAxis
             width={64}

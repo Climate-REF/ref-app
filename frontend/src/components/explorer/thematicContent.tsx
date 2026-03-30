@@ -99,7 +99,6 @@ function collectionToExplorerCards(
     .map((card: AftCollectionCard) => ({
       title: card.title,
       description: card.description ?? undefined,
-      placeholder: card.placeholder ?? undefined,
       content: card.content
         .filter((c: AftCollectionCardContent) => !c.placeholder)
         .map(toExplorerCardContent),
