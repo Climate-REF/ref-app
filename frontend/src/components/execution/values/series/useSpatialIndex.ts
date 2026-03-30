@@ -151,7 +151,7 @@ export function useSpatialIndex(
       hiddenLabels: Set<string>,
     ): NearestResult[] {
       // Find the closest data index by X pixel position
-      const xVal = xScale.invert(pixelX);
+      const xVal = xScale.invert(pixelX) as number;
       let closestDataIdx = 0;
       let closestXDist = Number.POSITIVE_INFINITY;
       for (let i = 0; i < chartData.length; i++) {
