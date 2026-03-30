@@ -23,7 +23,7 @@ import useMousePositionAndWidth from "@/hooks/useMousePosition";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 // Well-known category orderings for common climate dimensions
-const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
+export const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
   // Meteorological seasons (Annual first, then chronological)
   season: ["Annual", "annual", "ANN", "DJF", "MAM", "JJA", "SON"],
 };
@@ -32,7 +32,7 @@ const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
  * Sort chart categories using a known ordering if one exists,
  * otherwise preserve the original order.
  */
-function sortCategories<T extends { name: string }>(
+export function sortCategories<T extends { name: string }>(
   items: T[],
   categoryOrder?: string[],
 ): T[] {
