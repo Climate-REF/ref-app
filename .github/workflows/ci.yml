@@ -8,6 +8,25 @@ on:
 
 
 jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Get changed changelog files
+        id: changed-changelog-files
+        uses: tj-actions/changed-files@v47
+        with:
+          files: |
+            changelog/[0-9]*.*.md
+      - name: Fail if no changelog message is present
+        if: steps.changed-changelog-files.outputs.any_changed == 'false'
+        run: |
+          echo "No changelog entry found. Please add a changelog file (e.g. changelog/<PR>.feature.md)."
+          echo "See changelog/README.md for details."
+          exit 1
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

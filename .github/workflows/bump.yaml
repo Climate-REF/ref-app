@@ -1,0 +1,47 @@
+# Bump the project's version
+# This will generate a commit with the new version and a changelog entry
+# This also tags the commit with the new version
+
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_rule:
+        type: choice
+        description: How to bump the project's version
+        options:
+          - patch
+          - minor
+          - major
+        required: true
+
+jobs:
+  bump_version:
+    name: "Bump version and create changelog"
+    runs-on: ubuntu-latest
+    env:
+      CI_COMMIT_EMAIL: "ci-runner@climate-ref.invalid"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install backend dependencies
+        run: cd backend && uv sync --all-extras --dev --locked
+
+      - name: Create bump and changelog
+        run: |
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "$CI_COMMIT_EMAIL"
+
+          # Bump (run from backend/ where pyproject.toml has bumpversion config)
+          cd backend && uv run bump-my-version bump ${{ github.event.inputs.bump_rule }} -vv
+          git push && git push --tags
