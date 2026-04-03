@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AftCollectionCard } from "@/client/types.gen";
-import { filterExplorerContentForDiagnostic } from "./explorer";
+import { filterExplorerContentForDiagnostic } from "./thematicContent";
 
 function makeCard(
   title: string,

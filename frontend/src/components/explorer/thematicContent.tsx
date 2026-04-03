@@ -37,6 +37,26 @@ function toChartGroupingConfig(
   };
 }
 
+/**
+ * Filter explorer cards to only content items matching a specific diagnostic,
+ * then convert to frontend types.
+ */
+export function filterExplorerContentForDiagnostic(
+  cards: AftCollectionCard[],
+  providerSlug: string,
+  diagnosticSlug: string,
+) {
+  return cards
+    .flatMap((card) => card.content)
+    .filter(
+      (c: AftCollectionCardContent) =>
+        c.provider === providerSlug &&
+        c.diagnostic === diagnosticSlug &&
+        !c.placeholder,
+    )
+    .map(toExplorerCardContent);
+}
+
 export function toExplorerCardContent(
   apiContent: AftCollectionCardContent,
 ): ExplorerCardContent {

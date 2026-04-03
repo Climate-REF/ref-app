@@ -2,35 +2,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
-import type { AftCollectionCard } from "@/client/types.gen";
 import { ErrorBoundary, ErrorFallback } from "@/components/app";
 import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
 } from "@/components/explorer/explorerCardContent";
-import { toExplorerCardContent } from "@/components/explorer/thematicContent";
+import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-/**
- * Filter explorer cards to only content items matching a specific diagnostic,
- * then convert to frontend types.
- */
-export function filterExplorerContentForDiagnostic(
-  cards: AftCollectionCard[],
-  providerSlug: string,
-  diagnosticSlug: string,
-) {
-  return cards
-    .flatMap((card) => card.content)
-    .filter(
-      (c) =>
-        c.provider === providerSlug &&
-        c.diagnostic === diagnosticSlug &&
-        !c.placeholder,
-    )
-    .map(toExplorerCardContent);
-}
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
