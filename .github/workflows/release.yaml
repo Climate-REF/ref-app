@@ -18,9 +18,16 @@ jobs:
 
       - name: Generate Release Notes
         run: |
-          echo "## Changes" > release_notes.md
-          echo "" >> release_notes.md
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> release_notes.md
+          VERSION="${GITHUB_REF_NAME}"
+          # Extract the relevant section from CHANGELOG.md for this version
+          # Falls back to git log if CHANGELOG.md doesn't have the version section
+          if grep -q "^## ${VERSION}" CHANGELOG.md 2>/dev/null; then
+            sed -n "/^## ${VERSION}/,/^## v/p" CHANGELOG.md | head -n -1 > release_notes.md
+          else
+            echo "## Changes" > release_notes.md
+            echo "" >> release_notes.md
+            git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> release_notes.md
+          fi
 
       - name: Create Release Draft
         uses: softprops/action-gh-release@v2

@@ -19,7 +19,6 @@ on:
 jobs:
   bump_version:
     name: "Bump version and create changelog"
-    if: "!startsWith(github.event.head_commit.message, 'bump:')"
     runs-on: ubuntu-latest
     env:
       CI_COMMIT_EMAIL: "ci-runner@climate-ref.invalid"
@@ -44,5 +43,5 @@ jobs:
           git config --global user.email "$CI_COMMIT_EMAIL"
 
           # Bump (run from backend/ where pyproject.toml has bumpversion config)
-          cd backend && uv run bump-my-version bump ${{ github.event.inputs.bump_rule }} -vv --tag --commit
+          cd backend && uv run bump-my-version bump ${{ github.event.inputs.bump_rule }} -vv
           git push && git push --tags

@@ -46,11 +46,11 @@ build-backend = "hatchling.build"
 current_version = "0.1.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
-tag = false
+tag = true
 sign_tags = false
 tag_name = "v{new_version}"
 tag_message = "Bump version: {current_version} → {new_version}"
-commit = false
+commit = true
 message = "Bump version: {current_version} → {new_version}"
 pre_commit_hooks = [
     "uv lock",
