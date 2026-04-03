@@ -47,6 +47,7 @@ export function filterExplorerContentForDiagnostic(
   diagnosticSlug: string,
 ) {
   return cards
+    .filter((card: AftCollectionCard) => !card.placeholder)
     .flatMap((card) => card.content)
     .filter(
       (c: AftCollectionCardContent) =>

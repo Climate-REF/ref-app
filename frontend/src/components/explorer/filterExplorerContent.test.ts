@@ -70,6 +70,37 @@ describe("filterExplorerContentForDiagnostic", () => {
     expect(result[1].title).toBe("From B");
   });
 
+  it("excludes placeholder cards entirely", () => {
+    const cards: AftCollectionCard[] = [
+      {
+        title: "Placeholder Card",
+        placeholder: true,
+        content: [
+          {
+            type: "box-whisker-chart",
+            provider: "ilamb",
+            diagnostic: "amoc-rapid",
+            title: "Should not appear",
+          },
+        ],
+      },
+      makeCard("Real Card", {
+        provider: "ilamb",
+        diagnostic: "amoc-rapid",
+        title: "Should appear",
+      }),
+    ];
+
+    const result = filterExplorerContentForDiagnostic(
+      cards,
+      "ilamb",
+      "amoc-rapid",
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe("Should appear");
+  });
+
   it("excludes placeholder content items", () => {
     const cards = [
       makeCard(

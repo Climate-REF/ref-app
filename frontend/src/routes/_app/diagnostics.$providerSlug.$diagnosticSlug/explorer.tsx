@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
 import { ErrorBoundary, ErrorFallback } from "@/components/app";
@@ -9,19 +9,23 @@ import {
 } from "@/components/explorer/explorerCardContent";
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
 );
 
-const Explorer = () => {
-  const { providerSlug, diagnosticSlug } = Route.useParams();
-  const parentData = parentRoute.useLoaderData();
-
+function ExplorerPanels({
+  collectionId,
+  providerSlug,
+  diagnosticSlug,
+}: {
+  collectionId: string;
+  providerSlug: string;
+  diagnosticSlug: string;
+}) {
   const { data: collection } = useSuspenseQuery(
     explorerGetCollectionOptions({
-      path: { collection_id: parentData.aft_link!.id },
+      path: { collection_id: collectionId },
     }),
   );
 
@@ -31,6 +35,43 @@ const Explorer = () => {
     diagnosticSlug,
   );
 
+  if (matchingContentItems.length === 0) {
+    return (
+      <p className="text-muted-foreground">
+        No explorer visualizations reference this diagnostic.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {matchingContentItems.map((contentItem, index) => (
+        <ErrorBoundary
+          key={`${contentItem.type}:${contentItem.provider}:${contentItem.diagnostic}:${contentItem.title}:${index}`}
+          fallback={<ErrorFallback />}
+        >
+          <Suspense fallback={<ExplorerCardContentSkeleton />}>
+            <ExplorerCardContent contentItem={contentItem} />
+          </Suspense>
+        </ErrorBoundary>
+      ))}
+    </div>
+  );
+}
+
+const Explorer = () => {
+  const { providerSlug, diagnosticSlug } = Route.useParams();
+  const parentData = parentRoute.useLoaderData();
+
+  if (!parentData.aft_link) {
+    return (
+      <Navigate
+        to="/diagnostics/$providerSlug/$diagnosticSlug/figures"
+        params={{ providerSlug, diagnosticSlug }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <title>{`Explorer - ${diagnosticSlug} - Climate REF`}</title>
@@ -39,26 +80,11 @@ const Explorer = () => {
           <CardTitle>Explorer</CardTitle>
         </CardHeader>
         <CardContent>
-          {matchingContentItems.length === 0 ? (
-            <p className="text-muted-foreground">
-              No explorer visualizations reference this diagnostic.
-            </p>
-          ) : (
-            <TooltipProvider>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {matchingContentItems.map((contentItem) => (
-                  <ErrorBoundary
-                    key={contentItem.title}
-                    fallback={<ErrorFallback />}
-                  >
-                    <Suspense fallback={<ExplorerCardContentSkeleton />}>
-                      <ExplorerCardContent contentItem={contentItem} />
-                    </Suspense>
-                  </ErrorBoundary>
-                ))}
-              </div>
-            </TooltipProvider>
-          )}
+          <ExplorerPanels
+            collectionId={parentData.aft_link.id}
+            providerSlug={providerSlug}
+            diagnosticSlug={diagnosticSlug}
+          />
         </CardContent>
       </Card>
     </div>
