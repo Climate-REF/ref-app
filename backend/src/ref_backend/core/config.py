@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     """
 
     BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = []
+    BACKEND_CORS_ORIGIN_REGEX: str | None = None
+    """
+    A regex pattern for allowed CORS origins.
+
+    Useful for matching dynamic origins like Netlify deploy previews.
+    Example: r"https://deploy-preview-\\d+--climate-ref\\.netlify\\.app"
+    """
 
     @computed_field  # type: ignore[prop-decorator]
     @property
