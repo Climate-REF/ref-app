@@ -37,7 +37,7 @@ function toChartGroupingConfig(
   };
 }
 
-function toExplorerCardContent(
+export function toExplorerCardContent(
   apiContent: AftCollectionCardContent,
 ): ExplorerCardContent {
   const base = {
