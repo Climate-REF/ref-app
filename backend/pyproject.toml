@@ -56,6 +56,8 @@ pre_commit_hooks = [
     "uv lock",
     "git add uv.lock",
     "uv run towncrier build --yes --config ../towncrier.toml",
+    "git add ../CHANGELOG.md",
+    "git add -u ../changelog",
 ]
 
 [[tool.bumpversion.files]]

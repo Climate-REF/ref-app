@@ -4,9 +4,9 @@ This directory contains "news fragments", i.e. short files that contain a small 
 added to the CHANGELOG when it is next compiled.
 
 The CHANGELOG will be read by users,
-so this description should be aimed to Climate REF App users
+so this description should be aimed at Climate REF App users
 instead of describing internal changes which are only relevant to developers.
-Merge requests in combination with our git history provides additional
+Pull requests in combination with our git history provide additional
 developer-centric information.
 
 Make sure to use phrases in the past tense and use punctuation, examples:
