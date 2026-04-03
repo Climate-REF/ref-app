@@ -50,6 +50,10 @@ setup: ## Setup the backend and frontend
 generate-metadata: ## Generate diagnostic metadata YAML from provider registry
 	$(MAKE) -C backend generate-metadata
 
+.PHONY: changelog-draft
+changelog-draft: ## compile a draft of the next changelog
+	cd backend && uv run towncrier build --draft --config ../towncrier.toml
+
 # Consistent alias with python-only projects
 .PHONY: virtual-environment
 virtual-environment: setup ## Install backend and frontend dependencies

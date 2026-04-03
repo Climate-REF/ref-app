@@ -1,0 +1,30 @@
+# Generate a draft release on GitHub when a new tag is pushed
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  draft-release:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Release Notes
+        run: |
+          echo "## Changes" > release_notes.md
+          echo "" >> release_notes.md
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> release_notes.md
+
+      - name: Create Release Draft
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
