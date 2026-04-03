@@ -349,6 +349,29 @@ const DiagnosticInfoLayout = () => {
               Figures
             </Link>
           </TabsTrigger>
+          <TabsTrigger
+            value="explorer"
+            disabled={!data.aft_link}
+            data-disabled={!data.aft_link ? "true" : undefined}
+            onClick={() =>
+              navigate({
+                to: "/diagnostics/$providerSlug/$diagnosticSlug/explorer",
+                params: { providerSlug, diagnosticSlug },
+              })
+            }
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>Explorer</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Interactive visualizations from the CMIP7 AFT collection that
+                  feature this diagnostic.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
