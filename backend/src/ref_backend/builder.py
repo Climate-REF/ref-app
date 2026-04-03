@@ -127,10 +127,11 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
     )
 
     # Set all CORS enabled origins
-    if settings.all_cors_origins:
+    if settings.all_cors_origins or settings.BACKEND_CORS_ORIGIN_REGEX:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=settings.all_cors_origins,
+            allow_origin_regex=settings.BACKEND_CORS_ORIGIN_REGEX,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
