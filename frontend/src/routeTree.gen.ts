@@ -8,452 +8,609 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as ContentRouteRouteImport } from './routes/content/route'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ContentTermsOfUseRouteImport } from './routes/content/terms-of-use'
+import { Route as ContentPrivacyRouteImport } from './routes/content/privacy'
+import { Route as ContentIntroductionRouteImport } from './routes/content/introduction'
+import { Route as ContentAboutRouteImport } from './routes/content/about'
+import { Route as AppExplorerRouteRouteImport } from './routes/_app/explorer/route'
+import { Route as AppExplorerIndexRouteImport } from './routes/_app/explorer/index'
+import { Route as AppExecutionsIndexRouteImport } from './routes/_app/executions.index'
+import { Route as AppDiagnosticsIndexRouteImport } from './routes/_app/diagnostics.index'
+import { Route as AppDatasetsIndexRouteImport } from './routes/_app/datasets.index'
+import { Route as AppSettingsApiEndpointRouteImport } from './routes/_app/settings.api-endpoint'
+import { Route as AppExplorerThemesRouteImport } from './routes/_app/explorer/themes'
+import { Route as AppDatasetsSlugRouteImport } from './routes/_app/datasets.$slug'
+import { Route as AppExecutionsGroupIdRouteRouteImport } from './routes/_app/executions.$groupId/route'
+import { Route as AppExecutionsGroupIdIndexRouteImport } from './routes/_app/executions.$groupId/index'
+import { Route as AppExecutionsGroupIdSeriesRouteImport } from './routes/_app/executions.$groupId/series'
+import { Route as AppExecutionsGroupIdScalarRouteImport } from './routes/_app/executions.$groupId/scalar'
+import { Route as AppExecutionsGroupIdLogsRouteImport } from './routes/_app/executions.$groupId/logs'
+import { Route as AppExecutionsGroupIdFilesRouteImport } from './routes/_app/executions.$groupId/files'
+import { Route as AppExecutionsGroupIdExecutionsRouteImport } from './routes/_app/executions.$groupId/executions'
+import { Route as AppExecutionsGroupIdDatasetsRouteImport } from './routes/_app/executions.$groupId/datasets'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/route'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugIndexRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/index'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugSeriesRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/series'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugScalarsRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/scalars'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugGroupsRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/groups'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugFiguresRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/figures'
+import { Route as AppDiagnosticsProviderSlugDiagnosticSlugExplorerRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/explorer'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as ContentRouteImport } from './routes/content/route'
-import { Route as AppRouteImport } from './routes/_app/route'
-import { Route as IndexImport } from './routes/index'
-import { Route as ContentTermsOfUseImport } from './routes/content/terms-of-use'
-import { Route as ContentPrivacyImport } from './routes/content/privacy'
-import { Route as ContentIntroductionImport } from './routes/content/introduction'
-import { Route as ContentAboutImport } from './routes/content/about'
-import { Route as AppExplorerRouteImport } from './routes/_app/explorer/route'
-import { Route as AppExplorerIndexImport } from './routes/_app/explorer/index'
-import { Route as AppExecutionsIndexImport } from './routes/_app/executions.index'
-import { Route as AppDiagnosticsIndexImport } from './routes/_app/diagnostics.index'
-import { Route as AppDatasetsIndexImport } from './routes/_app/datasets.index'
-import { Route as AppSettingsApiEndpointImport } from './routes/_app/settings.api-endpoint'
-import { Route as AppExplorerThemesImport } from './routes/_app/explorer/themes'
-import { Route as AppDatasetsSlugImport } from './routes/_app/datasets.$slug'
-import { Route as AppExecutionsGroupIdRouteImport } from './routes/_app/executions.$groupId/route'
-import { Route as AppExecutionsGroupIdIndexImport } from './routes/_app/executions.$groupId/index'
-import { Route as AppExecutionsGroupIdSeriesImport } from './routes/_app/executions.$groupId/series'
-import { Route as AppExecutionsGroupIdScalarImport } from './routes/_app/executions.$groupId/scalar'
-import { Route as AppExecutionsGroupIdLogsImport } from './routes/_app/executions.$groupId/logs'
-import { Route as AppExecutionsGroupIdFilesImport } from './routes/_app/executions.$groupId/files'
-import { Route as AppExecutionsGroupIdExecutionsImport } from './routes/_app/executions.$groupId/executions'
-import { Route as AppExecutionsGroupIdDatasetsImport } from './routes/_app/executions.$groupId/datasets'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/route'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugIndexImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/index'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugSeriesImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/series'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugScalarsImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/scalars'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugGroupsImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/groups'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/figures'
-import { Route as AppDiagnosticsProviderSlugDiagnosticSlugExplorerImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/explorer'
-
-// Create/Update Routes
-
-const ContentRouteRoute = ContentRouteImport.update({
+const ContentRouteRoute = ContentRouteRouteImport.update({
   id: '/content',
   path: '/content',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AppRouteRoute = AppRouteImport.update({
+const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ContentTermsOfUseRoute = ContentTermsOfUseImport.update({
+const ContentTermsOfUseRoute = ContentTermsOfUseRouteImport.update({
   id: '/terms-of-use',
   path: '/terms-of-use',
   getParentRoute: () => ContentRouteRoute,
 } as any)
-
-const ContentPrivacyRoute = ContentPrivacyImport.update({
+const ContentPrivacyRoute = ContentPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
   getParentRoute: () => ContentRouteRoute,
 } as any)
-
-const ContentIntroductionRoute = ContentIntroductionImport.update({
+const ContentIntroductionRoute = ContentIntroductionRouteImport.update({
   id: '/introduction',
   path: '/introduction',
   getParentRoute: () => ContentRouteRoute,
 } as any)
-
-const ContentAboutRoute = ContentAboutImport.update({
+const ContentAboutRoute = ContentAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => ContentRouteRoute,
 } as any)
-
-const AppExplorerRouteRoute = AppExplorerRouteImport.update({
+const AppExplorerRouteRoute = AppExplorerRouteRouteImport.update({
   id: '/explorer',
   path: '/explorer',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppExplorerIndexRoute = AppExplorerIndexImport.update({
+const AppExplorerIndexRoute = AppExplorerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppExplorerRouteRoute,
 } as any)
-
-const AppExecutionsIndexRoute = AppExecutionsIndexImport.update({
+const AppExecutionsIndexRoute = AppExecutionsIndexRouteImport.update({
   id: '/executions/',
   path: '/executions/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppDiagnosticsIndexRoute = AppDiagnosticsIndexImport.update({
+const AppDiagnosticsIndexRoute = AppDiagnosticsIndexRouteImport.update({
   id: '/diagnostics/',
   path: '/diagnostics/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppDatasetsIndexRoute = AppDatasetsIndexImport.update({
+const AppDatasetsIndexRoute = AppDatasetsIndexRouteImport.update({
   id: '/datasets/',
   path: '/datasets/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppSettingsApiEndpointRoute = AppSettingsApiEndpointImport.update({
+const AppSettingsApiEndpointRoute = AppSettingsApiEndpointRouteImport.update({
   id: '/settings/api-endpoint',
   path: '/settings/api-endpoint',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppExplorerThemesRoute = AppExplorerThemesImport.update({
+const AppExplorerThemesRoute = AppExplorerThemesRouteImport.update({
   id: '/themes',
   path: '/themes',
   getParentRoute: () => AppExplorerRouteRoute,
 } as any)
-
-const AppDatasetsSlugRoute = AppDatasetsSlugImport.update({
+const AppDatasetsSlugRoute = AppDatasetsSlugRouteImport.update({
   id: '/datasets/$slug',
   path: '/datasets/$slug',
   getParentRoute: () => AppRouteRoute,
 } as any)
-
-const AppExecutionsGroupIdRouteRoute = AppExecutionsGroupIdRouteImport.update({
-  id: '/executions/$groupId',
-  path: '/executions/$groupId',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-
-const AppExecutionsGroupIdIndexRoute = AppExecutionsGroupIdIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppExecutionsGroupIdRouteRoute,
-} as any)
-
-const AppExecutionsGroupIdSeriesRoute = AppExecutionsGroupIdSeriesImport.update(
-  {
+const AppExecutionsGroupIdRouteRoute =
+  AppExecutionsGroupIdRouteRouteImport.update({
+    id: '/executions/$groupId',
+    path: '/executions/$groupId',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
+const AppExecutionsGroupIdIndexRoute =
+  AppExecutionsGroupIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppExecutionsGroupIdRouteRoute,
+  } as any)
+const AppExecutionsGroupIdSeriesRoute =
+  AppExecutionsGroupIdSeriesRouteImport.update({
     id: '/series',
     path: '/series',
     getParentRoute: () => AppExecutionsGroupIdRouteRoute,
-  } as any,
-)
-
-const AppExecutionsGroupIdScalarRoute = AppExecutionsGroupIdScalarImport.update(
-  {
+  } as any)
+const AppExecutionsGroupIdScalarRoute =
+  AppExecutionsGroupIdScalarRouteImport.update({
     id: '/scalar',
     path: '/scalar',
     getParentRoute: () => AppExecutionsGroupIdRouteRoute,
-  } as any,
-)
-
-const AppExecutionsGroupIdLogsRoute = AppExecutionsGroupIdLogsImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AppExecutionsGroupIdRouteRoute,
-} as any)
-
-const AppExecutionsGroupIdFilesRoute = AppExecutionsGroupIdFilesImport.update({
-  id: '/files',
-  path: '/files',
-  getParentRoute: () => AppExecutionsGroupIdRouteRoute,
-} as any)
-
+  } as any)
+const AppExecutionsGroupIdLogsRoute =
+  AppExecutionsGroupIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
+    getParentRoute: () => AppExecutionsGroupIdRouteRoute,
+  } as any)
+const AppExecutionsGroupIdFilesRoute =
+  AppExecutionsGroupIdFilesRouteImport.update({
+    id: '/files',
+    path: '/files',
+    getParentRoute: () => AppExecutionsGroupIdRouteRoute,
+  } as any)
 const AppExecutionsGroupIdExecutionsRoute =
-  AppExecutionsGroupIdExecutionsImport.update({
+  AppExecutionsGroupIdExecutionsRouteImport.update({
     id: '/executions',
     path: '/executions',
     getParentRoute: () => AppExecutionsGroupIdRouteRoute,
   } as any)
-
 const AppExecutionsGroupIdDatasetsRoute =
-  AppExecutionsGroupIdDatasetsImport.update({
+  AppExecutionsGroupIdDatasetsRouteImport.update({
     id: '/datasets',
     path: '/datasets',
     getParentRoute: () => AppExecutionsGroupIdRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugRouteImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteImport.update({
     id: '/diagnostics/$providerSlug/$diagnosticSlug',
     path: '/diagnostics/$providerSlug/$diagnosticSlug',
     getParentRoute: () => AppRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugIndexImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugSeriesImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugSeriesRouteImport.update({
     id: '/series',
     path: '/series',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugScalarsImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugScalarsRouteImport.update({
     id: '/scalars',
     path: '/scalars',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugGroupsImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugGroupsRouteImport.update({
     id: '/groups',
     path: '/groups',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugFiguresRouteImport.update({
     id: '/figures',
     path: '/figures',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
-
 const AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute =
-  AppDiagnosticsProviderSlugDiagnosticSlugExplorerImport.update({
+  AppDiagnosticsProviderSlugDiagnosticSlugExplorerRouteImport.update({
     id: '/explorer',
     path: '/explorer',
     getParentRoute: () => AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute,
   } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/content': typeof ContentRouteRouteWithChildren
+  '/explorer': typeof AppExplorerRouteRouteWithChildren
+  '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
+  '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
+  '/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
+  '/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/explorer/themes': typeof AppExplorerThemesRoute
+  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
+  '/datasets/': typeof AppDatasetsIndexRoute
+  '/diagnostics/': typeof AppDiagnosticsIndexRoute
+  '/executions/': typeof AppExecutionsIndexRoute
+  '/explorer/': typeof AppExplorerIndexRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
+  '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
+  '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
+  '/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
+  '/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
+  '/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
+  '/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
+  '/executions/$groupId/': typeof AppExecutionsGroupIdIndexRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/content': typeof ContentRouteRouteWithChildren
+  '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
+  '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
+  '/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/explorer/themes': typeof AppExplorerThemesRoute
+  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
+  '/datasets': typeof AppDatasetsIndexRoute
+  '/diagnostics': typeof AppDiagnosticsIndexRoute
+  '/executions': typeof AppExecutionsIndexRoute
+  '/explorer': typeof AppExplorerIndexRoute
+  '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
+  '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
+  '/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
+  '/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
+  '/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
+  '/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
+  '/executions/$groupId': typeof AppExecutionsGroupIdIndexRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
+  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_app': typeof AppRouteRouteWithChildren
+  '/content': typeof ContentRouteRouteWithChildren
+  '/_app/explorer': typeof AppExplorerRouteRouteWithChildren
+  '/content/about': typeof ContentAboutRoute
+  '/content/introduction': typeof ContentIntroductionRoute
+  '/content/privacy': typeof ContentPrivacyRoute
+  '/content/terms-of-use': typeof ContentTermsOfUseRoute
+  '/_app/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
+  '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/_app/explorer/themes': typeof AppExplorerThemesRoute
+  '/_app/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
+  '/_app/datasets/': typeof AppDatasetsIndexRoute
+  '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
+  '/_app/executions/': typeof AppExecutionsIndexRoute
+  '/_app/explorer/': typeof AppExplorerIndexRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
+  '/_app/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
+  '/_app/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
+  '/_app/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
+  '/_app/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
+  '/_app/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
+  '/_app/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
+  '/_app/executions/$groupId/': typeof AppExecutionsGroupIdIndexRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
+  '/_app/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/content'
+    | '/explorer'
+    | '/content/about'
+    | '/content/introduction'
+    | '/content/privacy'
+    | '/content/terms-of-use'
+    | '/executions/$groupId'
+    | '/datasets/$slug'
+    | '/explorer/themes'
+    | '/settings/api-endpoint'
+    | '/datasets/'
+    | '/diagnostics/'
+    | '/executions/'
+    | '/explorer/'
+    | '/diagnostics/$providerSlug/$diagnosticSlug'
+    | '/executions/$groupId/datasets'
+    | '/executions/$groupId/executions'
+    | '/executions/$groupId/files'
+    | '/executions/$groupId/logs'
+    | '/executions/$groupId/scalar'
+    | '/executions/$groupId/series'
+    | '/executions/$groupId/'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/series'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/content'
+    | '/content/about'
+    | '/content/introduction'
+    | '/content/privacy'
+    | '/content/terms-of-use'
+    | '/datasets/$slug'
+    | '/explorer/themes'
+    | '/settings/api-endpoint'
+    | '/datasets'
+    | '/diagnostics'
+    | '/executions'
+    | '/explorer'
+    | '/executions/$groupId/datasets'
+    | '/executions/$groupId/executions'
+    | '/executions/$groupId/files'
+    | '/executions/$groupId/logs'
+    | '/executions/$groupId/scalar'
+    | '/executions/$groupId/series'
+    | '/executions/$groupId'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
+    | '/diagnostics/$providerSlug/$diagnosticSlug/series'
+    | '/diagnostics/$providerSlug/$diagnosticSlug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/content'
+    | '/_app/explorer'
+    | '/content/about'
+    | '/content/introduction'
+    | '/content/privacy'
+    | '/content/terms-of-use'
+    | '/_app/executions/$groupId'
+    | '/_app/datasets/$slug'
+    | '/_app/explorer/themes'
+    | '/_app/settings/api-endpoint'
+    | '/_app/datasets/'
+    | '/_app/diagnostics/'
+    | '/_app/executions/'
+    | '/_app/explorer/'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug'
+    | '/_app/executions/$groupId/datasets'
+    | '/_app/executions/$groupId/executions'
+    | '/_app/executions/$groupId/files'
+    | '/_app/executions/$groupId/logs'
+    | '/_app/executions/$groupId/scalar'
+    | '/_app/executions/$groupId/series'
+    | '/_app/executions/$groupId/'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/series'
+    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
+  ContentRouteRoute: typeof ContentRouteRouteWithChildren
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRoute
-    }
     '/content': {
       id: '/content'
       path: '/content'
       fullPath: '/content'
-      preLoaderRoute: typeof ContentRouteImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof ContentRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/explorer': {
-      id: '/_app/explorer'
-      path: '/explorer'
-      fullPath: '/explorer'
-      preLoaderRoute: typeof AppExplorerRouteImport
-      parentRoute: typeof AppRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/content/about': {
-      id: '/content/about'
-      path: '/about'
-      fullPath: '/content/about'
-      preLoaderRoute: typeof ContentAboutImport
-      parentRoute: typeof ContentRouteImport
-    }
-    '/content/introduction': {
-      id: '/content/introduction'
-      path: '/introduction'
-      fullPath: '/content/introduction'
-      preLoaderRoute: typeof ContentIntroductionImport
-      parentRoute: typeof ContentRouteImport
-    }
-    '/content/privacy': {
-      id: '/content/privacy'
-      path: '/privacy'
-      fullPath: '/content/privacy'
-      preLoaderRoute: typeof ContentPrivacyImport
-      parentRoute: typeof ContentRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/content/terms-of-use': {
       id: '/content/terms-of-use'
       path: '/terms-of-use'
       fullPath: '/content/terms-of-use'
-      preLoaderRoute: typeof ContentTermsOfUseImport
-      parentRoute: typeof ContentRouteImport
+      preLoaderRoute: typeof ContentTermsOfUseRouteImport
+      parentRoute: typeof ContentRouteRoute
     }
-    '/_app/executions/$groupId': {
-      id: '/_app/executions/$groupId'
-      path: '/executions/$groupId'
-      fullPath: '/executions/$groupId'
-      preLoaderRoute: typeof AppExecutionsGroupIdRouteImport
-      parentRoute: typeof AppRouteImport
+    '/content/privacy': {
+      id: '/content/privacy'
+      path: '/privacy'
+      fullPath: '/content/privacy'
+      preLoaderRoute: typeof ContentPrivacyRouteImport
+      parentRoute: typeof ContentRouteRoute
     }
-    '/_app/datasets/$slug': {
-      id: '/_app/datasets/$slug'
-      path: '/datasets/$slug'
-      fullPath: '/datasets/$slug'
-      preLoaderRoute: typeof AppDatasetsSlugImport
-      parentRoute: typeof AppRouteImport
+    '/content/introduction': {
+      id: '/content/introduction'
+      path: '/introduction'
+      fullPath: '/content/introduction'
+      preLoaderRoute: typeof ContentIntroductionRouteImport
+      parentRoute: typeof ContentRouteRoute
     }
-    '/_app/explorer/themes': {
-      id: '/_app/explorer/themes'
-      path: '/themes'
-      fullPath: '/explorer/themes'
-      preLoaderRoute: typeof AppExplorerThemesImport
-      parentRoute: typeof AppExplorerRouteImport
+    '/content/about': {
+      id: '/content/about'
+      path: '/about'
+      fullPath: '/content/about'
+      preLoaderRoute: typeof ContentAboutRouteImport
+      parentRoute: typeof ContentRouteRoute
     }
-    '/_app/settings/api-endpoint': {
-      id: '/_app/settings/api-endpoint'
-      path: '/settings/api-endpoint'
-      fullPath: '/settings/api-endpoint'
-      preLoaderRoute: typeof AppSettingsApiEndpointImport
-      parentRoute: typeof AppRouteImport
-    }
-    '/_app/datasets/': {
-      id: '/_app/datasets/'
-      path: '/datasets'
-      fullPath: '/datasets'
-      preLoaderRoute: typeof AppDatasetsIndexImport
-      parentRoute: typeof AppRouteImport
-    }
-    '/_app/diagnostics/': {
-      id: '/_app/diagnostics/'
-      path: '/diagnostics'
-      fullPath: '/diagnostics'
-      preLoaderRoute: typeof AppDiagnosticsIndexImport
-      parentRoute: typeof AppRouteImport
-    }
-    '/_app/executions/': {
-      id: '/_app/executions/'
-      path: '/executions'
-      fullPath: '/executions'
-      preLoaderRoute: typeof AppExecutionsIndexImport
-      parentRoute: typeof AppRouteImport
+    '/_app/explorer': {
+      id: '/_app/explorer'
+      path: '/explorer'
+      fullPath: '/explorer'
+      preLoaderRoute: typeof AppExplorerRouteRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/explorer/': {
       id: '/_app/explorer/'
       path: '/'
       fullPath: '/explorer/'
-      preLoaderRoute: typeof AppExplorerIndexImport
-      parentRoute: typeof AppExplorerRouteImport
+      preLoaderRoute: typeof AppExplorerIndexRouteImport
+      parentRoute: typeof AppExplorerRouteRoute
     }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug'
-      path: '/diagnostics/$providerSlug/$diagnosticSlug'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
-      parentRoute: typeof AppRouteImport
-    }
-    '/_app/executions/$groupId/datasets': {
-      id: '/_app/executions/$groupId/datasets'
-      path: '/datasets'
-      fullPath: '/executions/$groupId/datasets'
-      preLoaderRoute: typeof AppExecutionsGroupIdDatasetsImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
-    }
-    '/_app/executions/$groupId/executions': {
-      id: '/_app/executions/$groupId/executions'
+    '/_app/executions/': {
+      id: '/_app/executions/'
       path: '/executions'
-      fullPath: '/executions/$groupId/executions'
-      preLoaderRoute: typeof AppExecutionsGroupIdExecutionsImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+      fullPath: '/executions/'
+      preLoaderRoute: typeof AppExecutionsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/_app/executions/$groupId/files': {
-      id: '/_app/executions/$groupId/files'
-      path: '/files'
-      fullPath: '/executions/$groupId/files'
-      preLoaderRoute: typeof AppExecutionsGroupIdFilesImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+    '/_app/diagnostics/': {
+      id: '/_app/diagnostics/'
+      path: '/diagnostics'
+      fullPath: '/diagnostics/'
+      preLoaderRoute: typeof AppDiagnosticsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/_app/executions/$groupId/logs': {
-      id: '/_app/executions/$groupId/logs'
-      path: '/logs'
-      fullPath: '/executions/$groupId/logs'
-      preLoaderRoute: typeof AppExecutionsGroupIdLogsImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+    '/_app/datasets/': {
+      id: '/_app/datasets/'
+      path: '/datasets'
+      fullPath: '/datasets/'
+      preLoaderRoute: typeof AppDatasetsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/_app/executions/$groupId/scalar': {
-      id: '/_app/executions/$groupId/scalar'
-      path: '/scalar'
-      fullPath: '/executions/$groupId/scalar'
-      preLoaderRoute: typeof AppExecutionsGroupIdScalarImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+    '/_app/settings/api-endpoint': {
+      id: '/_app/settings/api-endpoint'
+      path: '/settings/api-endpoint'
+      fullPath: '/settings/api-endpoint'
+      preLoaderRoute: typeof AppSettingsApiEndpointRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/_app/executions/$groupId/series': {
-      id: '/_app/executions/$groupId/series'
-      path: '/series'
-      fullPath: '/executions/$groupId/series'
-      preLoaderRoute: typeof AppExecutionsGroupIdSeriesImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+    '/_app/explorer/themes': {
+      id: '/_app/explorer/themes'
+      path: '/themes'
+      fullPath: '/explorer/themes'
+      preLoaderRoute: typeof AppExplorerThemesRouteImport
+      parentRoute: typeof AppExplorerRouteRoute
+    }
+    '/_app/datasets/$slug': {
+      id: '/_app/datasets/$slug'
+      path: '/datasets/$slug'
+      fullPath: '/datasets/$slug'
+      preLoaderRoute: typeof AppDatasetsSlugRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/executions/$groupId': {
+      id: '/_app/executions/$groupId'
+      path: '/executions/$groupId'
+      fullPath: '/executions/$groupId'
+      preLoaderRoute: typeof AppExecutionsGroupIdRouteRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/executions/$groupId/': {
       id: '/_app/executions/$groupId/'
       path: '/'
       fullPath: '/executions/$groupId/'
-      preLoaderRoute: typeof AppExecutionsGroupIdIndexImport
-      parentRoute: typeof AppExecutionsGroupIdRouteImport
+      preLoaderRoute: typeof AppExecutionsGroupIdIndexRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
     }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer'
-      path: '/explorer'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
-    }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
-      path: '/figures'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/figures'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
-    }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
-      path: '/groups'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/groups'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
-    }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars'
-      path: '/scalars'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
-    }
-    '/_app/diagnostics/$providerSlug/$diagnosticSlug/series': {
-      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/series'
+    '/_app/executions/$groupId/series': {
+      id: '/_app/executions/$groupId/series'
       path: '/series'
-      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/series'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
+      fullPath: '/executions/$groupId/series'
+      preLoaderRoute: typeof AppExecutionsGroupIdSeriesRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/executions/$groupId/scalar': {
+      id: '/_app/executions/$groupId/scalar'
+      path: '/scalar'
+      fullPath: '/executions/$groupId/scalar'
+      preLoaderRoute: typeof AppExecutionsGroupIdScalarRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/executions/$groupId/logs': {
+      id: '/_app/executions/$groupId/logs'
+      path: '/logs'
+      fullPath: '/executions/$groupId/logs'
+      preLoaderRoute: typeof AppExecutionsGroupIdLogsRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/executions/$groupId/files': {
+      id: '/_app/executions/$groupId/files'
+      path: '/files'
+      fullPath: '/executions/$groupId/files'
+      preLoaderRoute: typeof AppExecutionsGroupIdFilesRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/executions/$groupId/executions': {
+      id: '/_app/executions/$groupId/executions'
+      path: '/executions'
+      fullPath: '/executions/$groupId/executions'
+      preLoaderRoute: typeof AppExecutionsGroupIdExecutionsRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/executions/$groupId/datasets': {
+      id: '/_app/executions/$groupId/datasets'
+      path: '/datasets'
+      fullPath: '/executions/$groupId/datasets'
+      preLoaderRoute: typeof AppExecutionsGroupIdDatasetsRouteImport
+      parentRoute: typeof AppExecutionsGroupIdRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug'
+      path: '/diagnostics/$providerSlug/$diagnosticSlug'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/diagnostics/$providerSlug/$diagnosticSlug/': {
       id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/'
       path: '/'
       fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/'
-      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexImport
-      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteImport
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/series': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/series'
+      path: '/series'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/series'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars'
+      path: '/scalars'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
+      path: '/groups'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/groups'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
+      path: '/figures'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/figures'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
+    }
+    '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer': {
+      id: '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer'
+      path: '/explorer'
+      fullPath: '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
+      preLoaderRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRouteImport
+      parentRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface AppExplorerRouteRouteChildren {
   AppExplorerThemesRoute: typeof AppExplorerThemesRoute
@@ -569,381 +726,11 @@ const ContentRouteRouteWithChildren = ContentRouteRoute._addFileChildren(
   ContentRouteRouteChildren,
 )
 
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '': typeof AppRouteRouteWithChildren
-  '/content': typeof ContentRouteRouteWithChildren
-  '/explorer': typeof AppExplorerRouteRouteWithChildren
-  '/content/about': typeof ContentAboutRoute
-  '/content/introduction': typeof ContentIntroductionRoute
-  '/content/privacy': typeof ContentPrivacyRoute
-  '/content/terms-of-use': typeof ContentTermsOfUseRoute
-  '/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
-  '/datasets/$slug': typeof AppDatasetsSlugRoute
-  '/explorer/themes': typeof AppExplorerThemesRoute
-  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
-  '/datasets': typeof AppDatasetsIndexRoute
-  '/diagnostics': typeof AppDiagnosticsIndexRoute
-  '/executions': typeof AppExecutionsIndexRoute
-  '/explorer/': typeof AppExplorerIndexRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
-  '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
-  '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
-  '/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
-  '/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
-  '/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
-  '/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
-  '/executions/$groupId/': typeof AppExecutionsGroupIdIndexRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '': typeof AppRouteRouteWithChildren
-  '/content': typeof ContentRouteRouteWithChildren
-  '/content/about': typeof ContentAboutRoute
-  '/content/introduction': typeof ContentIntroductionRoute
-  '/content/privacy': typeof ContentPrivacyRoute
-  '/content/terms-of-use': typeof ContentTermsOfUseRoute
-  '/datasets/$slug': typeof AppDatasetsSlugRoute
-  '/explorer/themes': typeof AppExplorerThemesRoute
-  '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
-  '/datasets': typeof AppDatasetsIndexRoute
-  '/diagnostics': typeof AppDiagnosticsIndexRoute
-  '/executions': typeof AppExecutionsIndexRoute
-  '/explorer': typeof AppExplorerIndexRoute
-  '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
-  '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
-  '/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
-  '/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
-  '/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
-  '/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
-  '/executions/$groupId': typeof AppExecutionsGroupIdIndexRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
-  '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/_app': typeof AppRouteRouteWithChildren
-  '/content': typeof ContentRouteRouteWithChildren
-  '/_app/explorer': typeof AppExplorerRouteRouteWithChildren
-  '/content/about': typeof ContentAboutRoute
-  '/content/introduction': typeof ContentIntroductionRoute
-  '/content/privacy': typeof ContentPrivacyRoute
-  '/content/terms-of-use': typeof ContentTermsOfUseRoute
-  '/_app/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
-  '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
-  '/_app/explorer/themes': typeof AppExplorerThemesRoute
-  '/_app/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
-  '/_app/datasets/': typeof AppDatasetsIndexRoute
-  '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
-  '/_app/executions/': typeof AppExecutionsIndexRoute
-  '/_app/explorer/': typeof AppExplorerIndexRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
-  '/_app/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
-  '/_app/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
-  '/_app/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
-  '/_app/executions/$groupId/logs': typeof AppExecutionsGroupIdLogsRoute
-  '/_app/executions/$groupId/scalar': typeof AppExecutionsGroupIdScalarRoute
-  '/_app/executions/$groupId/series': typeof AppExecutionsGroupIdSeriesRoute
-  '/_app/executions/$groupId/': typeof AppExecutionsGroupIdIndexRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer': typeof AppDiagnosticsProviderSlugDiagnosticSlugExplorerRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures': typeof AppDiagnosticsProviderSlugDiagnosticSlugFiguresRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups': typeof AppDiagnosticsProviderSlugDiagnosticSlugGroupsRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars': typeof AppDiagnosticsProviderSlugDiagnosticSlugScalarsRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/series': typeof AppDiagnosticsProviderSlugDiagnosticSlugSeriesRoute
-  '/_app/diagnostics/$providerSlug/$diagnosticSlug/': typeof AppDiagnosticsProviderSlugDiagnosticSlugIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | ''
-    | '/content'
-    | '/explorer'
-    | '/content/about'
-    | '/content/introduction'
-    | '/content/privacy'
-    | '/content/terms-of-use'
-    | '/executions/$groupId'
-    | '/datasets/$slug'
-    | '/explorer/themes'
-    | '/settings/api-endpoint'
-    | '/datasets'
-    | '/diagnostics'
-    | '/executions'
-    | '/explorer/'
-    | '/diagnostics/$providerSlug/$diagnosticSlug'
-    | '/executions/$groupId/datasets'
-    | '/executions/$groupId/executions'
-    | '/executions/$groupId/files'
-    | '/executions/$groupId/logs'
-    | '/executions/$groupId/scalar'
-    | '/executions/$groupId/series'
-    | '/executions/$groupId/'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/series'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | ''
-    | '/content'
-    | '/content/about'
-    | '/content/introduction'
-    | '/content/privacy'
-    | '/content/terms-of-use'
-    | '/datasets/$slug'
-    | '/explorer/themes'
-    | '/settings/api-endpoint'
-    | '/datasets'
-    | '/diagnostics'
-    | '/executions'
-    | '/explorer'
-    | '/executions/$groupId/datasets'
-    | '/executions/$groupId/executions'
-    | '/executions/$groupId/files'
-    | '/executions/$groupId/logs'
-    | '/executions/$groupId/scalar'
-    | '/executions/$groupId/series'
-    | '/executions/$groupId'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/explorer'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/figures'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/groups'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/scalars'
-    | '/diagnostics/$providerSlug/$diagnosticSlug/series'
-    | '/diagnostics/$providerSlug/$diagnosticSlug'
-  id:
-    | '__root__'
-    | '/'
-    | '/_app'
-    | '/content'
-    | '/_app/explorer'
-    | '/content/about'
-    | '/content/introduction'
-    | '/content/privacy'
-    | '/content/terms-of-use'
-    | '/_app/executions/$groupId'
-    | '/_app/datasets/$slug'
-    | '/_app/explorer/themes'
-    | '/_app/settings/api-endpoint'
-    | '/_app/datasets/'
-    | '/_app/diagnostics/'
-    | '/_app/executions/'
-    | '/_app/explorer/'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug'
-    | '/_app/executions/$groupId/datasets'
-    | '/_app/executions/$groupId/executions'
-    | '/_app/executions/$groupId/files'
-    | '/_app/executions/$groupId/logs'
-    | '/_app/executions/$groupId/scalar'
-    | '/_app/executions/$groupId/series'
-    | '/_app/executions/$groupId/'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/figures'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/groups'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/series'
-    | '/_app/diagnostics/$providerSlug/$diagnosticSlug/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AppRouteRoute: typeof AppRouteRouteWithChildren
-  ContentRouteRoute: typeof ContentRouteRouteWithChildren
-}
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
   ContentRouteRoute: ContentRouteRouteWithChildren,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/_app",
-        "/content"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/_app": {
-      "filePath": "_app/route.tsx",
-      "children": [
-        "/_app/explorer",
-        "/_app/executions/$groupId",
-        "/_app/datasets/$slug",
-        "/_app/settings/api-endpoint",
-        "/_app/datasets/",
-        "/_app/diagnostics/",
-        "/_app/executions/",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-      ]
-    },
-    "/content": {
-      "filePath": "content/route.tsx",
-      "children": [
-        "/content/about",
-        "/content/introduction",
-        "/content/privacy",
-        "/content/terms-of-use"
-      ]
-    },
-    "/_app/explorer": {
-      "filePath": "_app/explorer/route.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/explorer/themes",
-        "/_app/explorer/"
-      ]
-    },
-    "/content/about": {
-      "filePath": "content/about.tsx",
-      "parent": "/content"
-    },
-    "/content/introduction": {
-      "filePath": "content/introduction.tsx",
-      "parent": "/content"
-    },
-    "/content/privacy": {
-      "filePath": "content/privacy.ts",
-      "parent": "/content"
-    },
-    "/content/terms-of-use": {
-      "filePath": "content/terms-of-use.ts",
-      "parent": "/content"
-    },
-    "/_app/executions/$groupId": {
-      "filePath": "_app/executions.$groupId/route.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/executions/$groupId/datasets",
-        "/_app/executions/$groupId/executions",
-        "/_app/executions/$groupId/files",
-        "/_app/executions/$groupId/logs",
-        "/_app/executions/$groupId/scalar",
-        "/_app/executions/$groupId/series",
-        "/_app/executions/$groupId/"
-      ]
-    },
-    "/_app/datasets/$slug": {
-      "filePath": "_app/datasets.$slug.tsx",
-      "parent": "/_app"
-    },
-    "/_app/explorer/themes": {
-      "filePath": "_app/explorer/themes.tsx",
-      "parent": "/_app/explorer"
-    },
-    "/_app/settings/api-endpoint": {
-      "filePath": "_app/settings.api-endpoint.tsx",
-      "parent": "/_app"
-    },
-    "/_app/datasets/": {
-      "filePath": "_app/datasets.index.tsx",
-      "parent": "/_app"
-    },
-    "/_app/diagnostics/": {
-      "filePath": "_app/diagnostics.index.tsx",
-      "parent": "/_app"
-    },
-    "/_app/executions/": {
-      "filePath": "_app/executions.index.tsx",
-      "parent": "/_app"
-    },
-    "/_app/explorer/": {
-      "filePath": "_app/explorer/index.tsx",
-      "parent": "/_app/explorer"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/route.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/series",
-        "/_app/diagnostics/$providerSlug/$diagnosticSlug/"
-      ]
-    },
-    "/_app/executions/$groupId/datasets": {
-      "filePath": "_app/executions.$groupId/datasets.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/executions": {
-      "filePath": "_app/executions.$groupId/executions.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/files": {
-      "filePath": "_app/executions.$groupId/files.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/logs": {
-      "filePath": "_app/executions.$groupId/logs.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/scalar": {
-      "filePath": "_app/executions.$groupId/scalar.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/series": {
-      "filePath": "_app/executions.$groupId/series.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/executions/$groupId/": {
-      "filePath": "_app/executions.$groupId/index.tsx",
-      "parent": "/_app/executions/$groupId"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/explorer.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/figures.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/groups.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/scalars": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/scalars.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/series": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/series.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    },
-    "/_app/diagnostics/$providerSlug/$diagnosticSlug/": {
-      "filePath": "_app/diagnostics.$providerSlug.$diagnosticSlug/index.tsx",
-      "parent": "/_app/diagnostics/$providerSlug/$diagnosticSlug"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

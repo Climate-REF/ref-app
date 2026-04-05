@@ -24,7 +24,7 @@ interface BoxWhiskerShapeProps {
 // Slightly darken a hex color for better contrast
 function darkenHex(hex: string, amount = 40): string {
   // Validate hex format and length
-  if (!hex || !hex.startsWith("#")) return hex;
+  if (!hex?.startsWith("#")) return hex;
 
   // Valid lengths: 4 (#rgb) or 7 (#rrggbb)
   if (hex.length !== 4 && hex.length !== 7) return hex;

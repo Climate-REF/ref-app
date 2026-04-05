@@ -74,4 +74,4 @@ function SourceTypeBadge({
   );
 }
 
-export { Badge, SourceTypeBadge, badgeVariants };
+export { Badge, badgeVariants, SourceTypeBadge };
