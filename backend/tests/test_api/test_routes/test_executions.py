@@ -139,6 +139,63 @@ def test_execution_values_csv_outlier_detection_on(client: TestClient, settings)
     assert "X-REF-Outlier-Count" in r.headers
 
 
+def test_execution_values_pagination_defaults(client: TestClient, settings):
+    """Test that execution values endpoint returns total_count and respects default pagination."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert "total_count" in data
+    assert isinstance(data["total_count"], int)
+    assert data["total_count"] >= 0
+    assert data["count"] <= 50
+    assert data["count"] <= data["total_count"]
+
+
+def test_execution_values_pagination_custom_limit(client: TestClient, settings):
+    """Test that execution values endpoint respects custom limit parameter."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] <= 2
+    assert data["total_count"] >= data["count"]
+
+
+def test_execution_values_pagination_offset(client: TestClient, settings):
+    """Test that offset skips items and total_count remains consistent."""
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    assert page1["total_count"] == page2["total_count"]
+
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids), "Paginated pages should not overlap"
+
+
 def test_execution_get_by_id(client: TestClient, settings) -> None:
     """Test getting a specific execution group by ID."""
     # Get an execution group ID from the list

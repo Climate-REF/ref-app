@@ -4,7 +4,7 @@ import csv
 import io
 from collections.abc import Generator, Sequence
 from enum import StrEnum
-from typing import Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Query
@@ -15,6 +15,9 @@ from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import AnnotatedScalarValue
+
+if TYPE_CHECKING:
+    from ref_backend.models import Facet
 
 TMetricValueModel = TypeVar("TMetricValueModel", bound=models.ScalarMetricValue | models.SeriesMetricValue)
 
@@ -67,6 +70,52 @@ def apply_metric_filters(
         query = query.filter(~models.MetricValue.id.in_(ids))
 
     return query
+
+
+METRIC_VALUES_NON_FILTER_PARAMS = frozenset(
+    {
+        "format",
+        "value_type",
+        "offset",
+        "limit",
+        "detect_outliers",
+        "include_unverified",
+        "isolate_ids",
+        "exclude_ids",
+    }
+)
+
+
+def collect_facets_from_query(query: Query[TMetricValueModel]) -> list["Facet"]:
+    """Compute facet values from the full filtered query (before pagination).
+
+    Loads the CV dimension columns registered on the model to build
+    the facet list without fetching heavy payload columns like ``values``.
+    Returns a list of :class:`ref_backend.models.Facet` objects.
+    """
+    from ref_backend.models import Facet  # noqa: PLC0415
+
+    facets: dict[str, set[str]] = {}
+
+    # Determine which CV dimension columns are registered
+    cv_dims: list[str] = getattr(query.column_descriptions[0]["entity"], "_cv_dimensions", [])
+
+    if not cv_dims:
+        return []
+
+    # Query only the lightweight dimension columns
+    entity = query.column_descriptions[0]["entity"]
+    dim_cols = [getattr(entity, d) for d in cv_dims]
+    for row in query.with_entities(*dim_cols):
+        for key, value in zip(cv_dims, row):
+            if value is None:
+                continue
+            if key in facets:
+                facets[key].add(value)
+            else:
+                facets[key] = {value}
+
+    return [Facet(key=k, values=list(v)) for k, v in facets.items()]
 
 
 def process_scalar_values(

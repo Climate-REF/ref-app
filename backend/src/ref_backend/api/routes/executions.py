@@ -20,8 +20,10 @@ from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
+    METRIC_VALUES_NON_FILTER_PARAMS,
     MetricValueType,
     apply_metric_filters,
+    collect_facets_from_query,
     generate_csv_response_scalar,
     generate_csv_response_series,
     process_scalar_values,
@@ -295,6 +297,9 @@ async def metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
+_EXECUTION_NON_FILTER_PARAMS = METRIC_VALUES_NON_FILTER_PARAMS | {"execution_id"}
+
+
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
 async def list_metric_values(  # noqa: PLR0913
     app_context: AppContextDep,
@@ -303,6 +308,8 @@ async def list_metric_values(  # noqa: PLR0913
     execution_id: str | None = None,
     value_type: MetricValueType = Query(..., description="Type of metric values to return"),
     format: str | None = None,
+    offset: int = Query(0, ge=0, description="Number of items to skip for pagination"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of items to return"),
     detect_outliers: Literal["off", "iqr"] = Query(
         "iqr", description="Outlier detection method: 'off' or 'iqr'"
     ),
@@ -315,13 +322,15 @@ async def list_metric_values(  # noqa: PLR0913
 
     - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
     - `format`: Return format - 'json' (default) or 'csv'
+    - `offset`: Number of items to skip (default 0)
+    - `limit`: Maximum number of items to return (default 50, max 500)
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
     # Extract additional filters from query parameters
     query_params = request.query_params
     filter_params = {}
     for key, value in query_params.items():
-        if key in {"format", "value_type"}:
+        if key in _EXECUTION_NON_FILTER_PARAMS:
             continue
         filter_params[key] = value
     if value_type == MetricValueType.SCALAR:
@@ -330,14 +339,11 @@ async def list_metric_values(  # noqa: PLR0913
         )
         scalar_query = apply_metric_filters(scalar_query, filter_params, isolate_ids, exclude_ids)
 
-        scalar_values = scalar_query.all() if scalar_query else []
-
-        # Process scalar values with outlier detection
-        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
-            scalar_values, detect_outliers, include_unverified
-        )
-
         if format == "csv":
+            scalar_values = scalar_query.all() if scalar_query else []
+            annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
+                scalar_values, detect_outliers, include_unverified
+            )
             filename = f"metric_values_scalar_{group_id}_{execution.id}.csv"
             return generate_csv_response_scalar(
                 annotated_scalar_values,
@@ -346,12 +352,23 @@ async def list_metric_values(  # noqa: PLR0913
                 outlier_count,
                 filename,
             )
-        else:
-            return MetricValueCollection.build_scalar(
-                scalar_values=annotated_scalar_values,
-                had_outliers=had_outliers if detection_ran else None,
-                outlier_count=outlier_count if detection_ran else None,
-            )
+
+        total_count = scalar_query.count() if scalar_query else 0
+        facets = collect_facets_from_query(scalar_query) if scalar_query else []
+        scalar_values = scalar_query.offset(offset).limit(limit).all() if scalar_query else []
+
+        # Process scalar values with outlier detection
+        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
+            scalar_values, detect_outliers, include_unverified
+        )
+
+        return MetricValueCollection.build_scalar(
+            scalar_values=annotated_scalar_values,
+            total_count=total_count,
+            had_outliers=had_outliers if detection_ran else None,
+            outlier_count=outlier_count if detection_ran else None,
+            facets=facets,
+        )
 
     elif value_type == MetricValueType.SERIES:
         series_query = app_context.session.query(models.SeriesMetricValue).filter(
@@ -360,9 +377,8 @@ async def list_metric_values(  # noqa: PLR0913
 
         series_query = apply_metric_filters(series_query, filter_params, isolate_ids, exclude_ids)
 
-        series_values = series_query.all() if series_query else []
-
         if format == "csv":
+            series_values = series_query.all() if series_query else []
             filename = f"metric_values_series_{group_id}_{execution.id}.csv"
             return generate_csv_response_series(
                 series_values,
@@ -371,12 +387,18 @@ async def list_metric_values(  # noqa: PLR0913
                 outlier_count=0,
                 filename=filename,
             )
-        else:
-            return MetricValueCollection.build_series(
-                series_values=series_values,
-                had_outliers=None,
-                outlier_count=None,
-            )
+
+        total_count = series_query.count() if series_query else 0
+        facets = collect_facets_from_query(series_query) if series_query else []
+        series_values = series_query.offset(offset).limit(limit).all() if series_query else []
+
+        return MetricValueCollection.build_series(
+            series_values=series_values,
+            total_count=total_count,
+            had_outliers=None,
+            outlier_count=None,
+            facets=facets,
+        )
     else:
         raise HTTPException(status_code=500, detail="Unknown value_type")
 

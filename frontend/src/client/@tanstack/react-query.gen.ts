@@ -2,7 +2,7 @@
 
 import { type Options, cmip7AssessmentFastTrackAftListAftDiagnostics, cmip7AssessmentFastTrackAftGetAftDiagnostic, datasetsList, datasetsGet, datasetsExecutions, diagnosticsList, diagnosticsFacets, diagnosticsGet, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, executionsGetExecutionStatistics, executionsListRecentExecutionGroups, executionsGet, executionsExecution, executionsExecutionDatasets, executionsExecutionLogs, executionsMetricBundle, executionsListMetricValues, executionsExecutionArchive, explorerListCollections, explorerGetCollection, explorerListThemes, explorerGetTheme, resultsGetResult, utilsHealthCheck } from '../sdk.gen';
 import { queryOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftGetAftDiagnosticData, DatasetsListData, DatasetsListError, DatasetsListResponse, DatasetsGetData, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DiagnosticsListData, DiagnosticsFacetsData, DiagnosticsGetData, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionsData, DiagnosticsListMetricValuesData, ExecutionsGetExecutionStatisticsData, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsGetData, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionLogsData, ExecutionsMetricBundleData, ExecutionsListMetricValuesData, ExecutionsExecutionArchiveData, ExplorerListCollectionsData, ExplorerGetCollectionData, ExplorerListThemesData, ExplorerGetThemeData, ResultsGetResultData, UtilsHealthCheckData } from '../types.gen';
+import type { Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftGetAftDiagnosticData, DatasetsListData, DatasetsListError, DatasetsListResponse, DatasetsGetData, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DiagnosticsListData, DiagnosticsFacetsData, DiagnosticsGetData, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionsData, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, ExecutionsGetExecutionStatisticsData, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsGetData, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionLogsData, ExecutionsMetricBundleData, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsExecutionArchiveData, ExplorerListCollectionsData, ExplorerGetCollectionData, ExplorerListThemesData, ExplorerGetThemeData, ResultsGetResultData, UtilsHealthCheckData } from '../types.gen';
 import { client as _heyApiClient } from '../client.gen';
 
 export type QueryKey<TOptions extends Options> = [
@@ -345,6 +345,8 @@ export const diagnosticsListMetricValuesQueryKey = (options: Options<Diagnostics
  *
  * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
  */
 export const diagnosticsListMetricValuesOptions = (options: Options<DiagnosticsListMetricValuesData>) => {
     return queryOptions({
@@ -358,6 +360,41 @@ export const diagnosticsListMetricValuesOptions = (options: Options<DiagnosticsL
             return data;
         },
         queryKey: diagnosticsListMetricValuesQueryKey(options)
+    });
+};
+
+export const diagnosticsListMetricValuesInfiniteQueryKey = (options: Options<DiagnosticsListMetricValuesData>): QueryKey<Options<DiagnosticsListMetricValuesData>> => createQueryKey('diagnosticsListMetricValues', options, true);
+
+/**
+ * List Metric Values
+ * Get all the diagnostic values for a given diagnostic (both scalar and series)
+ *
+ * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+ * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
+ */
+export const diagnosticsListMetricValuesInfiniteOptions = (options: Options<DiagnosticsListMetricValuesData>) => {
+    return infiniteQueryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, InfiniteData<DiagnosticsListMetricValuesResponse>, QueryKey<Options<DiagnosticsListMetricValuesData>>, number | Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await diagnosticsListMetricValues({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: diagnosticsListMetricValuesInfiniteQueryKey(options)
     });
 };
 
@@ -567,6 +604,8 @@ export const executionsListMetricValuesQueryKey = (options: Options<ExecutionsLi
  *
  * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
  */
 export const executionsListMetricValuesOptions = (options: Options<ExecutionsListMetricValuesData>) => {
     return queryOptions({
@@ -580,6 +619,41 @@ export const executionsListMetricValuesOptions = (options: Options<ExecutionsLis
             return data;
         },
         queryKey: executionsListMetricValuesQueryKey(options)
+    });
+};
+
+export const executionsListMetricValuesInfiniteQueryKey = (options: Options<ExecutionsListMetricValuesData>): QueryKey<Options<ExecutionsListMetricValuesData>> => createQueryKey('executionsListMetricValues', options, true);
+
+/**
+ * List Metric Values
+ * Fetch metric values for a specific execution (both scalar and series)
+ *
+ * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+ * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
+ */
+export const executionsListMetricValuesInfiniteOptions = (options: Options<ExecutionsListMetricValuesData>) => {
+    return infiniteQueryOptions<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, InfiniteData<ExecutionsListMetricValuesResponse>, QueryKey<Options<ExecutionsListMetricValuesData>>, number | Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await executionsListMetricValues({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: executionsListMetricValuesInfiniteQueryKey(options)
     });
 };
 

@@ -12,6 +12,8 @@ import type {
 type FetchQueryOptions = (options: any) => any;
 type FetchDownloadFunction = (options: any) => Promise<any>;
 
+export const DEFAULT_PAGE_SIZE = 50;
+
 interface UseValuesTabOptions<
   TPath extends Record<string, any> = Record<string, any>,
 > {
@@ -37,9 +39,12 @@ const EXCLUDED_FROM_FACET_FILTERS = [
   "include_unverified",
   "isolate_ids",
   "exclude_ids",
+  "offset",
+  "limit",
 ];
 
 // Parameters that should not be passed to the API query
+// (offset and limit ARE passed to the API, so they are not excluded here)
 const EXCLUDED_FROM_API = ["tab", "groupBy", "hue", "style"];
 
 /**
@@ -203,7 +208,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
       }
 
       navigate({
-        search: { ...filterParams, ...otherParams } as any,
+        search: { ...filterParams, ...otherParams, offset: 0 } as any,
         replace: true,
       });
     },
@@ -260,6 +265,28 @@ export function useMetricValues<TPath extends Record<string, any>>({
     [],
   );
 
+  // Handle pagination offset changes
+  const handleOffsetChange = useCallback(
+    (newOffset: number) => {
+      navigate({
+        search: { ...search, offset: newOffset } as any,
+        replace: true,
+      });
+    },
+    [search, navigate],
+  );
+
+  // Handle pagination limit changes
+  const handleLimitChange = useCallback(
+    (newLimit: number) => {
+      navigate({
+        search: { ...search, limit: newLimit, offset: 0 } as any,
+        replace: true,
+      });
+    },
+    [search, navigate],
+  );
+
   // Handle CSV download
   const handleDownload = useCallback(async () => {
     const response = await fetchDownload({
@@ -306,6 +333,14 @@ export function useMetricValues<TPath extends Record<string, any>>({
     initialFilters,
     isolateIds,
     excludeIds,
+    pagination: {
+      offset: Number(search.offset) || 0,
+      limit: Number(search.limit) || DEFAULT_PAGE_SIZE,
+      totalCount:
+        (metricValues as MetricValueCollection | undefined)?.total_count ?? 0,
+      onOffsetChange: handleOffsetChange,
+      onLimitChange: handleLimitChange,
+    },
     handlers: {
       onFiltersChange: handleFiltersChange,
       onDetectOutliersChange: handleDetectOutliersChange,

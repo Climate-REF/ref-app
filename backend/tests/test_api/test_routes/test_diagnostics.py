@@ -213,6 +213,121 @@ def test_diagnostic_values_csv_outlier_detection_on(client: TestClient, settings
     assert "X-REF-Outlier-Count" in r.headers
 
 
+def test_diagnostic_values_pagination_defaults(client: TestClient, settings):
+    """Test that metric values endpoint returns total_count and respects default pagination."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert "total_count" in data
+    assert isinstance(data["total_count"], int)
+    assert data["total_count"] >= 0
+    # Default limit is 50, so count should be at most 50
+    assert data["count"] <= 50
+    # count should not exceed total_count
+    assert data["count"] <= data["total_count"]
+
+
+def test_diagnostic_values_pagination_custom_limit(client: TestClient, settings):
+    """Test that metric values endpoint respects custom limit parameter."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] <= 2
+    assert data["total_count"] >= data["count"]
+
+
+def test_diagnostic_values_pagination_offset(client: TestClient, settings):
+    """Test that offset skips items and total_count remains consistent."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    base_url = (
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    # total_count should be the same across pages
+    assert page1["total_count"] == page2["total_count"]
+
+    # Pages should have different data (if enough items exist)
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids), "Paginated pages should not overlap"
+
+
+def test_diagnostic_values_pagination_beyond_total(client: TestClient, settings):
+    """Test that requesting offset beyond total returns empty data."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off&offset=999999"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] == 0
+    assert len(data["data"]) == 0
+    assert data["total_count"] >= 0
+
+
+def test_diagnostic_values_csv_ignores_pagination(client: TestClient, settings):
+    """Test that CSV export returns all results regardless of pagination params."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&format=csv&detect_outliers=off&limit=1&offset=0"
+    )
+
+    assert r.status_code == 200
+    lines = r.text.strip().splitlines()
+    csv_row_count = len(lines) - 1  # Exclude header
+
+    # Get total count from JSON endpoint
+    r_json = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off&limit=1"
+    )
+    total_count = r_json.json()["total_count"]
+
+    # CSV should have all rows, not just the paginated subset
+    assert csv_row_count == total_count
+
+
 def test_diagnostics_list_returns_data(client: TestClient, settings) -> None:
     """Test that diagnostics list endpoint returns data."""
     r = client.get(f"{settings.API_V1_STR}/diagnostics/")

@@ -1405,6 +1405,10 @@ export const MetricValueCollectionSchema = {
             type: 'integer',
             title: 'Count'
         },
+        total_count: {
+            type: 'integer',
+            title: 'Total Count'
+        },
         facets: {
             items: {
                 '$ref': '#/components/schemas/Facet'
@@ -1443,7 +1447,7 @@ export const MetricValueCollectionSchema = {
         }
     },
     type: 'object',
-    required: ['data', 'count', 'facets', 'types'],
+    required: ['data', 'count', 'total_count', 'facets', 'types'],
     title: 'MetricValueCollection'
 } as const;
 
