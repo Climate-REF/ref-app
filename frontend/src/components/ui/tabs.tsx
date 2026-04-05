@@ -78,4 +78,4 @@ function TabsContent<T extends string = string>({
   );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+export { Tabs, TabsContent, TabsList, TabsTrigger };

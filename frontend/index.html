@@ -12,14 +12,14 @@
     <title>Rapid Evaluation Framework</title>
     <script>
       // Prevent initial theme flash by setting html.dark before React mounts
-      (function () {
+      (() => {
         try {
           const storageKey = "theme";
           const getStored = () => {
             try { return localStorage.getItem(storageKey); } catch { return null; }
           };
-          const mql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-          const systemPrefersDark = () => mql && mql.matches;
+          const mql = window.matchMedia?.("(prefers-color-scheme: dark)");
+          const systemPrefersDark = () => mql?.matches;
           const stored = getStored();
           const shouldDark = stored ? stored === "dark" : systemPrefersDark();
           if (shouldDark) {
