@@ -5,13 +5,6 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 
 interface PaginationControlsProps {
   offset: number;
@@ -50,21 +43,17 @@ export function PaginationControls({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows per page</span>
-          <Select
+          <select
             value={String(limit)}
-            onValueChange={(value) => onLimitChange(Number(value))}
+            onChange={(e) => onLimitChange(Number(e.target.value))}
+            className="h-8 w-[80px] rounded-md border border-input bg-background px-2 text-sm"
           >
-            <SelectTrigger className="h-8 w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem key={size} value={String(size)}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={String(size)}>
+                {size}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="text-sm text-muted-foreground">
           Page {currentPage} of {totalPages}

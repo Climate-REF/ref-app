@@ -13,7 +13,10 @@ const valuesSearchSchema = z
     style: z.string().optional(),
     // Outlier detection parameters
     detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
-    include_unverified: z.coerce.boolean().default(false),
+    include_unverified: z.coerce
+      .string()
+      .default("false")
+      .transform((v) => v === "true"),
     // Pagination parameters
     offset: z.coerce.number().int().nonnegative().default(0),
     limit: z.coerce.number().int().positive().default(DEFAULT_PAGE_SIZE),
