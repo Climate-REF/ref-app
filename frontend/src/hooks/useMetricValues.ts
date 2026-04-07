@@ -69,6 +69,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
     style: searchStyle,
     detect_outliers: searchDetectOutliers,
     include_unverified: searchIncludeUnverified,
+    limit: searchLimit,
   } = search;
 
   // Fetch metric values using the provided query options function
@@ -209,13 +210,12 @@ export function useMetricValues<TPath extends Record<string, any>>({
       }
 
       navigate({
-        search: (prev: any) =>
-          ({
-            ...filterParams,
-            ...otherParams,
-            ...(prev?.limit !== undefined ? { limit: prev.limit } : {}),
-            offset: 0,
-          }) as any,
+        search: {
+          ...filterParams,
+          ...otherParams,
+          ...(searchLimit !== undefined ? { limit: searchLimit } : {}),
+          offset: 0,
+        } as any,
         replace: true,
       });
     },
@@ -226,6 +226,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
       searchStyle,
       searchDetectOutliers,
       searchIncludeUnverified,
+      searchLimit,
       navigate,
     ],
   );
