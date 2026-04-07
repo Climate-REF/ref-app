@@ -223,22 +223,26 @@ export function useMetricValues<TPath extends Record<string, any>>({
     ],
   );
 
-  // Handle outlier detection changes
+  // Handle outlier detection changes (reset offset since total_count may change)
   const handleDetectOutliersChange = useCallback(
     (value: string) => {
       navigate({
-        search: { ...search, detect_outliers: String(value) } as any,
+        search: { ...search, detect_outliers: String(value), offset: 0 } as any,
         replace: true,
       });
     },
     [search, navigate],
   );
 
-  // Handle unverified inclusion changes
+  // Handle unverified inclusion changes (reset offset since total_count may change)
   const handleIncludeUnverifiedChange = useCallback(
     (value: boolean) => {
       navigate({
-        search: { ...search, include_unverified: String(value) } as any,
+        search: {
+          ...search,
+          include_unverified: String(value),
+          offset: 0,
+        } as any,
         replace: true,
       });
     },

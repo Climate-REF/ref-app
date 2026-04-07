@@ -175,6 +175,70 @@ def test_diagnostic_values_include_unverified(client: TestClient, settings):
     assert unverified_count >= default_count
 
 
+def test_diagnostic_values_pagination_with_outlier_filtering(client: TestClient, settings):
+    """Test that pagination works correctly when outlier filtering reduces the dataset."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    # Get total with outliers included
+    r_all = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true"
+    )
+    assert r_all.status_code == 200
+    total_with_outliers = r_all.json()["total_count"]
+
+    # Get total with outliers excluded (default)
+    r_filtered = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=false"
+    )
+    assert r_filtered.status_code == 200
+    data_filtered = r_filtered.json()
+    total_without_outliers = data_filtered["total_count"]
+    outlier_count = data_filtered["outlier_count"]
+
+    # total_count should decrease by the number of outliers when filtering
+    if outlier_count and outlier_count > 0:
+        assert total_without_outliers == total_with_outliers - outlier_count
+    else:
+        assert total_without_outliers == total_with_outliers
+
+    # Page should have exactly min(limit, total_without_outliers) items
+    expected_count = min(50, total_without_outliers)
+    assert data_filtered["count"] == expected_count
+
+
+def test_diagnostic_values_outlier_consistency_across_pages(client: TestClient, settings):
+    """Test that outlier detection produces consistent results across pages."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    base_url = (
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    assert page1["total_count"] == page2["total_count"]
+    assert page1["outlier_count"] == page2["outlier_count"]
+    assert page1["had_outliers"] == page2["had_outliers"]
+
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids)
+
+
 def test_diagnostic_values_csv_outlier_detection_off(client: TestClient, settings):
     """Test diagnostic values CSV endpoint with outlier detection disabled."""
     diagnostic = get_diagnostic_with_scalar_values(client, settings)

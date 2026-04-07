@@ -95,6 +95,75 @@ def test_execution_values_include_unverified(client: TestClient, settings):
     assert unverified_count >= default_count
 
 
+def test_execution_values_pagination_with_outlier_filtering(client: TestClient, settings):
+    """Test that pagination works correctly when outlier filtering reduces the dataset.
+
+    With Option A (detect-then-paginate), total_count should reflect the
+    post-outlier-filtered count so that pages are always full up to the limit.
+    """
+    group_id = get_execution_group_id(client, settings)
+
+    # Get total with outliers included
+    r_all = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true"
+    )
+    assert r_all.status_code == 200
+    total_with_outliers = r_all.json()["total_count"]
+
+    # Get total with outliers excluded (default)
+    r_filtered = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=false"
+    )
+    assert r_filtered.status_code == 200
+    data_filtered = r_filtered.json()
+    total_without_outliers = data_filtered["total_count"]
+    outlier_count = data_filtered["outlier_count"]
+
+    # total_count should decrease by the number of outliers when filtering
+    if outlier_count and outlier_count > 0:
+        assert total_without_outliers == total_with_outliers - outlier_count
+    else:
+        assert total_without_outliers == total_with_outliers
+
+    # Page should have exactly min(limit, total_without_outliers) items
+    expected_count = min(50, total_without_outliers)  # default limit=50
+    assert data_filtered["count"] == expected_count
+
+
+def test_execution_values_outlier_consistency_across_pages(client: TestClient, settings):
+    """Test that outlier detection produces consistent results across pages.
+
+    Since outliers are now detected on the full dataset before pagination,
+    total_count and outlier_count must be identical on every page.
+    """
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    assert page1["total_count"] == page2["total_count"]
+    assert page1["outlier_count"] == page2["outlier_count"]
+    assert page1["had_outliers"] == page2["had_outliers"]
+
+    # Pages should not overlap
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids)
+
+
 def test_execution_values_csv_outlier_detection_off(client: TestClient, settings):
     """Test execution values CSV endpoint with outlier detection disabled."""
     group_id = get_execution_group_id(client, settings)

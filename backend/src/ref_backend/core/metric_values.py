@@ -126,8 +126,13 @@ def process_scalar_values(
     """
     Process scalar values with optional outlier detection.
 
+    Outlier detection runs on the **full** (unpaginated) set so that IQR
+    bounds are computed globally.  When ``include_unverified`` is False the
+    flagged outliers are removed from the returned list.  Callers are
+    responsible for paginating the result afterwards.
+
     Args:
-        scalar_values: List of scalar metric values
+        scalar_values: List of scalar metric values (should be the full query result, not a paginated slice)
         detect_outliers: Outlier detection method
         include_unverified: Whether to include outlier values
 
@@ -149,6 +154,15 @@ def process_scalar_values(
         annotated_scalar_values = [AnnotatedScalarValue(value=v) for v in scalar_values]
 
     return annotated_scalar_values, had_outliers, outlier_count, detection_ran
+
+
+def paginate_annotated_values(
+    values: list[AnnotatedScalarValue],
+    offset: int,
+    limit: int,
+) -> list[AnnotatedScalarValue]:
+    """Return a slice of annotated values for the requested page."""
+    return values[offset : offset + limit]
 
 
 def generate_csv_response_scalar(

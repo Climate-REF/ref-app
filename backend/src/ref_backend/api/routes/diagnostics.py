@@ -16,6 +16,7 @@ from ref_backend.core.metric_values import (
     collect_facets_from_query,
     generate_csv_response_scalar,
     generate_csv_response_series,
+    paginate_annotated_values,
     process_scalar_values,
 )
 from ref_backend.models import (
@@ -347,17 +348,22 @@ async def list_metric_values(  # noqa: PLR0913
                 filename,
             )
 
-        total_count = scalar_query.count() if scalar_query else 0
         facets = collect_facets_from_query(scalar_query) if scalar_query else []
-        scalar_values = scalar_query.offset(offset).limit(limit).all() if scalar_query else []
 
-        # Process scalar values with outlier detection
+        # Load all values so outlier detection uses global IQR bounds
+        all_scalar_values = scalar_query.all() if scalar_query else []
+
+        # Process scalar values with outlier detection (and optional filtering)
         annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
-            scalar_values, detect_outliers, include_unverified
+            all_scalar_values, detect_outliers, include_unverified
         )
 
+        # total_count reflects the post-outlier-filter count so pagination math is correct
+        total_count = len(annotated_scalar_values)
+        page = paginate_annotated_values(annotated_scalar_values, offset, limit)
+
         return MetricValueCollection.build_scalar(
-            scalar_values=annotated_scalar_values,
+            scalar_values=page,
             total_count=total_count,
             had_outliers=had_outliers if detection_ran else None,
             outlier_count=outlier_count if detection_ran else None,
