@@ -4,7 +4,35 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
+import { defineConfig, type ProxyOptions } from "vite";
+
+const proxyDataUrl = process.env.VITE_PROXY_DATA_URL;
+
+const proxyConfig: Record<string, ProxyOptions> = proxyDataUrl
+  ? {
+      "/api/v1/explorer": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/api/v1/cmip7-aft-diagnostics": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/api": {
+        target: proxyDataUrl,
+        changeOrigin: true,
+        secure: false,
+      },
+    }
+  : {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+    };
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -19,13 +47,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    proxy: proxyConfig,
   },
   plugins: [
     mdx(/* jsxImportSource: …, otherOptions… */),

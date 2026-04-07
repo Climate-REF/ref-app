@@ -71,11 +71,10 @@ explorer_cards:
         span: 2
         metric_units: "K"
         other_filters:
-          variable_id: tas
+          statistic: tas regional mean
         filter_controls:
           - filter_key: region
             label: Region
-            default_value: Africa
             exclude_values:
               - Global
         grouping_config:
@@ -91,11 +90,10 @@ explorer_cards:
         span: 2
         metric_units: "mm/day"
         other_filters:
-          variable_id: pr
+          statistic: pr regional mean
         filter_controls:
           - filter_key: region
             label: Region
-            default_value: Africa
             exclude_values:
               - Global
         grouping_config:

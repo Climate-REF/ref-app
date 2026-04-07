@@ -1,5 +1,5 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
@@ -124,6 +124,29 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
   const referenceSeries = allSeriesValues.filter(
     (series) => series.dimensions.source_id === "Reference",
   );
+
+  // Auto-select the first available facet value for filter controls that
+  // have no current value (no defaultValue configured, or configured default
+  // doesn't match available data).
+  useEffect(() => {
+    if (!facetData || !contentItem.filterControls) return;
+    const facets = facetData as MetricValueCollection;
+    const updates: Record<string, string> = {};
+    for (const control of contentItem.filterControls) {
+      if (filterValues[control.filterKey]) continue;
+      const allOptions =
+        (facets.facets ?? []).find((f) => f.key === control.filterKey)
+          ?.values ?? [];
+      const excludeSet = new Set(control.excludeValues ?? []);
+      const firstValid = allOptions.find((v) => !excludeSet.has(v));
+      if (firstValid) {
+        updates[control.filterKey] = firstValid;
+      }
+    }
+    if (Object.keys(updates).length > 0) {
+      setFilterValues((prev) => ({ ...prev, ...updates }));
+    }
+  }, [facetData, contentItem.filterControls, filterValues]);
 
   // Build facet options for filter controls
   const facetCollection = facetData as MetricValueCollection | undefined;
