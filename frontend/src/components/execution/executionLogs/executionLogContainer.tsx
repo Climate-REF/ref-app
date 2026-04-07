@@ -123,7 +123,8 @@ export function ExecutionLogContainer({
         <CardHeader>
           <CardTitle>Error Loading Logs</CardTitle>
           <CardDescription>
-            An error occurred while loading the logs: {error.message}
+            An error occurred while loading the logs:{" "}
+            {error instanceof Error ? error.message : "Validation error"}
           </CardDescription>
         </CardHeader>
       </Card>
