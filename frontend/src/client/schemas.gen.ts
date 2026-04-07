@@ -228,6 +228,20 @@ export const AFTCollectionCardContentSchema = {
                 }
             ]
         },
+        filter_controls: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/AFTCollectionFilterControl'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Filter Controls'
+        },
         reference_datasets: {
             anyOf: [
                 {
@@ -435,6 +449,55 @@ export const AFTCollectionDiagnosticLinkSchema = {
     type: 'object',
     required: ['provider_slug', 'diagnostic_slug'],
     title: 'AFTCollectionDiagnosticLink'
+} as const;
+
+export const AFTCollectionFilterControlSchema = {
+    properties: {
+        filter_key: {
+            type: 'string',
+            title: 'Filter Key'
+        },
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
+        },
+        default_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Value'
+        },
+        exclude_values: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Exclude Values'
+        }
+    },
+    type: 'object',
+    required: ['filter_key'],
+    title: 'AFTCollectionFilterControl',
+    description: 'A user-facing filter control (e.g. a dropdown) that overrides an other_filters key.'
 } as const;
 
 export const AFTCollectionGroupingConfigSchema = {

@@ -7,6 +7,7 @@ import type {
   AftCollectionCard,
   AftCollectionCardContent,
   AftCollectionDetail,
+  AftCollectionFilterControl,
   AftCollectionGroupingConfig,
   ThemeDetail,
 } from "@/client/types.gen";
@@ -15,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Route } from "@/routes/_app/explorer/themes.tsx";
 import { ExplorerThemeLayout } from "./explorerThemeLayout";
 import type { ChartGroupingConfig } from "./grouping/types";
-import type { ExplorerCard, ExplorerCardContent } from "./types";
+import type { ExplorerCard, ExplorerCardContent, FilterControl } from "./types";
 
 const themes = [
   { name: "atmosphere", title: "Atmosphere" },
@@ -34,6 +35,17 @@ function toChartGroupingConfig(
     groupBy: apiConfig.group_by,
     hue: apiConfig.hue,
     style: apiConfig.style ?? undefined,
+  };
+}
+
+function toFilterControl(
+  apiControl: AftCollectionFilterControl,
+): FilterControl {
+  return {
+    filterKey: apiControl.filter_key,
+    label: apiControl.label ?? undefined,
+    defaultValue: apiControl.default_value ?? undefined,
+    excludeValues: apiControl.exclude_values ?? undefined,
   };
 }
 
@@ -97,6 +109,9 @@ export function toExplorerCardContent(
         symmetricalAxes: apiContent.symmetrical_axes ?? undefined,
         groupingConfig: apiContent.grouping_config
           ? toChartGroupingConfig(apiContent.grouping_config)
+          : undefined,
+        filterControls: apiContent.filter_controls
+          ? apiContent.filter_controls.map(toFilterControl)
           : undefined,
         labelTemplate: apiContent.label_template ?? undefined,
       };

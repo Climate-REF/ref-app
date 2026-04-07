@@ -29,6 +29,7 @@ export type AftCollectionCardContent = {
         [key: string]: string;
     } | null;
     grouping_config?: AftCollectionGroupingConfig | null;
+    filter_controls?: Array<AftCollectionFilterControl> | null;
     reference_datasets?: Array<ReferenceDatasetLink> | null;
 };
 
@@ -57,6 +58,16 @@ export type AftCollectionDiagnosticLink = {
     provider_slug: string;
     diagnostic_slug: string;
     provider_link?: string | null;
+};
+
+/**
+ * A user-facing filter control (e.g. a dropdown) that overrides an other_filters key.
+ */
+export type AftCollectionFilterControl = {
+    filter_key: string;
+    label?: string | null;
+    default_value?: string | null;
+    exclude_values?: Array<string> | null;
 };
 
 export type AftCollectionGroupingConfig = {
