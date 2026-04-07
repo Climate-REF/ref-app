@@ -30,10 +30,12 @@ export function PaginationControls({
   onOffsetChange,
   onLimitChange,
 }: PaginationControlsProps) {
-  const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-  const rangeStart = Math.min(offset + 1, totalCount);
-  const rangeEnd = Math.min(offset + limit, totalCount);
+  const currentPage = Math.min(Math.floor(offset / limit) + 1, totalPages);
+  const rangeStart =
+    offset >= totalCount ? 0 : Math.min(offset + 1, totalCount);
+  const rangeEnd =
+    offset >= totalCount ? 0 : Math.min(offset + limit, totalCount);
 
   const canGoPrevious = offset > 0;
   const canGoNext = offset + limit < totalCount;
@@ -41,7 +43,7 @@ export function PaginationControls({
   return (
     <div className="flex items-center justify-between px-2 py-2">
       <div className="text-sm text-muted-foreground">
-        {totalCount > 0
+        {totalCount > 0 && rangeStart > 0
           ? `Showing ${rangeStart}-${rangeEnd} of ${totalCount}`
           : "No results"}
       </div>
@@ -72,6 +74,7 @@ export function PaginationControls({
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            aria-label="First page"
             onClick={() => onOffsetChange(0)}
             disabled={!canGoPrevious}
           >
@@ -81,6 +84,7 @@ export function PaginationControls({
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            aria-label="Previous page"
             onClick={() => onOffsetChange(Math.max(0, offset - limit))}
             disabled={!canGoPrevious}
           >
@@ -90,6 +94,7 @@ export function PaginationControls({
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            aria-label="Next page"
             onClick={() => onOffsetChange(offset + limit)}
             disabled={!canGoNext}
           >
@@ -99,6 +104,7 @@ export function PaginationControls({
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            aria-label="Last page"
             onClick={() => onOffsetChange((totalPages - 1) * limit)}
             disabled={!canGoNext}
           >

@@ -41,6 +41,7 @@ const EXCLUDED_FROM_FACET_FILTERS = [
   "exclude_ids",
   "offset",
   "limit",
+  "execution_id",
 ];
 
 // Parameters that should not be passed to the API query
@@ -208,7 +209,13 @@ export function useMetricValues<TPath extends Record<string, any>>({
       }
 
       navigate({
-        search: { ...filterParams, ...otherParams, offset: 0 } as any,
+        search: (prev: any) =>
+          ({
+            ...filterParams,
+            ...otherParams,
+            ...(prev?.limit !== undefined ? { limit: prev.limit } : {}),
+            offset: 0,
+          }) as any,
         replace: true,
       });
     },

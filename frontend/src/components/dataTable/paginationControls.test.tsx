@@ -39,33 +39,48 @@ describe("PaginationControls", () => {
     expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
   });
 
+  it("clamps display when offset exceeds totalCount", () => {
+    render(
+      <PaginationControls {...defaultProps} offset={250} totalCount={200} />,
+    );
+    expect(screen.getByText("No results")).toBeInTheDocument();
+    expect(screen.getByText("Page 4 of 4")).toBeInTheDocument();
+  });
+
   it("disables previous buttons on first page", () => {
     render(<PaginationControls {...defaultProps} offset={0} />);
-    const buttons = screen.getAllByRole("button");
-    // First two buttons are first-page and previous-page
-    expect(buttons[0]).toBeDisabled();
-    expect(buttons[1]).toBeDisabled();
-    // Last two buttons are next-page and last-page
-    expect(buttons[2]).not.toBeDisabled();
-    expect(buttons[3]).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "First page" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Last page" }),
+    ).not.toBeDisabled();
   });
 
   it("disables next buttons on last page", () => {
     render(<PaginationControls {...defaultProps} offset={150} />);
-    const buttons = screen.getAllByRole("button");
-    expect(buttons[0]).not.toBeDisabled();
-    expect(buttons[1]).not.toBeDisabled();
-    expect(buttons[2]).toBeDisabled();
-    expect(buttons[3]).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "First page" }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
   });
 
   it("disables all nav buttons when only one page exists", () => {
     render(<PaginationControls {...defaultProps} totalCount={10} limit={50} />);
-    const buttons = screen.getAllByRole("button");
-    expect(buttons[0]).toBeDisabled();
-    expect(buttons[1]).toBeDisabled();
-    expect(buttons[2]).toBeDisabled();
-    expect(buttons[3]).toBeDisabled();
+    expect(screen.getByRole("button", { name: "First page" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
   });
 
   it("calls onOffsetChange(0) when first-page button is clicked", () => {
@@ -77,8 +92,7 @@ describe("PaginationControls", () => {
         onOffsetChange={onOffsetChange}
       />,
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]); // first-page button
+    fireEvent.click(screen.getByRole("button", { name: "First page" }));
     expect(onOffsetChange).toHaveBeenCalledWith(0);
   });
 
@@ -91,8 +105,7 @@ describe("PaginationControls", () => {
         onOffsetChange={onOffsetChange}
       />,
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[1]); // previous-page button
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(onOffsetChange).toHaveBeenCalledWith(50);
   });
 
@@ -105,8 +118,7 @@ describe("PaginationControls", () => {
         onOffsetChange={onOffsetChange}
       />,
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[2]); // next-page button
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(onOffsetChange).toHaveBeenCalledWith(100);
   });
 
@@ -119,8 +131,7 @@ describe("PaginationControls", () => {
         onOffsetChange={onOffsetChange}
       />,
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[3]); // last-page button
+    fireEvent.click(screen.getByRole("button", { name: "Last page" }));
     expect(onOffsetChange).toHaveBeenCalledWith(150);
   });
 
@@ -134,8 +145,7 @@ describe("PaginationControls", () => {
         onOffsetChange={onOffsetChange}
       />,
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[1]); // previous-page button
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(onOffsetChange).toHaveBeenCalledWith(0);
   });
 

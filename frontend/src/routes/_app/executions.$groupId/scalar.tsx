@@ -23,18 +23,14 @@ const scalarValuesSearchSchema = z
 
 export const ScalarValuesTab = () => {
   const { groupId } = Route.useParams();
-  const { executionId, detect_outliers, include_unverified } =
-    Route.useSearch();
+  const search = Route.useSearch();
+  const { detect_outliers, include_unverified } = search;
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { metricValues, isLoading, pagination, handlers } =
     useExecutionMetricValues({
       groupId,
-      search: {
-        execution_id: executionId,
-        detect_outliers,
-        include_unverified,
-      },
+      search,
       valueType: "scalar",
       navigate,
     });
