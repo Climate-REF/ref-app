@@ -350,7 +350,10 @@ async def list_metric_values(  # noqa: PLR0913
 
         facets = collect_facets_from_query(scalar_query) if scalar_query else []
 
-        # Load all values so outlier detection uses global IQR bounds
+        # NOTE: We intentionally load ALL scalar values into memory here rather
+        # than using SQL-level OFFSET/LIMIT. Outlier detection (IQR) needs the
+        # full dataset to compute globally consistent bounds -- paginating at
+        # the DB level would produce different IQR thresholds per page.
         all_scalar_values = scalar_query.all() if scalar_query else []
 
         # Process scalar values with outlier detection (and optional filtering)
