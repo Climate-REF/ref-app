@@ -26,12 +26,19 @@ const localStorageMock = (() => {
   };
 })();
 
+let originalViteBaseUrl: string | undefined;
+
 beforeEach(() => {
   vi.stubGlobal("localStorage", localStorageMock);
   localStorageMock.clear();
+  originalViteBaseUrl = import.meta.env.VITE_BASE_URL;
+  delete import.meta.env.VITE_BASE_URL;
 });
 
 afterEach(() => {
+  if (originalViteBaseUrl !== undefined) {
+    import.meta.env.VITE_BASE_URL = originalViteBaseUrl;
+  }
   vi.unstubAllGlobals();
 });
 
