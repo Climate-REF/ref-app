@@ -64,15 +64,38 @@ explorer_cards:
       - type: series-chart
         provider: esmvaltool
         diagnostic: regional-historical-annual-cycle
-        title: "Annual Cycle of Temperature (Global)"
+        title: "Annual Cycle of Temperature"
         description: >-
-          Monthly climatology of near-surface air temperature for the global
-          mean, comparing individual models with reanalysis data.
+          Monthly climatology of near-surface air temperature,
+          comparing individual models with reanalysis data.
         span: 2
         metric_units: "K"
         other_filters:
-          region: Global
           statistic: tas regional mean
+        filter_controls:
+          - filter_key: region
+            label: Region
+            exclude_values:
+              - Global
+        grouping_config:
+          group_by: source_id
+          hue: source_id
+      - type: series-chart
+        provider: esmvaltool
+        diagnostic: regional-historical-annual-cycle
+        title: "Annual Cycle of Precipitation"
+        description: >-
+          Monthly climatology of precipitation,
+          comparing individual models with observational data.
+        span: 2
+        metric_units: "mm/day"
+        other_filters:
+          statistic: pr regional mean
+        filter_controls:
+          - filter_key: region
+            label: Region
+            exclude_values:
+              - Global
         grouping_config:
           group_by: source_id
           hue: source_id
