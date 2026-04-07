@@ -41,6 +41,8 @@ interface DiagnosticFigureGalleryProps {
   diagnosticSlug: string;
   /** When set, display figures in paginated mode instead of infinite scroll */
   pageSize?: number;
+  /** Pre-set the filename filter (e.g. from explorer card config) */
+  initialFilter?: string;
 }
 
 interface FigureWithGroup {
@@ -148,8 +150,9 @@ export function FigureGallery({
   providerSlug,
   diagnosticSlug,
   pageSize,
+  initialFilter,
 }: DiagnosticFigureGalleryProps) {
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState(initialFilter ?? "");
   const [selectorFilters, setSelectorFilters] = useState<
     Record<string, string[]>
   >({});

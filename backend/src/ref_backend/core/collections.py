@@ -48,6 +48,7 @@ class AFTCollectionCardContent(BaseModel):
     symmetrical_axes: bool | None = None
     reference_stddev: float | None = None
     label_template: str | None = None
+    filename_filter: str | None = None
     other_filters: dict[str, str] | None = None
     grouping_config: AFTCollectionGroupingConfig | None = None
     filter_controls: list[AFTCollectionFilterControl] | None = None

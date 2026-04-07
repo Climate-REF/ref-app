@@ -204,6 +204,17 @@ export const AFTCollectionCardContentSchema = {
             ],
             title: 'Label Template'
         },
+        filename_filter: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Filename Filter'
+        },
         other_filters: {
             anyOf: [
                 {

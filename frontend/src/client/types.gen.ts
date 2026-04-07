@@ -25,6 +25,7 @@ export type AftCollectionCardContent = {
     symmetrical_axes?: boolean | null;
     reference_stddev?: number | null;
     label_template?: string | null;
+    filename_filter?: string | null;
     other_filters?: {
         [key: string]: string;
     } | null;

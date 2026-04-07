@@ -123,7 +123,11 @@ export function toExplorerCardContent(
         referenceStddev: apiContent.reference_stddev ?? undefined,
       };
     case "figure-gallery":
-      return { ...base, type: "figure-gallery" };
+      return {
+        ...base,
+        type: "figure-gallery",
+        filenameFilter: apiContent.filename_filter ?? undefined,
+      };
   }
 }
 
@@ -188,25 +192,25 @@ export function ThematicContent() {
     <>
       <title>{`${themeObj?.title} Explorer - Climate REF`}</title>
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <Tabs<ThemeName>
-            value={theme}
-            onValueChange={(value) => {
-              navigate({
-                to: Route.fullPath,
-                search: { theme: value },
-              });
-            }}
-          >
-            <TabsList className="overflow-x-auto">
-              {themes.map((item) => (
-                <TabsTrigger<ThemeName> key={item.name} value={item.name}>
-                  {item.title}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          {showPlainLanguageToggle && (
+        <Tabs<ThemeName>
+          value={theme}
+          onValueChange={(value) => {
+            navigate({
+              to: Route.fullPath,
+              search: { theme: value },
+            });
+          }}
+        >
+          <TabsList className="overflow-x-auto">
+            {themes.map((item) => (
+              <TabsTrigger<ThemeName> key={item.name} value={item.name}>
+                {item.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        {showPlainLanguageToggle && (
+          <div className="flex items-center gap-3">
             <Button
               variant={plainLanguage ? "default" : "outline"}
               size="sm"
@@ -220,13 +224,10 @@ export function ThematicContent() {
               )}
               {plainLanguage ? "Plain Language" : "Technical"}
             </Button>
-          )}
-        </div>
-        {showPlainLanguageToggle && (
-          <p className="text-xs text-muted-foreground">
-            Toggle between technical descriptions and plain language summaries
-            using the button above.
-          </p>
+            <p className="text-xs text-muted-foreground">
+              Toggle between technical descriptions and plain language summaries
+            </p>
+          </div>
         )}
       </div>
       <div className="mt-6">

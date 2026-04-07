@@ -40,6 +40,7 @@ export type BoxWhiskerChartContent = BaseCardContent & {
 
 export type FigureGalleryContent = BaseCardContent & {
   type: "figure-gallery";
+  filenameFilter?: string;
 };
 
 export type SeriesChartContent = BaseCardContent & {
