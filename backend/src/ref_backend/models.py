@@ -557,33 +557,27 @@ class AnnotatedScalarValue:
 class MetricValueCollection(BaseModel):
     data: Sequence[ScalarValue | SeriesValue]
     count: int
+    total_count: int
     facets: list[Facet]
-    types: list[str]  # List of types present: 'scalar' or 'scalar'
+    types: list[str]  # List of types present: 'scalar' or 'series'
     had_outliers: bool | None = None
     outlier_count: int | None = None
 
     @staticmethod
     def build_scalar(
         scalar_values: list[AnnotatedScalarValue],
+        total_count: int,
+        facets: list[Facet],
         had_outliers: bool | None = None,
         outlier_count: int | None = None,
     ) -> "MetricValueCollection":
-        """
-        Build a MetricValueCollection from series values"""
+        """Build a MetricValueCollection from scalar values."""
         scalar_values = scalar_values or []
 
-        # TODO: Query this using SQL
-        facets: dict[str, set[str]] = {}
         all_data: list[ScalarValue] = []
 
-        # Process scalar values
         for item in scalar_values:
             v = item.value
-            for key, value in v.dimensions.items():
-                if key in facets:
-                    facets[key].add(value)
-                else:
-                    facets[key] = {value}
             all_data.append(
                 ScalarValue(
                     id=v.id,
@@ -600,9 +594,8 @@ class MetricValueCollection(BaseModel):
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            facets=[
-                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
-            ],
+            total_count=total_count,
+            facets=facets,
             types=["scalar"],
             had_outliers=had_outliers,
             outlier_count=outlier_count,
@@ -611,24 +604,17 @@ class MetricValueCollection(BaseModel):
     @staticmethod
     def build_series(
         series_values: list[models.SeriesMetricValue],
+        total_count: int,
+        facets: list[Facet],
         had_outliers: None = None,
         outlier_count: None = None,
     ) -> "MetricValueCollection":
-        """Build a MetricValueCollection from scalar and/or series values"""
+        """Build a MetricValueCollection from series values."""
         series_values = series_values or []
 
-        # TODO: Query this using SQL
-        facets: dict[str, set[str]] = {}
         all_data: list[ScalarValue | SeriesValue] = []
 
-        # Process series values
         for series in series_values:
-            for key, value in series.dimensions.items():
-                if key in facets:
-                    facets[key].add(value)
-                else:
-                    facets[key] = {value}
-
             all_data.append(
                 SeriesValue(
                     id=series.id,
@@ -645,9 +631,8 @@ class MetricValueCollection(BaseModel):
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            facets=[
-                Facet(key=facet_key, values=list(facet_values)) for facet_key, facet_values in facets.items()
-            ],
+            total_count=total_count,
+            facets=facets,
             types=["series"],
             had_outliers=had_outliers,
             outlier_count=outlier_count,

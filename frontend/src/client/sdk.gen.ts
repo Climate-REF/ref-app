@@ -136,6 +136,8 @@ export const diagnosticsListExecutions = <ThrowOnError extends boolean = false>(
  *
  * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
  */
 export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListMetricValuesData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, ThrowOnError>({
@@ -240,6 +242,8 @@ export const executionsMetricBundle = <ThrowOnError extends boolean = false>(opt
  *
  * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
+ * - `offset`: Number of items to skip (default 0)
+ * - `limit`: Maximum number of items to return (default 50, max 500)
  */
 export const executionsListMetricValues = <ThrowOnError extends boolean = false>(options: Options<ExecutionsListMetricValuesData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, ThrowOnError>({

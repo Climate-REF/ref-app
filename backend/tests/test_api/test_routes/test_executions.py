@@ -95,6 +95,75 @@ def test_execution_values_include_unverified(client: TestClient, settings):
     assert unverified_count >= default_count
 
 
+def test_execution_values_pagination_with_outlier_filtering(client: TestClient, settings):
+    """Test that pagination works correctly when outlier filtering reduces the dataset.
+
+    With Option A (detect-then-paginate), total_count should reflect the
+    post-outlier-filtered count so that pages are always full up to the limit.
+    """
+    group_id = get_execution_group_id(client, settings)
+
+    # Get total with outliers included
+    r_all = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true"
+    )
+    assert r_all.status_code == 200
+    total_with_outliers = r_all.json()["total_count"]
+
+    # Get total with outliers excluded (default)
+    r_filtered = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=false"
+    )
+    assert r_filtered.status_code == 200
+    data_filtered = r_filtered.json()
+    total_without_outliers = data_filtered["total_count"]
+    outlier_count = data_filtered["outlier_count"]
+
+    # total_count should decrease by the number of outliers when filtering
+    if outlier_count and outlier_count > 0:
+        assert total_without_outliers == total_with_outliers - outlier_count
+    else:
+        assert total_without_outliers == total_with_outliers
+
+    # Page should have exactly min(limit, total_without_outliers) items
+    expected_count = min(50, total_without_outliers)  # default limit=50
+    assert data_filtered["count"] == expected_count
+
+
+def test_execution_values_outlier_consistency_across_pages(client: TestClient, settings):
+    """Test that outlier detection produces consistent results across pages.
+
+    Since outliers are now detected on the full dataset before pagination,
+    total_count and outlier_count must be identical on every page.
+    """
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=iqr&include_unverified=true&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    assert page1["total_count"] == page2["total_count"]
+    assert page1["outlier_count"] == page2["outlier_count"]
+    assert page1["had_outliers"] == page2["had_outliers"]
+
+    # Pages should not overlap
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids)
+
+
 def test_execution_values_csv_outlier_detection_off(client: TestClient, settings):
     """Test execution values CSV endpoint with outlier detection disabled."""
     group_id = get_execution_group_id(client, settings)
@@ -137,6 +206,147 @@ def test_execution_values_csv_outlier_detection_on(client: TestClient, settings)
     # Assert headers are present
     assert "X-REF-Had-Outliers" in r.headers
     assert "X-REF-Outlier-Count" in r.headers
+
+
+def test_execution_values_pagination_defaults(client: TestClient, settings):
+    """Test that execution values endpoint returns total_count and respects default pagination."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert "total_count" in data
+    assert isinstance(data["total_count"], int)
+    assert data["total_count"] >= 0
+    assert data["count"] <= 50
+    assert data["count"] <= data["total_count"]
+
+
+def test_execution_values_pagination_custom_limit(client: TestClient, settings):
+    """Test that execution values endpoint respects custom limit parameter."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] <= 2
+    assert data["total_count"] >= data["count"]
+
+
+def test_execution_values_pagination_offset(client: TestClient, settings):
+    """Test that offset skips items and total_count remains consistent."""
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=2"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    page1 = r_page1.json()
+
+    r_page2 = client.get(f"{base_url}&offset=2")
+    assert r_page2.status_code == 200
+    page2 = r_page2.json()
+
+    assert page1["total_count"] == page2["total_count"]
+
+    if page1["total_count"] > 2 and page2["count"] > 0:
+        page1_ids = {item["id"] for item in page1["data"]}
+        page2_ids = {item["id"] for item in page2["data"]}
+        assert page1_ids.isdisjoint(page2_ids), "Paginated pages should not overlap"
+
+
+def test_execution_values_facets_consistent_across_pages(client: TestClient, settings):
+    """Test that facets are computed from the full query, not the paginated page."""
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=1"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    facets_page1 = r_page1.json()["facets"]
+
+    r_page2 = client.get(f"{base_url}&offset=1")
+    assert r_page2.status_code == 200
+    facets_page2 = r_page2.json()["facets"]
+
+    facet_keys_1 = sorted(f["key"] for f in facets_page1)
+    facet_keys_2 = sorted(f["key"] for f in facets_page2)
+    assert facet_keys_1 == facet_keys_2, "Facet keys should be the same regardless of page"
+
+    for f1 in facets_page1:
+        f2 = next((f for f in facets_page2 if f["key"] == f1["key"]), None)
+        assert f2 is not None
+        assert sorted(f1["values"]) == sorted(f2["values"]), (
+            f"Facet values for '{f1['key']}' should be identical across pages"
+        )
+
+
+def test_execution_values_pagination_invalid_limit(client: TestClient, settings):
+    """Test that invalid limit values are rejected."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&limit=0")
+    assert r.status_code == 422
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&limit=501")
+    assert r.status_code == 422
+
+
+def test_execution_values_pagination_invalid_offset(client: TestClient, settings):
+    """Test that negative offset values are rejected."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&offset=-1")
+    assert r.status_code == 422
+
+
+def test_execution_values_pagination_beyond_total(client: TestClient, settings):
+    """Test that requesting offset beyond total returns empty data."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=off&offset=999999"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] == 0
+    assert len(data["data"]) == 0
+    assert data["total_count"] >= 0
+
+
+def test_execution_values_csv_ignores_pagination(client: TestClient, settings):
+    """Test that CSV export returns all results regardless of pagination params."""
+    group_id = get_execution_group_id(client, settings)
+
+    r_json = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=1"
+    )
+    assert r_json.status_code == 200
+    total_count = r_json.json()["total_count"]
+
+    r_csv = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&format=csv&detect_outliers=off&limit=1&offset=0"
+    )
+    assert r_csv.status_code == 200
+    lines = r_csv.text.strip().splitlines()
+    csv_row_count = len(lines) - 1
+    assert csv_row_count == total_count
 
 
 def test_execution_get_by_id(client: TestClient, settings) -> None:

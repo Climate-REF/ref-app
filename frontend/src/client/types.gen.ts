@@ -329,6 +329,7 @@ export type MetricDimensions = {
 export type MetricValueCollection = {
     data: Array<ScalarValue | SeriesValue>;
     count: number;
+    total_count: number;
     facets: Array<Facet>;
     types: Array<string>;
     had_outliers?: boolean | null;
@@ -734,6 +735,14 @@ export type DiagnosticsListMetricValuesData = {
         value_type: MetricValueType;
         format?: string | null;
         /**
+         * Number of items to skip for pagination
+         */
+        offset?: number;
+        /**
+         * Maximum number of items to return
+         */
+        limit?: number;
+        /**
          * Outlier detection method: 'off' or 'iqr'
          */
         detect_outliers?: 'off' | 'iqr';
@@ -973,6 +982,14 @@ export type ExecutionsListMetricValuesData = {
          */
         value_type: MetricValueType;
         format?: string | null;
+        /**
+         * Number of items to skip for pagination
+         */
+        offset?: number;
+        /**
+         * Maximum number of items to return
+         */
+        limit?: number;
         /**
          * Outlier detection method: 'off' or 'iqr'
          */

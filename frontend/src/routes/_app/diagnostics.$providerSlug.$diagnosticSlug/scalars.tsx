@@ -3,6 +3,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Values } from "@/components/execution/values";
 import { useDiagnosticMetricValues } from "@/hooks/useDiagnosticMetricValues";
+import { DEFAULT_PAGE_SIZE } from "@/hooks/useMetricValues";
 
 const valuesSearchSchema = z
   .object({
@@ -13,6 +14,9 @@ const valuesSearchSchema = z
     // Outlier detection parameters
     detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
     include_unverified: z.coerce.boolean().default(false),
+    // Pagination parameters
+    offset: z.coerce.number().int().nonnegative().default(0),
+    limit: z.coerce.number().int().positive().default(DEFAULT_PAGE_SIZE),
   })
   .catchall(z.string().optional());
 
@@ -21,7 +25,7 @@ export const ScalarsValuesTab = () => {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { metricValues, isLoading, initialFilters, handlers } =
+  const { metricValues, isLoading, initialFilters, pagination, handlers } =
     useDiagnosticMetricValues({
       providerSlug,
       diagnosticSlug,
@@ -47,6 +51,7 @@ export const ScalarsValuesTab = () => {
         onFiltersChange={handlers.onFiltersChange}
         onCurrentGroupingChange={handlers.onCurrentGroupingChange}
         onDownload={handlers.onDownload}
+        pagination={pagination}
       />
     </div>
   );

@@ -10,30 +10,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useExecutionMetricValues } from "@/hooks/useExecutionMetricValues";
+import { DEFAULT_PAGE_SIZE } from "@/hooks/useMetricValues";
 
 const scalarValuesSearchSchema = z
   .object({
     detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
     include_unverified: z.coerce.boolean().default(false),
+    offset: z.coerce.number().int().nonnegative().default(0),
+    limit: z.coerce.number().int().positive().default(DEFAULT_PAGE_SIZE),
   })
   .catchall(z.string().optional());
 
 export const ScalarValuesTab = () => {
   const { groupId } = Route.useParams();
-  const { executionId, detect_outliers, include_unverified } =
-    Route.useSearch();
+  const search = Route.useSearch();
+  const { detect_outliers, include_unverified } = search;
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { metricValues, isLoading, handlers } = useExecutionMetricValues({
-    groupId,
-    search: {
-      execution_id: executionId,
-      detect_outliers,
-      include_unverified,
-    },
-    valueType: "scalar",
-    navigate,
-  });
+  const { metricValues, isLoading, pagination, handlers } =
+    useExecutionMetricValues({
+      groupId,
+      search,
+      valueType: "scalar",
+      navigate,
+    });
 
   return (
     <Card>
@@ -57,6 +57,7 @@ export const ScalarValuesTab = () => {
           onIncludeUnverifiedChange={handlers.onIncludeUnverifiedChange}
           valueType="scalars"
           onDownload={handlers.onDownload}
+          pagination={pagination}
         />
       </CardContent>
     </Card>
