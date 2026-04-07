@@ -25,7 +25,7 @@ help:  ## print short description of each target
 .PHONY: dev-backend
 dev-backend: # Start the backend
 	@echo "Starting backend"
-	@cd backend && uv run fastapi dev "src/ref_backend/main.py" --reload
+	@cd backend && uv run fastapi dev "src/ref_backend/main.py" --reload --reload-dir src --reload-dir static
 
 .PHONY: dev-frontend
 dev-frontend: # Start the frontend
