@@ -196,6 +196,90 @@ def test_execution_values_pagination_offset(client: TestClient, settings):
         assert page1_ids.isdisjoint(page2_ids), "Paginated pages should not overlap"
 
 
+def test_execution_values_facets_consistent_across_pages(client: TestClient, settings):
+    """Test that facets are computed from the full query, not the paginated page."""
+    group_id = get_execution_group_id(client, settings)
+
+    base_url = (
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=1"
+    )
+
+    r_page1 = client.get(f"{base_url}&offset=0")
+    assert r_page1.status_code == 200
+    facets_page1 = r_page1.json()["facets"]
+
+    r_page2 = client.get(f"{base_url}&offset=1")
+    assert r_page2.status_code == 200
+    facets_page2 = r_page2.json()["facets"]
+
+    facet_keys_1 = sorted(f["key"] for f in facets_page1)
+    facet_keys_2 = sorted(f["key"] for f in facets_page2)
+    assert facet_keys_1 == facet_keys_2, "Facet keys should be the same regardless of page"
+
+    for f1 in facets_page1:
+        f2 = next((f for f in facets_page2 if f["key"] == f1["key"]), None)
+        assert f2 is not None
+        assert sorted(f1["values"]) == sorted(f2["values"]), (
+            f"Facet values for '{f1['key']}' should be identical across pages"
+        )
+
+
+def test_execution_values_pagination_invalid_limit(client: TestClient, settings):
+    """Test that invalid limit values are rejected."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&limit=0")
+    assert r.status_code == 422
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&limit=501")
+    assert r.status_code == 422
+
+
+def test_execution_values_pagination_invalid_offset(client: TestClient, settings):
+    """Test that negative offset values are rejected."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&offset=-1")
+    assert r.status_code == 422
+
+
+def test_execution_values_pagination_beyond_total(client: TestClient, settings):
+    """Test that requesting offset beyond total returns empty data."""
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&detect_outliers=off&offset=999999"
+    )
+
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["count"] == 0
+    assert len(data["data"]) == 0
+    assert data["total_count"] >= 0
+
+
+def test_execution_values_csv_ignores_pagination(client: TestClient, settings):
+    """Test that CSV export returns all results regardless of pagination params."""
+    group_id = get_execution_group_id(client, settings)
+
+    r_json = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values?value_type=scalar&detect_outliers=off&limit=1"
+    )
+    assert r_json.status_code == 200
+    total_count = r_json.json()["total_count"]
+
+    r_csv = client.get(
+        f"{settings.API_V1_STR}/executions/{group_id}/values"
+        "?value_type=scalar&format=csv&detect_outliers=off&limit=1&offset=0"
+    )
+    assert r_csv.status_code == 200
+    lines = r_csv.text.strip().splitlines()
+    csv_row_count = len(lines) - 1
+    assert csv_row_count == total_count
+
+
 def test_execution_get_by_id(client: TestClient, settings) -> None:
     """Test getting a specific execution group by ID."""
     # Get an execution group ID from the list
