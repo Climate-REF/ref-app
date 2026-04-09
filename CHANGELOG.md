@@ -1,3 +1,10 @@
+## v0.2.2 (2026-04-09)
+
+### Trivial Changes
+
+- Updated GitHub Actions to Node.js 24 compatible versions ahead of the Node.js 20 deprecation. (#27)
+
+
 ## v0.2.1 (2026-04-09)
 
 ### Bug Fixes
