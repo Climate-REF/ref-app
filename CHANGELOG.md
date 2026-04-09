@@ -1,3 +1,10 @@
+## v0.2.1 (2026-04-09)
+
+### Bug Fixes
+
+- Allowed the application to start without a `ref.toml` file by falling back to environment defaults. (#26)
+
+
 ## v0.2.0 (2026-04-08)
 
 ### Features
