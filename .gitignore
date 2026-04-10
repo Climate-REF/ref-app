@@ -1,2 +1,5 @@
 .env
-.kilocode
+.env.sentry-build-plugin
+
+.pytest_cache
+.ruff_cache
