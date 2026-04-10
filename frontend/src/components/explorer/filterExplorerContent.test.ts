@@ -212,6 +212,50 @@ describe("filterExplorerContentForDiagnostic", () => {
     }
   });
 
+  it("converts filter_controls to filterControls for series-chart", () => {
+    const cards: AftCollectionCard[] = [
+      {
+        title: "Card A",
+        content: [
+          {
+            type: "series-chart",
+            provider: "esmvaltool",
+            diagnostic: "regional-historical-annual-cycle",
+            title: "Annual Cycle",
+            filter_controls: [
+              {
+                filter_key: "region",
+                label: "Region",
+                default_value: "Africa",
+                exclude_values: ["Global"],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const result = filterExplorerContentForDiagnostic(
+      cards,
+      "esmvaltool",
+      "regional-historical-annual-cycle",
+    );
+
+    expect(result).toHaveLength(1);
+    const item = result[0];
+    expect(item.type).toBe("series-chart");
+    if (item.type === "series-chart") {
+      expect(item.filterControls).toEqual([
+        {
+          filterKey: "region",
+          label: "Region",
+          defaultValue: "Africa",
+          excludeValues: ["Global"],
+        },
+      ]);
+    }
+  });
+
   it("handles all content types correctly", () => {
     const cards: AftCollectionCard[] = [
       {

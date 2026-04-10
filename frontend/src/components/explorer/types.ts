@@ -2,6 +2,14 @@ import type { ReactNode } from "react";
 import type { ReferenceDatasetLink } from "@/client/types.gen";
 import type { ChartGroupingConfig } from "./grouping";
 
+// A user-facing filter control (e.g. a dropdown) that overrides an otherFilters key
+export type FilterControl = {
+  filterKey: string;
+  label?: string;
+  defaultValue?: string;
+  excludeValues?: string[];
+};
+
 // Base properties shared across all card types
 export type BaseCardContent = {
   provider: string;
@@ -32,6 +40,7 @@ export type BoxWhiskerChartContent = BaseCardContent & {
 
 export type FigureGalleryContent = BaseCardContent & {
   type: "figure-gallery";
+  filenameFilter?: string;
 };
 
 export type SeriesChartContent = BaseCardContent & {
@@ -40,6 +49,7 @@ export type SeriesChartContent = BaseCardContent & {
   otherFilters?: Record<string, string>;
   symmetricalAxes?: boolean;
   groupingConfig?: ChartGroupingConfig;
+  filterControls?: FilterControl[];
   labelTemplate?: string;
   /* Template for series labels (e.g., "{variable_id} - {source_id}") */
 };

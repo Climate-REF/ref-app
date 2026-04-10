@@ -96,7 +96,7 @@ explorer_cards:
           and amplitude of fire activity across models and observations.
         span: 2
         other_filters:
-          metric: cycle
+          metric: cycle_global
           region: global
         grouping_config:
           group_by: source_id
@@ -118,4 +118,4 @@ explorer_cards:
           Spatial maps of burnt fraction bias, RMSE, and model-observation
           comparison for individual models.
         span: 2
-        filters: global_bias
+        filename_filter: global_bias

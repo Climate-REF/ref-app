@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PaginationControls } from "@/components/dataTable/paginationControls.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -13,6 +14,14 @@ import ScalarDataTable from "./scalarDataTable.tsx";
 import SeriesDataTable from "./seriesDataTable.tsx";
 import type { Facet, ScalarValue, SeriesValue } from "./types";
 import { isScalarValue, isSeriesValue } from "./types";
+
+type PaginationProps = {
+  offset: number;
+  limit: number;
+  totalCount: number;
+  onOffsetChange: (offset: number) => void;
+  onLimitChange: (limit: number) => void;
+};
 
 type ValuesProps = {
   values: (ScalarValue | SeriesValue)[];
@@ -37,6 +46,7 @@ type ValuesProps = {
   initialIncludeUnverified?: boolean;
   onIncludeUnverifiedChange?: (value: boolean) => void;
   valueType: ViewType;
+  pagination?: PaginationProps;
 };
 
 type ViewType = "scalars" | "series";
@@ -173,6 +183,15 @@ export function Values({ valueType, ...props }: ValuesProps) {
               loading={props.loading}
               rowSelection={rowSelection}
               setRowSelection={setRowSelection}
+            />
+          )}
+          {props.pagination && (
+            <PaginationControls
+              offset={props.pagination.offset}
+              limit={props.pagination.limit}
+              totalCount={props.pagination.totalCount}
+              onOffsetChange={props.pagination.onOffsetChange}
+              onLimitChange={props.pagination.onLimitChange}
             />
           )}
         </div>

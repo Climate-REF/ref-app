@@ -13,6 +13,7 @@ export function FigureGalleryContent({
       providerSlug={contentItem.provider}
       diagnosticSlug={contentItem.diagnostic}
       pageSize={12}
+      initialFilter={contentItem.filenameFilter}
     />
   );
 }

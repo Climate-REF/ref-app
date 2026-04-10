@@ -21,6 +21,15 @@ class AFTCollectionGroupingConfig(BaseModel):
     style: str | None = None
 
 
+class AFTCollectionFilterControl(BaseModel):
+    """A user-facing filter control (e.g. a dropdown) that overrides an other_filters key."""
+
+    filter_key: str
+    label: str | None = None
+    default_value: str | None = None
+    exclude_values: list[str] | None = None
+
+
 class AFTCollectionCardContent(BaseModel):
     type: Literal["box-whisker-chart", "figure-gallery", "series-chart", "taylor-diagram"]
     provider: str
@@ -39,8 +48,10 @@ class AFTCollectionCardContent(BaseModel):
     symmetrical_axes: bool | None = None
     reference_stddev: float | None = None
     label_template: str | None = None
+    filename_filter: str | None = None
     other_filters: dict[str, str] | None = None
     grouping_config: AFTCollectionGroupingConfig | None = None
+    filter_controls: list[AFTCollectionFilterControl] | None = None
     reference_datasets: list[ReferenceDatasetLink] | None = None
 
 

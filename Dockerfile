@@ -50,12 +50,18 @@ ENV STATIC_DIR=/app/static
 ENV REF_CONFIGURATION=/app/.ref
 ENV FRONTEND_HOST=http://0.0.0.0:8000
 
+RUN groupadd --system app && useradd --system --gid app app
+
 WORKDIR /app
 
 # Copy the installed packages from the build stage
 COPY --from=backend --chown=app:app /app /app
 COPY /backend /app
 COPY --from=frontend --chown=app:app /frontend/dist /app/static
+
+RUN chown -R app:app /app
+
+USER app
 
 # Run the REF CLI tool by default
 ENTRYPOINT ["fastapi", "run", "--workers", "4", "/app/src/ref_backend/main.py"]

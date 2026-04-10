@@ -30,17 +30,14 @@ export const AFTCollectionCardSchema = {
         },
         content: {
             items: {
-                $ref: '#/components/schemas/AFTCollectionCardContent'
+                '$ref': '#/components/schemas/AFTCollectionCardContent'
             },
             type: 'array',
             title: 'Content'
         }
     },
     type: 'object',
-    required: [
-        'title',
-        'content'
-    ],
+    required: ['title', 'content'],
     title: 'AFTCollectionCard'
 } as const;
 
@@ -48,12 +45,7 @@ export const AFTCollectionCardContentSchema = {
     properties: {
         type: {
             type: 'string',
-            enum: [
-                'box-whisker-chart',
-                'figure-gallery',
-                'series-chart',
-                'taylor-diagram'
-            ],
+            enum: ['box-whisker-chart', 'figure-gallery', 'series-chart', 'taylor-diagram'],
             title: 'Type'
         },
         provider: {
@@ -94,10 +86,7 @@ export const AFTCollectionCardContentSchema = {
             anyOf: [
                 {
                     type: 'integer',
-                    enum: [
-                        1,
-                        2
-                    ]
+                    enum: [1, 2]
                 },
                 {
                     type: 'null'
@@ -215,6 +204,17 @@ export const AFTCollectionCardContentSchema = {
             ],
             title: 'Label Template'
         },
+        filename_filter: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Filename Filter'
+        },
         other_filters: {
             anyOf: [
                 {
@@ -232,18 +232,32 @@ export const AFTCollectionCardContentSchema = {
         grouping_config: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/AFTCollectionGroupingConfig'
+                    '$ref': '#/components/schemas/AFTCollectionGroupingConfig'
                 },
                 {
                     type: 'null'
                 }
             ]
         },
+        filter_controls: {
+            anyOf: [
+                {
+                    items: {
+                        '$ref': '#/components/schemas/AFTCollectionFilterControl'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Filter Controls'
+        },
         reference_datasets: {
             anyOf: [
                 {
                     items: {
-                        $ref: '#/components/schemas/ReferenceDatasetLink'
+                        '$ref': '#/components/schemas/ReferenceDatasetLink'
                     },
                     type: 'array'
                 },
@@ -255,12 +269,7 @@ export const AFTCollectionCardContentSchema = {
         }
     },
     type: 'object',
-    required: [
-        'type',
-        'provider',
-        'diagnostic',
-        'title'
-    ],
+    required: ['type', 'provider', 'diagnostic', 'title'],
     title: 'AFTCollectionCardContent'
 } as const;
 
@@ -313,7 +322,7 @@ export const AFTCollectionContentSchema = {
         plain_language: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/AFTCollectionPlainLanguage'
+                    '$ref': '#/components/schemas/AFTCollectionPlainLanguage'
                 },
                 {
                     type: 'null'
@@ -396,7 +405,7 @@ export const AFTCollectionDetailSchema = {
         content: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/AFTCollectionContent'
+                    '$ref': '#/components/schemas/AFTCollectionContent'
                 },
                 {
                     type: 'null'
@@ -405,26 +414,21 @@ export const AFTCollectionDetailSchema = {
         },
         diagnostics: {
             items: {
-                $ref: '#/components/schemas/AFTCollectionDiagnosticLink'
+                '$ref': '#/components/schemas/AFTCollectionDiagnosticLink'
             },
             type: 'array',
             title: 'Diagnostics'
         },
         explorer_cards: {
             items: {
-                $ref: '#/components/schemas/AFTCollectionCard'
+                '$ref': '#/components/schemas/AFTCollectionCard'
             },
             type: 'array',
             title: 'Explorer Cards'
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'name',
-        'diagnostics',
-        'explorer_cards'
-    ],
+    required: ['id', 'name', 'diagnostics', 'explorer_cards'],
     title: 'AFTCollectionDetail'
 } as const;
 
@@ -454,11 +458,57 @@ export const AFTCollectionDiagnosticLinkSchema = {
         }
     },
     type: 'object',
-    required: [
-        'provider_slug',
-        'diagnostic_slug'
-    ],
+    required: ['provider_slug', 'diagnostic_slug'],
     title: 'AFTCollectionDiagnosticLink'
+} as const;
+
+export const AFTCollectionFilterControlSchema = {
+    properties: {
+        filter_key: {
+            type: 'string',
+            title: 'Filter Key'
+        },
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
+        },
+        default_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Value'
+        },
+        exclude_values: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Exclude Values'
+        }
+    },
+    type: 'object',
+    required: ['filter_key'],
+    title: 'AFTCollectionFilterControl',
+    description: 'A user-facing filter control (e.g. a dropdown) that overrides an other_filters key.'
 } as const;
 
 export const AFTCollectionGroupingConfigSchema = {
@@ -484,10 +534,7 @@ export const AFTCollectionGroupingConfigSchema = {
         }
     },
     type: 'object',
-    required: [
-        'group_by',
-        'hue'
-    ],
+    required: ['group_by', 'hue'],
     title: 'AFTCollectionGroupingConfig'
 } as const;
 
@@ -569,11 +616,7 @@ export const AFTCollectionSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'name',
-        'card_count'
-    ],
+    required: ['id', 'name', 'card_count'],
     title: 'AFTCollectionSummary'
 } as const;
 
@@ -669,25 +712,14 @@ export const AFTDiagnosticDetailSchema = {
         },
         diagnostics: {
             items: {
-                $ref: '#/components/schemas/RefDiagnosticLink'
+                '$ref': '#/components/schemas/RefDiagnosticLink'
             },
             type: 'array',
             title: 'Diagnostics'
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'name',
-        'theme',
-        'version_control',
-        'reference_dataset',
-        'endorser',
-        'provider_link',
-        'description',
-        'short_description',
-        'diagnostics'
-    ],
+    required: ['id', 'name', 'theme', 'version_control', 'reference_dataset', 'endorser', 'provider_link', 'description', 'short_description', 'diagnostics'],
     title: 'AFTDiagnosticDetail'
 } as const;
 
@@ -783,24 +815,14 @@ export const AFTDiagnosticSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'name',
-        'theme',
-        'version_control',
-        'reference_dataset',
-        'endorser',
-        'provider_link',
-        'description',
-        'short_description'
-    ],
+    required: ['id', 'name', 'theme', 'version_control', 'reference_dataset', 'endorser', 'provider_link', 'description', 'short_description'],
     title: 'AFTDiagnosticSummary'
 } as const;
 
 export const CMECMetricSchema = {
     properties: {
         DIMENSIONS: {
-            $ref: '#/components/schemas/MetricDimensions'
+            '$ref': '#/components/schemas/MetricDimensions'
         },
         RESULTS: {
             additionalProperties: true,
@@ -846,12 +868,11 @@ export const CMECMetricSchema = {
     },
     additionalProperties: true,
     type: 'object',
-    required: [
-        'DIMENSIONS',
-        'RESULTS'
-    ],
+    required: ['DIMENSIONS', 'RESULTS'],
     title: 'CMECMetric',
-    description: 'CMEC diagnostic bundle object\n\nContains the diagnostics calculated during a diagnostic execution, in a standardised format.'
+    description: `CMEC diagnostic bundle object
+
+Contains the diagnostics calculated during a diagnostic execution, in a standardised format.`
 } as const;
 
 export const CMIP6DatasetMetadataSchema = {
@@ -874,12 +895,7 @@ export const CMIP6DatasetMetadataSchema = {
         }
     },
     type: 'object',
-    required: [
-        'variable_id',
-        'source_id',
-        'experiment_id',
-        'variant_label'
-    ],
+    required: ['variable_id', 'source_id', 'experiment_id', 'variant_label'],
     title: 'CMIP6DatasetMetadata'
 } as const;
 
@@ -887,7 +903,7 @@ export const Collection_Dataset_Schema = {
     properties: {
         data: {
             items: {
-                $ref: '#/components/schemas/Dataset'
+                '$ref': '#/components/schemas/Dataset'
             },
             type: 'array',
             title: 'Data'
@@ -911,10 +927,7 @@ export const Collection_Dataset_Schema = {
         }
     },
     type: 'object',
-    required: [
-        'data',
-        'count'
-    ],
+    required: ['data', 'count'],
     title: 'Collection[Dataset]'
 } as const;
 
@@ -922,7 +935,7 @@ export const Collection_DiagnosticSummary_Schema = {
     properties: {
         data: {
             items: {
-                $ref: '#/components/schemas/DiagnosticSummary'
+                '$ref': '#/components/schemas/DiagnosticSummary'
             },
             type: 'array',
             title: 'Data'
@@ -946,10 +959,7 @@ export const Collection_DiagnosticSummary_Schema = {
         }
     },
     type: 'object',
-    required: [
-        'data',
-        'count'
-    ],
+    required: ['data', 'count'],
     title: 'Collection[DiagnosticSummary]'
 } as const;
 
@@ -957,7 +967,7 @@ export const Collection_ExecutionGroup_Schema = {
     properties: {
         data: {
             items: {
-                $ref: '#/components/schemas/ExecutionGroup'
+                '$ref': '#/components/schemas/ExecutionGroup'
             },
             type: 'array',
             title: 'Data'
@@ -981,10 +991,7 @@ export const Collection_ExecutionGroup_Schema = {
         }
     },
     type: 'object',
-    required: [
-        'data',
-        'count'
-    ],
+    required: ['data', 'count'],
     title: 'Collection[ExecutionGroup]'
 } as const;
 
@@ -992,7 +999,7 @@ export const Collection_Execution_Schema = {
     properties: {
         data: {
             items: {
-                $ref: '#/components/schemas/Execution'
+                '$ref': '#/components/schemas/Execution'
             },
             type: 'array',
             title: 'Data'
@@ -1016,10 +1023,7 @@ export const Collection_Execution_Schema = {
         }
     },
     type: 'object',
-    required: [
-        'data',
-        'count'
-    ],
+    required: ['data', 'count'],
     title: 'Collection[Execution]'
 } as const;
 
@@ -1040,7 +1044,7 @@ export const DatasetSchema = {
         metadata: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/CMIP6DatasetMetadata'
+                    '$ref': '#/components/schemas/CMIP6DatasetMetadata'
                 },
                 {
                     type: 'null'
@@ -1061,13 +1065,7 @@ export const DatasetSchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'slug',
-        'dataset_type',
-        'metadata',
-        'more_info_url'
-    ],
+    required: ['id', 'slug', 'dataset_type', 'metadata', 'more_info_url'],
     title: 'Dataset'
 } as const;
 
@@ -1078,7 +1076,7 @@ export const DiagnosticSummarySchema = {
             title: 'Id'
         },
         provider: {
-            $ref: '#/components/schemas/ProviderSummary'
+            '$ref': '#/components/schemas/ProviderSummary'
         },
         slug: {
             type: 'string',
@@ -1129,7 +1127,7 @@ export const DiagnosticSummarySchema = {
         },
         group_by: {
             items: {
-                $ref: '#/components/schemas/GroupBy'
+                '$ref': '#/components/schemas/GroupBy'
             },
             type: 'array',
             title: 'Group By'
@@ -1137,7 +1135,7 @@ export const DiagnosticSummarySchema = {
         aft_link: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/AFTDiagnosticDetail'
+                    '$ref': '#/components/schemas/AFTDiagnosticDetail'
                 },
                 {
                     type: 'null'
@@ -1148,7 +1146,7 @@ export const DiagnosticSummarySchema = {
             anyOf: [
                 {
                     items: {
-                        $ref: '#/components/schemas/ReferenceDatasetLink'
+                        '$ref': '#/components/schemas/ReferenceDatasetLink'
                     },
                     type: 'array'
                 },
@@ -1174,25 +1172,12 @@ export const DiagnosticSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'provider',
-        'slug',
-        'name',
-        'description',
-        'execution_groups',
-        'has_metric_values',
-        'has_scalar_values',
-        'has_series_values',
-        'execution_count',
-        'successful_execution_count',
-        'execution_group_count',
-        'successful_execution_group_count',
-        'group_by',
-        'aft_link'
-    ],
+    required: ['id', 'provider', 'slug', 'name', 'description', 'execution_groups', 'has_metric_values', 'has_scalar_values', 'has_series_values', 'execution_count', 'successful_execution_count', 'execution_group_count', 'successful_execution_group_count', 'group_by', 'aft_link'],
     title: 'DiagnosticSummary',
-    description: 'Summary information about a diagnostic.\n\nA diagnostic is a specific metric or set of metrics calculated by a provider.\nEach diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.'
+    description: `Summary information about a diagnostic.
+
+A diagnostic is a specific metric or set of metrics calculated by a provider.
+Each diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.`
 } as const;
 
 export const ExecutionSchema = {
@@ -1229,23 +1214,14 @@ export const ExecutionSchema = {
         },
         outputs: {
             items: {
-                $ref: '#/components/schemas/ExecutionOutput'
+                '$ref': '#/components/schemas/ExecutionOutput'
             },
             type: 'array',
             title: 'Outputs'
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'dataset_hash',
-        'dataset_count',
-        'successful',
-        'retracted',
-        'created_at',
-        'updated_at',
-        'outputs'
-    ],
+    required: ['id', 'dataset_hash', 'dataset_count', 'successful', 'retracted', 'created_at', 'updated_at', 'outputs'],
     title: 'Execution'
 } as const;
 
@@ -1265,7 +1241,7 @@ export const ExecutionGroupSchema = {
         },
         executions: {
             items: {
-                $ref: '#/components/schemas/Execution'
+                '$ref': '#/components/schemas/Execution'
             },
             type: 'array',
             title: 'Executions'
@@ -1273,7 +1249,7 @@ export const ExecutionGroupSchema = {
         latest_execution: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/Execution'
+                    '$ref': '#/components/schemas/Execution'
                 },
                 {
                     type: 'null'
@@ -1301,7 +1277,7 @@ export const ExecutionGroupSchema = {
             title: 'Selectors'
         },
         diagnostic: {
-            $ref: '#/components/schemas/DiagnosticSummary'
+            '$ref': '#/components/schemas/DiagnosticSummary'
         },
         created_at: {
             type: 'string',
@@ -1315,17 +1291,7 @@ export const ExecutionGroupSchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'key',
-        'dirty',
-        'executions',
-        'latest_execution',
-        'selectors',
-        'diagnostic',
-        'created_at',
-        'updated_at'
-    ],
+    required: ['id', 'key', 'dirty', 'executions', 'latest_execution', 'selectors', 'diagnostic', 'created_at', 'updated_at'],
     title: 'ExecutionGroup'
 } as const;
 
@@ -1340,7 +1306,7 @@ export const ExecutionOutputSchema = {
             title: 'Execution Id'
         },
         output_type: {
-            $ref: '#/components/schemas/ResultOutputType'
+            '$ref': '#/components/schemas/ResultOutputType'
         },
         filename: {
             type: 'string',
@@ -1374,18 +1340,7 @@ export const ExecutionOutputSchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'execution_id',
-        'output_type',
-        'filename',
-        'short_name',
-        'long_name',
-        'description',
-        'created_at',
-        'updated_at',
-        'url'
-    ],
+    required: ['id', 'execution_id', 'output_type', 'filename', 'short_name', 'long_name', 'description', 'created_at', 'updated_at', 'url'],
     title: 'ExecutionOutput'
 } as const;
 
@@ -1427,16 +1382,7 @@ export const ExecutionStatsSchema = {
         }
     },
     type: 'object',
-    required: [
-        'total_execution_groups',
-        'successful_execution_groups',
-        'failed_execution_groups',
-        'scalar_value_count',
-        'series_value_count',
-        'total_datasets',
-        'total_files',
-        'success_rate_percentage'
-    ],
+    required: ['total_execution_groups', 'successful_execution_groups', 'failed_execution_groups', 'scalar_value_count', 'series_value_count', 'total_datasets', 'total_files', 'success_rate_percentage'],
     title: 'ExecutionStats',
     description: 'Statistics for execution groups and their success rates.'
 } as const;
@@ -1456,10 +1402,7 @@ export const FacetSchema = {
         }
     },
     type: 'object',
-    required: [
-        'key',
-        'values'
-    ],
+    required: ['key', 'values'],
     title: 'Facet'
 } as const;
 
@@ -1485,10 +1428,7 @@ export const GroupBySchema = {
         }
     },
     type: 'object',
-    required: [
-        'source_type',
-        'group_by'
-    ],
+    required: ['source_type', 'group_by'],
     title: 'GroupBy'
 } as const;
 
@@ -1496,7 +1436,7 @@ export const HTTPValidationErrorSchema = {
     properties: {
         detail: {
             items: {
-                $ref: '#/components/schemas/ValidationError'
+                '$ref': '#/components/schemas/ValidationError'
             },
             type: 'array',
             title: 'Detail'
@@ -1510,7 +1450,10 @@ export const MetricDimensionsSchema = {
     additionalProperties: true,
     type: 'object',
     title: 'MetricDimensions',
-    description: 'CMEC diagnostic bundle DIMENSIONS object\n\nThis describes the order of the dimensions and their possible values.\nThe order of the dimensions matter as that determines how the executions are nested.',
+    description: `CMEC diagnostic bundle DIMENSIONS object
+
+This describes the order of the dimensions and their possible values.
+The order of the dimensions matter as that determines how the executions are nested.`,
     default: {
         json_structure: []
     }
@@ -1522,10 +1465,10 @@ export const MetricValueCollectionSchema = {
             items: {
                 anyOf: [
                     {
-                        $ref: '#/components/schemas/ScalarValue'
+                        '$ref': '#/components/schemas/ScalarValue'
                     },
                     {
-                        $ref: '#/components/schemas/SeriesValue'
+                        '$ref': '#/components/schemas/SeriesValue'
                     }
                 ]
             },
@@ -1536,9 +1479,13 @@ export const MetricValueCollectionSchema = {
             type: 'integer',
             title: 'Count'
         },
+        total_count: {
+            type: 'integer',
+            title: 'Total Count'
+        },
         facets: {
             items: {
-                $ref: '#/components/schemas/Facet'
+                '$ref': '#/components/schemas/Facet'
             },
             type: 'array',
             title: 'Facets'
@@ -1574,12 +1521,7 @@ export const MetricValueCollectionSchema = {
         }
     },
     type: 'object',
-    required: [
-        'data',
-        'count',
-        'facets',
-        'types'
-    ],
+    required: ['data', 'count', 'total_count', 'facets', 'types'],
     title: 'MetricValueCollection'
 } as const;
 
@@ -1601,20 +1543,14 @@ export const MetricValueFacetSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'dimensions',
-        'count'
-    ],
+    required: ['dimensions', 'count'],
     title: 'MetricValueFacetSummary',
     description: 'Summary of the dimensions used in a metric value collection.'
 } as const;
 
 export const MetricValueTypeSchema = {
     type: 'string',
-    enum: [
-        'scalar',
-        'series'
-    ],
+    enum: ['scalar', 'series'],
     title: 'MetricValueType',
     description: 'Type of metric values to query.'
 } as const;
@@ -1631,12 +1567,11 @@ export const ProviderSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'slug',
-        'name'
-    ],
+    required: ['slug', 'name'],
     title: 'ProviderSummary',
-    description: 'Summary information about a Metric Provider.\n\nThe diagnostic provider is the framework that was used to generate a set of metrics.'
+    description: `Summary information about a Metric Provider.
+
+The diagnostic provider is the framework that was used to generate a set of metrics.`
 } as const;
 
 export const RefDiagnosticLinkSchema = {
@@ -1651,10 +1586,7 @@ export const RefDiagnosticLinkSchema = {
         }
     },
     type: 'object',
-    required: [
-        'provider_slug',
-        'diagnostic_slug'
-    ],
+    required: ['provider_slug', 'diagnostic_slug'],
     title: 'RefDiagnosticLink',
     description: 'Link to a specific diagnostic calculated by a provider.'
 } as const;
@@ -1664,7 +1596,7 @@ export const ReferenceDatasetLinkSchema = {
         slug: {
             type: 'string',
             title: 'Slug',
-            description: 'Unique identifier for the dataset(e.g., \'obs4mips.CERES-EBAF.v4.2\')'
+            description: "Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')"
         },
         description: {
             anyOf: [
@@ -1680,33 +1612,30 @@ export const ReferenceDatasetLinkSchema = {
         },
         type: {
             type: 'string',
-            enum: [
-                'primary',
-                'secondary',
-                'comparison'
-            ],
+            enum: ['primary', 'secondary', 'comparison'],
             title: 'Type',
-            description: 'Role of this reference dataset:\n- \'primary\': Main reference dataset for the diagnostic\n- \'secondary\': Additional reference for comparison or validation\n- \'comparison\': Used for comparative analysis'
+            description: `Role of this reference dataset:
+- 'primary': Main reference dataset for the diagnostic
+- 'secondary': Additional reference for comparison or validation
+- 'comparison': Used for comparative analysis`
         }
     },
     type: 'object',
-    required: [
-        'slug',
-        'type'
-    ],
+    required: ['slug', 'type'],
     title: 'ReferenceDatasetLink',
-    description: 'Link to a reference dataset used by a diagnostic.\n\nReference datasets are observational or reanalysis datasets that diagnostics\ncompare model outputs against. They can be classified by their role in the analysis.'
+    description: `Link to a reference dataset used by a diagnostic.
+
+Reference datasets are observational or reanalysis datasets that diagnostics
+compare model outputs against. They can be classified by their role in the analysis.`
 } as const;
 
 export const ResultOutputTypeSchema = {
     type: 'string',
-    enum: [
-        'plot',
-        'data',
-        'html'
-    ],
+    enum: ['plot', 'data', 'html'],
     title: 'ResultOutputType',
-    description: 'Types of supported outputs\n\nThese map to the categories of output in the CMEC output bundle'
+    description: `Types of supported outputs
+
+These map to the categories of output in the CMEC output bundle`
 } as const;
 
 export const ScalarValueSchema = {
@@ -1780,10 +1709,7 @@ export const ScalarValueSchema = {
             anyOf: [
                 {
                     type: 'string',
-                    enum: [
-                        'verified',
-                        'unverified'
-                    ]
+                    enum: ['verified', 'unverified']
                 },
                 {
                     type: 'null'
@@ -1793,15 +1719,11 @@ export const ScalarValueSchema = {
         }
     },
     type: 'object',
-    required: [
-        'dimensions',
-        'value',
-        'id',
-        'execution_group_id',
-        'execution_id'
-    ],
+    required: ['dimensions', 'value', 'id', 'execution_group_id', 'execution_id'],
     title: 'ScalarValue',
-    description: 'A flattened representation of a scalar diagnostic value\n\nThis includes the dimensions and the value of the diagnostic'
+    description: `A flattened representation of a scalar diagnostic value
+
+This includes the dimensions and the value of the diagnostic`
 } as const;
 
 export const SeriesValueSchema = {
@@ -1894,15 +1816,11 @@ export const SeriesValueSchema = {
         }
     },
     type: 'object',
-    required: [
-        'id',
-        'dimensions',
-        'values',
-        'execution_group_id',
-        'execution_id'
-    ],
+    required: ['id', 'dimensions', 'values', 'execution_group_id', 'execution_id'],
     title: 'SeriesValue',
-    description: 'A flattened representation of a series diagnostic value\n\nThis includes the dimensions, values array, index array, and index name'
+    description: `A flattened representation of a series diagnostic value
+
+This includes the dimensions, values array, index array, and index name`
 } as const;
 
 export const ThemeDetailSchema = {
@@ -1928,26 +1846,21 @@ export const ThemeDetailSchema = {
         },
         collections: {
             items: {
-                $ref: '#/components/schemas/AFTCollectionDetail'
+                '$ref': '#/components/schemas/AFTCollectionDetail'
             },
             type: 'array',
             title: 'Collections'
         },
         explorer_cards: {
             items: {
-                $ref: '#/components/schemas/AFTCollectionCard'
+                '$ref': '#/components/schemas/AFTCollectionCard'
             },
             type: 'array',
             title: 'Explorer Cards'
         }
     },
     type: 'object',
-    required: [
-        'slug',
-        'title',
-        'collections',
-        'explorer_cards'
-    ],
+    required: ['slug', 'title', 'collections', 'explorer_cards'],
     title: 'ThemeDetail'
 } as const;
 
@@ -1982,12 +1895,7 @@ export const ThemeSummarySchema = {
         }
     },
     type: 'object',
-    required: [
-        'slug',
-        'title',
-        'collection_count',
-        'card_count'
-    ],
+    required: ['slug', 'title', 'collection_count', 'card_count'],
     title: 'ThemeSummary'
 } as const;
 
@@ -2024,202 +1932,6 @@ export const ValidationErrorSchema = {
         }
     },
     type: 'object',
-    required: [
-        'loc',
-        'msg',
-        'type'
-    ],
+    required: ['loc', 'msg', 'type'],
     title: 'ValidationError'
-} as const;
-
-export const Collection_Dataset_WritableSchema = {
-    properties: {
-        data: {
-            items: {
-                $ref: '#/components/schemas/DatasetWritable'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        total_count: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Total Count'
-        }
-    },
-    type: 'object',
-    required: [
-        'data'
-    ],
-    title: 'Collection[Dataset]'
-} as const;
-
-export const Collection_DiagnosticSummary_WritableSchema = {
-    properties: {
-        data: {
-            items: {
-                $ref: '#/components/schemas/DiagnosticSummary'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        total_count: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Total Count'
-        }
-    },
-    type: 'object',
-    required: [
-        'data'
-    ],
-    title: 'Collection[DiagnosticSummary]'
-} as const;
-
-export const Collection_ExecutionGroup_WritableSchema = {
-    properties: {
-        data: {
-            items: {
-                $ref: '#/components/schemas/ExecutionGroup'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        total_count: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Total Count'
-        }
-    },
-    type: 'object',
-    required: [
-        'data'
-    ],
-    title: 'Collection[ExecutionGroup]'
-} as const;
-
-export const Collection_Execution_WritableSchema = {
-    properties: {
-        data: {
-            items: {
-                $ref: '#/components/schemas/Execution'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        total_count: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Total Count'
-        }
-    },
-    type: 'object',
-    required: [
-        'data'
-    ],
-    title: 'Collection[Execution]'
-} as const;
-
-export const DatasetWritableSchema = {
-    properties: {
-        id: {
-            type: 'integer',
-            title: 'Id'
-        },
-        slug: {
-            type: 'string',
-            title: 'Slug'
-        },
-        dataset_type: {
-            type: 'string',
-            title: 'Dataset Type'
-        },
-        metadata: {
-            anyOf: [
-                {
-                    $ref: '#/components/schemas/CMIP6DatasetMetadata'
-                },
-                {
-                    type: 'null'
-                }
-            ]
-        }
-    },
-    type: 'object',
-    required: [
-        'id',
-        'slug',
-        'dataset_type',
-        'metadata'
-    ],
-    title: 'Dataset'
-} as const;
-
-export const ExecutionStatsWritableSchema = {
-    properties: {
-        total_execution_groups: {
-            type: 'integer',
-            title: 'Total Execution Groups'
-        },
-        successful_execution_groups: {
-            type: 'integer',
-            title: 'Successful Execution Groups'
-        },
-        failed_execution_groups: {
-            type: 'integer',
-            title: 'Failed Execution Groups'
-        },
-        scalar_value_count: {
-            type: 'integer',
-            title: 'Scalar Value Count'
-        },
-        series_value_count: {
-            type: 'integer',
-            title: 'Series Value Count'
-        },
-        total_datasets: {
-            type: 'integer',
-            title: 'Total Datasets'
-        },
-        total_files: {
-            type: 'integer',
-            title: 'Total Files'
-        }
-    },
-    type: 'object',
-    required: [
-        'total_execution_groups',
-        'successful_execution_groups',
-        'failed_execution_groups',
-        'scalar_value_count',
-        'series_value_count',
-        'total_datasets',
-        'total_files'
-    ],
-    title: 'ExecutionStats',
-    description: 'Statistics for execution groups and their success rates.'
 } as const;

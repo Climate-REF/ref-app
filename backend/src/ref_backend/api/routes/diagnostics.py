@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import Integer, func, text
+from sqlalchemy import Integer, func
 from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
@@ -10,10 +10,13 @@ from climate_ref.models.dataset import CMIP6Dataset
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
+    METRIC_VALUES_NON_FILTER_PARAMS,
     MetricValueType,
     apply_metric_filters,
+    collect_facets_from_query,
     generate_csv_response_scalar,
     generate_csv_response_series,
+    paginate_annotated_values,
     process_scalar_values,
 )
 from ref_backend.models import (
@@ -174,23 +177,18 @@ async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
     # Get unique values for each CV dimension column from both scalar and series values
     dimension_summary = {}
 
-    # Get dimensions from scalar values
+    # Get dimensions from scalar and series values using ORM queries
+    # to avoid raw SQL interpolation
     for dimension_name in models.ScalarMetricValue._cv_dimensions:
-        scalar_query = text(f"""
-            SELECT DISTINCT {dimension_name}
-            FROM {models.ScalarMetricValue.__tablename__}
-            WHERE {dimension_name} IS NOT NULL
-        """)  # noqa: S608
-        scalar_result = app_context.session.execute(scalar_query).fetchall()
+        if not hasattr(models.ScalarMetricValue, dimension_name):
+            continue
+
+        scalar_col = getattr(models.ScalarMetricValue, dimension_name)
+        scalar_result = app_context.session.query(scalar_col).filter(scalar_col.isnot(None)).distinct().all()
         scalar_values = {row[0] for row in scalar_result}
 
-        # Get dimensions from series values
-        series_query = text(f"""
-            SELECT DISTINCT {dimension_name}
-            FROM {models.SeriesMetricValue.__tablename__}
-            WHERE {dimension_name} IS NOT NULL
-        """)  # noqa: S608
-        series_result = app_context.session.execute(series_query).fetchall()
+        series_col = getattr(models.SeriesMetricValue, dimension_name)
+        series_result = app_context.session.query(series_col).filter(series_col.isnot(None)).distinct().all()
         series_values = {row[0] for row in series_result}
 
         # Combine and sort unique values
@@ -292,6 +290,8 @@ async def list_metric_values(  # noqa: PLR0913
     request: Request,
     value_type: MetricValueType = Query(..., description="Type of metric values to return"),
     format: str | None = None,
+    offset: int = Query(0, ge=0, description="Number of items to skip for pagination"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of items to return"),
     detect_outliers: Literal["off", "iqr"] = Query(
         "iqr", description="Outlier detection method: 'off' or 'iqr'"
     ),
@@ -304,6 +304,8 @@ async def list_metric_values(  # noqa: PLR0913
 
     - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
     - `format`: Return format - 'json' (default) or 'csv'
+    - `offset`: Number of items to skip (default 0)
+    - `limit`: Maximum number of items to return (default 50, max 500)
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
@@ -311,7 +313,7 @@ async def list_metric_values(  # noqa: PLR0913
     query_params = request.query_params
     filter_params = {}
     for key, value in query_params.items():
-        if key in {"format", "value_type"}:
+        if key in METRIC_VALUES_NON_FILTER_PARAMS:
             continue
         filter_params[key] = value
 
@@ -325,14 +327,13 @@ async def list_metric_values(  # noqa: PLR0913
 
         # Apply filtering
         scalar_query = apply_metric_filters(scalar_query, filter_params, isolate_ids, exclude_ids)
-        scalar_values = scalar_query.all() if scalar_query else []
-
-        # Process scalar values with outlier detection
-        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
-            scalar_values, detect_outliers, include_unverified
-        )
 
         if format == "csv":
+            # CSV export returns all results without pagination
+            scalar_values = scalar_query.all() if scalar_query else []
+            annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
+                scalar_values, detect_outliers, include_unverified
+            )
             filename = f"metric_values_scalar_{provider_slug}_{diagnostic_slug}.csv"
             return generate_csv_response_scalar(
                 annotated_scalar_values,
@@ -341,12 +342,31 @@ async def list_metric_values(  # noqa: PLR0913
                 outlier_count,
                 filename,
             )
-        else:
-            return MetricValueCollection.build_scalar(
-                scalar_values=annotated_scalar_values,
-                had_outliers=had_outliers if detection_ran else None,
-                outlier_count=outlier_count if detection_ran else None,
-            )
+
+        facets = collect_facets_from_query(scalar_query) if scalar_query else []
+
+        # NOTE: We intentionally load ALL scalar values into memory here rather
+        # than using SQL-level OFFSET/LIMIT. Outlier detection (IQR) needs the
+        # full dataset to compute globally consistent bounds -- paginating at
+        # the DB level would produce different IQR thresholds per page.
+        all_scalar_values = scalar_query.all() if scalar_query else []
+
+        # Process scalar values with outlier detection (and optional filtering)
+        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
+            all_scalar_values, detect_outliers, include_unverified
+        )
+
+        # total_count reflects the post-outlier-filter count so pagination math is correct
+        total_count = len(annotated_scalar_values)
+        page = paginate_annotated_values(annotated_scalar_values, offset, limit)
+
+        return MetricValueCollection.build_scalar(
+            scalar_values=page,
+            total_count=total_count,
+            had_outliers=had_outliers if detection_ran else None,
+            outlier_count=outlier_count if detection_ran else None,
+            facets=facets,
+        )
 
     elif value_type == MetricValueType.SERIES:
         series_query = (
@@ -359,9 +379,9 @@ async def list_metric_values(  # noqa: PLR0913
         # Apply filtering
         series_query = apply_metric_filters(series_query, filter_params, isolate_ids, exclude_ids)
 
-        series_values = series_query.all() if series_query else []
-
         if format == "csv":
+            # CSV export returns all results without pagination
+            series_values = series_query.all() if series_query else []
             filename = f"metric_values_series_{provider_slug}_{diagnostic_slug}.csv"
             return generate_csv_response_series(
                 series_values,
@@ -370,11 +390,17 @@ async def list_metric_values(  # noqa: PLR0913
                 outlier_count=0,
                 filename=filename,
             )
-        else:
-            return MetricValueCollection.build_series(
-                series_values=series_values,
-                had_outliers=None,
-                outlier_count=None,
-            )
+
+        total_count = series_query.count() if series_query else 0
+        facets = collect_facets_from_query(series_query) if series_query else []
+        series_values = series_query.offset(offset).limit(limit).all() if series_query else []
+
+        return MetricValueCollection.build_series(
+            series_values=series_values,
+            total_count=total_count,
+            had_outliers=None,
+            outlier_count=None,
+            facets=facets,
+        )
     else:
         raise HTTPException(status_code=500, detail="Unknown value_type")

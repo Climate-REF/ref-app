@@ -12,6 +12,8 @@ import type {
 type FetchQueryOptions = (options: any) => any;
 type FetchDownloadFunction = (options: any) => Promise<any>;
 
+export const DEFAULT_PAGE_SIZE = 50;
+
 interface UseValuesTabOptions<
   TPath extends Record<string, any> = Record<string, any>,
 > {
@@ -37,9 +39,13 @@ const EXCLUDED_FROM_FACET_FILTERS = [
   "include_unverified",
   "isolate_ids",
   "exclude_ids",
+  "offset",
+  "limit",
+  "execution_id",
 ];
 
 // Parameters that should not be passed to the API query
+// (offset and limit ARE passed to the API, so they are not excluded here)
 const EXCLUDED_FROM_API = ["tab", "groupBy", "hue", "style"];
 
 /**
@@ -63,6 +69,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
     style: searchStyle,
     detect_outliers: searchDetectOutliers,
     include_unverified: searchIncludeUnverified,
+    limit: searchLimit,
   } = search;
 
   // Fetch metric values using the provided query options function
@@ -203,7 +210,12 @@ export function useMetricValues<TPath extends Record<string, any>>({
       }
 
       navigate({
-        search: { ...filterParams, ...otherParams } as any,
+        search: {
+          ...filterParams,
+          ...otherParams,
+          ...(searchLimit !== undefined ? { limit: searchLimit } : {}),
+          offset: 0,
+        } as any,
         replace: true,
       });
     },
@@ -214,26 +226,31 @@ export function useMetricValues<TPath extends Record<string, any>>({
       searchStyle,
       searchDetectOutliers,
       searchIncludeUnverified,
+      searchLimit,
       navigate,
     ],
   );
 
-  // Handle outlier detection changes
+  // Handle outlier detection changes (reset offset since total_count may change)
   const handleDetectOutliersChange = useCallback(
     (value: string) => {
       navigate({
-        search: { ...search, detect_outliers: String(value) } as any,
+        search: { ...search, detect_outliers: String(value), offset: 0 } as any,
         replace: true,
       });
     },
     [search, navigate],
   );
 
-  // Handle unverified inclusion changes
+  // Handle unverified inclusion changes (reset offset since total_count may change)
   const handleIncludeUnverifiedChange = useCallback(
     (value: boolean) => {
       navigate({
-        search: { ...search, include_unverified: String(value) } as any,
+        search: {
+          ...search,
+          include_unverified: String(value),
+          offset: 0,
+        } as any,
         replace: true,
       });
     },
@@ -258,6 +275,28 @@ export function useMetricValues<TPath extends Record<string, any>>({
       setFilteredData(data);
     },
     [],
+  );
+
+  // Handle pagination offset changes
+  const handleOffsetChange = useCallback(
+    (newOffset: number) => {
+      navigate({
+        search: { ...search, offset: newOffset } as any,
+        replace: true,
+      });
+    },
+    [search, navigate],
+  );
+
+  // Handle pagination limit changes
+  const handleLimitChange = useCallback(
+    (newLimit: number) => {
+      navigate({
+        search: { ...search, limit: newLimit, offset: 0 } as any,
+        replace: true,
+      });
+    },
+    [search, navigate],
   );
 
   // Handle CSV download
@@ -306,6 +345,14 @@ export function useMetricValues<TPath extends Record<string, any>>({
     initialFilters,
     isolateIds,
     excludeIds,
+    pagination: {
+      offset: Number(search.offset) || 0,
+      limit: Number(search.limit) || DEFAULT_PAGE_SIZE,
+      totalCount:
+        (metricValues as MetricValueCollection | undefined)?.total_count ?? 0,
+      onOffsetChange: handleOffsetChange,
+      onLimitChange: handleLimitChange,
+    },
     handlers: {
       onFiltersChange: handleFiltersChange,
       onDetectOutliersChange: handleDetectOutliersChange,

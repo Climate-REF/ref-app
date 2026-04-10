@@ -13,10 +13,11 @@ def get_ref_config(settings: Settings) -> Config:
     Get the REF configuration object
     """
     config_fname = Path(settings.REF_CONFIGURATION) / "ref.toml"
-    if not config_fname.exists():
-        raise FileNotFoundError(f"REF configuration file not found: {config_fname}")
-    logger.info(f"Loading REF configuration from {config_fname}")
-    return Config.load(config_fname)
+    if config_fname.exists():
+        logger.info(f"Loading REF configuration from {config_fname}")
+    else:
+        logger.info(f"REF configuration file not found at {config_fname}, using defaults")
+    return Config.load(config_fname, allow_missing=True)
 
 
 def get_database(ref_config: Config) -> Database:

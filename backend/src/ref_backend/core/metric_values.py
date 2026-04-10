@@ -4,7 +4,7 @@ import csv
 import io
 from collections.abc import Generator, Sequence
 from enum import StrEnum
-from typing import Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Query
@@ -15,6 +15,9 @@ from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.outliers import detect_outliers_in_scalar_values
 from ref_backend.models import AnnotatedScalarValue
+
+if TYPE_CHECKING:
+    from ref_backend.models import Facet
 
 TMetricValueModel = TypeVar("TMetricValueModel", bound=models.ScalarMetricValue | models.SeriesMetricValue)
 
@@ -69,6 +72,49 @@ def apply_metric_filters(
     return query
 
 
+METRIC_VALUES_NON_FILTER_PARAMS = frozenset(
+    {
+        "format",
+        "value_type",
+        "offset",
+        "limit",
+        "detect_outliers",
+        "include_unverified",
+        "isolate_ids",
+        "exclude_ids",
+    }
+)
+
+
+def collect_facets_from_query(query: Query[TMetricValueModel]) -> list["Facet"]:
+    """Compute facet values from the full filtered query (before pagination).
+
+    Uses ``DISTINCT`` per CV dimension column so the work scales with
+    the number of unique facet values rather than the total row count.
+    Returns a list of :class:`ref_backend.models.Facet` objects.
+    """
+    from ref_backend.models import Facet  # noqa: PLC0415
+
+    # Determine which CV dimension columns are registered
+    entity = query.column_descriptions[0]["entity"]
+    cv_dims: list[str] = getattr(entity, "_cv_dimensions", [])
+
+    if not cv_dims:
+        return []
+
+    facets: list[Facet] = []
+
+    for key in cv_dims:
+        col = getattr(entity, key)
+        distinct_values = [
+            value for (value,) in query.with_entities(col).order_by(None).distinct() if value is not None
+        ]
+        if distinct_values:
+            facets.append(Facet(key=key, values=distinct_values))
+
+    return facets
+
+
 def process_scalar_values(
     scalar_values: Sequence[models.ScalarMetricValue],
     detect_outliers: Literal["off", "iqr"],
@@ -77,8 +123,13 @@ def process_scalar_values(
     """
     Process scalar values with optional outlier detection.
 
+    Outlier detection runs on the **full** (unpaginated) set so that IQR
+    bounds are computed globally.  When ``include_unverified`` is False the
+    flagged outliers are removed from the returned list.  Callers are
+    responsible for paginating the result afterwards.
+
     Args:
-        scalar_values: List of scalar metric values
+        scalar_values: List of scalar metric values (should be the full query result, not a paginated slice)
         detect_outliers: Outlier detection method
         include_unverified: Whether to include outlier values
 
@@ -100,6 +151,15 @@ def process_scalar_values(
         annotated_scalar_values = [AnnotatedScalarValue(value=v) for v in scalar_values]
 
     return annotated_scalar_values, had_outliers, outlier_count, detection_ran
+
+
+def paginate_annotated_values(
+    values: list[AnnotatedScalarValue],
+    offset: int,
+    limit: int,
+) -> list[AnnotatedScalarValue]:
+    """Return a slice of annotated values for the requested page."""
+    return values[offset : offset + limit]
 
 
 def generate_csv_response_scalar(
