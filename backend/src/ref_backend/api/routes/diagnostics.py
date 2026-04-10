@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import Integer, func, text
+from sqlalchemy import Integer, func
 from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
@@ -177,23 +177,18 @@ async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
     # Get unique values for each CV dimension column from both scalar and series values
     dimension_summary = {}
 
-    # Get dimensions from scalar values
+    # Get dimensions from scalar and series values using ORM queries
+    # to avoid raw SQL interpolation
     for dimension_name in models.ScalarMetricValue._cv_dimensions:
-        scalar_query = text(f"""
-            SELECT DISTINCT {dimension_name}
-            FROM {models.ScalarMetricValue.__tablename__}
-            WHERE {dimension_name} IS NOT NULL
-        """)  # noqa: S608
-        scalar_result = app_context.session.execute(scalar_query).fetchall()
+        if not hasattr(models.ScalarMetricValue, dimension_name):
+            continue
+
+        scalar_col = getattr(models.ScalarMetricValue, dimension_name)
+        scalar_result = app_context.session.query(scalar_col).filter(scalar_col.isnot(None)).distinct().all()
         scalar_values = {row[0] for row in scalar_result}
 
-        # Get dimensions from series values
-        series_query = text(f"""
-            SELECT DISTINCT {dimension_name}
-            FROM {models.SeriesMetricValue.__tablename__}
-            WHERE {dimension_name} IS NOT NULL
-        """)  # noqa: S608
-        series_result = app_context.session.execute(series_query).fetchall()
+        series_col = getattr(models.SeriesMetricValue, dimension_name)
+        series_result = app_context.session.query(series_col).filter(series_col.isnot(None)).distinct().all()
         series_values = {row[0] for row in series_result}
 
         # Combine and sort unique values

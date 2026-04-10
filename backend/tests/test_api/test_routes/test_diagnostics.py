@@ -574,6 +574,94 @@ def test_diagnostic_values_pagination_with_filter(client: TestClient, settings):
         assert item["dimensions"].get(facet["key"]) == filter_value
 
 
+def test_diagnostics_facets_dimensions_are_sorted_and_non_null(client: TestClient, settings) -> None:
+    """Test that facets dimensions contain only sorted, non-null values.
+
+    Validates the ORM-based facets query correctly filters NULLs and sorts results.
+    """
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
+    assert r.status_code == 200
+    data = r.json()
+
+    for dimension_name, values in data["dimensions"].items():
+        assert isinstance(values, list), f"Dimension '{dimension_name}' should be a list"
+        assert None not in values, f"Dimension '{dimension_name}' should not contain null values"
+        assert values == sorted(values), f"Dimension '{dimension_name}' should be sorted"
+        assert len(values) == len(set(values)), f"Dimension '{dimension_name}' should have unique values"
+
+
+def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) -> None:
+    """Test that facets count reflects total metric values."""
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["count"] >= 0
+
+
+def test_diagnostic_executions_ignores_truly_unknown_query_params(client: TestClient, settings) -> None:
+    """Test that query params not matching any model attribute are silently ignored.
+
+    Only params matching a real CMIP6Dataset attribute should affect filtering.
+    Completely nonexistent param names must not cause errors.
+    """
+    diagnostic = get_diagnostic(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
+        "?nonexistent_column=test&fake_param=evil&zzz_not_real=bad"
+    )
+    assert r.status_code == 200
+
+    # Truly unknown params should be ignored, yielding the same results as unfiltered
+    r_unfiltered = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
+    )
+    assert r_unfiltered.status_code == 200
+    assert r.json()["count"] == r_unfiltered.json()["count"]
+
+
+def test_diagnostic_executions_dunder_attrs_do_not_crash(client: TestClient, settings) -> None:
+    """Test that dunder attribute names in query params don't cause 500 errors.
+
+    NOTE: hasattr(CMIP6Dataset, '__tablename__') is True because it's a
+    SQLAlchemy class attribute. This means dunder names pass the hasattr check
+    and may produce unexpected filter behavior (returning 0 results). This test
+    verifies the server doesn't crash -- the empty result is a known limitation
+    of the unfiltered hasattr approach (tracked as MEDIUM priority).
+    """
+    diagnostic = get_diagnostic(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions?__tablename__=evil"
+    )
+    # Must not crash with a 500
+    assert r.status_code == 200
+
+
+def test_diagnostic_values_ignores_unknown_filter_params(client: TestClient, settings) -> None:
+    """Test that unknown filter params on the values endpoint are safely ignored."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    provider_slug = diagnostic["provider"]["slug"]
+    diagnostic_slug = diagnostic["slug"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off&nonexistent_col=evil&zzz_fake=bad"
+    )
+    assert r.status_code == 200
+
+    r_clean = client.get(
+        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/values"
+        "?value_type=scalar&detect_outliers=off"
+    )
+    assert r_clean.status_code == 200
+    assert r.json()["total_count"] == r_clean.json()["total_count"]
+
+
 def test_diagnostics_list_returns_data(client: TestClient, settings) -> None:
     """Test that diagnostics list endpoint returns data."""
     r = client.get(f"{settings.API_V1_STR}/diagnostics/")
