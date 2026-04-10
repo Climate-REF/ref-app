@@ -1,6 +1,6 @@
 [project]
 name = "ref-backend"
-version = "0.2.2"
+version = "0.2.3"
 description = "Backend for the Climate Rapid Evaluation Framework"
 requires-python = ">=3.11"
 dependencies = [
@@ -46,7 +46,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.bumpversion]
-current_version = "0.2.2"
+current_version = "0.2.3"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 tag = true

@@ -1,3 +1,10 @@
+## v0.2.3 (2026-04-10)
+
+### Bug Fixes
+
+- Fixed high-priority security vulnerabilities: replaced raw SQL interpolation in diagnostics facets endpoint with safe ORM queries, disabled PII collection in Sentry, and restricted CORS to GET-only methods for the read-only API. (#28)
+
+
 ## v0.2.2 (2026-04-09)
 
 ### Trivial Changes
