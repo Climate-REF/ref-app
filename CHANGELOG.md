@@ -1,3 +1,20 @@
+## v0.3.0 (2026-04-13)
+
+### Improvements
+
+- Upgraded `@hey-api/openapi-ts` to v0.95.0 and removed the standalone `@hey-api/client-fetch` dependency, which is now bundled with the code generator. (#24)
+
+### Breaking Changes
+
+- The default `REF_CONFIGURATION` path in the image changed from `/app/.ref` to `/ref`,
+  to align with the `climate-ref` worker image. Deployments that relied on the default must
+  remount their config/state volume at `/ref`, or set `REF_CONFIGURATION` explicitly.
+
+  Added a `REF_READ_ONLY_DATABASE` setting so the API can run against a read-only `/ref` volume,
+  using `climate-ref` 0.13.1's `Database.from_config(read_only=True)` and `Database.migration_status` helpers.
+  Bumped `vite` to `>=7.3.2` for a security fix and refreshed the Python lockfile. (#30)
+
+
 ## v0.2.3 (2026-04-10)
 
 ### Bug Fixes
