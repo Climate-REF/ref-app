@@ -20,8 +20,18 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable --no-dev --no-install-project
 
 ADD backend /app
+# --no-editable ensures climate-ref / climate-ref-core install from wheels
+# (wheels include pycmec/*.yaml package data); an editable install would
+# resolve them via a .pth file and could miss package data if a source tree
+# is present.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-editable --no-dev
+
+# Fail the build early if climate_ref_core package data is missing from the
+# installed wheel — see https://github.com/Climate-REF/ref-app/issues/29.
+RUN uv run python -c "import importlib.resources, pathlib; \
+    p = pathlib.Path(str(importlib.resources.files('climate_ref_core.pycmec') / 'cv_cmip7_aft.yaml')); \
+    assert p.is_file(), f'Missing package data: {p}'"
 
 
 # Build the frontend

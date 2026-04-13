@@ -28,8 +28,8 @@ from ref_backend.core.ref import get_database, get_provider_registry, get_ref_co
 
 # Initialize singletons at application startup
 ref_config = get_ref_config(settings)
-database = get_database(ref_config)
-provider_registry = get_provider_registry(ref_config)
+database = get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
+provider_registry = get_provider_registry(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
 
 setup_logging(settings.LOG_LEVEL)
 app = build_app(settings, ref_config, database)
