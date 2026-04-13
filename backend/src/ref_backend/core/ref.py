@@ -51,12 +51,13 @@ def _check_migration_status(database: Database, ref_config: Config) -> None:
 
     Mirrors the ``ref db status`` CLI check: compare the current alembic
     revision against the head revision defined by the bundled alembic
-    scripts. When they differ, log a warning rather than raising — the
-    migration Job that owns ``/ref`` may be running a newer version of
-    ``climate-ref`` whose revisions this image doesn't know about, and the
-    API should still come up as a read-only consumer. Only raise when the
-    database has no alembic stamp at all *and* migrations are expected to
-    have been run (``ref_config.db.run_migrations``).
+    scripts. When they differ, log a warning rather than raising.
+
+    Raises
+    ------
+    ValueError
+        Raised when the database has no alembic stamp at all *and* migrations are expected to
+        have been run (``ref_config.db.run_migrations``).
     """
     script = ScriptDirectory.from_config(database.alembic_config(ref_config))
     head_rev = script.get_current_head()
