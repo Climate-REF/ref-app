@@ -68,6 +68,18 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Climate Rapid Evaluation Framework"
     SENTRY_DSN: HttpUrl | None = None
     REF_CONFIGURATION: str = "data"
+    REF_READ_ONLY_DATABASE: bool = False
+    """
+    Open the SQLite database in read-only mode.
+
+    When true, the API opens the configured SQLite database via a URI-form
+    connection string with ``mode=ro&immutable=1`` so that SQLite does not
+    attempt to create a journal/WAL sidecar. This lets the REF state volume
+    (e.g. ``/ref``) be mounted read-only in deployments where the API is a
+    pure consumer of worker-produced state.
+
+    Ignored for non-SQLite databases.
+    """
     STATIC_DIR: str | None = None
     USE_TEST_DATA: bool = False
     """

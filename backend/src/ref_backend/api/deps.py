@@ -24,8 +24,8 @@ def _ref_config_dependency(settings: SettingsDep) -> Config:
 REFConfigDep = Annotated[Config, Depends(_ref_config_dependency)]
 
 
-def _get_database_dependency(ref_config: REFConfigDep) -> Database:
-    return get_database(ref_config)
+def _get_database_dependency(settings: SettingsDep, ref_config: REFConfigDep) -> Database:
+    return get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
 
 
 DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
@@ -57,11 +57,11 @@ class AppContext:
     provider_registry: ProviderRegistry
 
 
-def _provider_registry_dependency(ref_config: REFConfigDep) -> ProviderRegistry:
+def _provider_registry_dependency(settings: SettingsDep, ref_config: REFConfigDep) -> ProviderRegistry:
     """
     Get the provider registry
     """
-    return get_provider_registry(ref_config)
+    return get_provider_registry(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
 
 
 ProviderRegistryDep = Annotated[ProviderRegistry, Depends(_provider_registry_dependency)]
