@@ -14,6 +14,26 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { downloadTextFile } from "@/lib/downloadUtils.ts";
 import { ExecutionLogView, type LogMessage } from "./executionLogView.tsx";
 
+function isValidationError(
+  error: unknown,
+): error is { detail: Array<{ msg: string }> } {
+  if (typeof error !== "object" || error === null || !("detail" in error)) {
+    return false;
+  }
+  const { detail } = error as { detail: unknown };
+  return (
+    Array.isArray(detail) &&
+    detail.length > 0 &&
+    typeof detail[0]?.msg === "string"
+  );
+}
+
+function formatValidationError(error: {
+  detail: Array<{ msg: string }>;
+}): string {
+  return error.detail.map((d) => d.msg).join("; ");
+}
+
 interface ExecutionLogContainerProps {
   groupId: string;
   executionId?: string;
@@ -123,7 +143,12 @@ export function ExecutionLogContainer({
         <CardHeader>
           <CardTitle>Error Loading Logs</CardTitle>
           <CardDescription>
-            An error occurred while loading the logs: {error.message}
+            An error occurred while loading the logs:{" "}
+            {error instanceof Error
+              ? error.message
+              : isValidationError(error)
+                ? formatValidationError(error)
+                : JSON.stringify(error)}
           </CardDescription>
         </CardHeader>
       </Card>
