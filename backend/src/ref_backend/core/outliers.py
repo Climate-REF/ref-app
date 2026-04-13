@@ -140,9 +140,11 @@ def detect_outliers_in_scalar_values(
                 lower_bound, upper_bound = iqr_bounds
                 # Apply bounds to individual values (Reference values always non-outlier)
                 source_id_flags = group_values.apply(
-                    lambda row: (row["value"] < lower_bound or row["value"] > upper_bound)
-                    if row["source_id"] != "Reference"
-                    else False,
+                    lambda row: (
+                        (row["value"] < lower_bound or row["value"] > upper_bound)
+                        if row["source_id"] != "Reference"
+                        else False
+                    ),
                     axis=1,
                 )
             else:

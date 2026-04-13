@@ -5,13 +5,11 @@ description = "Backend for the Climate Rapid Evaluation Framework"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",
-    "python-multipart<1.0.0,>=0.0.7",
-    "tenacity<9.0.0,>=8.2.3",
     "pydantic>2.0",
     "psycopg[binary]<4.0.0,>=3.1.13",
-    "pydantic-settings<3.0.0,>=2.2.1",
+    "pydantic-settings<3.0.0,>=2.13.1",
     "sentry-sdk[fastapi]>=2.0.0",
-    "climate-ref[aft-providers,postgres]>=0.13.0,<0.14",
+    "climate-ref[aft-providers,postgres]>=0.13.1,<0.14",
     "loguru",
     "pyyaml>=6.0",
     "fastapi-sqlalchemy-monitor>=1.1.3",
@@ -19,9 +17,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0",
+    "pytest>=9.0",
     "mypy>=1.8.0",
-    "ruff>=0.12.0",
+    "ruff>=0.15.0",
     "pre-commit>=4.0",
     "coverage>=7.4.3",
     # "climate-ref-example",
@@ -30,9 +28,6 @@ dev = [
     "bump-my-version>=0.28.1",
     "towncrier>=24.8.0",
 ]
-
-[tool.uv]
-constraint-dependencies = ["environs<15.0.0"]
 
 [tool.uv.sources]
 # Temporary pin for testing
