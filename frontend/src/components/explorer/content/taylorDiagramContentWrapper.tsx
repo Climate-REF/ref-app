@@ -78,6 +78,7 @@ export function TaylorDiagramContentWrapper({
       },
       query: {
         value_type: "scalar",
+        limit: 500,
         ...contentItem.otherFilters,
       },
     }),

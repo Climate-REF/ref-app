@@ -74,6 +74,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       query: {
         ...queryFilters,
         value_type: "series",
+        limit: 500,
         ...(isolateIdsParam ? { isolate_ids: isolateIdsParam } : {}),
         ...(excludeIdsParam ? { exclude_ids: excludeIdsParam } : {}),
       },

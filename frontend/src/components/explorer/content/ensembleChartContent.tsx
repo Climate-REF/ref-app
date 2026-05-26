@@ -36,6 +36,7 @@ export function EnsembleChartContent({
         ...contentItem.otherFilters,
         // Ensure explicit flags for type and outlier handling
         value_type: "scalar",
+        limit: 500,
         detect_outliers: "iqr",
         include_unverified: includeUnverified,
         // Only include isolate/exclude params if present

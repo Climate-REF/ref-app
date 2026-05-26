@@ -41,7 +41,6 @@ diagnostics:
 explorer_cards:
   - title: "Sea Ice"
     description: "Sea Ice Area Seasonal Cycle"
-    placeholder: true
     content:
       - type: series-chart
         provider: esmvaltool

@@ -37,7 +37,6 @@ diagnostics:
     diagnostic_slug: amoc-rapid
 explorer_cards:
   - title: "AMOC"
-    placeholder: true
     content:
       - type: box-whisker-chart
         provider: ilamb
