@@ -20,6 +20,7 @@ const mockReferenceSeriesValue: SeriesValue = {
   id: 2,
   execution_group_id: 100,
   execution_id: 201,
+  kind: "reference",
   dimensions: { source_id: "Reference", experiment_id: "exp1", metric: "rmse" },
   values: [1.5, 2.5, 3.5],
   index: [2020, 2021, 2022],
@@ -132,11 +133,12 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[1].color).toBe("#000000");
   });
 
-  it("deduplicates reference series with the same label", () => {
+  it("deduplicates reference series with the same label when reference_id is absent", () => {
     const refSeries2: SeriesValue = {
       id: 10,
       execution_group_id: 101,
       execution_id: 210,
+      kind: "reference",
       dimensions: {
         source_id: "Reference",
         experiment_id: "exp1",
@@ -161,6 +163,7 @@ describe("createChartData", () => {
       id: 11,
       execution_group_id: 101,
       execution_id: 211,
+      kind: "reference",
       dimensions: {
         source_id: "Reference",
         experiment_id: "exp1",
@@ -181,6 +184,112 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[1].label).not.toBe(
       result.seriesMetadata[2].label,
     );
+  });
+
+  it("dedups two reference series with the same reference_id to one", () => {
+    const refA: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 20,
+      execution_id: 220,
+      reference_id: "obs-hash-1",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "a",
+      },
+    };
+    const refB: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 21,
+      execution_id: 221,
+      reference_id: "obs-hash-1",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp2",
+        metric: "b",
+      },
+    };
+    const result = createChartData([mockSeriesValue], [refA, refB]);
+    // Different labels (different dimensions), but same reference_id -> deduped to one.
+    expect(result.seriesMetadata).toHaveLength(2);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("keeps two reference series with different reference_id", () => {
+    const refA: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 22,
+      execution_id: 222,
+      reference_id: "obs-hash-1",
+    };
+    const refB: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 23,
+      execution_id: 223,
+      reference_id: "obs-hash-2",
+    };
+    const result = createChartData([mockSeriesValue], [refA, refB]);
+    expect(result.seriesMetadata).toHaveLength(3);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+    expect(result.seriesMetadata[2].isReference).toBe(true);
+  });
+
+  it("sets isReference from kind, not array position", () => {
+    const result = createChartData(
+      [mockSeriesValue],
+      [mockReferenceSeriesValue],
+    );
+    expect(result.seriesMetadata[0].isReference).toBe(false);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("treats a series with kind reference but source_id !== Reference as a reference", () => {
+    const refWithOtherSourceId: SeriesValue = {
+      id: 30,
+      execution_group_id: 100,
+      execution_id: 230,
+      kind: "reference",
+      dimensions: {
+        source_id: "SomeObsDataset",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.5, 2.5, 3.5],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const result = createChartData([mockSeriesValue], [refWithOtherSourceId]);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("treats a series with source_id === Reference but kind model (or absent) as a model, proving the sentinel is gone", () => {
+    const modelWithReferenceSourceId: SeriesValue = {
+      id: 31,
+      execution_group_id: 100,
+      execution_id: 231,
+      kind: "model",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.0, 2.0, 3.0],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const modelWithReferenceSourceIdNoKind: SeriesValue = {
+      ...modelWithReferenceSourceId,
+      id: 32,
+      execution_id: 232,
+      kind: undefined,
+    };
+    // Passed in the "regular" bucket, as seriesChartContent.tsx would do based on kind.
+    const result = createChartData(
+      [modelWithReferenceSourceId, modelWithReferenceSourceIdNoKind],
+      [],
+    );
+    expect(result.seriesMetadata[0].isReference).toBe(false);
+    expect(result.seriesMetadata[1].isReference).toBe(false);
   });
 
   it("uses index name from first series", () => {

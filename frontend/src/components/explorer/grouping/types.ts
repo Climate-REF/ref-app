@@ -40,4 +40,6 @@ export interface AvailableDimensions {
  */
 export interface DimensionedData {
   dimensions: Record<string, string>;
+  /** Role of this item ("model" or "reference"); absent/undefined means "model" */
+  kind?: "model" | "reference" | null;
 }

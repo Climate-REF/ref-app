@@ -167,9 +167,17 @@ export function createChartData(
   indexName: string;
   isTimeAxis: boolean;
 } {
-  // Deduplicate reference series by label (same observational data repeated across executions)
+  // Deduplicate reference series (same observational data repeated across executions).
+  // Prefer the reference_id content hash; fall back to label-based dedup only when
+  // reference_id is absent.
+  const seenRefIds = new Set<string>();
   const seenRefLabels = new Set<string>();
   const dedupedReferenceSeries = referenceSeriesValues.filter((series) => {
+    if (series.reference_id) {
+      if (seenRefIds.has(series.reference_id)) return false;
+      seenRefIds.add(series.reference_id);
+      return true;
+    }
     const label = applyLabelTemplate(series, labelTemplate);
     if (seenRefLabels.has(label)) return false;
     seenRefLabels.add(label);
@@ -201,7 +209,7 @@ export function createChartData(
   // Create series metadata
   const seriesMetadata: SeriesMetadata[] = allSeries.map((series, idx) => {
     const label = applyLabelTemplate(series, labelTemplate);
-    const isReference = idx >= seriesValues.length; // Deduplicated reference series come after regular series
+    const isReference = series.kind === "reference";
     const color = isReference ? "#000000" : getLabelColor(label);
     return {
       seriesIndex: idx,
