@@ -87,7 +87,7 @@ repos:
       # Frontend: TypeScript typecheck
       - id: typescript-typecheck
         name: TypeScript typecheck
-        entry: bash -lc "cd frontend && npx --yes tsc --noEmit"
+        entry: bash -lc "cd frontend && npx --yes tsc -b --noEmit"
         language: system
         pass_filenames: false
         files: ^frontend/
