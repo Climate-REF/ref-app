@@ -212,17 +212,16 @@ export function createChartData(
   // Prefer the per-series value_units for the Y-axis unit label (first series
   // that has one); callers fall back to their own `units` prop when this is
   // undefined, since ILAMB series never carry value_units.
-  const valueUnits = allSeries.find(
-    (series) => series.value_units,
-  )?.value_units;
+  const valueUnits =
+    allSeries.find((series) => series.value_units)?.value_units ?? undefined;
   // Same fallback pattern for the X-axis unit label.
-  const indexUnits = allSeries.find(
-    (series) => series.index_units,
-  )?.index_units;
+  const indexUnits =
+    allSeries.find((series) => series.index_units)?.index_units ?? undefined;
   // Calendar metadata (e.g. "standard", "360_day", "noleap"). ILAMB never
   // sets this; ESMValTool does. Surfaced for callers/tooltips — see the
   // code comment below on why non-standard calendars aren't fully honored.
-  const calendar = allSeries.find((series) => series.calendar)?.calendar;
+  const calendar =
+    allSeries.find((series) => series.calendar)?.calendar ?? undefined;
 
   // Build the union of index values across all series, preserving first-seen
   // order, so each series contributes its value to the row matching its own
@@ -235,6 +234,30 @@ export function createChartData(
         seenIndexValues.add(rawIndex);
         indexValueOrder.push(rawIndex);
       }
+    }
+  }
+
+  // Order rows by index value so the line is drawn left-to-right regardless of
+  // the order the series were provided in (a first-seen union can interleave
+  // when series carry disjoint indices). Numeric indices sort numerically;
+  // string indices sort lexically, which is chronological for ISO-8601 dates.
+  indexValueOrder.sort((a, b) => {
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    const [as, bs] = [String(a), String(b)];
+    return as < bs ? -1 : as > bs ? 1 : 0;
+  });
+
+  // Fallback when no series carries an index array at all: key rows by
+  // position (0, 1, 2, …) as the earlier implementation did, so index-less
+  // series still render instead of collapsing to an empty chart.
+  const hasAnyIndex = indexValueOrder.length > 0;
+  if (!hasAnyIndex) {
+    const maxLength = Math.max(
+      0,
+      ...allSeries.map((s) => s.values?.length ?? 0),
+    );
+    for (let i = 0; i < maxLength; i++) {
+      indexValueOrder.push(i);
     }
   }
 
@@ -265,8 +288,15 @@ export function createChartData(
     };
 
     allSeries.forEach((series, seriesIdx) => {
-      if (!series.index || !series.values) return;
-      const dataIdx = series.index.indexOf(rawIndex);
+      if (!series.values) return;
+      // Series with an index align by value; index-less series fall back to
+      // positional lookup (rawIndex is the row position in that case).
+      const dataIdx =
+        series.index && series.index.length > 0
+          ? series.index.indexOf(rawIndex)
+          : typeof rawIndex === "number"
+            ? rawIndex
+            : -1;
       if (dataIdx !== -1 && dataIdx < series.values.length) {
         dataPoint[`series_${seriesIdx}`] = series.values[dataIdx];
       }

@@ -518,6 +518,56 @@ describe("createChartData index alignment", () => {
     expect(rowByYear.get(2023)?.series_0 ?? null).toBeNull();
     expect(rowByYear.get(2023)).toMatchObject({ series_1: 400.0 });
   });
+
+  it("keeps index-less series visible by keying rows positionally", () => {
+    const seriesNoIndex: SeriesValue = {
+      id: 43,
+      execution_group_id: 100,
+      execution_id: 243,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [5.0, 6.0, 7.0],
+      index: null,
+      index_name: null,
+    };
+    const result = createChartData([seriesNoIndex], []);
+    // Without any index array, rows fall back to positional keys 0, 1, 2
+    // rather than collapsing to an empty chart.
+    expect(result.chartData).toHaveLength(3);
+    expect(result.chartData[0]).toMatchObject({ index: 0, series_0: 5.0 });
+    expect(result.chartData[2]).toMatchObject({ index: 2, series_0: 7.0 });
+  });
+
+  it("orders rows by ascending index value when series indices interleave", () => {
+    const seriesA: SeriesValue = {
+      id: 44,
+      execution_group_id: 100,
+      execution_id: 244,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [1.0, 3.0, 5.0],
+      index: [1, 3, 5],
+      index_name: "step",
+    };
+    const seriesB: SeriesValue = {
+      id: 45,
+      execution_group_id: 100,
+      execution_id: 245,
+      dimensions: { source_id: "ModelB", metric: "rmse" },
+      values: [2.0, 4.0, 6.0],
+      index: [2, 4, 6],
+      index_name: "step",
+    };
+    const result = createChartData([seriesA, seriesB], []);
+    // Fully interleaved indices must still produce ascending x-values so the
+    // line renders left-to-right instead of zigzagging.
+    const xs = result.chartData.map((row) => row.step as number);
+    expect(xs).toEqual([1, 2, 3, 4, 5, 6]);
+    const rowByStep = new Map(
+      result.chartData.map((row) => [row.step as number, row]),
+    );
+    expect(rowByStep.get(1)).toMatchObject({ series_0: 1.0 });
+    expect(rowByStep.get(2)).toMatchObject({ series_1: 2.0 });
+    expect(rowByStep.get(1)?.series_1 ?? null).toBeNull();
+  });
 });
 
 describe("createChartData axis units and calendar", () => {
