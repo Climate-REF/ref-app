@@ -5,7 +5,7 @@
     ":dependencyDashboard",
     ":semanticCommits"
   ],
-  "timezone": "Pacific/Auckland",
+  "timezone": "Australia/Melbourne",
   "dependencyDashboardTitle": "Renovate Dependency Dashboard",
   "labels": ["dependencies"],
   "minimumReleaseAge": "3 days",
