@@ -160,6 +160,12 @@ def detect_outliers_in_scalar_values(
             # Fallback to original IQR method if no source_id or insufficient data
             if len(group_values) >= min_n:
                 iqr_flags = flag_outliers_iqr(group_values.value.to_list(), factor=factor)
+                # Reference values are always non-outlier, even on this fallback path.
+                if "kind" in group_values.columns:
+                    iqr_flags = [
+                        False if kind == "reference" else flag
+                        for flag, kind in zip(iqr_flags, group_values["kind"])
+                    ]
             else:
                 iqr_flags = [False] * len(group_values)
             source_id_flags = iqr_flags  # type: ignore

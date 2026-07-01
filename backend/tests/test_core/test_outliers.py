@@ -177,6 +177,32 @@ class TestDetectOutliersInScalarValues:
         assert by_id[100].is_outlier is False
         assert by_id[100].verification_status == "verified"
 
+    def test_reference_row_non_outlier_on_fallback_path_without_source_id(self):
+        """Rows tagged kind='reference' stay non-outlier even on the fallback
+        IQR path taken when no source_id dimension is present. Without the
+        kind override on that path, the extreme reference value would be
+        flagged an outlier."""
+        mock_values = [
+            Mock(
+                dimensions={"metric": "rmse", "statistic": "mean", "kind": "model"},
+                value=float(i),
+                id=i,
+            )
+            for i in range(4)
+        ] + [
+            Mock(
+                dimensions={"metric": "rmse", "statistic": "mean", "kind": "reference"},
+                value=1000.0,
+                id=100,
+            )
+        ]
+
+        annotated, _ = detect_outliers_in_scalar_values(mock_values, min_n=4)
+        by_id = {item.value.id: item for item in annotated}
+
+        assert by_id[100].is_outlier is False
+        assert by_id[100].verification_status == "verified"
+
     def test_source_id_reference_sentinel_with_kind_model_is_treated_as_model(self):
         """Regression: a row with source_id == 'Reference' but kind == 'model'
         is now treated as a model — it participates in IQR and can be flagged
