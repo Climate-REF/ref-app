@@ -568,6 +568,39 @@ describe("createChartData index alignment", () => {
     expect(rowByStep.get(2)).toMatchObject({ series_1: 2.0 });
     expect(rowByStep.get(1)?.series_1 ?? null).toBeNull();
   });
+
+  it("still renders an index-less series when mixed with an indexed series", () => {
+    const indexed: SeriesValue = {
+      id: 46,
+      execution_group_id: 100,
+      execution_id: 246,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [1.0, 2.0, 3.0],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const indexLess: SeriesValue = {
+      id: 47,
+      execution_group_id: 100,
+      execution_id: 247,
+      dimensions: { source_id: "ModelB", metric: "rmse" },
+      values: [10.0, 20.0, 30.0],
+      index: null,
+      index_name: null,
+    };
+    const result = createChartData([indexed, indexLess], []);
+    // The indexed series drives the rows; the index-less series falls back to
+    // the row ordinal so it still renders instead of disappearing.
+    expect(result.chartData).toHaveLength(3);
+    expect(result.chartData[0]).toMatchObject({
+      series_0: 1.0,
+      series_1: 10.0,
+    });
+    expect(result.chartData[2]).toMatchObject({
+      series_0: 3.0,
+      series_1: 30.0,
+    });
+  });
 });
 
 describe("createChartData axis units and calendar", () => {

@@ -275,35 +275,36 @@ export function createChartData(
     };
   });
 
-  // Build chart data: one row per unique index value, in first-seen order.
-  const chartData: ChartDataPoint[] = indexValueOrder.map((rawIndex) => {
-    let indexValue: number | string | null;
-    if (isTimeAxis && typeof rawIndex === "string") {
-      indexValue = parseDatetimeToTimestamp(rawIndex);
-    } else {
-      indexValue = rawIndex;
-    }
-    const dataPoint: ChartDataPoint = {
-      [indexName]: indexValue,
-    };
-
-    allSeries.forEach((series, seriesIdx) => {
-      if (!series.values) return;
-      // Series with an index align by value; index-less series fall back to
-      // positional lookup (rawIndex is the row position in that case).
-      const dataIdx =
-        series.index && series.index.length > 0
-          ? series.index.indexOf(rawIndex)
-          : typeof rawIndex === "number"
-            ? rawIndex
-            : -1;
-      if (dataIdx !== -1 && dataIdx < series.values.length) {
-        dataPoint[`series_${seriesIdx}`] = series.values[dataIdx];
+  // Build chart data: one row per index value, in ascending order.
+  const chartData: ChartDataPoint[] = indexValueOrder.map(
+    (rawIndex, rowIdx) => {
+      let indexValue: number | string | null;
+      if (isTimeAxis && typeof rawIndex === "string") {
+        indexValue = parseDatetimeToTimestamp(rawIndex);
+      } else {
+        indexValue = rawIndex;
       }
-    });
+      const dataPoint: ChartDataPoint = {
+        [indexName]: indexValue,
+      };
 
-    return dataPoint;
-  });
+      allSeries.forEach((series, seriesIdx) => {
+        if (!series.values) return;
+        // Series with an index align by value; index-less series fall back to
+        // positional lookup keyed off the row ordinal, so they still render even
+        // when other series in the chart carry an index.
+        const dataIdx =
+          series.index && series.index.length > 0
+            ? series.index.indexOf(rawIndex)
+            : rowIdx;
+        if (dataIdx !== -1 && dataIdx < series.values.length) {
+          dataPoint[`series_${seriesIdx}`] = series.values[dataIdx];
+        }
+      });
+
+      return dataPoint;
+    },
+  );
 
   return {
     chartData,
