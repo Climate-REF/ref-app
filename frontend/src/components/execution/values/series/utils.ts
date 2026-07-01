@@ -166,6 +166,9 @@ export function createChartData(
   seriesMetadata: SeriesMetadata[];
   indexName: string;
   isTimeAxis: boolean;
+  valueUnits?: string;
+  indexUnits?: string;
+  calendar?: string;
 } {
   // Deduplicate reference series (same observational data repeated across executions).
   // Prefer the reference_id content hash; fall back to label-based dedup only when
@@ -199,12 +202,41 @@ export function createChartData(
   // Use the first series' index name
   const indexName = allSeries[0]?.index_name || "index";
 
-  // Detect if the index contains datetime strings
-  const firstIndex = allSeries[0]?.index ?? [];
-  const isTimeAxis = detectTimeAxis(firstIndex);
+  // Detect if the index contains datetime strings. All series are checked
+  // (not just the first) since alignment now happens by index value rather
+  // than by array position, and any series' index values can drive detection.
+  const isTimeAxis = allSeries.some((series) =>
+    detectTimeAxis(series.index ?? []),
+  );
 
-  // Find the maximum length across all series
-  const maxLength = Math.max(...allSeries.map((s) => s.values?.length || 0));
+  // Prefer the per-series value_units for the Y-axis unit label (first series
+  // that has one); callers fall back to their own `units` prop when this is
+  // undefined, since ILAMB series never carry value_units.
+  const valueUnits = allSeries.find(
+    (series) => series.value_units,
+  )?.value_units;
+  // Same fallback pattern for the X-axis unit label.
+  const indexUnits = allSeries.find(
+    (series) => series.index_units,
+  )?.index_units;
+  // Calendar metadata (e.g. "standard", "360_day", "noleap"). ILAMB never
+  // sets this; ESMValTool does. Surfaced for callers/tooltips — see the
+  // code comment below on why non-standard calendars aren't fully honored.
+  const calendar = allSeries.find((series) => series.calendar)?.calendar;
+
+  // Build the union of index values across all series, preserving first-seen
+  // order, so each series contributes its value to the row matching its own
+  // index value rather than being smeared across positions.
+  const indexValueOrder: (string | number)[] = [];
+  const seenIndexValues = new Set<string | number>();
+  for (const series of allSeries) {
+    for (const rawIndex of series.index ?? []) {
+      if (!seenIndexValues.has(rawIndex)) {
+        seenIndexValues.add(rawIndex);
+        indexValueOrder.push(rawIndex);
+      }
+    }
+  }
 
   // Create series metadata
   const seriesMetadata: SeriesMetadata[] = allSeries.map((series, idx) => {
@@ -220,10 +252,8 @@ export function createChartData(
     };
   });
 
-  // Build chart data
-  const chartData: ChartDataPoint[] = [];
-  for (let i = 0; i < maxLength; i++) {
-    const rawIndex = allSeries[0]?.index?.[i] ?? i;
+  // Build chart data: one row per unique index value, in first-seen order.
+  const chartData: ChartDataPoint[] = indexValueOrder.map((rawIndex) => {
     let indexValue: number | string | null;
     if (isTimeAxis && typeof rawIndex === "string") {
       indexValue = parseDatetimeToTimestamp(rawIndex);
@@ -235,15 +265,25 @@ export function createChartData(
     };
 
     allSeries.forEach((series, seriesIdx) => {
-      if (series.values && i < series.values.length) {
-        dataPoint[`series_${seriesIdx}`] = series.values[i];
+      if (!series.index || !series.values) return;
+      const dataIdx = series.index.indexOf(rawIndex);
+      if (dataIdx !== -1 && dataIdx < series.values.length) {
+        dataPoint[`series_${seriesIdx}`] = series.values[dataIdx];
       }
     });
 
-    chartData.push(dataPoint);
-  }
+    return dataPoint;
+  });
 
-  return { chartData, seriesMetadata, indexName, isTimeAxis };
+  return {
+    chartData,
+    seriesMetadata,
+    indexName,
+    isTimeAxis,
+    valueUnits,
+    indexUnits,
+    calendar,
+  };
 }
 
 /**
