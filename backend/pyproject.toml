@@ -2,14 +2,14 @@
 name = "ref-backend"
 version = "0.3.0"
 description = "Backend for the Climate Rapid Evaluation Framework"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",
     "pydantic>2.0",
     "psycopg[binary]<4.0.0,>=3.1.13",
     "pydantic-settings<3.0.0,>=2.13.1",
     "sentry-sdk[fastapi]>=2.0.0",
-    "climate-ref[aft-providers,postgres]>=0.13.1,<0.14",
+    "climate-ref[aft-providers,postgres]>=0.15,<0.16",
     "loguru",
     "pyyaml>=6.0",
     "fastapi-sqlalchemy-monitor>=1.1.3",
@@ -33,8 +33,9 @@ dev = [
 # Temporary pin for testing
 # climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", tag="v0.7.0" }
 # climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example", tag="v0.7.0" }
-# Uncomment the following line to use a local version of climate-ref
-#climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
+# Temporary pin to unreleased climate-ref main for the `climate_ref.results` read-layer facade.
+# Swap to a tagged release (>=0.16) once one containing the read layer is published.
+climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", rev = "67f158079d21923efb865e4252b4bd9299bbca6a" }
 
 [build-system]
 requires = ["hatchling"]

@@ -14,20 +14,20 @@ from starlette.responses import StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
+from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
-    METRIC_VALUES_NON_FILTER_PARAMS,
     MetricValueType,
-    apply_metric_filters,
-    collect_facets_from_query,
+    parse_id_list,
+)
+from ref_backend.core.reader_values import (
     generate_csv_response_scalar,
     generate_csv_response_series,
-    paginate_annotated_values,
-    process_scalar_values,
+    parse_dimension_filters,
 )
 from ref_backend.models import (
     Collection,
@@ -298,9 +298,6 @@ async def metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
-_EXECUTION_NON_FILTER_PARAMS = METRIC_VALUES_NON_FILTER_PARAMS | {"execution_id"}
-
-
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
 async def list_metric_values(  # noqa: PLR0913
     app_context: AppContextDep,
@@ -327,87 +324,55 @@ async def list_metric_values(  # noqa: PLR0913
     - `limit`: Maximum number of items to return (default 50, max 500)
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
-    # Extract additional filters from query parameters
-    query_params = request.query_params
-    filter_params = {}
-    for key, value in query_params.items():
-        if key in _EXECUTION_NON_FILTER_PARAMS:
-            continue
-        filter_params[key] = value
+
+    # Restrict to the selected execution's values; ``_get_execution`` already resolves the
+    # latest execution when no ``execution_id`` is supplied. ``promoted_only`` is disabled so
+    # values from every diagnostic version are returned (the endpoint is not version-scoped),
+    # and retracted executions are included to match the previous unfiltered query.
+    metric_filter = MetricValueFilter(
+        execution_ids=[execution.id],
+        dimensions=parse_dimension_filters(request.query_params),
+        isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
+        exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
+        promoted_only=False,
+        include_retracted=True,
+    )
+
     if value_type == MetricValueType.SCALAR:
-        scalar_query = app_context.session.query(models.ScalarMetricValue).filter(
-            models.ScalarMetricValue.execution_id == execution.id
-        )
-        scalar_query = apply_metric_filters(scalar_query, filter_params, isolate_ids, exclude_ids)
+        detection_ran = detect_outliers == "iqr"
+        outlier_policy = OutlierPolicy(method=detect_outliers)
 
         if format == "csv":
-            scalar_values = scalar_query.all() if scalar_query else []
-            annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
-                scalar_values, detect_outliers, include_unverified
+            # CSV export returns all results without pagination.
+            collection = app_context.reader.values.scalar_values(
+                metric_filter,
+                outliers=outlier_policy,
+                include_unverified=include_unverified,
             )
             filename = f"metric_values_scalar_{group_id}_{execution.id}.csv"
-            return generate_csv_response_scalar(
-                annotated_scalar_values,
-                detection_ran,
-                had_outliers,
-                outlier_count,
-                filename,
-            )
+            return generate_csv_response_scalar(collection, detection_ran, filename)
 
-        facets = collect_facets_from_query(scalar_query) if scalar_query else []
-
-        # NOTE: We intentionally load ALL scalar values into memory here rather
-        # than using SQL-level OFFSET/LIMIT. Outlier detection (IQR) needs the
-        # full dataset to compute globally consistent bounds -- paginating at
-        # the DB level would produce different IQR thresholds per page.
-        all_scalar_values = scalar_query.all() if scalar_query else []
-
-        # Process scalar values with outlier detection (and optional filtering)
-        annotated_scalar_values, had_outliers, outlier_count, detection_ran = process_scalar_values(
-            all_scalar_values, detect_outliers, include_unverified
+        collection = app_context.reader.values.scalar_values(
+            metric_filter,
+            outliers=outlier_policy,
+            include_unverified=include_unverified,
+            offset=offset,
+            limit=limit,
         )
-
-        # total_count reflects the post-outlier-filter count so pagination math is correct
-        total_count = len(annotated_scalar_values)
-        page = paginate_annotated_values(annotated_scalar_values, offset, limit)
-
-        return MetricValueCollection.build_scalar(
-            scalar_values=page,
-            total_count=total_count,
-            had_outliers=had_outliers if detection_ran else None,
-            outlier_count=outlier_count if detection_ran else None,
-            facets=facets,
-        )
+        return MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
 
     elif value_type == MetricValueType.SERIES:
-        series_query = app_context.session.query(models.SeriesMetricValue).filter(
-            models.SeriesMetricValue.execution_id == execution.id
-        )
-
-        series_query = apply_metric_filters(series_query, filter_params, isolate_ids, exclude_ids)
-
         if format == "csv":
-            series_values = series_query.all() if series_query else []
+            series_collection = app_context.reader.values.series_values(metric_filter)
             filename = f"metric_values_series_{group_id}_{execution.id}.csv"
-            return generate_csv_response_series(
-                series_values,
-                detection_ran=False,
-                had_outliers=False,
-                outlier_count=0,
-                filename=filename,
-            )
+            return generate_csv_response_series(series_collection, filename)
 
-        total_count = series_query.count() if series_query else 0
-        facets = collect_facets_from_query(series_query) if series_query else []
-        series_values = series_query.offset(offset).limit(limit).all() if series_query else []
-
-        return MetricValueCollection.build_series(
-            series_values=series_values,
-            total_count=total_count,
-            had_outliers=None,
-            outlier_count=None,
-            facets=facets,
+        series_collection = app_context.reader.values.series_values(
+            metric_filter,
+            offset=offset,
+            limit=limit,
         )
+        return MetricValueCollection.build_series_from_reader(series_collection)
     else:
         raise HTTPException(status_code=500, detail="Unknown value_type")
 
