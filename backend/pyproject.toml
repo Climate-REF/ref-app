@@ -9,7 +9,7 @@ dependencies = [
     "psycopg[binary]<4.0.0,>=3.1.13",
     "pydantic-settings<3.0.0,>=2.13.1",
     "sentry-sdk[fastapi]>=2.0.0",
-    "climate-ref[aft-providers,postgres]>=0.15,<0.16",
+    "climate-ref[aft-providers,postgres]>=0.16.0,<0.17",
     "loguru",
     "pyyaml>=6.0",
     "fastapi-sqlalchemy-monitor>=1.1.3",
@@ -33,9 +33,10 @@ dev = [
 # Temporary pin for testing
 # climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", tag="v0.7.0" }
 # climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example", tag="v0.7.0" }
-# Temporary pin to unreleased climate-ref main for the `climate_ref.results` read-layer facade.
-# Swap to a tagged release (>=0.16) once one containing the read layer is published.
-climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", rev = "67f158079d21923efb865e4252b4bd9299bbca6a" }
+# climate-ref v0.16.0 is tagged and GitHub-released, but not yet published to PyPI
+# (PyPI currently tops out at 0.14.6), so source it from the release tag. The version
+# constraint above is already correct -- delete this line once 0.16.0 lands on PyPI.
+climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", tag = "v0.16.0" }
 
 [build-system]
 requires = ["hatchling"]
