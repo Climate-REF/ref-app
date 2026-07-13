@@ -29,6 +29,7 @@ interface SeriesCanvasProps {
   isTimeAxis: boolean;
   metricName?: string;
   units?: string;
+  indexUnits?: string;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseLeave: () => void;
   onClick: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -52,6 +53,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
   isTimeAxis,
   metricName,
   units,
+  indexUnits,
   onMouseMove,
   onMouseLeave,
   onClick,
@@ -193,6 +195,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
       isTimeAxis,
       metricName,
       units,
+      indexUnits,
     );
   }, [
     chartData,
@@ -212,6 +215,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     isTimeAxis,
     metricName,
     units,
+    indexUnits,
   ]);
 
   // Redraw on data/scale changes
@@ -342,6 +346,7 @@ function drawAxes(
   isTimeAxis: boolean,
   metricName?: string,
   units?: string,
+  indexUnits?: string,
 ) {
   ctx.save();
 
@@ -410,12 +415,14 @@ function drawAxes(
     }
   }
 
-  // X axis label
+  // X axis label. Units don't apply to time axes (already rendered as dates).
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = "14px system-ui, sans-serif";
+  const xLabel =
+    !isTimeAxis && indexUnits ? `${indexName} (${indexUnits})` : indexName;
   ctx.fillText(
-    indexName,
+    xLabel,
     margins.left + innerWidth / 2,
     margins.top + innerHeight + 30,
   );

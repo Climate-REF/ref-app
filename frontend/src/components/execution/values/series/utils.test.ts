@@ -20,6 +20,7 @@ const mockReferenceSeriesValue: SeriesValue = {
   id: 2,
   execution_group_id: 100,
   execution_id: 201,
+  kind: "reference",
   dimensions: { source_id: "Reference", experiment_id: "exp1", metric: "rmse" },
   values: [1.5, 2.5, 3.5],
   index: [2020, 2021, 2022],
@@ -132,11 +133,12 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[1].color).toBe("#000000");
   });
 
-  it("deduplicates reference series with the same label", () => {
+  it("deduplicates reference series with the same label when reference_id is absent", () => {
     const refSeries2: SeriesValue = {
       id: 10,
       execution_group_id: 101,
       execution_id: 210,
+      kind: "reference",
       dimensions: {
         source_id: "Reference",
         experiment_id: "exp1",
@@ -161,6 +163,7 @@ describe("createChartData", () => {
       id: 11,
       execution_group_id: 101,
       execution_id: 211,
+      kind: "reference",
       dimensions: {
         source_id: "Reference",
         experiment_id: "exp1",
@@ -181,6 +184,112 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[1].label).not.toBe(
       result.seriesMetadata[2].label,
     );
+  });
+
+  it("dedups two reference series with the same reference_id to one", () => {
+    const refA: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 20,
+      execution_id: 220,
+      reference_id: "obs-hash-1",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "a",
+      },
+    };
+    const refB: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 21,
+      execution_id: 221,
+      reference_id: "obs-hash-1",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp2",
+        metric: "b",
+      },
+    };
+    const result = createChartData([mockSeriesValue], [refA, refB]);
+    // Different labels (different dimensions), but same reference_id -> deduped to one.
+    expect(result.seriesMetadata).toHaveLength(2);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("keeps two reference series with different reference_id", () => {
+    const refA: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 22,
+      execution_id: 222,
+      reference_id: "obs-hash-1",
+    };
+    const refB: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      id: 23,
+      execution_id: 223,
+      reference_id: "obs-hash-2",
+    };
+    const result = createChartData([mockSeriesValue], [refA, refB]);
+    expect(result.seriesMetadata).toHaveLength(3);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+    expect(result.seriesMetadata[2].isReference).toBe(true);
+  });
+
+  it("sets isReference from kind, not array position", () => {
+    const result = createChartData(
+      [mockSeriesValue],
+      [mockReferenceSeriesValue],
+    );
+    expect(result.seriesMetadata[0].isReference).toBe(false);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("treats a series with kind reference but source_id !== Reference as a reference", () => {
+    const refWithOtherSourceId: SeriesValue = {
+      id: 30,
+      execution_group_id: 100,
+      execution_id: 230,
+      kind: "reference",
+      dimensions: {
+        source_id: "SomeObsDataset",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.5, 2.5, 3.5],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const result = createChartData([mockSeriesValue], [refWithOtherSourceId]);
+    expect(result.seriesMetadata[1].isReference).toBe(true);
+  });
+
+  it("treats a series with source_id === Reference but kind model (or absent) as a model, proving the sentinel is gone", () => {
+    const modelWithReferenceSourceId: SeriesValue = {
+      id: 31,
+      execution_group_id: 100,
+      execution_id: 231,
+      kind: "model",
+      dimensions: {
+        source_id: "Reference",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.0, 2.0, 3.0],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const modelWithReferenceSourceIdNoKind: SeriesValue = {
+      ...modelWithReferenceSourceId,
+      id: 32,
+      execution_id: 232,
+      kind: undefined,
+    };
+    // Passed in the "regular" bucket, as seriesChartContent.tsx would do based on kind.
+    const result = createChartData(
+      [modelWithReferenceSourceId, modelWithReferenceSourceIdNoKind],
+      [],
+    );
+    expect(result.seriesMetadata[0].isReference).toBe(false);
+    expect(result.seriesMetadata[1].isReference).toBe(false);
   });
 
   it("uses index name from first series", () => {
@@ -315,6 +424,269 @@ describe("createChartData", () => {
     };
     const result = createChartData([mockSeriesValue, emptySeries], []);
     expect(result.seriesMetadata).toHaveLength(2);
+  });
+});
+
+describe("createChartData index alignment", () => {
+  it("aligns two series sharing one identical index the same as before (no regression)", () => {
+    const seriesA: SeriesValue = {
+      ...mockSeriesValue,
+      values: [1.0, 2.0, 3.0, 4.0],
+      index: [2020, 2021, 2022, 2023],
+    };
+    const seriesB: SeriesValue = {
+      id: 40,
+      execution_group_id: 100,
+      execution_id: 240,
+      dimensions: {
+        source_id: "ModelB",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [10.0, 20.0, 30.0, 40.0],
+      index: [2020, 2021, 2022, 2023],
+      index_name: "year",
+    };
+    const result = createChartData([seriesA, seriesB], []);
+    expect(result.chartData).toHaveLength(4);
+    expect(result.chartData[0]).toMatchObject({
+      year: 2020,
+      series_0: 1.0,
+      series_1: 10.0,
+    });
+    expect(result.chartData[1]).toMatchObject({
+      year: 2021,
+      series_0: 2.0,
+      series_1: 20.0,
+    });
+    expect(result.chartData[3]).toMatchObject({
+      year: 2023,
+      series_0: 4.0,
+      series_1: 40.0,
+    });
+  });
+
+  it("aligns two series with different index arrays by index value, not position", () => {
+    const seriesA: SeriesValue = {
+      id: 41,
+      execution_group_id: 100,
+      execution_id: 241,
+      dimensions: {
+        source_id: "ModelA",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [1.0, 2.0, 3.0],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const seriesB: SeriesValue = {
+      id: 42,
+      execution_group_id: 100,
+      execution_id: 242,
+      dimensions: {
+        source_id: "ModelB",
+        experiment_id: "exp1",
+        metric: "rmse",
+      },
+      values: [200.0, 300.0, 400.0],
+      // Overlaps at 2021 and 2022, but starts later and ends later than seriesA.
+      index: [2021, 2022, 2023],
+      index_name: "year",
+    };
+    const result = createChartData([seriesA, seriesB], []);
+    // Union of index values: 2020, 2021, 2022, 2023
+    expect(result.chartData).toHaveLength(4);
+
+    const rowByYear = new Map(
+      result.chartData.map((row) => [row.year as number, row]),
+    );
+
+    // seriesA only contributes at 2020-2022; seriesB only at 2021-2023.
+    expect(rowByYear.get(2020)).toMatchObject({ series_0: 1.0 });
+    expect(rowByYear.get(2020)?.series_1 ?? null).toBeNull();
+
+    expect(rowByYear.get(2021)).toMatchObject({
+      series_0: 2.0,
+      series_1: 200.0,
+    });
+    expect(rowByYear.get(2022)).toMatchObject({
+      series_0: 3.0,
+      series_1: 300.0,
+    });
+
+    expect(rowByYear.get(2023)?.series_0 ?? null).toBeNull();
+    expect(rowByYear.get(2023)).toMatchObject({ series_1: 400.0 });
+  });
+
+  it("keeps index-less series visible by keying rows positionally", () => {
+    const seriesNoIndex: SeriesValue = {
+      id: 43,
+      execution_group_id: 100,
+      execution_id: 243,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [5.0, 6.0, 7.0],
+      index: null,
+      index_name: null,
+    };
+    const result = createChartData([seriesNoIndex], []);
+    // Without any index array, rows fall back to positional keys 0, 1, 2
+    // rather than collapsing to an empty chart.
+    expect(result.chartData).toHaveLength(3);
+    expect(result.chartData[0]).toMatchObject({ index: 0, series_0: 5.0 });
+    expect(result.chartData[2]).toMatchObject({ index: 2, series_0: 7.0 });
+  });
+
+  it("orders rows by ascending index value when series indices interleave", () => {
+    const seriesA: SeriesValue = {
+      id: 44,
+      execution_group_id: 100,
+      execution_id: 244,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [1.0, 3.0, 5.0],
+      index: [1, 3, 5],
+      index_name: "step",
+    };
+    const seriesB: SeriesValue = {
+      id: 45,
+      execution_group_id: 100,
+      execution_id: 245,
+      dimensions: { source_id: "ModelB", metric: "rmse" },
+      values: [2.0, 4.0, 6.0],
+      index: [2, 4, 6],
+      index_name: "step",
+    };
+    const result = createChartData([seriesA, seriesB], []);
+    // Fully interleaved indices must still produce ascending x-values so the
+    // line renders left-to-right instead of zigzagging.
+    const xs = result.chartData.map((row) => row.step as number);
+    expect(xs).toEqual([1, 2, 3, 4, 5, 6]);
+    const rowByStep = new Map(
+      result.chartData.map((row) => [row.step as number, row]),
+    );
+    expect(rowByStep.get(1)).toMatchObject({ series_0: 1.0 });
+    expect(rowByStep.get(2)).toMatchObject({ series_1: 2.0 });
+    expect(rowByStep.get(1)?.series_1 ?? null).toBeNull();
+  });
+
+  it("still renders an index-less series when mixed with an indexed series", () => {
+    const indexed: SeriesValue = {
+      id: 46,
+      execution_group_id: 100,
+      execution_id: 246,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      values: [1.0, 2.0, 3.0],
+      index: [2020, 2021, 2022],
+      index_name: "year",
+    };
+    const indexLess: SeriesValue = {
+      id: 47,
+      execution_group_id: 100,
+      execution_id: 247,
+      dimensions: { source_id: "ModelB", metric: "rmse" },
+      values: [10.0, 20.0, 30.0],
+      index: null,
+      index_name: null,
+    };
+    const result = createChartData([indexed, indexLess], []);
+    // The indexed series drives the rows; the index-less series falls back to
+    // the row ordinal so it still renders instead of disappearing.
+    expect(result.chartData).toHaveLength(3);
+    expect(result.chartData[0]).toMatchObject({
+      series_0: 1.0,
+      series_1: 10.0,
+    });
+    expect(result.chartData[2]).toMatchObject({
+      series_0: 3.0,
+      series_1: 30.0,
+    });
+  });
+});
+
+describe("createChartData axis units and calendar", () => {
+  it("derives the Y-axis unit from a series' value_units when present", () => {
+    const seriesWithUnits: SeriesValue = {
+      ...mockSeriesValue,
+      value_units: "kg m-2 s-1",
+    };
+    const result = createChartData([seriesWithUnits], []);
+    expect(result.valueUnits).toBe("kg m-2 s-1");
+  });
+
+  it("falls back to undefined valueUnits when no series carries value_units (caller falls back to the units prop)", () => {
+    const result = createChartData([mockSeriesValue], []);
+    expect(result.valueUnits).toBeUndefined();
+  });
+
+  it("uses the first series with value_units when several series are present", () => {
+    const seriesNoUnits: SeriesValue = { ...mockSeriesValue };
+    const seriesWithUnits: SeriesValue = {
+      ...mockSeriesValue,
+      id: 50,
+      execution_id: 250,
+      value_units: "percent",
+    };
+    const result = createChartData([seriesNoUnits, seriesWithUnits], []);
+    expect(result.valueUnits).toBe("percent");
+  });
+
+  it("derives indexUnits from a series' index_units when present", () => {
+    const seriesWithIndexUnits: SeriesValue = {
+      ...mockSeriesValue,
+      index_units: "days since 1850-01-01",
+    };
+    const result = createChartData([seriesWithIndexUnits], []);
+    expect(result.indexUnits).toBe("days since 1850-01-01");
+  });
+
+  it("handles a series with calendar present without error (ESMValTool case)", () => {
+    const seriesWithCalendar: SeriesValue = {
+      ...mockSeriesValue,
+      index: [
+        "2020-01-15T00:00:00",
+        "2020-02-15T00:00:00",
+        "2020-03-15T00:00:00",
+        "2020-04-15T00:00:00",
+      ],
+      calendar: "standard",
+    };
+    expect(() => createChartData([seriesWithCalendar], [])).not.toThrow();
+    const result = createChartData([seriesWithCalendar], []);
+    expect(result.isTimeAxis).toBe(true);
+    expect(result.calendar).toBe("standard");
+  });
+
+  it("still detects ISO-string time axis when calendar is absent (ILAMB case)", () => {
+    const ilambSeries: SeriesValue = {
+      ...mockSeriesValue,
+      index: [
+        "2020-01-15T00:00:00",
+        "2020-02-15T00:00:00",
+        "2020-03-15T00:00:00",
+        "2020-04-15T00:00:00",
+      ],
+    };
+    const result = createChartData([ilambSeries], []);
+    expect(result.isTimeAxis).toBe(true);
+    expect(result.calendar).toBeUndefined();
+  });
+
+  it("surfaces a non-standard calendar without building a full calendar engine", () => {
+    const nonStandardCalendarSeries: SeriesValue = {
+      ...mockSeriesValue,
+      index: [
+        "2020-01-15T00:00:00",
+        "2020-02-15T00:00:00",
+        "2020-03-15T00:00:00",
+        "2020-04-15T00:00:00",
+      ],
+      calendar: "360_day",
+    };
+    const result = createChartData([nonStandardCalendarSeries], []);
+    expect(result.calendar).toBe("360_day");
+    // Still marked as a time axis via ISO-string detection; Date-based parsing
+    // remains approximate for 360_day/noleap calendars (see code comment).
+    expect(result.isTimeAxis).toBe(true);
   });
 });
 

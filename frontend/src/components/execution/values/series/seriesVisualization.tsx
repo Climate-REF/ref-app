@@ -67,10 +67,22 @@ export function SeriesVisualization({
   }, []);
 
   // Create chart data and metadata (stable unless data/props change)
-  const { chartData, seriesMetadata, indexName, isTimeAxis } = useMemo(
+  const {
+    chartData,
+    seriesMetadata,
+    indexName,
+    isTimeAxis,
+    valueUnits,
+    indexUnits,
+  } = useMemo(
     () => createChartData(seriesValues, referenceSeriesValues, labelTemplate),
     [seriesValues, referenceSeriesValues, labelTemplate],
   );
+
+  // Prefer per-series value_units for the Y-axis/tooltip unit label; fall
+  // back to the card-config `units` prop when no series carries value_units
+  // (e.g. ILAMB series, which never set it).
+  const effectiveUnits = valueUnits ?? units;
 
   // Available dimension keys for grouping
   const availableDimensions = useMemo(
@@ -370,7 +382,8 @@ export function SeriesVisualization({
             isDark={isDark}
             isTimeAxis={isTimeAxis}
             metricName={metricName}
-            units={units}
+            units={effectiveUnits}
+            indexUnits={indexUnits}
             onMouseMove={handleCanvasMouseMove}
             onMouseLeave={handleCanvasMouseLeave}
             onClick={handleCanvasClick}
@@ -384,7 +397,7 @@ export function SeriesVisualization({
             containerWidth={containerWidth}
             indexName={indexName}
             isTimeAxis={isTimeAxis}
-            units={units}
+            units={effectiveUnits}
           />
         </div>
       </div>

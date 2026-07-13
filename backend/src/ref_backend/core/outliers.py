@@ -58,8 +58,14 @@ def calculate_iqr_bounds_by_source_id(
     if "source_id" not in df.columns:
         return None
 
-    # Separate Reference values (exclude from IQR calculation)
-    reference_mask = df["source_id"] == "Reference"
+    # Separate reference values (exclude from IQR calculation) using the
+    # first-class `kind` signal. A missing/None/empty kind is treated as a
+    # model. If the `kind` column is absent entirely (older data), fall back
+    # to treating all rows as models (no reference exclusion).
+    if "kind" in df.columns:
+        reference_mask = df["kind"] == "reference"
+    else:
+        reference_mask = pd.Series(False, index=df.index)
     non_reference_df = df[~reference_mask]
 
     # Group by source_id and calculate mean for each
@@ -138,11 +144,11 @@ def detect_outliers_in_scalar_values(
 
             if iqr_bounds is not None:
                 lower_bound, upper_bound = iqr_bounds
-                # Apply bounds to individual values (Reference values always non-outlier)
+                # Apply bounds to individual values (reference values always non-outlier)
                 source_id_flags = group_values.apply(
                     lambda row: (
                         (row["value"] < lower_bound or row["value"] > upper_bound)
-                        if row["source_id"] != "Reference"
+                        if row.get("kind") != "reference"
                         else False
                     ),
                     axis=1,
@@ -154,6 +160,12 @@ def detect_outliers_in_scalar_values(
             # Fallback to original IQR method if no source_id or insufficient data
             if len(group_values) >= min_n:
                 iqr_flags = flag_outliers_iqr(group_values.value.to_list(), factor=factor)
+                # Reference values are always non-outlier, even on this fallback path.
+                if "kind" in group_values.columns:
+                    iqr_flags = [
+                        False if kind == "reference" else flag
+                        for flag, kind in zip(iqr_flags, group_values["kind"])
+                    ]
             else:
                 iqr_flags = [False] * len(group_values)
             source_id_flags = iqr_flags  # type: ignore
