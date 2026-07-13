@@ -310,16 +310,16 @@ async def list_metric_values(  # noqa: PLR0913
     # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
     await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
-    # Scope to this diagnostic/provider via exact-match slugs. ``promoted_only`` is disabled so
-    # values from every diagnostic version are returned (matching the previous query, which did
-    # not filter by promoted version), and retracted executions are included as before.
+    # Scope to this diagnostic/provider via exact-match slugs. ``promoted_only`` keeps only the
+    # promoted diagnostic version, so values from superseded versions are hidden. Exposing
+    # previous versions needs a separate design (TODO). Retracted executions are still included.
     metric_filter = MetricValueFilter(
         diagnostic_slug=diagnostic_slug,
         provider_slug=provider_slug,
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        promoted_only=False,
+        promoted_only=True,
         include_retracted=True,
     )
 
