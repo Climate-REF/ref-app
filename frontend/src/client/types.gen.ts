@@ -974,6 +974,10 @@ export type ScalarValue = {
         [key: string]: string;
     };
     /**
+     * Kind
+     */
+    kind?: 'model' | 'reference';
+    /**
      * Value
      */
     value: number | number;
@@ -1049,6 +1053,30 @@ export type SeriesValue = {
      * Execution Id
      */
     execution_id: number;
+    /**
+     * Kind
+     */
+    kind?: 'model' | 'reference';
+    /**
+     * Reference Id
+     */
+    reference_id?: string | null;
+    /**
+     * Value Units
+     */
+    value_units?: string | null;
+    /**
+     * Value Long Name
+     */
+    value_long_name?: string | null;
+    /**
+     * Index Units
+     */
+    index_units?: string | null;
+    /**
+     * Calendar
+     */
+    calendar?: string | null;
 };
 
 /**

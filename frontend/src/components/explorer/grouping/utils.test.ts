@@ -239,17 +239,33 @@ describe("categorizeByGrouping", () => {
 });
 
 describe("isReferenceItem", () => {
-  it("returns true when source_id is Reference", () => {
-    const result = isReferenceItem(mockData[2]);
+  it("returns true when kind is reference", () => {
+    const item: DimensionedData = {
+      dimensions: { source_id: "ModelA" },
+      kind: "reference",
+    };
+    const result = isReferenceItem(item);
     expect(result).toBe(true);
   });
 
-  it("returns false when source_id is not Reference", () => {
-    const result = isReferenceItem(mockData[0]);
+  it("returns false when kind is model", () => {
+    const item: DimensionedData = {
+      dimensions: { source_id: "Reference" },
+      kind: "model",
+    };
+    const result = isReferenceItem(item);
     expect(result).toBe(false);
   });
 
-  it("returns false when source_id is missing", () => {
+  it("returns false when kind is missing, even if source_id is Reference", () => {
+    const item: DimensionedData = {
+      dimensions: { source_id: "Reference" },
+    };
+    const result = isReferenceItem(item);
+    expect(result).toBe(false);
+  });
+
+  it("returns false when both kind and source_id are missing", () => {
     const emptyItem: DimensionedData = { dimensions: {} };
     const result = isReferenceItem(emptyItem);
     expect(result).toBe(false);

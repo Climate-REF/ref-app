@@ -117,13 +117,13 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
     isSeriesValue,
   ) as SeriesValue[];
 
-  // Split into regular and reference series
-  // TODO: support other times
+  // Split into regular and reference series based on role (kind).
+  // Missing/"model" kind is treated as a model series; only "reference" is a reference series.
   const regularSeries = allSeriesValues.filter(
-    (series) => series.dimensions.source_id !== "Reference",
+    (series) => series.kind !== "reference",
   );
   const referenceSeries = allSeriesValues.filter(
-    (series) => series.dimensions.source_id === "Reference",
+    (series) => series.kind === "reference",
   );
 
   // Auto-select the first available facet value for filter controls that

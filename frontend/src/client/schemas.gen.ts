@@ -1799,6 +1799,15 @@ export const ScalarValueSchema = {
             type: 'object',
             title: 'Dimensions'
         },
+        kind: {
+            type: 'string',
+            enum: [
+                'model',
+                'reference'
+            ],
+            title: 'Kind',
+            default: 'model'
+        },
         value: {
             anyOf: [
                 {
@@ -1972,6 +1981,70 @@ export const SeriesValueSchema = {
         execution_id: {
             type: 'integer',
             title: 'Execution Id'
+        },
+        kind: {
+            type: 'string',
+            enum: [
+                'model',
+                'reference'
+            ],
+            title: 'Kind',
+            default: 'model'
+        },
+        reference_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Id'
+        },
+        value_units: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Value Units'
+        },
+        value_long_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Value Long Name'
+        },
+        index_units: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Index Units'
+        },
+        calendar: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Calendar'
         }
     },
     type: 'object',

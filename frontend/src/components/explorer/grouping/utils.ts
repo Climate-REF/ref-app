@@ -162,10 +162,10 @@ export function categorizeByGrouping<T extends DimensionedData>(
 }
 
 /**
- * Check if an item is a reference item (based on source_id)
+ * Check if an item is a reference item (based on kind)
  */
 export function isReferenceItem<T extends DimensionedData>(item: T): boolean {
-  return item.dimensions.source_id === "Reference";
+  return item.kind === "reference";
 }
 
 /**

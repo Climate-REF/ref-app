@@ -30,13 +30,14 @@ dev = [
 ]
 
 [tool.uv.sources]
-# Temporary pin for testing
-# climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", tag="v0.7.0" }
-# climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example", tag="v0.7.0" }
-# climate-ref v0.16.0 is tagged and GitHub-released, but not yet published to PyPI
-# (PyPI currently tops out at 0.14.6), so source it from the release tag. The version
-# constraint above is already correct -- delete this line once 0.16.0 lands on PyPI.
+# climate-ref v0.16.0 carries the shared metric-value contract (kind, reference_id,
+# typed presentation attributes). It is tagged and GitHub-released but not yet on PyPI
+# (PyPI tops out at 0.14.6), so source it from the release tag. The version constraint
+# above is already correct -- delete this line once 0.16.0 lands on PyPI.
 climate-ref = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref", tag = "v0.16.0" }
+# climate-ref-example = { git = "https://github.com/Climate-REF/climate-ref", subdirectory = "packages/climate-ref-example", tag="v0.7.0" }
+# Uncomment the following line to use a local version of climate-ref
+#climate-ref = { path = "../../climate-ref/packages/climate-ref", editable = true }
 
 [build-system]
 requires = ["hatchling"]

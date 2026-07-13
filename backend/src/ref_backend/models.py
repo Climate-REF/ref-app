@@ -541,6 +541,12 @@ class SeriesValue(BaseModel):
     attributes: dict[str, Union[str, float]] | None = None
     execution_group_id: int
     execution_id: int
+    kind: Literal["model", "reference"] = "model"
+    reference_id: str | None = None
+    value_units: str | None = None
+    value_long_name: str | None = None
+    index_units: str | None = None
+    calendar: str | None = None
 
 
 class Facet(BaseModel):
@@ -553,6 +559,48 @@ class AnnotatedScalarValue:
     value: models.ScalarMetricValue
     is_outlier: bool | None = None
     verification_status: Literal["verified", "unverified"] | None = None
+
+
+def _normalize_kind(dimensions: dict[str, str]) -> Literal["model", "reference"]:
+    """
+    Normalise the ``kind`` CV dimension to the model/reference role.
+
+    ``kind`` is absent from ``dimensions`` for model rows (the committed
+    default is omitted at serialisation), so a missing or empty value is
+    treated as ``"model"``.
+    """
+    kind = dimensions.get("kind")
+    return "reference" if kind == "reference" else "model"
+
+
+_PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {
+    "value_units": ("value_units", "units"),
+    "value_long_name": ("value_long_name", "long_name"),
+    "index_units": ("index_units",),
+    "calendar": ("calendar",),
+}
+
+
+def _normalize_presentation_attributes(
+    attributes: dict[str, Union[str, float]] | None,
+) -> dict[str, str | None]:
+    """
+    Normalise provider-specific presentation attribute keys to the shared names.
+
+    Providers disagree on attribute keys (ESMValTool already uses the target
+    names, ILAMB uses ``units``/``long_name``), so the first present key in
+    each fallback chain wins; a series with no matching key surfaces ``None``.
+    """
+    attributes = attributes or {}
+    normalized: dict[str, str | None] = {}
+    for target, fallback_keys in _PRESENTATION_ATTRIBUTE_FALLBACKS.items():
+        value: str | None = None
+        for key in fallback_keys:
+            if key in attributes and attributes[key] is not None:
+                value = str(attributes[key])
+                break
+        normalized[target] = value
+    return normalized
 
 
 class MetricValueCollection(BaseModel):
@@ -589,6 +637,7 @@ class MetricValueCollection(BaseModel):
                     execution_id=v.execution_id,
                     is_outlier=item.is_outlier,
                     verification_status=item.verification_status,
+                    kind=_normalize_kind(v.dimensions),
                 )
             )
 
@@ -616,6 +665,7 @@ class MetricValueCollection(BaseModel):
         all_data: list[ScalarValue | SeriesValue] = []
 
         for series in series_values:
+            presentation = _normalize_presentation_attributes(series.attributes)
             all_data.append(
                 SeriesValue(
                     id=series.id,
@@ -626,6 +676,9 @@ class MetricValueCollection(BaseModel):
                     index_name=series.index_name,
                     execution_group_id=series.execution.execution_group_id,
                     execution_id=series.execution_id,
+                    kind=_normalize_kind(series.dimensions),
+                    reference_id=series.reference_id,
+                    **presentation,
                 )
             )
 
