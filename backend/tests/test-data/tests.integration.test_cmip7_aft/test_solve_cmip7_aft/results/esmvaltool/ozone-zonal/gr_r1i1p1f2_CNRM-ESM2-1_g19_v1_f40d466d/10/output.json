@@ -1,0 +1,47 @@
+{
+  "index": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/ozone-zonal/gr_r1i1p1f2_CNRM-ESM2-1_g19_v1_f40d466d/10/executions/recipe_20260716_140605/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/ozone-zonal/gr_r1i1p1f2_CNRM-ESM2-1_g19_v1_f40d466d/10/executions/recipe_20260716_140605/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_bottom.nc": {
+      "filename": "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_bottom.nc",
+      "long_name": "Zonal mean profile of Mole Fraction of O3 of dataset CMIP6 - ESACCI-OZONE.",
+      "description": "",
+      "dimensions": {}
+    },
+    "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_top_left.nc": {
+      "filename": "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_top_left.nc",
+      "long_name": "Zonal mean profile of Mole Fraction of O3 of dataset CMIP6.",
+      "description": "",
+      "dimensions": {}
+    },
+    "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_top_right.nc": {
+      "filename": "executions/recipe_20260716_140605/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical_top_right.nc",
+      "long_name": "Zonal mean profile of Mole Fraction of O3 of dataset ESACCI-OZONE.",
+      "description": "",
+      "dimensions": {}
+    }
+  },
+  "plots": {
+    "executions/recipe_20260716_140605/plots/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical.png": {
+      "filename": "executions/recipe_20260716_140605/plots/zonal_mean_profiles/plot/zonal_mean_profile_o3_CNRM-ESM2-1_historical.png",
+      "long_name": "Zonal mean profile of Mole Fraction of O3 of dataset CMIP6.",
+      "description": "",
+      "dimensions": {}
+    }
+  },
+  "html": {
+    "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/ozone-zonal/gr_r1i1p1f2_CNRM-ESM2-1_g19_v1_f40d466d/10/executions/recipe_20260716_140605/index.html": {
+      "filename": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/ozone-zonal/gr_r1i1p1f2_CNRM-ESM2-1_g19_v1_f40d466d/10/executions/recipe_20260716_140605/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

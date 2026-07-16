@@ -1,0 +1,23 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,3.3731508421930387
+ACCESS-ESM1-5,global,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,2.2537843525789563
+ACCESS-ESM1-5,global,Bias,Bias [g d-1 m-2],scalar,g d-1 m-2,-1.0277945602290717
+ACCESS-ESM1-5,global,Bias,Bias Score [1],score,1,0.6051621259700827
+Reference,tropical,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,5.454800323301819
+ACCESS-ESM1-5,tropical,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,2.9924443867926165
+ACCESS-ESM1-5,tropical,Bias,Bias [g d-1 m-2],scalar,g d-1 m-2,-3.323481241281095
+ACCESS-ESM1-5,tropical,Bias,Bias Score [1],score,1,0.13440097269261356
+ACCESS-ESM1-5,global,RMSE,RMSE [g d-1 m-2],scalar,g d-1 m-2,2.6461713447525983
+ACCESS-ESM1-5,global,RMSE,RMSE Score [1],score,1,0.4733365242375573
+ACCESS-ESM1-5,tropical,RMSE,RMSE [g d-1 m-2],scalar,g d-1 m-2,5.296998772832763
+ACCESS-ESM1-5,tropical,RMSE,RMSE Score [1],score,1,0.3549730360260335
+ACCESS-ESM1-5,global,Annual Cycle,Phase Shift [month],scalar,month,0.4966887417218543
+ACCESS-ESM1-5,global,Annual Cycle,Seasonal Cycle Score [1],score,1,0.8443708609271523
+ACCESS-ESM1-5,tropical,Annual Cycle,Phase Shift [month],scalar,month,1.25
+ACCESS-ESM1-5,tropical,Annual Cycle,Seasonal Cycle Score [1],score,1,0.5416666666666667
+ACCESS-ESM1-5,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.7955370993580726
+ACCESS-ESM1-5,global,Spatial Distribution,Correlation [1],scalar,1,0.465630728061954
+ACCESS-ESM1-5,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.6957725294026527
+ACCESS-ESM1-5,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.9887332035149045
+ACCESS-ESM1-5,tropical,Spatial Distribution,Correlation [1],scalar,1,-0.1779085955786192
+ACCESS-ESM1-5,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.41099293427857203

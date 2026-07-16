@@ -1,0 +1,55 @@
+{
+  "index": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/gn_r1i1p1f1_ACCESS-ESM1-5_g35_v1_52fefb59/18/executions/recipe_20260716_140606/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/gn_r1i1p1f1_ACCESS-ESM1-5_g35_v1_52fefb59/18/executions/recipe_20260716_140606/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20260716_140606/work/zec/zec/zec.nc": {
+      "filename": "executions/recipe_20260716_140606/work/zec/zec/zec.nc",
+      "long_name": "",
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      }
+    },
+    "executions/recipe_20260716_140606/work/zec/zec/zec_50.nc": {
+      "filename": "executions/recipe_20260716_140606/work/zec/zec/zec_50.nc",
+      "long_name": "",
+      "description": "",
+      "dimensions": {
+        "metric": "zec"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe_20260716_140606/plots/zec/zec/zec_50_barplot.png": {
+      "filename": "executions/recipe_20260716_140606/plots/zec/zec/zec_50_barplot.png",
+      "long_name": "Barplot of ZEC_50",
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      }
+    },
+    "executions/recipe_20260716_140606/plots/zec/zec/zec_timeseries_all_models.png": {
+      "filename": "executions/recipe_20260716_140606/plots/zec/zec/zec_timeseries_all_models.png",
+      "long_name": "ZEC timeseries",
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      }
+    }
+  },
+  "html": {
+    "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/gn_r1i1p1f1_ACCESS-ESM1-5_g35_v1_52fefb59/18/executions/recipe_20260716_140606/index.html": {
+      "filename": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/zero-emission-commitment/gn_r1i1p1f1_ACCESS-ESM1-5_g35_v1_52fefb59/18/executions/recipe_20260716_140606/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

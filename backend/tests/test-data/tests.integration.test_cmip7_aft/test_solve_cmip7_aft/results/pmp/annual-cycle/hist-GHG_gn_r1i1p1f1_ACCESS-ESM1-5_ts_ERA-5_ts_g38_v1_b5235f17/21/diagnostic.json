@@ -1,0 +1,200 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "hist-GHG": {}
+    },
+    "json_structure": [
+      "kind",
+      "source_id",
+      "member_id",
+      "experiment_id",
+      "variable_id",
+      "reference_source_id",
+      "region",
+      "statistic",
+      "season"
+    ],
+    "kind": {
+      "model": {}
+    },
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "reference_source_id": {
+      "ERA-5": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "season": {
+      "ann": {},
+      "djf": {},
+      "jja": {},
+      "mam": {},
+      "son": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "bias_xy": {},
+      "cor_xy": {},
+      "mae_xy": {},
+      "mean-obs_xy": {},
+      "mean_xy": {},
+      "rms_devzm": {},
+      "rms_xy": {},
+      "rms_xyt": {},
+      "rms_y": {},
+      "rmsc_xy": {},
+      "std-obs_xy": {},
+      "std-obs_xy_devzm": {},
+      "std-obs_xyt": {},
+      "std_xy": {},
+      "std_xy_devzm": {},
+      "std_xyt": {}
+    },
+    "variable_id": {
+      "ts": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {
+    "commandLine": "/home/jared/code/climate-ref/software/conda/pmp-a0cd98ec96f7c858f788439a4f0b4951fe2d7a55/bin/mean_climate_driver.py -p /home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations /data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/pmp/annual-cycle/hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5_ts_ERA-5_ts_g38_v1_b5235f17/21/obs_dict.json --test_data_path /data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/pmp/annual-cycle/hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5_ts_ERA-5_ts_g38_v1_b5235f17/21 --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v4.nc --metrics_output_path /data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/pmp/annual-cycle/hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5_ts_ERA-5_ts_g38_v1_b5235f17/21 --cmec",
+    "conda": {
+      "Platform": "linux-64"
+    },
+    "date": "2026-07-16 14:07:01",
+    "openGL": {
+      "GLX": {
+        "client": {},
+        "server": {}
+      }
+    },
+    "osAccess": false,
+    "packages": {
+      "PMP": "3.9.2",
+      "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+      "cdat_info": "8.2.1",
+      "cdp": "1.7.0",
+      "esmf": "0.8.10",
+      "esmpy": "8.9.0",
+      "matplotlib": "3.10.6",
+      "numpy": "2.0.2",
+      "python": "3.10.10",
+      "scipy": "1.15.2",
+      "xarray": "2025.6.1",
+      "xcdat": "0.10.0"
+    },
+    "platform": {
+      "Name": "gus",
+      "OS": "Linux",
+      "Version": "6.12.88+deb13-amd64"
+    },
+    "userId": "jared"
+  },
+  "RESULTS": {
+    "model": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "hist-GHG": {
+            "ts": {
+              "ERA-5": {
+                "attributes": {
+                  "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v4.nc"
+                },
+                "global": {
+                  "bias_xy": {
+                    "ann": 1.55238,
+                    "djf": 1.66939,
+                    "jja": 1.47011,
+                    "mam": 1.47425,
+                    "son": 1.59322
+                  },
+                  "cor_xy": {
+                    "ann": 0.973264,
+                    "djf": 0.969618,
+                    "jja": 0.970058,
+                    "mam": 0.971528,
+                    "son": 0.97079
+                  },
+                  "mae_xy": {
+                    "ann": 2.57763,
+                    "djf": 2.94304,
+                    "jja": 2.77248,
+                    "mam": 2.6903,
+                    "son": 2.72777
+                  },
+                  "mean-obs_xy": {
+                    "ann": 288.038,
+                    "djf": 286.212,
+                    "jja": 289.845,
+                    "mam": 288.055,
+                    "son": 288.057
+                  },
+                  "mean_xy": {
+                    "ann": 289.59,
+                    "djf": 287.881,
+                    "jja": 291.315,
+                    "mam": 289.529,
+                    "son": 289.651
+                  },
+                  "rms_devzm": {
+                    "ann": 2.5675
+                  },
+                  "rms_xy": {
+                    "ann": 3.80383,
+                    "djf": 4.43753,
+                    "jja": 4.11347,
+                    "mam": 4.06961,
+                    "son": 3.97481
+                  },
+                  "rms_xyt": {
+                    "ann": 4.26745
+                  },
+                  "rms_y": {
+                    "ann": 2.80661
+                  },
+                  "rmsc_xy": {
+                    "ann": 3.47264,
+                    "djf": 4.11155,
+                    "jja": 3.84179,
+                    "mam": 3.7932,
+                    "son": 3.64153
+                  },
+                  "std-obs_xy": {
+                    "ann": 14.7479,
+                    "djf": 16.7278,
+                    "jja": 14.677,
+                    "mam": 15.5647,
+                    "son": 14.8687
+                  },
+                  "std-obs_xy_devzm": {
+                    "ann": 4.15782
+                  },
+                  "std-obs_xyt": {
+                    "ann": 15.7057
+                  },
+                  "std_xy": {
+                    "ann": 15.1182,
+                    "djf": 16.6199,
+                    "jja": 15.6702,
+                    "mam": 16.01,
+                    "son": 15.1652
+                  },
+                  "std_xy_devzm": {
+                    "ann": 3.73955
+                  },
+                  "std_xyt": {
+                    "ann": 16.1009
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

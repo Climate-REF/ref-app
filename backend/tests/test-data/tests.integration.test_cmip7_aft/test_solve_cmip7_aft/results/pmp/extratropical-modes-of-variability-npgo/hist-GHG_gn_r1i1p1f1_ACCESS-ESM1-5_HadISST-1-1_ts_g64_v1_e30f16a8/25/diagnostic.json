@@ -1,0 +1,137 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "hist-GHG": {}
+    },
+    "json_structure": [
+      "kind",
+      "mip_id",
+      "source_id",
+      "member_id",
+      "experiment_id",
+      "reference_source_id",
+      "mode",
+      "season",
+      "method",
+      "statistic"
+    ],
+    "kind": {
+      "model": {}
+    },
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "method": {
+      "cbf": {},
+      "eof1": {},
+      "eof2": {}
+    },
+    "mip_id": {
+      "cmip6": {}
+    },
+    "mode": {
+      "NPGO": {}
+    },
+    "reference_source_id": {
+      "HadISST-1-1": {}
+    },
+    "season": {
+      "monthly": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "bias": {},
+      "bias_glo": {},
+      "cor": {},
+      "cor_glo": {},
+      "frac": {},
+      "frac_cbf_regrid": {},
+      "mean": {},
+      "mean_glo": {},
+      "rms": {},
+      "rms_glo": {},
+      "rmsc": {},
+      "rmsc_glo": {},
+      "stdv_pc": {},
+      "stdv_pc_ratio_to_obs": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {},
+  "RESULTS": {
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "hist-GHG": {
+              "HadISST-1-1": {
+                "NPGO": {
+                  "attributes": {
+                    "target_model_eofs": 2
+                  },
+                  "monthly": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 2,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "2000-2005"
+                    },
+                    "cbf": {
+                      "bias": 0.0008529356870382941,
+                      "bias_glo": 0.031582794785208014,
+                      "cor": 0.7386872982611676,
+                      "cor_glo": 0.38061815619404105,
+                      "frac": 0.09687375770307928,
+                      "frac_cbf_regrid": 0.14915891182928212,
+                      "mean": 3.324076432273517e-17,
+                      "mean_glo": 0.06953719119836707,
+                      "rms": 0.13791947615752614,
+                      "rms_glo": 0.1362525227878265,
+                      "rmsc": 0.6928819029108036,
+                      "rmsc_glo": 1.1084718484022797,
+                      "stdv_pc": 0.1167388931262994,
+                      "stdv_pc_ratio_to_obs": 0.8145907025940083
+                    },
+                    "eof1": {
+                      "bias": -0.017387262832058048,
+                      "bias_glo": 0.0609627824081342,
+                      "cor": 0.17802945858862174,
+                      "cor_glo": 0.035457689262511534,
+                      "frac": 0.17062006725773216,
+                      "mean": 2.7196988991328772e-17,
+                      "mean_glo": 0.09653594527833015,
+                      "rms": 0.2724783402681173,
+                      "rms_glo": 0.22902791547586415,
+                      "rmsc": 1.182116449331297,
+                      "rmsc_glo": 1.383737717107014,
+                      "stdv_pc": 0.22235014222791263,
+                      "stdv_pc_ratio_to_obs": 1.551533972344206
+                    },
+                    "eof2": {
+                      "bias": -0.012560087069559238,
+                      "bias_glo": -0.03172037990097244,
+                      "cor": 0.15367251337504148,
+                      "cor_glo": 0.1938128145477766,
+                      "frac": 0.13916421819740019,
+                      "mean": 1.3598494495664386e-17,
+                      "mean_glo": 0.008319087816542066,
+                      "rms": 0.25733815074299343,
+                      "rms_glo": 0.15594073473502593,
+                      "rmsc": 1.1913935055066711,
+                      "rmsc_glo": 1.2265227828844507,
+                      "stdv_pc": 0.20081037596488938,
+                      "stdv_pc_ratio_to_obs": 1.401231936201686
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
