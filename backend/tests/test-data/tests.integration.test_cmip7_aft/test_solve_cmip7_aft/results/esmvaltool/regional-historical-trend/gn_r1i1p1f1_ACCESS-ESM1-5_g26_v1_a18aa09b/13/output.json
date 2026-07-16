@@ -1,0 +1,113 @@
+{
+  "index": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/regional-historical-trend/gn_r1i1p1f1_ACCESS-ESM1-5_g26_v1_a18aa09b/13/executions/recipe_20260716_140605/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/regional-historical-trend/gn_r1i1p1f1_ACCESS-ESM1-5_g26_v1_a18aa09b/13/executions/recipe_20260716_140605/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20260716_140605/work/hus200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260716_140605/work/hus200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/work/pr_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260716_140605/work/pr_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/work/psl_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260716_140605/work/psl_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/work/tas_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260716_140605/work/tas_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/work/ua200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260716_140605/work/ua200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe_20260716_140605/plots/hus200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260716_140605/plots/hus200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/plots/pr_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260716_140605/plots/pr_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/plots/psl_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260716_140605/plots/psl_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/plots/tas_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260716_140605/plots/tas_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260716_140605/plots/ua200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260716_140605/plots/ua200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "html": {
+    "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/regional-historical-trend/gn_r1i1p1f1_ACCESS-ESM1-5_g26_v1_a18aa09b/13/executions/recipe_20260716_140605/index.html": {
+      "filename": "/data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/esmvaltool/regional-historical-trend/gn_r1i1p1f1_ACCESS-ESM1-5_g26_v1_a18aa09b/13/executions/recipe_20260716_140605/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

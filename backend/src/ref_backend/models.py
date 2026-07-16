@@ -554,6 +554,13 @@ class Facet(BaseModel):
     values: list[str]
 
 
+# ``kind`` is a CV dimension but is surfaced as a dedicated ``kind`` field on each value and
+# excluded from the per-item ``dimensions`` mapping (see climate_ref ScalarValue.dimensions).
+# Offering it as a facet would let callers filter on a key that never appears in item dimensions,
+# so it is excluded to keep facets a subset of the item dimensions.
+NON_FACET_DIMENSIONS = frozenset({"kind"})
+
+
 @define
 class AnnotatedScalarValue:
     value: models.ScalarMetricValue
@@ -623,7 +630,11 @@ class MetricValueCollection(BaseModel):
             for item in collection.items
         ]
 
-        facets = [Facet(key=f.key, values=list(f.values)) for f in collection.facets]
+        facets = [
+            Facet(key=f.key, values=list(f.values))
+            for f in collection.facets
+            if f.key not in NON_FACET_DIMENSIONS
+        ]
 
         return MetricValueCollection(
             data=all_data,
@@ -659,7 +670,11 @@ class MetricValueCollection(BaseModel):
                 )
             )
 
-        facets = [Facet(key=f.key, values=list(f.values)) for f in collection.facets]
+        facets = [
+            Facet(key=f.key, values=list(f.values))
+            for f in collection.facets
+            if f.key not in NON_FACET_DIMENSIONS
+        ]
 
         return MetricValueCollection(
             data=all_data,

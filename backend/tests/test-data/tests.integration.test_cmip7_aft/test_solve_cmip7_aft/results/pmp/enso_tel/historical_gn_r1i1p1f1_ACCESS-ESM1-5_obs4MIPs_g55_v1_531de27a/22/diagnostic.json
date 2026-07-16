@@ -1,0 +1,118 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "kind",
+      "mip_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "experiment_id",
+      "metric",
+      "reference_source_id"
+    ],
+    "kind": {
+      "model": {}
+    },
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "EnsoPrMapDjfCorr": {},
+      "EnsoPrMapDjfRmse": {},
+      "EnsoPrMapDjfStd": {},
+      "EnsoPrMapJjaCorr": {},
+      "EnsoPrMapJjaRmse": {},
+      "EnsoPrMapJjaStd": {}
+    },
+    "mip_id": {
+      "cmip6": {}
+    },
+    "reference_source_id": {
+      "HadISST_GPCP-Monthly-3-2": {},
+      "Tropflux_GPCP-Monthly-3-2": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {
+    "commandLine": "/home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path /data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/pmp/enso_tel/historical_gn_r1i1p1f1_ACCESS-ESM1-5_obs4MIPs_g55_v1_531de27a/22/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory /data/projects/climate-ref/refapp-fixture/tests.integration.test_cmip7_aft/test_solve_cmip7_aft/scratch/pmp/enso_tel/historical_gn_r1i1p1f1_ACCESS-ESM1-5_obs4MIPs_g55_v1_531de27a/22",
+    "conda": {
+      "Platform": "linux-64"
+    },
+    "date": "2026-07-16 14:07:00",
+    "openGL": {
+      "GLX": {
+        "client": {},
+        "server": {}
+      }
+    },
+    "osAccess": false,
+    "packages": {
+      "PMP": "3.9.2",
+      "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+      "cdat_info": "8.2.1",
+      "cdp": "1.7.0",
+      "esmf": "0.8.10",
+      "esmpy": "8.9.0",
+      "matplotlib": "3.10.6",
+      "numpy": "2.0.2",
+      "python": "3.10.10",
+      "scipy": "1.15.2",
+      "xarray": "2025.6.1",
+      "xcdat": "0.10.0"
+    },
+    "platform": {
+      "Name": "gus",
+      "OS": "Linux",
+      "Version": "6.12.88+deb13-amd64"
+    },
+    "userId": "jared"
+  },
+  "RESULTS": {
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "gn": {
+              "historical": {
+                "EnsoPrMapDjfCorr": {
+                  "HadISST_GPCP-Monthly-3-2": 0.8284741364339038,
+                  "Tropflux_GPCP-Monthly-3-2": 0.832438949539564
+                },
+                "EnsoPrMapDjfRmse": {
+                  "HadISST_GPCP-Monthly-3-2": 0.3288841387010711,
+                  "Tropflux_GPCP-Monthly-3-2": 0.325495337770583
+                },
+                "EnsoPrMapDjfStd": {
+                  "HadISST_GPCP-Monthly-3-2": 1.2254145399476348,
+                  "Tropflux_GPCP-Monthly-3-2": 1.2678051246614426
+                },
+                "EnsoPrMapJjaCorr": {
+                  "HadISST_GPCP-Monthly-3-2": 0.8134818351187548,
+                  "Tropflux_GPCP-Monthly-3-2": 0.8064925016226705
+                },
+                "EnsoPrMapJjaRmse": {
+                  "HadISST_GPCP-Monthly-3-2": 0.4094760416457439,
+                  "Tropflux_GPCP-Monthly-3-2": 0.4015105722184469
+                },
+                "EnsoPrMapJjaStd": {
+                  "HadISST_GPCP-Monthly-3-2": 1.69266606413509,
+                  "Tropflux_GPCP-Monthly-3-2": 1.8413299292569218
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
