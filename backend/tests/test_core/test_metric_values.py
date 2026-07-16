@@ -14,7 +14,7 @@ from ref_backend.core.metric_values import (
     parse_id_list,
     process_scalar_values,
 )
-from ref_backend.models import AnnotatedScalarValue, MetricValueCollection, _normalize_kind
+from ref_backend.models import AnnotatedScalarValue, MetricValueCollection
 
 
 class TestParseIdList:
@@ -401,63 +401,84 @@ class TestGenerateCsvResponseSeries:
         assert response.headers["Content-Disposition"] == "attachment; filename=test.csv"
 
 
-class TestBuildScalar:
-    """Test MetricValueCollection.build_scalar sets kind from dimensions."""
+def _reader_collection(items):
+    """Build a stand-in reader collection (only the fields the builders read)."""
+    return Mock(items=items, total_count=len(items), facets=[], had_outliers=False, outlier_count=0)
 
-    def test_kind_read_from_dimensions(self):
-        """A scalar row with kind="reference" in its dimensions surfaces kind="reference"."""
-        mock_value = Mock(
-            id=1,
-            dimensions={"metric": "rmse", "kind": "reference"},
-            attributes=None,
-            value=1.5,
-            execution_id=2,
-        )
-        mock_value.execution = Mock(execution_group_id=1)
 
-        collection = MetricValueCollection.build_scalar(
-            [AnnotatedScalarValue(value=mock_value)],
-            total_count=1,
-            facets=[],
-        )
+class TestBuildScalarFromReader:
+    """Test MetricValueCollection.build_scalar_from_reader carries the reader's fields through."""
 
-        assert collection.data[0].kind == "reference"
-
-    def test_missing_kind_defaults_to_model(self):
-        """A scalar row without kind in its dimensions defaults to kind="model"."""
-        mock_value = Mock(
+    def test_kind_and_outlier_annotations_pass_through(self):
+        """A reader scalar surfaces its resolved kind plus outlier annotations."""
+        item = Mock(
             id=1,
             dimensions={"metric": "rmse"},
             attributes=None,
             value=1.5,
+            execution_group_id=1,
             execution_id=2,
+            is_outlier=True,
+            verification_status="unverified",
+            kind="reference",
         )
-        mock_value.execution = Mock(execution_group_id=1)
 
-        collection = MetricValueCollection.build_scalar(
-            [AnnotatedScalarValue(value=mock_value)],
-            total_count=1,
-            facets=[],
+        collection = MetricValueCollection.build_scalar_from_reader(
+            _reader_collection([item]), detection_ran=True
+        )
+
+        value = collection.data[0]
+        assert value.kind == "reference"
+        assert value.is_outlier is True
+        assert value.verification_status == "unverified"
+        assert collection.had_outliers is False
+        assert collection.outlier_count == 0
+
+    def test_no_detection_clears_outlier_summary(self):
+        """When detection did not run the outlier summary is None."""
+        item = Mock(
+            id=1,
+            dimensions={"metric": "rmse"},
+            attributes=None,
+            value=1.5,
+            execution_group_id=1,
+            execution_id=2,
+            is_outlier=None,
+            verification_status=None,
+            kind="model",
+        )
+
+        collection = MetricValueCollection.build_scalar_from_reader(
+            _reader_collection([item]), detection_ran=False
         )
 
         assert collection.data[0].kind == "model"
-
-    def test_normalize_kind_treats_none_and_empty_as_model(self):
-        """The kind-normalisation helper treats missing, None and empty kind as model."""
-        assert _normalize_kind({"metric": "rmse"}) == "model"
-        assert _normalize_kind({"metric": "rmse", "kind": None}) == "model"
-        assert _normalize_kind({"metric": "rmse", "kind": ""}) == "model"
-        assert _normalize_kind({"metric": "rmse", "kind": "reference"}) == "reference"
+        assert collection.had_outliers is None
+        assert collection.outlier_count is None
 
 
-class TestBuildSeries:
-    """Test MetricValueCollection.build_series surfaces kind, reference_id and presentation attrs."""
+class TestBuildSeriesFromReader:
+    """Test build_series_from_reader surfaces kind, reference_id and presentation attrs."""
+
+    def _series_item(self, **overrides):
+        defaults = dict(
+            id=1,
+            dimensions={"metric": "temp"},
+            attributes=None,
+            values=[1.0, 2.0],
+            index=[2020, 2021],
+            index_name="time",
+            execution_group_id=1,
+            execution_id=2,
+            kind="model",
+            reference_id=None,
+        )
+        defaults.update(overrides)
+        return Mock(**defaults)
 
     def test_esmvaltool_style_attributes(self):
         """ESMValTool-style attribute keys already match the target names."""
-        mock_series = Mock(
-            id=1,
-            dimensions={"metric": "temp"},
+        item = self._series_item(
             attributes={
                 "value_units": "K",
                 "value_long_name": "Near-Surface Air Temperature",
@@ -465,15 +486,9 @@ class TestBuildSeries:
                 "calendar": "standard",
                 "index_long_name": "time",
             },
-            values=[1.0, 2.0],
-            index=[2020, 2021],
-            index_name="time",
-            reference_id=None,
-            execution_id=2,
         )
-        mock_series.execution = Mock(execution_group_id=1)
 
-        collection = MetricValueCollection.build_series([mock_series], total_count=1, facets=[])
+        collection = MetricValueCollection.build_series_from_reader(_reader_collection([item]))
 
         value = collection.data[0]
         assert value.value_units == "K"
@@ -483,23 +498,15 @@ class TestBuildSeries:
 
     def test_ilamb_style_attributes_fall_back(self):
         """ILAMB-style keys (units, long_name) fall back onto the target names."""
-        mock_series = Mock(
-            id=1,
-            dimensions={"metric": "temp"},
+        item = self._series_item(
             attributes={
                 "units": "percent",
                 "long_name": "Bias",
                 "standard_name": "bias",
             },
-            values=[1.0, 2.0],
-            index=[2020, 2021],
-            index_name="time",
-            reference_id=None,
-            execution_id=2,
         )
-        mock_series.execution = Mock(execution_group_id=1)
 
-        collection = MetricValueCollection.build_series([mock_series], total_count=1, facets=[])
+        collection = MetricValueCollection.build_series_from_reader(_reader_collection([item]))
 
         value = collection.data[0]
         assert value.value_units == "percent"
@@ -509,19 +516,7 @@ class TestBuildSeries:
 
     def test_missing_attributes_are_none(self):
         """A series with attributes=None surfaces None presentation fields, not an error."""
-        mock_series = Mock(
-            id=1,
-            dimensions={"metric": "temp"},
-            attributes=None,
-            values=[1.0, 2.0],
-            index=[2020, 2021],
-            index_name="time",
-            reference_id=None,
-            execution_id=2,
-        )
-        mock_series.execution = Mock(execution_group_id=1)
-
-        collection = MetricValueCollection.build_series([mock_series], total_count=1, facets=[])
+        collection = MetricValueCollection.build_series_from_reader(_reader_collection([self._series_item()]))
 
         value = collection.data[0]
         assert value.value_units is None
@@ -531,39 +526,17 @@ class TestBuildSeries:
 
     def test_reference_series_sets_kind_and_reference_id(self):
         """A reference series surfaces kind="reference" and its reference_id."""
-        mock_series = Mock(
-            id=1,
-            dimensions={"metric": "temp", "kind": "reference"},
-            attributes=None,
-            values=[1.0, 2.0],
-            index=[2020, 2021],
-            index_name="time",
-            reference_id="abc123",
-            execution_id=2,
-        )
-        mock_series.execution = Mock(execution_group_id=1)
+        item = self._series_item(kind="reference", reference_id="abc123")
 
-        collection = MetricValueCollection.build_series([mock_series], total_count=1, facets=[])
+        collection = MetricValueCollection.build_series_from_reader(_reader_collection([item]))
 
         value = collection.data[0]
         assert value.kind == "reference"
         assert value.reference_id == "abc123"
 
     def test_model_series_defaults_kind_and_no_reference_id(self):
-        """A model series (kind absent from dimensions) defaults to kind="model" with no reference_id."""
-        mock_series = Mock(
-            id=1,
-            dimensions={"metric": "temp"},
-            attributes=None,
-            values=[1.0, 2.0],
-            index=[2020, 2021],
-            index_name="time",
-            reference_id=None,
-            execution_id=2,
-        )
-        mock_series.execution = Mock(execution_group_id=1)
-
-        collection = MetricValueCollection.build_series([mock_series], total_count=1, facets=[])
+        """A model series surfaces kind="model" with no reference_id."""
+        collection = MetricValueCollection.build_series_from_reader(_reader_collection([self._series_item()]))
 
         value = collection.data[0]
         assert value.kind == "model"

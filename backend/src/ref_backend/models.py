@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar, Generic, Literal, TypeVar, Union
+from typing import TYPE_CHECKING, ClassVar, Generic, Literal, TypeVar, Union, cast
 
 from attr import define
 from loguru import logger
@@ -19,6 +19,7 @@ from ref_backend.core.diagnostic_metadata import (
 from ref_backend.core.json_utils import sanitize_float_list, sanitize_float_value
 
 if TYPE_CHECKING:
+    from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
     from ref_backend.api.deps import AppContext
 
 
@@ -560,18 +561,6 @@ class AnnotatedScalarValue:
     verification_status: Literal["verified", "unverified"] | None = None
 
 
-def _normalize_kind(dimensions: dict[str, str]) -> Literal["model", "reference"]:
-    """
-    Normalise the ``kind`` CV dimension to the model/reference role.
-
-    ``kind`` is absent from ``dimensions`` for model rows (the committed
-    default is omitted at serialisation), so a missing or empty value is
-    treated as ``"model"``.
-    """
-    kind = dimensions.get("kind")
-    return "reference" if kind == "reference" else "model"
-
-
 _PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {
     "value_units": ("value_units", "units"),
     "value_long_name": ("value_long_name", "long_name"),
@@ -612,83 +601,74 @@ class MetricValueCollection(BaseModel):
     outlier_count: int | None = None
 
     @staticmethod
-    def build_scalar(
-        scalar_values: list[AnnotatedScalarValue],
-        total_count: int,
-        facets: list[Facet],
-        had_outliers: bool | None = None,
-        outlier_count: int | None = None,
+    def build_scalar_from_reader(
+        collection: "ScalarValueCollection",
+        detection_ran: bool,
     ) -> "MetricValueCollection":
-        """Build a MetricValueCollection from scalar values."""
-        scalar_values = scalar_values or []
-
-        all_data: list[ScalarValue] = []
-
-        for item in scalar_values:
-            v = item.value
-            all_data.append(
-                ScalarValue(
-                    id=v.id,
-                    dimensions=v.dimensions,
-                    attributes=v.attributes,
-                    value=sanitize_float_value(float(v.value)),
-                    execution_group_id=v.execution.execution_group_id,
-                    execution_id=v.execution_id,
-                    is_outlier=item.is_outlier,
-                    verification_status=item.verification_status,
-                    kind=_normalize_kind(v.dimensions),
-                )
+        """Build a MetricValueCollection from a reader scalar collection."""
+        all_data: list[ScalarValue] = [
+            ScalarValue(
+                id=item.id,
+                dimensions=dict(item.dimensions),
+                attributes=dict(item.attributes) if item.attributes else None,
+                kind=cast('Literal["model", "reference"]', item.kind),
+                value=sanitize_float_value(float(cast(float, item.value))),
+                execution_group_id=item.execution_group_id,
+                execution_id=item.execution_id,
+                is_outlier=item.is_outlier,
+                verification_status=cast(
+                    'Literal["verified", "unverified"] | None', item.verification_status
+                ),
             )
+            for item in collection.items
+        ]
+
+        facets = [Facet(key=f.key, values=list(f.values)) for f in collection.facets]
 
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=total_count,
+            total_count=collection.total_count,
             facets=facets,
             types=["scalar"],
-            had_outliers=had_outliers,
-            outlier_count=outlier_count,
+            had_outliers=collection.had_outliers if detection_ran else None,
+            outlier_count=collection.outlier_count if detection_ran else None,
         )
 
     @staticmethod
-    def build_series(
-        series_values: list[models.SeriesMetricValue],
-        total_count: int,
-        facets: list[Facet],
-        had_outliers: None = None,
-        outlier_count: None = None,
+    def build_series_from_reader(
+        collection: "SeriesValueCollection",
     ) -> "MetricValueCollection":
-        """Build a MetricValueCollection from series values."""
-        series_values = series_values or []
-
+        """Build a MetricValueCollection from a reader series collection."""
         all_data: list[ScalarValue | SeriesValue] = []
-
-        for series in series_values:
-            presentation = _normalize_presentation_attributes(series.attributes)
+        for item in collection.items:
+            attributes = dict(item.attributes) if item.attributes else None
             all_data.append(
                 SeriesValue(
-                    id=series.id,
-                    dimensions=series.dimensions,
-                    attributes=series.attributes,
-                    values=sanitize_float_list(series.values or []),
-                    index=series.index,
-                    index_name=series.index_name,
-                    execution_group_id=series.execution.execution_group_id,
-                    execution_id=series.execution_id,
-                    kind=_normalize_kind(series.dimensions),
-                    reference_id=series.reference_id,
-                    **presentation,
+                    id=item.id,
+                    dimensions=dict(item.dimensions),
+                    attributes=attributes,
+                    values=sanitize_float_list(list(item.values or [])),
+                    index=list(item.index) if item.index is not None else None,
+                    index_name=item.index_name,
+                    execution_group_id=item.execution_group_id,
+                    execution_id=item.execution_id,
+                    kind=cast('Literal["model", "reference"]', item.kind),
+                    reference_id=item.reference_id,
+                    **_normalize_presentation_attributes(attributes),
                 )
             )
+
+        facets = [Facet(key=f.key, values=list(f.values)) for f in collection.facets]
 
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=total_count,
+            total_count=collection.total_count,
             facets=facets,
             types=["series"],
-            had_outliers=had_outliers,
-            outlier_count=outlier_count,
+            had_outliers=None,
+            outlier_count=None,
         )
 
 
