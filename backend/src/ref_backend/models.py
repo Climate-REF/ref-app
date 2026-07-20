@@ -2,7 +2,6 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar, Generic, Literal, TypeVar, Union, cast
 
-from attr import define
 from loguru import logger
 from pydantic import BaseModel, HttpUrl, computed_field
 from sqlalchemy import func
@@ -559,13 +558,6 @@ class Facet(BaseModel):
 # Offering it as a facet would let callers filter on a key that never appears in item dimensions,
 # so it is excluded to keep facets a subset of the item dimensions.
 NON_FACET_DIMENSIONS = frozenset({"kind"})
-
-
-@define
-class AnnotatedScalarValue:
-    value: models.ScalarMetricValue
-    is_outlier: bool | None = None
-    verification_status: Literal["verified", "unverified"] | None = None
 
 
 _PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {
