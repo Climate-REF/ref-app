@@ -19,7 +19,6 @@ import {
   extractAvailableDimensions,
   initializeGroupingConfig,
 } from "@/components/explorer/grouping";
-import useMousePositionAndWidth from "@/hooks/useMousePosition";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
 
 // Well-known category orderings for common climate dimensions
@@ -139,7 +138,6 @@ export const EnsembleChart = ({
   yMax,
   categoryOrder,
 }: EnsembleChartProps) => {
-  const { mousePosition, windowSize } = useMousePositionAndWidth();
   const [highlightedPoint, setHighlightedPoint] = useState<{
     groupName: string;
     point: ScalarValue;
@@ -163,98 +161,110 @@ export const EnsembleChart = ({
   // This prevents odd spacing where only one bar has data at each x-axis position
   const isSelfHued = hueDimension === groupByDimension;
 
-  // First group by the main dimension (x-axis)
-  const primaryGroupedData = Object.groupBy(
-    data,
-    (d: ScalarValue) => d.dimensions[groupByDimension] ?? metricName,
-  );
+  // Group by the main dimension (x-axis), then by hue within each group,
+  // and compute box-whisker statistics for each subgroup.
+  const sortedChartData = useMemo(() => {
+    const primaryGroupedData = Object.groupBy(
+      data,
+      (d: ScalarValue) => d.dimensions[groupByDimension] ?? metricName,
+    );
 
-  const chartData = Object.entries(primaryGroupedData).map(
-    (
-      [groupName, values]: [string, ScalarValue[] | undefined],
-      categoryIndex,
-    ) => {
-      if (!values || values.length === 0) {
+    const chartData = Object.entries(primaryGroupedData).map(
+      (
+        [groupName, values]: [string, ScalarValue[] | undefined],
+        categoryIndex,
+      ) => {
+        if (!values || values.length === 0) {
+          return {
+            name: groupName,
+            groups: {},
+            __outliers: {},
+            __rawData: [],
+            __categoryColor: isSelfHued
+              ? COLORS[categoryIndex % COLORS.length]
+              : undefined,
+          };
+        }
+
+        // If hue dimension is specified (and different from groupBy), create sub-groups
+        let subGroups: { [key: string]: ScalarValue[] };
+        if (!isSelfHued && hueDimension && hueDimension !== "none") {
+          // Normal hue: create sub-groups based on hue dimension
+          subGroups = Object.groupBy(
+            values,
+            (d: ScalarValue) => d.dimensions[hueDimension] ?? "Unknown",
+          ) as { [key: string]: ScalarValue[] };
+        } else {
+          // Single group if no hue dimension or hue === groupBy
+          subGroups = { ensemble: values };
+        }
+
+        const groups: { [key: string]: GroupStatistics | null } = {};
+        const outliers: { [key: string]: number } = {};
+        const allRawData: ScalarValue[] = [];
+
+        Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
+          const allValues: number[] =
+            subGroupValues
+              ?.map((d: ScalarValue) => Number(d.value))
+              ?.filter((v: number) => Number.isFinite(v)) ?? [];
+
+          const filteredValues: number[] = allValues
+            .filter(
+              (v: number) =>
+                (clipMin === undefined || v >= clipMin) &&
+                (clipMax === undefined || v <= clipMax),
+            )
+            .sort((a: number, b: number) => a - b);
+
+          allRawData.push(...(subGroupValues || []));
+
+          if (filteredValues.length === 0) {
+            groups[subGroupName] = null;
+            outliers[subGroupName] = 0;
+          } else {
+            const min = d3.min(filteredValues)!;
+            const max = d3.max(filteredValues)!;
+            const q1 = d3.quantile(filteredValues, 0.25)!;
+            const median = d3.median(filteredValues)!;
+            const q3 = d3.quantile(filteredValues, 0.75)!;
+
+            groups[subGroupName] = {
+              min,
+              lowerQuartile: q1,
+              median,
+              upperQuartile: q3,
+              max,
+              values: filteredValues,
+            };
+            outliers[subGroupName] = allValues.length - filteredValues.length;
+          }
+        });
+
         return {
           name: groupName,
-          groups: {},
-          __outliers: {},
-          __rawData: [],
+          groups,
+          __outliers: outliers,
+          __rawData: allRawData,
           __categoryColor: isSelfHued
             ? COLORS[categoryIndex % COLORS.length]
             : undefined,
         };
-      }
+      },
+    );
 
-      // If hue dimension is specified (and different from groupBy), create sub-groups
-      let subGroups: { [key: string]: ScalarValue[] };
-      if (!isSelfHued && hueDimension && hueDimension !== "none") {
-        // Normal hue: create sub-groups based on hue dimension
-        subGroups = Object.groupBy(
-          values,
-          (d: ScalarValue) => d.dimensions[hueDimension] ?? "Unknown",
-        ) as { [key: string]: ScalarValue[] };
-      } else {
-        // Single group if no hue dimension or hue === groupBy
-        subGroups = { ensemble: values };
-      }
-
-      const groups: { [key: string]: GroupStatistics | null } = {};
-      const outliers: { [key: string]: number } = {};
-      const allRawData: ScalarValue[] = [];
-
-      Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
-        const allValues: number[] =
-          subGroupValues
-            ?.map((d: ScalarValue) => Number(d.value))
-            ?.filter((v: number) => Number.isFinite(v)) ?? [];
-
-        const filteredValues: number[] = allValues
-          .filter(
-            (v: number) =>
-              (clipMin === undefined || v >= clipMin) &&
-              (clipMax === undefined || v <= clipMax),
-          )
-          .sort((a: number, b: number) => a - b);
-
-        allRawData.push(...(subGroupValues || []));
-
-        if (filteredValues.length === 0) {
-          groups[subGroupName] = null;
-          outliers[subGroupName] = 0;
-        } else {
-          const min = d3.min(filteredValues)!;
-          const max = d3.max(filteredValues)!;
-          const q1 = d3.quantile(filteredValues, 0.25)!;
-          const median = d3.median(filteredValues)!;
-          const q3 = d3.quantile(filteredValues, 0.75)!;
-
-          groups[subGroupName] = {
-            min,
-            lowerQuartile: q1,
-            median,
-            upperQuartile: q3,
-            max,
-            values: filteredValues,
-          };
-          outliers[subGroupName] = allValues.length - filteredValues.length;
-        }
-      });
-
-      return {
-        name: groupName,
-        groups,
-        __outliers: outliers,
-        __rawData: allRawData,
-        __categoryColor: isSelfHued
-          ? COLORS[categoryIndex % COLORS.length]
-          : undefined,
-      };
-    },
-  );
-
-  // Sort categories using explicit order or well-known orderings (e.g., seasons)
-  const sortedChartData = sortCategories(chartData, categoryOrder);
+    // Sort categories using explicit order or well-known orderings (e.g., seasons)
+    return sortCategories(chartData, categoryOrder);
+  }, [
+    data,
+    groupByDimension,
+    hueDimension,
+    isSelfHued,
+    metricName,
+    clipMin,
+    clipMax,
+    categoryOrder,
+  ]);
 
   // Get all unique group names for rendering multiple bars
   const allGroupNames = useMemo(() => {
@@ -378,7 +388,7 @@ export const EnsembleChart = ({
             wrapperStyle={{ zIndex: 1000 }}
             animationDuration={500}
             offset={20}
-            content={({ active, payload, label, coordinate }) => {
+            content={({ active, payload, label, coordinate, viewBox }) => {
               if (!active || !payload || payload.length === 0) {
                 // Clear highlight when tooltip is not active
                 if (highlightedPoint) {
@@ -479,9 +489,13 @@ export const EnsembleChart = ({
               }
 
               let side = "right";
-
-              if (mousePosition.x > windowSize.width / 2 + 20) {
-                // If mouse is on the right half of the screen, show tooltip on the left
+              const chartWidth = viewBox?.width ?? 0;
+              if (
+                coordinate?.x !== undefined &&
+                chartWidth > 0 &&
+                coordinate.x > chartWidth / 2
+              ) {
+                // If cursor is on the right half of the chart, show tooltip on the left
                 side = "left";
               }
 
