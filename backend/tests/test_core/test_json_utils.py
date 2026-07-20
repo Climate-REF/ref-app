@@ -68,6 +68,12 @@ class TestSanitizeFloatList:
         result = sanitize_float_list(values)
         assert result == [None, None, None]
 
+    def test_none_and_int_values_pass_through(self):
+        """Test that None and int values in a series pass through unchanged."""
+        values = [1.0, None, 2]
+        result = sanitize_float_list(values)
+        assert result == [1.0, None, 2]
+
 
 class TestSanitizeDictValues:
     """Test the sanitize_dict_values function."""
