@@ -275,6 +275,17 @@ export function createChartData(
     };
   });
 
+  // Precompute a value-to-position lookup per series so alignment below is a
+  // map lookup rather than a linear scan of the series' index. Ties keep the
+  // first occurrence, matching indexOf's semantics.
+  const positionByIndexValue = allSeries.map((series) => {
+    const map = new Map<string | number, number>();
+    series.index?.forEach((v, i) => {
+      if (!map.has(v)) map.set(v, i);
+    });
+    return map;
+  });
+
   // Build chart data: one row per index value, in ascending order.
   const chartData: ChartDataPoint[] = indexValueOrder.map(
     (rawIndex, rowIdx) => {
@@ -295,7 +306,7 @@ export function createChartData(
         // when other series in the chart carry an index.
         const dataIdx =
           series.index && series.index.length > 0
-            ? series.index.indexOf(rawIndex)
+            ? (positionByIndexValue[seriesIdx].get(rawIndex) ?? -1)
             : rowIdx;
         if (dataIdx !== -1 && dataIdx < series.values.length) {
           dataPoint[`series_${seriesIdx}`] = series.values[dataIdx];
