@@ -371,6 +371,25 @@ def test_execution_404_invalid_id(client: TestClient, settings) -> None:
     assert r.status_code == 404
 
 
+def test_execution_404_non_numeric_group_id(client: TestClient, settings) -> None:
+    """Test that a non-numeric group id returns 404 instead of a 500."""
+    r = client.get(f"{settings.API_V1_STR}/executions/not-a-number")
+    assert r.status_code == 404
+
+
+def test_execution_404_non_numeric_group_id_on_execution_route(client: TestClient, settings) -> None:
+    """Test that a non-numeric group id on the execution sub-route returns 404."""
+    r = client.get(f"{settings.API_V1_STR}/executions/not-a-number/execution")
+    assert r.status_code == 404
+
+
+def test_execution_404_non_numeric_execution_id(client: TestClient, settings) -> None:
+    """Test that a non-numeric execution_id query param returns 404."""
+    group_id = get_execution_group_id(client, settings)
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/execution?execution_id=abc")
+    assert r.status_code == 404
+
+
 def test_execution_datasets(client: TestClient, settings) -> None:
     """Test getting datasets for an execution group."""
     # Get an execution group ID from the list

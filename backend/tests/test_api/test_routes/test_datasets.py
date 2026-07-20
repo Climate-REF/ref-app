@@ -61,3 +61,24 @@ def test_dataset_executions(client: TestClient, settings):
     r = client.get(f"{settings.API_V1_STR}/datasets/{dataset_id}/executions")
 
     assert r.status_code == 200
+
+
+def test_dataset_list_invalid_facets_json(client: TestClient, settings):
+    """Test that malformed facets JSON returns 400 instead of a 500."""
+    r = client.get(f"{settings.API_V1_STR}/datasets/?dataset_type=cmip6&facets=notjson")
+
+    assert r.status_code == 400
+
+
+def test_dataset_list_non_object_facets_json(client: TestClient, settings):
+    """Test that facets JSON that is not an object returns 400 instead of a 500."""
+    r = client.get(f"{settings.API_V1_STR}/datasets/?dataset_type=cmip6&facets=%5B1%2C2%5D")
+
+    assert r.status_code == 400
+
+
+def test_dataset_list_facets_without_dataset_type(client: TestClient, settings):
+    """Test that facets without a dataset_type returns 400 instead of a 500."""
+    r = client.get(f'{settings.API_V1_STR}/datasets/?dataset_type=&facets={{"a":"b"}}')
+
+    assert r.status_code == 400

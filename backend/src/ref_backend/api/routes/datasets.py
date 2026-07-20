@@ -38,7 +38,12 @@ async def _list(  # noqa: PLR0913
         dataset_query = dataset_query.filter(models.Dataset.dataset_type == dataset_type.upper())
 
         if facets:
-            facet_filters = json.loads(facets)
+            try:
+                facet_filters = json.loads(facets)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="facets must be a JSON object") from None
+            if not isinstance(facet_filters, dict):
+                raise HTTPException(status_code=400, detail="facets must be a JSON object")
             for dataset_type_model in models.Dataset.__subclasses__():
                 if dataset_type_model.__mapper_args__["polymorphic_identity"].value == dataset_type:
                     for key, value in facet_filters.items():
@@ -46,7 +51,9 @@ async def _list(  # noqa: PLR0913
                             dataset_query = dataset_query.filter(getattr(dataset_type_model, key) == value)
                     break
     elif facets:
-        raise ValueError("Cannot filter using facets if a source type is not specified")
+        raise HTTPException(
+            status_code=400, detail="Cannot filter using facets if a source type is not specified"
+        )
 
     total_count = dataset_query.count()
     datasets = dataset_query.offset(offset).limit(limit)

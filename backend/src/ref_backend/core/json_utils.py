@@ -5,8 +5,6 @@ JSON utilities for handling special float values like NaN and infinity
 import math
 from typing import Any
 
-from loguru import logger
-
 
 def sanitize_float_value(value: float | Any) -> float | Any:
     """
@@ -17,18 +15,12 @@ def sanitize_float_value(value: float | Any) -> float | Any:
 
     Returns
     -------
-        - 0.0 if the value is NaN
-        - 0.0 if the value is infinity (positive or negative)
+        - None if the value is NaN
+        - None if the value is infinity (positive or negative)
         - The original value if it's a valid float or not a float
     """
-    if isinstance(value, float):
-        if math.isnan(value):
-            # The None values will be converted to null in JSON
-            return None
-        if math.isinf(value):
-            return None
-    else:
-        logger.warning(f"Non-float value encountered during sanitization: {value}")
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
     return value
 
 
@@ -41,7 +33,7 @@ def sanitize_float_list(values: list[float | Any]) -> list[float | Any]:
 
     Returns
     -------
-        List with NaN and infinity values replaced with 0.0
+        List with NaN and infinity values replaced with None
     """
     return [sanitize_float_value(value) for value in values]
 

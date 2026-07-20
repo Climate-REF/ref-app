@@ -41,6 +41,13 @@ from ref_backend.models import (
 router = APIRouter(prefix="/executions", tags=["executions"])
 
 
+def _parse_int_id(value: str, resource: str) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"{resource} not found") from None
+
+
 @router.get("/statistics")
 async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
     """
@@ -200,7 +207,9 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     """
     Inspect a specific execution
     """
-    execution_group = app_context.session.query(models.ExecutionGroup).get(group_id)
+    execution_group = app_context.session.query(models.ExecutionGroup).get(
+        _parse_int_id(group_id, "Execution group")
+    )
     if not execution_group:
         raise HTTPException(status_code=404, detail="Execution not found")
 
@@ -208,19 +217,23 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
 
 
 async def _get_execution(group_id: str, execution_id: str | None, session: Session) -> models.Execution:
+    group_id_int = _parse_int_id(group_id, "Execution group")
+
     if execution_id is not None:
-        execution: models.Execution | None = session.query(models.Execution).get(execution_id)
+        execution: models.Execution | None = session.query(models.Execution).get(
+            _parse_int_id(execution_id, "Execution")
+        )
     else:
         # Fetch only the latest execution for the group without loading the full collection
         execution = (
             session.query(models.Execution)
-            .filter(models.Execution.execution_group_id == int(group_id))
+            .filter(models.Execution.execution_group_id == group_id_int)
             .order_by(models.Execution.id.desc())
             .limit(1)
             .one_or_none()
         )
 
-    if not execution or not execution.execution_group_id == int(group_id):
+    if not execution or not execution.execution_group_id == group_id_int:
         raise HTTPException(status_code=404, detail="Result not found")
     return execution
 
