@@ -70,9 +70,7 @@ def register_cv_dimensions(ref_config: Config) -> None:
 
     This is a workaround until we have a better way to handle controlled vocabularies.
     """
-    cv_path = ref_config.paths.dimensions_cv
-
-    MetricValue.register_cv_dimensions(CV.load_from_file(cv_path))
+    MetricValue.register_cv_dimensions(CV.load(ref_config.paths.dimensions_cv_resource))
 
 
 class SPAStaticFiles(StaticFiles):
