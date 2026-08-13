@@ -569,6 +569,25 @@ describe("createChartData index alignment", () => {
     expect(rowByStep.get(1)?.series_1 ?? null).toBeNull();
   });
 
+  it("uses the first occurrence when a series' index has duplicate values", () => {
+    const seriesWithDuplicateIndex: SeriesValue = {
+      id: 48,
+      execution_group_id: 100,
+      execution_id: 248,
+      dimensions: { source_id: "ModelA", metric: "rmse" },
+      // Index value 2021 appears twice; alignment must resolve to the first
+      // occurrence (value 2.0), matching Array.prototype.indexOf semantics.
+      values: [1.0, 2.0, 20.0, 3.0],
+      index: [2020, 2021, 2021, 2022],
+      index_name: "year",
+    };
+    const result = createChartData([seriesWithDuplicateIndex], []);
+    const rowByYear = new Map(
+      result.chartData.map((row) => [row.year as number, row]),
+    );
+    expect(rowByYear.get(2021)).toMatchObject({ series_0: 2.0 });
+  });
+
   it("still renders an index-less series when mixed with an indexed series", () => {
     const indexed: SeriesValue = {
       id: 46,
