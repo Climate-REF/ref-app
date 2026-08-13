@@ -1,5 +1,4 @@
 import functools
-import importlib.resources
 from pathlib import Path
 
 from climate_ref.config import Config
@@ -32,12 +31,11 @@ def test_ref_config() -> Config:
     config = get_ref_config(test_settings())
 
     config.paths.results = EXAMPLE_DIR / "results"
-    config.paths.dimensions_cv = Path(
-        str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
-    )
     config.db.database_url = "sqlite:///" + str(EXAMPLE_DIR / "db" / "climate_ref.db")
 
     # Override paths that may contain hardcoded CI runner paths from ref.toml
+    # Clearing dimensions_cv falls back to the CV bundled with climate-ref
+    config.paths.dimensions_cv = None
     config.paths.log = EXAMPLE_DIR / "log"
     config.paths.scratch = EXAMPLE_DIR / "scratch"
     config.paths.software = EXAMPLE_DIR / "software"
