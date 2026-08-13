@@ -23,7 +23,7 @@ from ref_backend.models import (
 )
 
 
-def _make_collection(  # noqa: PLR0913
+def _make_collection(  # noqa: PLR0913, PLR0917
     id: str,
     name: str = "Test Collection",
     theme: str = "Climate",

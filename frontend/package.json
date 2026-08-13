@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
-    "@hey-api/openapi-ts": "^0.95.0",
+    "@hey-api/openapi-ts": "^0.99.0",
     "@sentry/vite-plugin": "^4.3.0",
     "@tailwindcss/typography": "^0.5.18",
     "@tanstack/react-router-devtools": "^1.115.3",
@@ -77,5 +77,8 @@
     "typescript": "~5.8.0",
     "vite": ">=7.3.2 <8",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "js-yaml": "^4.3.1"
   }
 }
