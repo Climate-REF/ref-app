@@ -14,8 +14,6 @@ from starlette.types import Scope
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.models import MetricValue
-from climate_ref_core.pycmec.controlled_vocabulary import CV
 from ref_backend.api.main import api_router
 from ref_backend.core.config import Settings
 
@@ -64,15 +62,6 @@ class LogStatistics(Action):
             logger.info(asdict(statistics))
 
 
-def register_cv_dimensions(ref_config: Config) -> None:
-    """
-    Register the controlled vocabulary dimensions for MetricValue.
-
-    This is a workaround until we have a better way to handle controlled vocabularies.
-    """
-    MetricValue.register_cv_dimensions(CV.load(ref_config.paths.dimensions_cv_resource))
-
-
 class SPAStaticFiles(StaticFiles):
     """
     Static file handler with SPA fallback.
@@ -97,8 +86,6 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             dsn=str(settings.SENTRY_DSN),
             enable_tracing=True,
         )
-
-    register_cv_dimensions(ref_config)
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
