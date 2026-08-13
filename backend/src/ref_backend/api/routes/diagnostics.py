@@ -7,7 +7,7 @@ from starlette.responses import StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
-from climate_ref.results import MetricValueFilter, OutlierPolicy
+from climate_ref.results import MetricValueFilter
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
@@ -15,8 +15,7 @@ from ref_backend.core.metric_values import (
     parse_id_list,
 )
 from ref_backend.core.reader_values import (
-    generate_csv_response_scalar,
-    generate_csv_response_series,
+    fetch_metric_values,
     parse_dimension_filters,
 )
 from ref_backend.models import (
@@ -323,41 +322,14 @@ async def list_metric_values(  # noqa: PLR0913
         include_retracted=True,
     )
 
-    if value_type == MetricValueType.SCALAR:
-        detection_ran = detect_outliers == "iqr"
-        outlier_policy = OutlierPolicy(method=detect_outliers)
-
-        if format == "csv":
-            # CSV export returns all results without pagination
-            collection = app_context.reader.values.scalar_values(
-                metric_filter,
-                outliers=outlier_policy,
-                include_unverified=include_unverified,
-            )
-            filename = f"metric_values_scalar_{provider_slug}_{diagnostic_slug}.csv"
-            return generate_csv_response_scalar(collection, detection_ran, filename)
-
-        collection = app_context.reader.values.scalar_values(
-            metric_filter,
-            outliers=outlier_policy,
-            include_unverified=include_unverified,
-            offset=offset,
-            limit=limit,
-        )
-        return MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
-
-    elif value_type == MetricValueType.SERIES:
-        if format == "csv":
-            # CSV export returns all results without pagination
-            series_collection = app_context.reader.values.series_values(metric_filter)
-            filename = f"metric_values_series_{provider_slug}_{diagnostic_slug}.csv"
-            return generate_csv_response_series(series_collection, filename)
-
-        series_collection = app_context.reader.values.series_values(
-            metric_filter,
-            offset=offset,
-            limit=limit,
-        )
-        return MetricValueCollection.build_series_from_reader(series_collection)
-    else:
-        raise HTTPException(status_code=500, detail="Unknown value_type")
+    return fetch_metric_values(
+        app_context,
+        metric_filter,
+        value_type=value_type,
+        format=format,
+        offset=offset,
+        limit=limit,
+        detect_outliers=detect_outliers,
+        include_unverified=include_unverified,
+        filename_stem=f"{provider_slug}_{diagnostic_slug}",
+    )
