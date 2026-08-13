@@ -40,4 +40,9 @@ def test_ref_config() -> Config:
     config.paths.scratch = EXAMPLE_DIR / "scratch"
     config.paths.software = EXAMPLE_DIR / "software"
 
+    # Keep the tests off the shared user cache directory.
+    # The default lives in platformdirs and is written by any local REF run,
+    # so a stale or truncated file there fails the whole suite.
+    config.ignore_datasets_file = EXAMPLE_DIR / "ignore_datasets.yaml"
+
     return config

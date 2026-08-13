@@ -1,15 +1,12 @@
 import functools
-import secrets
-import warnings
 from pathlib import Path
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Literal
 
 from pydantic import (
     AnyUrl,
     BeforeValidator,
     HttpUrl,
     computed_field,
-    model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -31,7 +28,6 @@ class Settings(BaseSettings):
     )
 
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_HOST: str = "http://localhost:8000"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
@@ -110,23 +106,6 @@ class Settings(BaseSettings):
             return self.DIAGNOSTIC_METADATA_PATH
         # Default to static/diagnostics/ directory relative to backend directory
         return Path(__file__).parent.parent.parent.parent / "static" / "diagnostics"
-
-    def _check_default_secret(self, var_name: str, value: str | None) -> None:
-        if value == "changethis":
-            message = (
-                f'The value of {var_name} is "changethis", '
-                "for security, please change it, at least for deployments."
-            )
-            if self.ENVIRONMENT == "local":
-                warnings.warn(message, stacklevel=1)
-            else:
-                raise ValueError(message)
-
-    @model_validator(mode="after")
-    def _enforce_non_default_secrets(self) -> Self:
-        self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
-
-        return self
 
 
 @functools.lru_cache
