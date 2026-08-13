@@ -15,10 +15,9 @@ from starlette.responses import StreamingResponse
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref.results import MetricValueFilter
-from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
-from ref_backend.core.file_handling import file_iterator
+from ref_backend.core.file_handling import file_iterator, resolve_artifact
 from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
     MetricValueType,
@@ -276,7 +275,7 @@ async def execution_logs(
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    file_path = app_context.ref_config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
+    file_path = resolve_artifact(app_context.reader.artifacts.log_file, execution.output_fragment)
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
@@ -301,7 +300,9 @@ async def metric_bundle(
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
 
-    file_path = app_context.ref_config.paths.results / execution.output_fragment / "diagnostic.json"
+    file_path = resolve_artifact(
+        app_context.reader.artifacts.output_file, execution.output_fragment, "diagnostic.json"
+    )
 
     if not file_path.exists():
         logger.warning(f"Metric bundle not found: {file_path}")
@@ -375,7 +376,7 @@ async def execution_archive(
     The archive is created on-the-fly and streamed directly to the client.
     """
     execution = await _get_execution(group_id, execution_id, app_context.session)
-    result_path = app_context.ref_config.paths.results / execution.output_fragment
+    result_path = resolve_artifact(app_context.reader.artifacts.output_directory, execution.output_fragment)
 
     if not result_path.exists():
         raise HTTPException(status_code=404, detail="Execution output not found")

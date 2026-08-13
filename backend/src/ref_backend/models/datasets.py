@@ -4,6 +4,8 @@ from pydantic import BaseModel, computed_field
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.results.datasets import DatasetView
+from climate_ref_core.source_types import SourceDatasetType
 
 
 class CMIP6DatasetMetadata(BaseModel):
@@ -36,6 +38,20 @@ class Dataset(BaseModel):
                 experiment_id=dataset.experiment_id,
                 variant_label=dataset.variant_label,
             )
+        else:
+            metadata = None
+
+        return Dataset(
+            id=dataset.id,
+            slug=dataset.slug,
+            dataset_type=str(dataset.dataset_type),
+            metadata=metadata,
+        )
+
+    @staticmethod
+    def build_from_view(dataset: DatasetView) -> "Dataset":
+        if dataset.dataset_type == SourceDatasetType.CMIP6:
+            metadata = CMIP6DatasetMetadata.model_validate(dataset.facets)
         else:
             metadata = None
 

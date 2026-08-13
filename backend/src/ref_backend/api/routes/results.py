@@ -4,14 +4,14 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from climate_ref.models import ExecutionOutput
-from ref_backend.api.deps import REFConfigDep, SessionDep
-from ref_backend.core.file_handling import file_iterator
+from ref_backend.api.deps import ReaderDep, SessionDep
+from ref_backend.core.file_handling import file_iterator, resolve_artifact
 
 router = APIRouter(prefix="/results", tags=["results"])
 
 
 @router.get("/{result_id}")
-async def get_result(session: SessionDep, config: REFConfigDep, result_id: int) -> StreamingResponse:
+async def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> StreamingResponse:
     """
     Fetch a result
     """
@@ -19,7 +19,9 @@ async def get_result(session: SessionDep, config: REFConfigDep, result_id: int) 
     if result is None:
         raise HTTPException(status_code=404, detail="Result not found")
 
-    file_path = config.paths.results / result.execution.output_fragment / result.filename
+    file_path = resolve_artifact(
+        reader.artifacts.output_file, result.execution.output_fragment, result.filename
+    )
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
