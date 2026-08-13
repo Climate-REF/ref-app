@@ -3,10 +3,8 @@
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal, Union, cast
 
-from attr import define
 from pydantic import BaseModel
 
-from climate_ref import models
 from climate_ref_core.metric_values import ScalarMetricValue
 from ref_backend.core.json_utils import sanitize_float_list, sanitize_float_value
 
@@ -61,13 +59,6 @@ class Facet(BaseModel):
 # Offering it as a facet would let callers filter on a key that never appears in item dimensions,
 # so it is excluded to keep facets a subset of the item dimensions.
 NON_FACET_DIMENSIONS = frozenset({"kind"})
-
-
-@define
-class AnnotatedScalarValue:
-    value: models.ScalarMetricValue
-    is_outlier: bool | None = None
-    verification_status: Literal["verified", "unverified"] | None = None
 
 
 _PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {

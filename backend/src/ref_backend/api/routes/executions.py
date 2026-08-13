@@ -20,13 +20,11 @@ from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator
 from ref_backend.core.filter_utils import build_filter_clause
-from ref_backend.core.metric_values import (
-    MetricValueType,
-    parse_id_list,
-)
 from ref_backend.core.reader_values import (
+    MetricValueType,
     fetch_metric_values,
     parse_dimension_filters,
+    parse_id_list,
 )
 from ref_backend.models import (
     Collection,

@@ -3,6 +3,7 @@
 import csv
 import io
 from collections.abc import Generator, Mapping
+from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
 from fastapi import HTTPException
@@ -12,11 +13,25 @@ from climate_ref import models
 from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
 from ref_backend.core.json_utils import sanitize_float_value
-from ref_backend.core.metric_values import MetricValueType
 from ref_backend.models import MetricValueCollection
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
+
+
+class MetricValueType(StrEnum):
+    """Type of metric values to query."""
+
+    SCALAR = "scalar"
+    SERIES = "series"
+
+
+def parse_id_list(id_str: str) -> list[int]:
+    """Parse comma-separated list of IDs into integers."""
+    try:
+        return [int(i.strip()) for i in id_str.split(",") if i.strip()]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
 
 
 def parse_dimension_filters(query_params: Mapping[str, str]) -> dict[str, str]:

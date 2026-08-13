@@ -22,7 +22,6 @@ from ref_backend.models.executions import (
 )
 from ref_backend.models.values import (
     NON_FACET_DIMENSIONS,
-    AnnotatedScalarValue,
     Facet,
     MetricValueCollection,
     MetricValueFacetSummary,
@@ -35,7 +34,6 @@ __all__ = [
     "AFTDiagnosticBase",
     "AFTDiagnosticDetail",
     "AFTDiagnosticSummary",
-    "AnnotatedScalarValue",
     "CMIP6DatasetMetadata",
     "Collection",
     "Dataset",
