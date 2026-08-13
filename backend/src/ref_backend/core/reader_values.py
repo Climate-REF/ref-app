@@ -126,7 +126,7 @@ def generate_csv_response_series(
     )
 
 
-def fetch_metric_values(  # noqa: PLR0913
+def fetch_metric_values(  # noqa: PLR0913, PLR0917
     app_context: "AppContext",
     metric_filter: MetricValueFilter,
     value_type: MetricValueType,

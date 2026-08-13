@@ -106,7 +106,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
 
 
 @router.get("/")
-async def list_recent_execution_groups(  # noqa: PLR0913
+async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     limit: int = 10,
     offset: int = 0,
@@ -311,7 +311,7 @@ async def metric_bundle(
 
 
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
-async def list_metric_values(  # noqa: PLR0913
+async def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     request: Request,
     group_id: str,

@@ -282,7 +282,7 @@ async def list_executions(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=MetricValueCollection)
-async def list_metric_values(  # noqa: PLR0913
+async def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
