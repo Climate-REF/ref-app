@@ -1,3 +1,20 @@
+## v0.4.1 (2026-08-13)
+
+### Improvements
+
+- Memoizes the ensemble chart statistics pipeline, drops the window-level mousemove subscription, and replaces linear series alignment with map lookups. (#45)
+- Updated climate-ref to 0.17.0. (#46)
+
+### Bug Fixes
+
+- Returns 404/400 for malformed ids and facet filters instead of a 500, and stops leaking internal error detail from the AFT routes. (#44)
+
+### Trivial Changes
+
+- Removed the unused pre-Reader metric-value helpers and their tests. (#42)
+- Adds direct tests for the reader-values CSV path, file streaming, and config validation. (#43)
+
+
 ## v0.4.0 (2026-07-16)
 
 ### Features
