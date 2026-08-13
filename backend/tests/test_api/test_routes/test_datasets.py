@@ -82,3 +82,41 @@ def test_dataset_list_facets_without_dataset_type(client: TestClient, settings):
     r = client.get(f'{settings.API_V1_STR}/datasets/?dataset_type=&facets={{"a":"b"}}')
 
     assert r.status_code == 400
+
+
+def test_dataset_list_unknown_dataset_type(client: TestClient, settings):
+    """Test that an unrecognised dataset_type returns 400 rather than an empty list."""
+    r = client.get(f"{settings.API_V1_STR}/datasets/?dataset_type=not-a-source-type")
+
+    assert r.status_code == 400
+
+
+def test_dataset_list_unknown_facet(client: TestClient, settings):
+    """Test that a facet that is not a column on the source type returns 400 rather than being ignored."""
+    r = client.get(f'{settings.API_V1_STR}/datasets/?dataset_type=cmip6&facets={{"not_a_facet":"x"}}')
+
+    assert r.status_code == 400
+
+
+def test_dataset_list_facet_filter(client: TestClient, settings):
+    """Test that a known facet actually narrows the result set."""
+    dataset = get_dataset(client, settings)
+    source_id = dataset["metadata"]["source_id"]
+
+    r = client.get(f'{settings.API_V1_STR}/datasets/?dataset_type=cmip6&facets={{"source_id":"{source_id}"}}')
+
+    assert r.status_code == 200
+    data = r.json()["data"]
+    assert data
+    assert all(ds["metadata"]["source_id"] == source_id for ds in data)
+
+
+def test_dataset_list_name_contains(client: TestClient, settings):
+    """Test that name_contains still filters on the slug."""
+    dataset = get_dataset(client, settings)
+    slug = dataset["slug"]
+
+    r = client.get(f"{settings.API_V1_STR}/datasets/?name_contains={slug}")
+
+    assert r.status_code == 200
+    assert [ds["slug"] for ds in r.json()["data"]] == [slug]
