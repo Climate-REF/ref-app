@@ -10,6 +10,7 @@
     "includes": [
       "**",
       "!**/dist",
+      "!**/coverage",
       "!**/src/client",
       "!**/*.gen.ts",
       "!**/openapi.json",

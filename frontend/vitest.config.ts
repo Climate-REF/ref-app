@@ -11,14 +11,22 @@ export default defineConfig({
     css: false,
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      reporter: ["text", "html", "lcov"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/**/*.test.{ts,tsx}",
         "src/test/**",
         "src/client/**",
         "src/routeTree.gen.ts",
+        "src/components/ui/**",
+        "*.config.ts",
       ],
+      thresholds: {
+        statements: 13,
+        branches: 15,
+        functions: 11,
+        lines: 14,
+      },
     },
   },
   resolve: {

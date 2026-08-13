@@ -7,7 +7,10 @@ It's particularly useful for exposing reference dataset information and other me
 that may not be directly available from the diagnostic provider code.
 """
 
+import functools
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Literal
 
 import yaml
@@ -155,3 +158,15 @@ def load_diagnostic_metadata(path: Path) -> dict[str, DiagnosticMetadata]:
 
     logger.info(f"Loaded metadata for {len(merged)} diagnostics from {len(yaml_files)} files in {path}")
     return merged
+
+
+@functools.lru_cache
+def load_diagnostic_metadata_cached(path: Path) -> Mapping[str, DiagnosticMetadata]:
+    """
+    Load diagnostic metadata, reusing the result for a given path.
+
+    The metadata files are read once per path and never reloaded,
+    so a running server does not pick up edits without a restart.
+    The returned mapping is read-only because every caller shares it.
+    """
+    return MappingProxyType(load_diagnostic_metadata(path))

@@ -3,12 +3,20 @@
 import csv
 import io
 from collections.abc import Generator, Mapping
+from typing import TYPE_CHECKING, Literal
 
+from fastapi import HTTPException
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
+from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
 from ref_backend.core.json_utils import sanitize_float_value
+from ref_backend.core.metric_values import MetricValueType
+from ref_backend.models import MetricValueCollection
+
+if TYPE_CHECKING:
+    from ref_backend.api.deps import AppContext
 
 
 def parse_dimension_filters(query_params: Mapping[str, str]) -> dict[str, str]:
@@ -116,3 +124,61 @@ def generate_csv_response_series(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+def fetch_metric_values(  # noqa: PLR0913
+    app_context: "AppContext",
+    metric_filter: MetricValueFilter,
+    value_type: MetricValueType,
+    format: str | None,
+    offset: int,
+    limit: int,
+    detect_outliers: Literal["off", "iqr"],
+    include_unverified: bool,
+    filename_stem: str,
+) -> MetricValueCollection | StreamingResponse:
+    """
+    Read metric values for an already-scoped filter and render them as JSON or CSV.
+
+    `filename_stem` names the CSV download, which is the only thing that varies
+    between the diagnostic-scoped and execution-scoped endpoints.
+    CSV exports return every matching value, so `offset` and `limit` are ignored there.
+    """
+    if value_type == MetricValueType.SCALAR:
+        detection_ran = detect_outliers == "iqr"
+        outlier_policy = OutlierPolicy(method=detect_outliers)
+
+        if format == "csv":
+            collection = app_context.reader.values.scalar_values(
+                metric_filter,
+                outliers=outlier_policy,
+                include_unverified=include_unverified,
+            )
+            return generate_csv_response_scalar(
+                collection, detection_ran, f"metric_values_scalar_{filename_stem}.csv"
+            )
+
+        collection = app_context.reader.values.scalar_values(
+            metric_filter,
+            outliers=outlier_policy,
+            include_unverified=include_unverified,
+            offset=offset,
+            limit=limit,
+        )
+        return MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
+
+    if value_type == MetricValueType.SERIES:
+        if format == "csv":
+            series_collection = app_context.reader.values.series_values(metric_filter)
+            return generate_csv_response_series(
+                series_collection, f"metric_values_series_{filename_stem}.csv"
+            )
+
+        series_collection = app_context.reader.values.series_values(
+            metric_filter,
+            offset=offset,
+            limit=limit,
+        )
+        return MetricValueCollection.build_series_from_reader(series_collection)
+
+    raise HTTPException(status_code=500, detail="Unknown value_type")
