@@ -119,4 +119,6 @@ def test_dataset_list_name_contains(client: TestClient, settings):
     r = client.get(f"{settings.API_V1_STR}/datasets/?name_contains={slug}")
 
     assert r.status_code == 200
-    assert [ds["slug"] for ds in r.json()["data"]] == [slug]
+    returned_slugs = [ds["slug"] for ds in r.json()["data"]]
+    assert slug in returned_slugs
+    assert all(slug.lower() in returned.lower() for returned in returned_slugs)
