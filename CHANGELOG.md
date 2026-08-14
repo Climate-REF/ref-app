@@ -1,3 +1,32 @@
+## v0.4.2 (2026-08-14)
+
+### Improvements
+
+- Builds the dataset listing on `climate_ref`'s shared `select_datasets` query rather than hand-rolled polymorphic filtering.
+  This has a few consequences:
+
+  - Only the latest version of each dataset is listed, so superseded versions no longer appear as duplicates.
+  - Fetching a dataset by slug returns the latest version instead of failing when several versions share a slug.
+  - An unknown `dataset_type` or an unknown facet key now returns a 400 rather than being silently ignored.
+
+  (#49)
+
+### Bug Fixes
+
+- Resolves execution artifact paths through `Reader.artifacts` instead of joining the results root by hand.
+  The reader guards containment, so a bad `output_fragment` or filename can no longer escape the results directory.
+  Requests for such a path now return a 404. (#49)
+- Gives each request its own database session, so a request no longer leaves a connection idle in a transaction.
+  The session dependency handed out `Database.session`, which is long lived and shared process-wide, and never closed it.
+  This now uses `Database.session_scope` from climate-ref 0.17.2, which is the minimum version as a result.
+  The `Database` is also cached per url, rather than being rebuilt on each request. (#51)
+
+### Trivial Changes
+
+- Reworked a batch of internal cleanups. The test suite no longer reads the shared user cache directory, so a stale file there cannot fail every test. The duplicated metric-value endpoint logic now lives in one helper, the diagnostic metadata cache is keyed by path rather than held on a class, and `ref_backend.models` is split into a package. Coverage is now reported for the frontend and the backend gate is raised to 90 percent. (#47)
+- Bumped the locked frontend and backend dependencies to clear the open security advisories. (#50)
+
+
 ## v0.4.1 (2026-08-13)
 
 ### Improvements
