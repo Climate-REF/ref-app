@@ -1,5 +1,6 @@
 from collections.abc import Generator
 from dataclasses import dataclass
+from threading import Lock
 from typing import Annotated
 
 from fastapi import Depends
@@ -25,8 +26,17 @@ def _ref_config_dependency(settings: SettingsDep) -> Config:
 REFConfigDep = Annotated[Config, Depends(_ref_config_dependency)]
 
 
+_database_cache: dict[tuple[str, bool], Database] = {}
+_database_cache_lock = Lock()
+
+
 def _get_database_dependency(settings: SettingsDep, ref_config: REFConfigDep) -> Database:
-    return get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
+    # A Database owns an engine and its connection pool, so it is reused across requests.
+    key = (ref_config.db.database_url, settings.REF_READ_ONLY_DATABASE)
+    with _database_cache_lock:
+        if key not in _database_cache:
+            _database_cache[key] = get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
+        return _database_cache[key]
 
 
 DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
@@ -34,9 +44,16 @@ DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
 
 def get_database_session(database: DatabaseDep) -> Generator[Session, None, None]:
     """
-    Create a new database session
+    Provide the database session for the duration of a request
+
+    SQLAlchemy opens a transaction on first use and holds it until the session is closed.
+    Closing on the way out returns the connection to the pool, so it does not sit idle
+    in a transaction until the server or the database times it out.
     """
-    yield database.session
+    try:
+        yield database.session
+    finally:
+        database.session.close()
 
 
 SessionDep = Annotated[Session, Depends(get_database_session)]
