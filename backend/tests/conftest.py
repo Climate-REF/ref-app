@@ -7,7 +7,6 @@ from starlette.testclient import TestClient
 from ref_backend.api import deps
 from ref_backend.builder import build_app
 from ref_backend.core.config import get_settings
-from ref_backend.core.ref import get_database
 from ref_backend.testing import test_ref_config, test_settings
 
 
@@ -25,7 +24,9 @@ def app() -> FastAPI:
     including mocking Sentry setup and using a custom settings function.
     """
     app = build_app(
-        settings=test_settings(), ref_config=test_ref_config(), database=get_database(test_ref_config())
+        settings=test_settings(),
+        ref_config=test_ref_config(),
+        database=deps._get_database_dependency(test_settings(), test_ref_config()),
     )
 
     app.dependency_overrides[get_settings] = test_settings

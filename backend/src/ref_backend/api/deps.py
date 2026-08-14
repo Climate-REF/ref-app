@@ -46,9 +46,10 @@ def get_database_session(database: DatabaseDep) -> Generator[Session, None, None
     """
     Provide the database session for the duration of a request
 
-    SQLAlchemy opens a transaction on first use and holds it until the session is closed.
-    Closing on the way out returns the connection to the pool, so it does not sit idle
-    in a transaction until the server or the database times it out.
+    A Database owns a single Session, so this session is shared process-wide rather than
+    isolated per request.
+    SQLAlchemy opens a transaction on first use and holds it until the session is closed,
+    so closing on the way out returns the connection to the pool.
     """
     try:
         yield database.session
