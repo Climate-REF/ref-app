@@ -44,27 +44,24 @@ DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
 
 def get_database_session(database: DatabaseDep) -> Generator[Session, None, None]:
     """
-    Provide the database session for the duration of a request
+    Provide a session that lives for the duration of a request
 
-    A Database owns a single Session, so this session is shared process-wide rather than
-    isolated per request.
-    SQLAlchemy opens a transaction on first use and holds it until the session is closed,
-    so closing on the way out returns the connection to the pool.
+    `Database.session` is long lived and shared process-wide, so it is not safe to hand to a
+    request. `session_scope` gives each request its own session on the shared engine and pool,
+    and closes it once the response is sent.
     """
-    try:
-        yield database.session
-    finally:
-        database.session.close()
+    with database.session_scope() as session:
+        yield session
 
 
 SessionDep = Annotated[Session, Depends(get_database_session)]
 
 
-def _get_reader_dependency(database: DatabaseDep, ref_config: REFConfigDep) -> Reader:
+def _get_reader_dependency(database: DatabaseDep, ref_config: REFConfigDep, session: SessionDep) -> Reader:
     """
     Get the results reader
     """
-    return Reader(database, results=ref_config.paths.results)
+    return Reader(database, results=ref_config.paths.results, session=session)
 
 
 ReaderDep = Annotated[Reader, Depends(_get_reader_dependency)]
