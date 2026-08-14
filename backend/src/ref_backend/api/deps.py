@@ -1,5 +1,6 @@
 from collections.abc import Generator
 from dataclasses import dataclass
+from threading import Lock
 from typing import Annotated
 
 from fastapi import Depends
@@ -25,8 +26,17 @@ def _ref_config_dependency(settings: SettingsDep) -> Config:
 REFConfigDep = Annotated[Config, Depends(_ref_config_dependency)]
 
 
+_database_cache: dict[tuple[str, bool], Database] = {}
+_database_cache_lock = Lock()
+
+
 def _get_database_dependency(settings: SettingsDep, ref_config: REFConfigDep) -> Database:
-    return get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
+    # A Database owns an engine and its connection pool, so it is reused across requests.
+    key = (ref_config.db.database_url, settings.REF_READ_ONLY_DATABASE)
+    with _database_cache_lock:
+        if key not in _database_cache:
+            _database_cache[key] = get_database(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
+        return _database_cache[key]
 
 
 DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
@@ -34,19 +44,24 @@ DatabaseDep = Annotated[Database, Depends(_get_database_dependency)]
 
 def get_database_session(database: DatabaseDep) -> Generator[Session, None, None]:
     """
-    Create a new database session
+    Provide a session that lives for the duration of a request
+
+    `Database.session` is long lived and shared process-wide, so it is not safe to hand to a
+    request. `session_scope` gives each request its own session on the shared engine and pool,
+    and closes it once the response is sent.
     """
-    yield database.session
+    with database.session_scope() as session:
+        yield session
 
 
 SessionDep = Annotated[Session, Depends(get_database_session)]
 
 
-def _get_reader_dependency(database: DatabaseDep, ref_config: REFConfigDep) -> Reader:
+def _get_reader_dependency(database: DatabaseDep, ref_config: REFConfigDep, session: SessionDep) -> Reader:
     """
     Get the results reader
     """
-    return Reader(database, results=ref_config.paths.results)
+    return Reader(database, results=ref_config.paths.results, session=session)
 
 
 ReaderDep = Annotated[Reader, Depends(_get_reader_dependency)]
