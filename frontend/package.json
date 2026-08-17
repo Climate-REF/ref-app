@@ -58,7 +58,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
     "@hey-api/openapi-ts": "^0.99.0",
-    "@sentry/vite-plugin": "^4.3.0",
+    "@sentry/vite-plugin": "^5.0.0",
     "@tailwindcss/typography": "^0.5.18",
     "@tanstack/react-router-devtools": "^1.115.3",
     "@tanstack/router-plugin": "^1.115.3",
