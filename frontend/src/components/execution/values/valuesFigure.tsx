@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { EraSections } from "@/components/charts/eraSections";
 import {
   EmptyEnsembleChart,
   EnsembleChart,
@@ -132,14 +133,18 @@ export function ValuesFigure({
           </div>
         </div>
       ) : null}
-      <EnsembleChart
-        data={values}
-        metricName="Values"
-        metricUnits="unitless"
-        groupingConfig={groupingConfig}
-        showZeroLine={true}
-        symmetricalAxes={symmetricalAxes}
-      />
+      <EraSections values={values}>
+        {(eraValues) => (
+          <EnsembleChart
+            data={eraValues}
+            metricName="Values"
+            metricUnits="unitless"
+            groupingConfig={groupingConfig}
+            showZeroLine={true}
+            symmetricalAxes={symmetricalAxes}
+          />
+        )}
+      </EraSections>
     </>
   );
 }

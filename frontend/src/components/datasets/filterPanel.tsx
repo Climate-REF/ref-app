@@ -18,7 +18,7 @@ interface FilterPanelProps {
   onClear: () => void;
 }
 
-const sources = ["cmip6", "obs4mips"];
+const sources = ["cmip6", "cmip7", "obs4mips"];
 
 export function FilterPanel({
   facets,

@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
+import { EraSections } from "@/components/charts/eraSections";
 import {
   EmptyEnsembleChart,
   EnsembleChart,
@@ -85,18 +86,22 @@ export function EnsembleChartContent({
         </div>
       )}
 
-      <EnsembleChart
-        data={values}
-        metricName={contentItem.title}
-        metricUnits={contentItem.metricUnits ?? "unitless"}
-        clipMin={contentItem.clipMin}
-        clipMax={contentItem.clipMax}
-        yMin={contentItem.yMin}
-        yMax={contentItem.yMax}
-        groupingConfig={contentItem.groupingConfig}
-        showZeroLine={contentItem.showZeroLine ?? true}
-        symmetricalAxes={contentItem.symmetricalAxes ?? false}
-      />
+      <EraSections values={values}>
+        {(eraValues) => (
+          <EnsembleChart
+            data={eraValues}
+            metricName={contentItem.title}
+            metricUnits={contentItem.metricUnits ?? "unitless"}
+            clipMin={contentItem.clipMin}
+            clipMax={contentItem.clipMax}
+            yMin={contentItem.yMin}
+            yMax={contentItem.yMax}
+            groupingConfig={contentItem.groupingConfig}
+            showZeroLine={contentItem.showZeroLine ?? true}
+            symmetricalAxes={contentItem.symmetricalAxes ?? false}
+          />
+        )}
+      </EraSections>
     </div>
   );
 }

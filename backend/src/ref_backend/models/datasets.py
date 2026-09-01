@@ -3,12 +3,13 @@
 from pydantic import BaseModel, computed_field
 
 from climate_ref import models
-from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref.results.datasets import DatasetView
 from climate_ref_core.source_types import SourceDatasetType
+from ref_backend.core.source_types import mip_era_for
 
 
-class CMIP6DatasetMetadata(BaseModel):
+class CMIPDatasetMetadata(BaseModel):
     variable_id: str
     source_id: str
     experiment_id: str
@@ -19,7 +20,13 @@ class Dataset(BaseModel):
     id: int
     slug: str
     dataset_type: str
-    metadata: CMIP6DatasetMetadata | None
+    metadata: CMIPDatasetMetadata | None
+
+    @computed_field  # type: ignore
+    @property
+    def mip_era(self) -> str | None:
+        """The model era this dataset belongs to, or None for non-CMIP sources."""
+        return mip_era_for(self.dataset_type)
 
     @computed_field  # type: ignore
     @property
@@ -31,15 +38,14 @@ class Dataset(BaseModel):
 
     @staticmethod
     def build(dataset: models.Dataset) -> "Dataset":
-        if isinstance(dataset, CMIP6Dataset):
-            metadata = CMIP6DatasetMetadata(
+        metadata = None
+        if isinstance(dataset, CMIP6Dataset | CMIP7Dataset):
+            metadata = CMIPDatasetMetadata(
                 variable_id=dataset.variable_id,
                 source_id=dataset.source_id,
                 experiment_id=dataset.experiment_id,
                 variant_label=dataset.variant_label,
             )
-        else:
-            metadata = None
 
         return Dataset(
             id=dataset.id,
@@ -50,8 +56,8 @@ class Dataset(BaseModel):
 
     @staticmethod
     def build_from_view(dataset: DatasetView) -> "Dataset":
-        if dataset.dataset_type == SourceDatasetType.CMIP6:
-            metadata = CMIP6DatasetMetadata.model_validate(dataset.facets)
+        if dataset.dataset_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
+            metadata = CMIPDatasetMetadata.model_validate(dataset.facets)
         else:
             metadata = None
 

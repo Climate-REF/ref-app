@@ -414,9 +414,9 @@ export type CmecMetric = {
 };
 
 /**
- * CMIP6DatasetMetadata
+ * CMIPDatasetMetadata
  */
-export type Cmip6DatasetMetadata = {
+export type CmipDatasetMetadata = {
     /**
      * Variable Id
      */
@@ -531,7 +531,13 @@ export type Dataset = {
      * Dataset Type
      */
     dataset_type: string;
-    metadata: Cmip6DatasetMetadata | null;
+    metadata: CmipDatasetMetadata | null;
+    /**
+     * Mip Era
+     *
+     * The model era this dataset belongs to, or None for non-CMIP sources.
+     */
+    readonly mip_era: string | null;
     /**
      * More Info Url
      */
@@ -1231,7 +1237,7 @@ export type DatasetWritable = {
      * Dataset Type
      */
     dataset_type: string;
-    metadata: Cmip6DatasetMetadata | null;
+    metadata: CmipDatasetMetadata | null;
 };
 
 /**
@@ -1700,6 +1706,10 @@ export type ExecutionsListRecentExecutionGroupsData = {
          * Source Id
          */
         source_id?: string | null;
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
     };
     url: '/api/v1/executions/';
 };

@@ -1,6 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
+import { EraSections } from "@/components/charts/eraSections";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
   MetricValueCollection,
@@ -194,15 +195,19 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           }
         />
       )}
-      <SeriesVisualization
-        seriesValues={regularSeries}
-        referenceSeriesValues={referenceSeries}
-        maxSeriesLimit={500} // Limit for performance in preview
-        symmetricalAxes={contentItem.symmetricalAxes ?? false}
-        labelTemplate={contentItem.labelTemplate}
-        metricName={contentItem.title}
-        units={contentItem.metricUnits}
-      />
+      <EraSections values={regularSeries}>
+        {(eraSeries) => (
+          <SeriesVisualization
+            seriesValues={eraSeries}
+            referenceSeriesValues={referenceSeries}
+            maxSeriesLimit={500} // Limit for performance in preview
+            symmetricalAxes={contentItem.symmetricalAxes ?? false}
+            labelTemplate={contentItem.labelTemplate}
+            metricName={contentItem.title}
+            units={contentItem.metricUnits}
+          />
+        )}
+      </EraSections>
     </div>
   );
 }

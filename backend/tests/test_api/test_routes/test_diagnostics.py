@@ -700,3 +700,23 @@ def test_diagnostics_facets(client: TestClient, settings) -> None:
     assert "count" in data
     assert isinstance(data["dimensions"], dict)
     assert isinstance(data["count"], int)
+
+
+def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:
+    """A `mip_era` filter restricts executions to a single model era."""
+    diagnostic = get_diagnostic(client, settings)
+    base = (
+        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
+    )
+
+    unfiltered = client.get(base)
+    cmip6 = client.get(f"{base}?mip_era=CMIP6")
+    cmip7 = client.get(f"{base}?mip_era=CMIP7")
+
+    assert unfiltered.status_code == 200
+    assert cmip6.status_code == 200
+    assert cmip7.status_code == 200
+
+    # The test fixtures are CMIP6 only, so CMIP7 is empty and CMIP6 accounts for everything.
+    assert cmip7.json()["count"] == 0
+    assert cmip6.json()["count"] == unfiltered.json()["count"]

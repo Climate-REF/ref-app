@@ -930,7 +930,7 @@ export const CMECMetricSchema = {
     description: 'CMEC diagnostic bundle object\n\nContains the diagnostics calculated during a diagnostic execution, in a standardised format.'
 } as const;
 
-export const CMIP6DatasetMetadataSchema = {
+export const CMIPDatasetMetadataSchema = {
     properties: {
         variable_id: {
             type: 'string',
@@ -956,7 +956,7 @@ export const CMIP6DatasetMetadataSchema = {
         'experiment_id',
         'variant_label'
     ],
-    title: 'CMIP6DatasetMetadata'
+    title: 'CMIPDatasetMetadata'
 } as const;
 
 export const Collection_Dataset_Schema = {
@@ -1116,12 +1116,25 @@ export const DatasetSchema = {
         metadata: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/CMIP6DatasetMetadata'
+                    $ref: '#/components/schemas/CMIPDatasetMetadata'
                 },
                 {
                     type: 'null'
                 }
             ]
+        },
+        mip_era: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Mip Era',
+            description: 'The model era this dataset belongs to, or None for non-CMIP sources.',
+            readOnly: true
         },
         more_info_url: {
             anyOf: [
@@ -1142,6 +1155,7 @@ export const DatasetSchema = {
         'slug',
         'dataset_type',
         'metadata',
+        'mip_era',
         'more_info_url'
     ],
     title: 'Dataset'
@@ -2315,7 +2329,7 @@ export const DatasetWritableSchema = {
         metadata: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/CMIP6DatasetMetadata'
+                    $ref: '#/components/schemas/CMIPDatasetMetadata'
                 },
                 {
                     type: 'null'

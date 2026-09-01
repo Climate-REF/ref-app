@@ -74,10 +74,10 @@ export function WelcomeModal() {
             for more information.
           </p>
           <p className="text-sm text-muted-foreground">
-            The results presented here focus on CMIP6 datasets, but this will be
-            updated as new CMIP7 datasets become available. We have some example
-            figures available in the <Link to="/explorer">Data Explorer</Link>{" "}
-            or you can browse the full{" "}
+            The results presented here cover CMIP6 and CMIP7 datasets. The two
+            are always charted separately, because the ensembles are not
+            directly comparable. We have some example figures available in the{" "}
+            <Link to="/explorer">Data Explorer</Link> or you can browse the full{" "}
             <Link to="/diagnostics">Diagnostic Catalog</Link>.
           </p>
 

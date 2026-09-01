@@ -6,10 +6,8 @@ from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.results import MetricValueFilter
 from ref_backend.api.deps import AppContextDep
-from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
@@ -18,6 +16,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
+from ref_backend.core.source_types import cmip_dataset_filter
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
@@ -259,22 +258,16 @@ async def list_executions(
     """
     Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
 
-    e.g. `?source_id=MIROC6&experiment_id=ssp585`
+    e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
     executions_query = (
         app_context.session.query(models.Execution)
-        .join(CMIP6Dataset, models.Execution.datasets)
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+        .filter(cmip_dataset_filter(dict(request.query_params)))
     )
-
-    query_params = request.query_params
-    for key, value in query_params.items():
-        if hasattr(CMIP6Dataset, key):
-            col = getattr(CMIP6Dataset, key)
-            executions_query = executions_query.filter(build_filter_clause(col, value))
 
     executions = executions_query.all()
 

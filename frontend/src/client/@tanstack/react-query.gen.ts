@@ -85,6 +85,8 @@ export const datasetsListQueryKey = (options?: Options<DatasetsListData>) => cre
  * List
  *
  * Paginated list of currently ingested datasets
+ *
+ * Only the latest version of each dataset is returned.
  */
 export const datasetsListOptions = (options?: Options<DatasetsListData>) => queryOptions<DatasetsListResponse, DatasetsListError, DatasetsListResponse, ReturnType<typeof datasetsListQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -134,31 +136,30 @@ export const datasetsListInfiniteQueryKey = (options?: Options<DatasetsListData>
  * List
  *
  * Paginated list of currently ingested datasets
+ *
+ * Only the latest version of each dataset is returned.
  */
-export const datasetsListInfiniteOptions = (options?: Options<DatasetsListData>) => {
-    const opts = infiniteQueryOptions<DatasetsListResponse, DatasetsListError, InfiniteData<DatasetsListResponse>, QueryKey<Options<DatasetsListData>>, number | Pick<QueryKey<Options<DatasetsListData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
-    // @ts-ignore
-    {
-        queryFn: async ({ pageParam, queryKey, signal }) => {
-            // @ts-ignore
-            const page: Pick<QueryKey<Options<DatasetsListData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
-                query: {
-                    offset: pageParam
-                }
-            };
-            const params = createInfiniteParams(queryKey, page);
-            const { data } = await datasetsList({
-                ...options,
-                ...params,
-                signal,
-                throwOnError: true
-            });
-            return data;
-        },
-        queryKey: datasetsListInfiniteQueryKey(options)
-    });
-    return opts as Omit<typeof opts, 'initialData'>;
-};
+export const datasetsListInfiniteOptions = (options?: Options<DatasetsListData>) => infiniteQueryOptions<DatasetsListResponse, DatasetsListError, InfiniteData<DatasetsListResponse>, QueryKey<Options<DatasetsListData>>, number | Pick<QueryKey<Options<DatasetsListData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+// @ts-ignore
+{
+    queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<DatasetsListData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+            query: {
+                offset: pageParam
+            }
+        };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await datasetsList({
+            ...options,
+            ...params,
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: datasetsListInfiniteQueryKey(options)
+});
 
 export const datasetsGetQueryKey = (options: Options<DatasetsGetData>) => createQueryKey('datasetsGet', options);
 
@@ -166,6 +167,8 @@ export const datasetsGetQueryKey = (options: Options<DatasetsGetData>) => create
  * Get
  *
  * Get a single dataset by slug
+ *
+ * When several versions share a slug, the latest is returned.
  */
 export const datasetsGetOptions = (options: Options<DatasetsGetData>) => queryOptions<DatasetsGetResponse, DatasetsGetError, DatasetsGetResponse, ReturnType<typeof datasetsGetQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -207,30 +210,27 @@ export const datasetsExecutionsInfiniteQueryKey = (options: Options<DatasetsExec
  *
  * List the currently registered diagnostics
  */
-export const datasetsExecutionsInfiniteOptions = (options: Options<DatasetsExecutionsData>) => {
-    const opts = infiniteQueryOptions<DatasetsExecutionsResponse, DatasetsExecutionsError, InfiniteData<DatasetsExecutionsResponse>, QueryKey<Options<DatasetsExecutionsData>>, number | Pick<QueryKey<Options<DatasetsExecutionsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
-    // @ts-ignore
-    {
-        queryFn: async ({ pageParam, queryKey, signal }) => {
-            // @ts-ignore
-            const page: Pick<QueryKey<Options<DatasetsExecutionsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
-                query: {
-                    offset: pageParam
-                }
-            };
-            const params = createInfiniteParams(queryKey, page);
-            const { data } = await datasetsExecutions({
-                ...options,
-                ...params,
-                signal,
-                throwOnError: true
-            });
-            return data;
-        },
-        queryKey: datasetsExecutionsInfiniteQueryKey(options)
-    });
-    return opts as Omit<typeof opts, 'initialData'>;
-};
+export const datasetsExecutionsInfiniteOptions = (options: Options<DatasetsExecutionsData>) => infiniteQueryOptions<DatasetsExecutionsResponse, DatasetsExecutionsError, InfiniteData<DatasetsExecutionsResponse>, QueryKey<Options<DatasetsExecutionsData>>, number | Pick<QueryKey<Options<DatasetsExecutionsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+// @ts-ignore
+{
+    queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<DatasetsExecutionsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+            query: {
+                offset: pageParam
+            }
+        };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await datasetsExecutions({
+            ...options,
+            ...params,
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: datasetsExecutionsInfiniteQueryKey(options)
+});
 
 export const diagnosticsListQueryKey = (options?: Options<DiagnosticsListData>) => createQueryKey('diagnosticsList', options);
 
@@ -319,7 +319,7 @@ export const diagnosticsListExecutionsQueryKey = (options: Options<DiagnosticsLi
  *
  * Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
  *
- * e.g. `?source_id=MIROC6&experiment_id=ssp585`
+ * e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
  */
 export const diagnosticsListExecutionsOptions = (options: Options<DiagnosticsListExecutionsData>) => queryOptions<DiagnosticsListExecutionsResponse, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, ReturnType<typeof diagnosticsListExecutionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -371,30 +371,27 @@ export const diagnosticsListMetricValuesInfiniteQueryKey = (options: Options<Dia
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
  */
-export const diagnosticsListMetricValuesInfiniteOptions = (options: Options<DiagnosticsListMetricValuesData>) => {
-    const opts = infiniteQueryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, InfiniteData<DiagnosticsListMetricValuesResponse>, QueryKey<Options<DiagnosticsListMetricValuesData>>, number | Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
-    // @ts-ignore
-    {
-        queryFn: async ({ pageParam, queryKey, signal }) => {
-            // @ts-ignore
-            const page: Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
-                query: {
-                    offset: pageParam
-                }
-            };
-            const params = createInfiniteParams(queryKey, page);
-            const { data } = await diagnosticsListMetricValues({
-                ...options,
-                ...params,
-                signal,
-                throwOnError: true
-            });
-            return data;
-        },
-        queryKey: diagnosticsListMetricValuesInfiniteQueryKey(options)
-    });
-    return opts as Omit<typeof opts, 'initialData'>;
-};
+export const diagnosticsListMetricValuesInfiniteOptions = (options: Options<DiagnosticsListMetricValuesData>) => infiniteQueryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, InfiniteData<DiagnosticsListMetricValuesResponse>, QueryKey<Options<DiagnosticsListMetricValuesData>>, number | Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+// @ts-ignore
+{
+    queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+            query: {
+                offset: pageParam
+            }
+        };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await diagnosticsListMetricValues({
+            ...options,
+            ...params,
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: diagnosticsListMetricValuesInfiniteQueryKey(options)
+});
 
 export const executionsGetExecutionStatisticsQueryKey = (options?: Options<ExecutionsGetExecutionStatisticsData>) => createQueryKey('executionsGetExecutionStatistics', options);
 
@@ -432,7 +429,8 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  * - dirty
  * - successful (filters by latest execution success)
  * - source_id (filters groups that include an execution whose datasets
- * include a CMIP6 dataset with this source_id)
+ * include a CMIP6 or CMIP7 dataset with this source_id)
+ * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
  */
 export const executionsListRecentExecutionGroupsOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => queryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ReturnType<typeof executionsListRecentExecutionGroupsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -460,32 +458,30 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  * - dirty
  * - successful (filters by latest execution success)
  * - source_id (filters groups that include an execution whose datasets
- * include a CMIP6 dataset with this source_id)
+ * include a CMIP6 or CMIP7 dataset with this source_id)
+ * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
  */
-export const executionsListRecentExecutionGroupsInfiniteOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => {
-    const opts = infiniteQueryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, InfiniteData<ExecutionsListRecentExecutionGroupsResponse>, QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>, number | Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
-    // @ts-ignore
-    {
-        queryFn: async ({ pageParam, queryKey, signal }) => {
-            // @ts-ignore
-            const page: Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
-                query: {
-                    offset: pageParam
-                }
-            };
-            const params = createInfiniteParams(queryKey, page);
-            const { data } = await executionsListRecentExecutionGroups({
-                ...options,
-                ...params,
-                signal,
-                throwOnError: true
-            });
-            return data;
-        },
-        queryKey: executionsListRecentExecutionGroupsInfiniteQueryKey(options)
-    });
-    return opts as Omit<typeof opts, 'initialData'>;
-};
+export const executionsListRecentExecutionGroupsInfiniteOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => infiniteQueryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, InfiniteData<ExecutionsListRecentExecutionGroupsResponse>, QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>, number | Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+// @ts-ignore
+{
+    queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+            query: {
+                offset: pageParam
+            }
+        };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await executionsListRecentExecutionGroups({
+            ...options,
+            ...params,
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: executionsListRecentExecutionGroupsInfiniteQueryKey(options)
+});
 
 export const executionsGetQueryKey = (options: Options<ExecutionsGetData>) => createQueryKey('executionsGet', options);
 
@@ -626,30 +622,27 @@ export const executionsListMetricValuesInfiniteQueryKey = (options: Options<Exec
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
  */
-export const executionsListMetricValuesInfiniteOptions = (options: Options<ExecutionsListMetricValuesData>) => {
-    const opts = infiniteQueryOptions<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, InfiniteData<ExecutionsListMetricValuesResponse>, QueryKey<Options<ExecutionsListMetricValuesData>>, number | Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
-    // @ts-ignore
-    {
-        queryFn: async ({ pageParam, queryKey, signal }) => {
-            // @ts-ignore
-            const page: Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
-                query: {
-                    offset: pageParam
-                }
-            };
-            const params = createInfiniteParams(queryKey, page);
-            const { data } = await executionsListMetricValues({
-                ...options,
-                ...params,
-                signal,
-                throwOnError: true
-            });
-            return data;
-        },
-        queryKey: executionsListMetricValuesInfiniteQueryKey(options)
-    });
-    return opts as Omit<typeof opts, 'initialData'>;
-};
+export const executionsListMetricValuesInfiniteOptions = (options: Options<ExecutionsListMetricValuesData>) => infiniteQueryOptions<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, InfiniteData<ExecutionsListMetricValuesResponse>, QueryKey<Options<ExecutionsListMetricValuesData>>, number | Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+// @ts-ignore
+{
+    queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+            query: {
+                offset: pageParam
+            }
+        };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await executionsListMetricValues({
+            ...options,
+            ...params,
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: executionsListMetricValuesInfiniteQueryKey(options)
+});
 
 export const executionsExecutionArchiveQueryKey = (options: Options<ExecutionsExecutionArchiveData>) => createQueryKey('executionsExecutionArchive', options);
 
