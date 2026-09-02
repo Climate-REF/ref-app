@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Build the frontend
 # The frontend builds to static content that can be served via the backend
-FROM node:22 AS frontend
+FROM node:24 AS frontend
 
 WORKDIR /frontend
 
