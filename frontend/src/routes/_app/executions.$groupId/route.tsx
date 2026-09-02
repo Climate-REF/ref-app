@@ -46,7 +46,7 @@ const ExecutionInfoLayout = () => {
 
   return (
     <>
-      <title>{`${data?.diagnostic?.name} - ${data?.key} - Climate REF`}</title>
+      <title>{`${data?.diagnostic?.name} - ${data?.key} - Climate-REF`}</title>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <DetailsPanel

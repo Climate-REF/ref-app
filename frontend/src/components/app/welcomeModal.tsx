@@ -47,11 +47,7 @@ export function WelcomeModal() {
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold mb-4 flex flex-row items-center justify-center gap-4">
             Welcome to the Climate-REF
-            <img
-              src="/logos/REF/REF_mark.png"
-              alt="Climate-REF"
-              className="h-10 w-10"
-            />
+            <img src="/logos/REF/REF_mark.png" alt="" className="h-10 w-10" />
           </DialogTitle>
           <DialogDescription>
             Climate-REF (Rapid Evaluation Framework) provides a consistent,

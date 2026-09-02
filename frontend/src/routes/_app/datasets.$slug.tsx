@@ -46,7 +46,7 @@ function DatasetPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <title>{`${ds.slug} - Climate REF`}</title>
+      <title>{`${ds.slug} - Climate-REF`}</title>
       <DetailsPanel
         title={ds.slug}
         description={ds.dataset_type}

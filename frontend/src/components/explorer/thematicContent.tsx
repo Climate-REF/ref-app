@@ -190,7 +190,7 @@ export function ThematicContent() {
 
   return (
     <>
-      <title>{`${themeObj?.title} Explorer - Climate REF`}</title>
+      <title>{`${themeObj?.title} Explorer - Climate-REF`}</title>
       <div className="space-y-4">
         <Tabs<ThemeName>
           value={theme}
