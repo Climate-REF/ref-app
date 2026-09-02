@@ -4,7 +4,7 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import type { DiagnosticSummary } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { formatBytes, formatDuration } from "@/lib/format";
+import { formatBytes, formatCount, formatDuration } from "@/lib/format";
 
 const columnHelper = createColumnHelper<DiagnosticSummary>();
 
@@ -59,7 +59,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     "Timed",
     "Executions that recorded a wall time, out of all executions.",
     (row) => row.resource_usage?.timed_execution_count,
-    (v) => (v === undefined ? "—" : String(v)),
+    formatCount,
   ),
   numericColumn(
     "wall_total",
@@ -135,13 +135,12 @@ export function ResourceUsageTable({ diagnostics }: ResourceUsageTableProps) {
     });
   };
 
-  const sorted = [...diagnostics].sort(
-    (a, b) =>
-      (b.resource_usage?.wall_seconds_total ?? -1) -
-      (a.resource_usage?.wall_seconds_total ?? -1),
-  );
-
   return (
-    <DataTable data={sorted} columns={columns} onRowClick={handleRowClick} />
+    <DataTable
+      data={diagnostics}
+      columns={columns}
+      onRowClick={handleRowClick}
+      initialSorting={[{ id: "wall_total", desc: true }]}
+    />
   );
 }

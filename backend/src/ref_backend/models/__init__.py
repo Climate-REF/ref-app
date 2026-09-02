@@ -5,7 +5,6 @@ These are the response models for the API, and drive the generated frontend clie
 They are deliberately separate from the SQLAlchemy models in `climate_ref.models`.
 """
 
-from ref_backend.core.resource_usage import ExecutionResourceSummary
 from ref_backend.models.aft import (
     AFTDiagnosticBase,
     AFTDiagnosticDetail,
@@ -42,7 +41,6 @@ __all__ = [
     "Execution",
     "ExecutionGroup",
     "ExecutionOutput",
-    "ExecutionResourceSummary",
     "ExecutionStats",
     "Facet",
     "GroupBy",

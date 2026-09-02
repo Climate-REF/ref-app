@@ -42,48 +42,33 @@ class ExecutionResourceSummary(BaseModel):
     """
     Mean CPU time per execution that recorded it, in seconds
     """
-    cpu_seconds_max: float | None
-    """
-    Largest CPU time of any execution that recorded it, in seconds
-    """
     peak_memory_bytes_max: int | None
     """
     Largest peak resident memory of any execution that recorded it, in bytes
     """
 
 
-_AGGREGATES = (
+RESOURCE_AGGREGATES = (
     func.count(models.Execution.wall_seconds).label("timed_execution_count"),
     func.sum(models.Execution.wall_seconds).label("wall_seconds_total"),
     func.avg(models.Execution.wall_seconds).label("wall_seconds_mean"),
     func.max(models.Execution.wall_seconds).label("wall_seconds_max"),
     func.sum(models.Execution.cpu_seconds).label("cpu_seconds_total"),
     func.avg(models.Execution.cpu_seconds).label("cpu_seconds_mean"),
-    func.max(models.Execution.cpu_seconds).label("cpu_seconds_max"),
     func.max(models.Execution.peak_memory_bytes).label("peak_memory_bytes_max"),
 )
 
 
-def _summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
+def summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
+    """
+    Build a summary from a row that carries the ``RESOURCERESOURCE_AGGREGATES`` labels.
+
+    Returns ``None`` when the row holds no timed executions.
+    """
     values = row._mapping
     if not values["timed_execution_count"]:
         return None
-    return ExecutionResourceSummary(
-        timed_execution_count=values["timed_execution_count"],
-        wall_seconds_total=float(values["wall_seconds_total"]),
-        wall_seconds_mean=float(values["wall_seconds_mean"]),
-        wall_seconds_max=float(values["wall_seconds_max"]),
-        cpu_seconds_total=_optional_float(values["cpu_seconds_total"]),
-        cpu_seconds_mean=_optional_float(values["cpu_seconds_mean"]),
-        cpu_seconds_max=_optional_float(values["cpu_seconds_max"]),
-        peak_memory_bytes_max=None
-        if values["peak_memory_bytes_max"] is None
-        else int(values["peak_memory_bytes_max"]),
-    )
-
-
-def _optional_float(value: float | None) -> float | None:
-    return None if value is None else float(value)
+    return ExecutionResourceSummary.model_validate(dict(values))
 
 
 def resource_usage_by_diagnostic(
@@ -95,7 +80,7 @@ def resource_usage_by_diagnostic(
     Diagnostics without any timed executions are absent from the result.
     """
     rows = (
-        session.query(models.ExecutionGroup.diagnostic_id, *_AGGREGATES)
+        session.query(models.ExecutionGroup.diagnostic_id, *RESOURCE_AGGREGATES)
         .join(models.Execution)
         .filter(models.ExecutionGroup.diagnostic_id.in_(list(diagnostic_ids)))
         .group_by(models.ExecutionGroup.diagnostic_id)
@@ -103,7 +88,7 @@ def resource_usage_by_diagnostic(
     )
     result = {}
     for row in rows:
-        summary = _summary_from_row(row)
+        summary = summary_from_row(row)
         if summary is not None:
             result[row.diagnostic_id] = summary
     return result
@@ -111,4 +96,4 @@ def resource_usage_by_diagnostic(
 
 def resource_usage_overall(session: Session) -> ExecutionResourceSummary | None:
     """Roll up the resource usage of every execution in the database."""
-    return _summary_from_row(session.query(*_AGGREGATES).one())
+    return summary_from_row(session.query(*RESOURCE_AGGREGATES).one())

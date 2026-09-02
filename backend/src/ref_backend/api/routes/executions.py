@@ -31,6 +31,7 @@ from ref_backend.core.resource_usage import resource_usage_overall
 from ref_backend.models import (
     Collection,
     Dataset,
+    DiagnosticSummary,
     Execution,
     ExecutionGroup,
     ExecutionStats,
@@ -178,11 +179,14 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     )
 
     data = []
+    summaries: dict[int, DiagnosticSummary] = {}
     for eg in execution_groups:
         try:
             # Eagerly load executions to avoid lazy loading during serialization
             eg.executions
-            data.append(ExecutionGroup.build(eg, app_context))
+            if eg.diagnostic_id not in summaries:
+                summaries[eg.diagnostic_id] = DiagnosticSummary.build(eg.diagnostic, app_context)
+            data.append(ExecutionGroup.build(eg, app_context, summaries[eg.diagnostic_id]))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
             continue

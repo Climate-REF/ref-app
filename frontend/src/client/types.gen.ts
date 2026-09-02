@@ -784,10 +784,6 @@ export type ExecutionResourceSummary = {
      */
     cpu_seconds_mean: number | null;
     /**
-     * Cpu Seconds Max
-     */
-    cpu_seconds_max: number | null;
-    /**
      * Peak Memory Bytes Max
      */
     peak_memory_bytes_max: number | null;

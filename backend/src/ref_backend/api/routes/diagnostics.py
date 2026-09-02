@@ -17,7 +17,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.resource_usage import resource_usage_by_diagnostic
+from ref_backend.core.resource_usage import RESOURCE_AGGREGATES, summary_from_row
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
@@ -100,19 +100,24 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     )
     series_diagnostic_ids = {row[0] for row in series_values_exist}
 
-    # Count executions per diagnostic
+    # Count executions and roll up their resource usage per diagnostic
     execution_counts = (
         app_context.session.query(
             models.ExecutionGroup.diagnostic_id,
             func.count(models.Execution.id).label("total_count"),
             func.sum(func.cast(models.Execution.successful, Integer)).label("successful_count"),
+            *RESOURCE_AGGREGATES,
         )
         .join(models.Execution)
         .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
         .group_by(models.ExecutionGroup.diagnostic_id)
         .all()
     )
-    execution_stats = {row[0]: {"total": row[1], "successful": row[2] or 0} for row in execution_counts}
+    execution_stats = {
+        row.diagnostic_id: {"total": row.total_count, "successful": row.successful_count or 0}
+        for row in execution_counts
+    }
+    resource_usage = {row.diagnostic_id: summary_from_row(row) for row in execution_counts}
 
     # Count execution groups per diagnostic
     execution_group_counts = (
@@ -151,7 +156,6 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
         .all()
     )
     successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
-    resource_usage = resource_usage_by_diagnostic(app_context.session, diagnostic_ids)
 
     return Collection(
         data=[

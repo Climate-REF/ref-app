@@ -14,8 +14,9 @@ export function DataTable<TData, TValue>({
   loading = false,
   canHideColumns = false,
   onRowClick,
+  initialSorting,
 }: DataTableProps<TData, TValue>) {
-  const { table } = useDataTable({ data, columns });
+  const { table } = useDataTable({ data, columns, initialSorting });
 
   return (
     <div className="flex flex-col gap-y-4">

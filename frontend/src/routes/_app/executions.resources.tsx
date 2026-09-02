@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatBytes, formatDuration } from "@/lib/format";
+import { formatBytes, formatCount, formatDuration } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/executions/resources")({
   component: ResourceUsagePage,
@@ -21,11 +21,21 @@ export const Route = createFileRoute("/_app/executions/resources")({
   },
 });
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  loading,
+}: {
+  label: string;
+  value: string;
+  loading: boolean;
+}) {
   return (
     <div className="space-y-1">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold tabular-nums">{value}</p>
+      <p className="text-2xl font-bold tabular-nums">
+        {loading ? "..." : value}
+      </p>
     </div>
   );
 }
@@ -52,35 +62,23 @@ function ResourceUsagePage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat
               label="Timed executions"
-              value={
-                statistics.isLoading
-                  ? "..."
-                  : String(usage?.timed_execution_count ?? 0)
-              }
+              value={formatCount(usage?.timed_execution_count ?? 0)}
+              loading={statistics.isLoading}
             />
             <Stat
               label="Total wall time"
-              value={
-                statistics.isLoading
-                  ? "..."
-                  : formatDuration(usage?.wall_seconds_total)
-              }
+              value={formatDuration(usage?.wall_seconds_total)}
+              loading={statistics.isLoading}
             />
             <Stat
               label="Total CPU time"
-              value={
-                statistics.isLoading
-                  ? "..."
-                  : formatDuration(usage?.cpu_seconds_total)
-              }
+              value={formatDuration(usage?.cpu_seconds_total)}
+              loading={statistics.isLoading}
             />
             <Stat
               label="Peak memory"
-              value={
-                statistics.isLoading
-                  ? "..."
-                  : formatBytes(usage?.peak_memory_bytes_max)
-              }
+              value={formatBytes(usage?.peak_memory_bytes_max)}
+              loading={statistics.isLoading}
             />
           </div>
           {diagnostics.isLoading && <div>Loading diagnostics...</div>}

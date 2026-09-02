@@ -227,12 +227,8 @@ const DiagnosticInfoLayout = () => {
                     <TooltipContent className="max-w-xs">
                       <p>
                         Wall clock time recorded by the workers, rolled up
-                        across the {data.resource_usage.timed_execution_count}{" "}
-                        execution
-                        {data.resource_usage.timed_execution_count === 1
-                          ? ""
-                          : "s"}{" "}
-                        of this diagnostic that recorded it.
+                        across the executions of this diagnostic that recorded
+                        it.
                       </p>
                       <p className="mt-2">
                         CPU time and peak memory are optional, so they roll up

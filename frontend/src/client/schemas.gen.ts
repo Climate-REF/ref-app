@@ -1562,17 +1562,6 @@ export const ExecutionResourceSummarySchema = {
             ],
             title: 'Cpu Seconds Mean'
         },
-        cpu_seconds_max: {
-            anyOf: [
-                {
-                    type: 'number'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Cpu Seconds Max'
-        },
         peak_memory_bytes_max: {
             anyOf: [
                 {
@@ -1593,7 +1582,6 @@ export const ExecutionResourceSummarySchema = {
         'wall_seconds_max',
         'cpu_seconds_total',
         'cpu_seconds_mean',
-        'cpu_seconds_max',
         'peak_memory_bytes_max'
     ],
     title: 'ExecutionResourceSummary',
