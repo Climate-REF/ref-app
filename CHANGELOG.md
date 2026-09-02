@@ -1,3 +1,16 @@
+## v0.6.0 (2026-09-02)
+
+### Features
+
+- Added a CMIP6 / CMIP7 era bar to every results page, coloured with the CMIP brand palette.
+  The last picked era is remembered when moving between pages.
+  The diagnostics catalog now counts only the selected era's execution groups. (#85)
+
+### Bug Fixes
+
+- The figure gallery and execution groups tab now show only the selected MIP era. (#85)
+
+
 ## v0.5.1 (2026-09-02)
 
 ### Improvements
