@@ -1,8 +1,10 @@
-import { defineConfig } from "@hey-api/openapi-ts";
+import path from "node:path";
+import type { UserConfig } from "@hey-api/openapi-ts";
 
-export default defineConfig({
-  input: "./openapi.json",
-  output: "src/client",
+// Paths are anchored to this file because the generator runs from an isolated directory.
+export default {
+  input: path.join(import.meta.dirname, "openapi.json"),
+  output: path.join(import.meta.dirname, "src/client"),
   plugins: [
     "@hey-api/typescript",
     "@hey-api/sdk",
@@ -10,4 +12,4 @@ export default defineConfig({
     "@hey-api/schemas",
     "@tanstack/react-query",
   ],
-});
+} satisfies UserConfig;

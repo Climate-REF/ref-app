@@ -2,21 +2,21 @@ import mimetypes
 import os
 import tarfile
 import tempfile
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import DatasetFile
-from climate_ref.results import MetricValueFilter
+from climate_ref.results import ExecutionGroupFilter, MetricValueFilter
 from climate_ref_core.pycmec.metric import CMECMetric
-from ref_backend.api.deps import AppContextDep
+from ref_backend.api.deps import AppContext, AppContextDep
 from ref_backend.core.file_handling import file_iterator, resolve_artifact
 from ref_backend.core.metric_values import (
     MetricValueType,
@@ -35,6 +35,7 @@ from ref_backend.models import (
     ExecutionStats,
     MetricValueCollection,
 )
+from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
@@ -46,61 +47,47 @@ def _parse_int_id(value: str, resource: str) -> int:
         raise HTTPException(status_code=404, detail=f"{resource} not found") from None
 
 
+def _load_execution_groups(session: Session, group_ids: Sequence[int]) -> list[models.ExecutionGroup]:
+    """
+    Load the ORM rows for execution groups the reader has already selected
+
+    The response builders need ORM objects, so the reader decides which groups to show
+    and this hydrates them, preserving the order of ``group_ids``.
+    """
+    if not group_ids:
+        return []
+
+    rows = (
+        session.query(models.ExecutionGroup)
+        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
+        .filter(models.ExecutionGroup.id.in_(group_ids))
+        .all()
+    )
+    by_id = {row.id: row for row in rows}
+    return [by_id[group_id] for group_id in group_ids if group_id in by_id]
+
+
 @router.get("/statistics")
 async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
     """
     Get execution statistics for the dashboard.
 
-    Returns counts of total, successful, and failed execution groups,
-    plus recent activity count.
+    Execution groups are counted at the promoted version of each diagnostic,
+    and classified by the outcome of their latest execution.
     """
     session = app_context.session
-
-    # Total execution groups
-    total_execution_groups = session.query(models.ExecutionGroup).count()
-
-    # Successful execution groups (latest execution is successful)
-    latest_execution_subquery = (
-        session.query(
-            models.Execution.execution_group_id.label("egid"),
-            func.max(models.Execution.id).label("max_id"),
-        )
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
-
-    successful_execution_groups = (
-        session.query(models.ExecutionGroup)
-        .join(
-            latest_execution_subquery,
-            models.ExecutionGroup.id == latest_execution_subquery.c.egid,
-        )
-        .join(
-            models.Execution,
-            models.Execution.id == latest_execution_subquery.c.max_id,
-        )
-        .filter(models.Execution.successful.is_(True))
-        .count()
-    )
-
-    # Failed execution groups (total - successful)
-    failed_execution_groups = total_execution_groups - successful_execution_groups
-
-    # Recent activity (last 50 execution groups by updated_at)
-    scalar_value_count = session.query(models.ScalarMetricValue).count()
-    series_value_count = session.query(models.SeriesMetricValue).count()
-
-    total_datasets = session.query(models.Dataset).count()
-    total_files = session.query(DatasetFile).count()
+    stats = app_context.reader.executions.statistics()
 
     return ExecutionStats(
-        total_execution_groups=total_execution_groups,
-        successful_execution_groups=successful_execution_groups,
-        failed_execution_groups=failed_execution_groups,
-        scalar_value_count=scalar_value_count,
-        series_value_count=series_value_count,
-        total_datasets=total_datasets,
-        total_files=total_files,
+        total_execution_groups=sum(s.total for s in stats),
+        successful_execution_groups=sum(s.successful for s in stats),
+        failed_execution_groups=sum(s.failed for s in stats),
+        running_execution_groups=sum(s.running for s in stats),
+        not_started_execution_groups=sum(s.not_started for s in stats),
+        scalar_value_count=session.query(models.ScalarMetricValue).count(),
+        series_value_count=session.query(models.SeriesMetricValue).count(),
+        total_datasets=session.query(models.Dataset).count(),
+        total_files=session.query(DatasetFile).count(),
     )
 
 
@@ -119,9 +106,11 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     """
     List the most recent execution groups
 
+    Only groups at the promoted version of their diagnostic are returned.
+
     Supports filtering by:
-    - diagnostic_name_contains
-    - provider_name_contains
+    - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
+    - provider_name_contains (case-insensitive substring of the provider slug)
     - dirty
     - successful (filters by latest execution success)
     - source_id (filters groups that include an execution whose datasets
@@ -130,56 +119,37 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     """
     session = app_context.session
 
-    query = session.query(models.ExecutionGroup).join(models.ExecutionGroup.diagnostic)
-
-    if diagnostic_name_contains:
-        query = query.filter(models.Diagnostic.name.ilike(f"%{diagnostic_name_contains}%"))
-    if provider_name_contains:
-        query = query.join(models.Diagnostic.provider).filter(
-            models.Provider.name.ilike(f"%{provider_name_contains}%")
-        )
-    if dirty is not None:
-        query = query.filter(models.ExecutionGroup.dirty == dirty)
-
-    # Filter by latest execution successful flag (joins to a subquery of latest executions)
-    if successful is not None:
-        latest_execution_subquery = (
-            session.query(
-                models.Execution.execution_group_id.label("egid"),
-                func.max(models.Execution.id).label("max_id"),
-            )
-            .group_by(models.Execution.execution_group_id)
-            .subquery()
-        )
-
-        query = (
-            query.join(
-                latest_execution_subquery,
-                models.ExecutionGroup.id == latest_execution_subquery.c.egid,
-            )
-            .join(
-                models.Execution,
-                models.Execution.id == latest_execution_subquery.c.max_id,
-            )
-            .filter(models.Execution.successful == successful)
-        )
-
-    # Filter by source_id using a correlated EXISTS to avoid DISTINCT across joins
-    if source_id or mip_era:
-        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
-        query = query.filter(models.ExecutionGroup.executions.any(cmip_dataset_filter(facets)))
-
-    total_count = query.count()
-
-    execution_groups = (
-        query.order_by(models.ExecutionGroup.updated_at.desc()).limit(limit).offset(offset).all()
+    filters = ExecutionGroupFilter(
+        diagnostic_contains=[diagnostic_name_contains] if diagnostic_name_contains else None,
+        provider_contains=[provider_name_contains] if provider_name_contains else None,
+        dirty=dirty,
+        successful=successful,
+    )
+    # The reader orders by id, so sort here to keep the most recently updated groups first.
+    groups = sorted(
+        app_context.reader.executions.groups(filters),
+        key=lambda group: (group.updated_at, group.id),
+        reverse=True,
     )
 
+    # Selectors do not record source_id, so match on the datasets used.
+    if source_id or mip_era:
+        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
+        matching_ids = set(
+            session.scalars(
+                select(models.ExecutionGroup.id).where(
+                    models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
+                )
+            )
+        )
+        groups = [group for group in groups if group.id in matching_ids]
+
+    total_count = len(groups)
+    page_ids = [group.id for group in groups[offset : offset + limit]]
+
     data = []
-    for eg in execution_groups:
+    for eg in _load_execution_groups(session, page_ids):
         try:
-            # Eagerly load executions to avoid lazy loading during serialization
-            eg.executions
             data.append(ExecutionGroup.build(eg, app_context))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
@@ -196,33 +166,33 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     """
     Inspect a specific execution
     """
-    execution_group = app_context.session.query(models.ExecutionGroup).get(
-        _parse_int_id(group_id, "Execution group")
-    )
-    if not execution_group:
+    group_id_int = _parse_int_id(group_id, "Execution group")
+    execution_groups = _load_execution_groups(app_context.session, [group_id_int])
+    if not execution_groups:
         raise HTTPException(status_code=404, detail="Execution not found")
+    return ExecutionGroup.build(execution_groups[0], app_context)
 
-    return ExecutionGroup.build(execution_group, app_context)
 
+async def _get_execution(
+    group_id: str, execution_id: str | None, app_context: AppContext
+) -> models.Execution:
+    """
+    Resolve the execution a route is asking about
 
-async def _get_execution(group_id: str, execution_id: str | None, session: Session) -> models.Execution:
+    When no execution is named, the reader picks the latest for the group.
+    """
     group_id_int = _parse_int_id(group_id, "Execution group")
 
     if execution_id is not None:
-        execution: models.Execution | None = session.query(models.Execution).get(
-            _parse_int_id(execution_id, "Execution")
-        )
+        execution_id_int = _parse_int_id(execution_id, "Execution")
     else:
-        # Fetch only the latest execution for the group without loading the full collection
-        execution = (
-            session.query(models.Execution)
-            .filter(models.Execution.execution_group_id == group_id_int)
-            .order_by(models.Execution.id.desc())
-            .limit(1)
-            .one_or_none()
-        )
+        latest = app_context.reader.executions.latest_execution(group_id_int)
+        if latest is None:
+            raise HTTPException(status_code=404, detail="Result not found")
+        execution_id_int = latest.id
 
-    if not execution or not execution.execution_group_id == group_id_int:
+    execution = app_context.session.get(models.Execution, execution_id_int)
+    if execution is None or execution.execution_group_id != group_id_int:
         raise HTTPException(status_code=404, detail="Result not found")
     return execution
 
@@ -238,7 +208,7 @@ async def execution(
 
     Gets the latest result if no execution_id is provided
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
 
     return Execution.build(execution, app_context)
 
@@ -250,7 +220,7 @@ async def execution_datasets(
     """
     Query the datasets that were used for a specific execution
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
 
     return Collection(data=[Dataset.build(dataset) for dataset in execution.datasets])
 
@@ -264,7 +234,7 @@ async def execution_logs(
     """
     Fetch the logs for an execution result
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
 
     file_path = resolve_artifact(app_context.reader.artifacts.log_file, execution.output_fragment)
     mime_type, _encoding = mimetypes.guess_type(file_path)
@@ -289,7 +259,7 @@ async def metric_bundle(
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
 
     file_path = resolve_artifact(
         app_context.reader.artifacts.output_file, execution.output_fragment, "diagnostic.json"
@@ -327,7 +297,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     - `offset`: Number of items to skip (default 0)
     - `limit`: Maximum number of items to return (default 50, max 500)
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
 
     # Restrict to the selected execution's values; ``_get_execution`` already resolves the
     # latest execution when no ``execution_id`` is supplied. ``promoted_only`` keeps only the
@@ -366,7 +336,7 @@ async def execution_archive(
 
     The archive is created on-the-fly and streamed directly to the client.
     """
-    execution = await _get_execution(group_id, execution_id, app_context.session)
+    execution = await _get_execution(group_id, execution_id, app_context)
     result_path = resolve_artifact(app_context.reader.artifacts.output_directory, execution.output_fragment)
 
     if not result_path.exists():

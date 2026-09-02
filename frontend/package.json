@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "biome check --write .",
     "preview": "vite preview",
-    "openapi-ts": "openapi-ts",
+    "openapi-ts": "bash ../scripts/generate-client-sdk.sh",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
