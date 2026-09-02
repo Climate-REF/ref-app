@@ -23,7 +23,9 @@ class ExecutionResourceSummary(BaseModel):
     """
     wall_seconds_total: float
     """
-    Sum of wall clock time across the timed executions, in seconds
+    Sum of wall clock time across the timed executions, in seconds.
+
+    Executions often run in parallel, so this can be more than the elapsed time of the run
     """
     wall_seconds_mean: float
     """

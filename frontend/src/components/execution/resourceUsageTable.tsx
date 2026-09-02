@@ -71,8 +71,8 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
   ),
   numericColumn(
     "wall_total",
-    "Wall\ntotal",
-    "Sum of wall clock time across the timed executions.",
+    "Wall\nsum",
+    "Sum of wall clock time across the timed executions, which run in parallel.",
     (row) => row.resource_usage?.wall_seconds_total,
     formatDuration,
   ),
@@ -92,7 +92,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
   ),
   numericColumn(
     "cpu_total",
-    "CPU\ntotal",
+    "CPU\nsum",
     "Sum of CPU time across the executions that recorded it.",
     (row) => row.resource_usage?.cpu_seconds_total,
     formatDuration,
