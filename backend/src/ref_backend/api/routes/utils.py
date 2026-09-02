@@ -3,7 +3,7 @@ from importlib.metadata import version
 from fastapi import APIRouter
 from sqlalchemy import func, select
 
-from climate_ref import models
+from climate_ref.models import ExecutionGroup
 from ref_backend.api.deps import SessionDep
 from ref_backend.models import About
 
@@ -20,7 +20,7 @@ async def about(session: SessionDep) -> About:
     """
     Version and freshness information about the deployment serving this API
     """
-    last_updated = session.scalar(select(func.max(models.ExecutionGroup.updated_at)))
+    last_updated = session.scalar(select(func.max(ExecutionGroup.updated_at)))
 
     return About(
         app_version=version("ref-backend"),

@@ -6,10 +6,6 @@ from pydantic import BaseModel
 
 
 class About(BaseModel):
-    """
-    Version and freshness information about the deployment serving this API.
-    """
-
     app_version: str
     """Version of the ref-app that is serving this API."""
 

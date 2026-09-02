@@ -21,8 +21,12 @@ export const VersionInfo = () => {
   return (
     <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-gray-500">
       <Item label="Explorer" value={__APP_VERSION__} />
-      {data ? <Item label="API" value={data.app_version} /> : null}
-      {data ? <Item label="Climate REF" value={data.ref_version} /> : null}
+      {data ? (
+        <>
+          <Item label="API" value={data.app_version} />
+          <Item label="Climate REF" value={data.ref_version} />
+        </>
+      ) : null}
       {lastUpdated ? (
         <Item label="Results updated" value={lastUpdated} />
       ) : null}
