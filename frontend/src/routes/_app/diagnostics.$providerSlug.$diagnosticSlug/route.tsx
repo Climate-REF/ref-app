@@ -226,9 +226,10 @@ const DiagnosticInfoLayout = () => {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>
-                        Wall clock time recorded by the workers, rolled up
-                        across the executions of this diagnostic that recorded
-                        it.
+                        Wall clock time recorded by the workers, summed across
+                        the executions of this diagnostic that recorded it.
+                        Executions run in parallel, so the sum can be larger
+                        than the elapsed time of the run.
                       </p>
                       <p className="mt-2">
                         CPU time and peak memory are optional, so they roll up
@@ -240,7 +241,7 @@ const DiagnosticInfoLayout = () => {
                 <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      Wall time (total / mean)
+                      Wall time (sum / mean)
                     </p>
                     <p className="font-medium tabular-nums">
                       {formatDuration(data.resource_usage.wall_seconds_total)} /{" "}
@@ -257,7 +258,7 @@ const DiagnosticInfoLayout = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      CPU time (total / mean)
+                      CPU time (sum / mean)
                     </p>
                     <p className="font-medium tabular-nums">
                       {formatDuration(data.resource_usage.cpu_seconds_total)} /{" "}

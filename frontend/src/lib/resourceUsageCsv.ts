@@ -24,7 +24,7 @@ function csvField(value: string | number | null | undefined): string {
 /**
  * Serialises the per-diagnostic resource roll-up as CSV, with raw seconds and bytes.
  *
- * Rows are ordered by total wall time, with untimed diagnostics last.
+ * Rows are ordered by summed wall time, with untimed diagnostics last.
  */
 export function resourceUsageCsv(diagnostics: DiagnosticSummary[]): string {
   const rows = [...diagnostics]
