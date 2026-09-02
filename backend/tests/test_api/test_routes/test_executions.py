@@ -448,5 +448,6 @@ def test_execution_list_pagination(client: TestClient, settings) -> None:
     page2 = client.get(f"{settings.API_V1_STR}/executions?limit=2&offset=2").json()
 
     assert page1["count"] == 2
+    assert page2["count"] == 2
     assert page1["total_count"] == page2["total_count"]
     assert {g["id"] for g in page1["data"]}.isdisjoint({g["id"] for g in page2["data"]})
