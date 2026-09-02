@@ -18,7 +18,7 @@ import {
 } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
-import { SwitchMipEraButton } from "@/components/charts/mipEraBar";
+import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Figure } from "@/components/diagnostics/figure.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { groupsInMipEra } from "@/lib/mipEras";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
 import {
@@ -178,6 +177,7 @@ export function FigureGallery({
   const { data: executionGroups, isLoading } = useQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+      query: { mip_era: selectedMipEra ?? undefined },
     }),
   );
 
@@ -191,10 +191,7 @@ export function FigureGallery({
     };
   }, [getColumns]);
 
-  const groups = useMemo(
-    () => groupsInMipEra(executionGroups?.data ?? [], selectedMipEra),
-    [executionGroups, selectedMipEra],
-  );
+  const groups = executionGroups?.data ?? [];
 
   const allFigures = useMemo<FigureWithGroup[]>(
     () =>
@@ -383,11 +380,12 @@ export function FigureGallery({
           </div>
         )
       ) : (
-        <div className="flex min-h-[350px] flex-col items-center justify-center gap-3 py-8 text-center text-sm text-muted-foreground">
-          {selectedMipEra && groups.length === 0
-            ? `No ${selectedMipEra} figures yet.`
-            : "No figures found matching your filters."}
-          {groups.length === 0 ? <SwitchMipEraButton /> : null}
+        <div className="flex min-h-[350px] items-center justify-center text-sm text-muted-foreground">
+          {groups.length === 0 ? (
+            <MipEraEmptyState what="figures" />
+          ) : (
+            "No figures found matching your filters."
+          )}
         </div>
       )}
 

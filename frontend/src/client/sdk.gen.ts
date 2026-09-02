@@ -84,6 +84,8 @@ export const diagnosticsGet = <ThrowOnError extends boolean = false>(options: Op
  * List Execution Groups
  *
  * Fetch execution groups for a diagnostic.
+ *
+ * Pass `mip_era` to keep only the groups that ran against that era.
  */
 export const diagnosticsListExecutionGroups = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListExecutionGroupsData, ThrowOnError>): RequestResult<DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionGroupsErrors, ThrowOnError> => (options.client ?? client).get<DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionGroupsErrors, ThrowOnError>({ url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups', ...options });
 

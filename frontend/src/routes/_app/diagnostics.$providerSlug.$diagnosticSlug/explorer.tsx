@@ -2,11 +2,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { Suspense } from "react";
-import { z } from "zod";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
 import { ErrorBoundary, ErrorFallback } from "@/components/app";
-import { MipEraBar } from "@/components/charts/mipEraBar";
-import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraScope } from "@/components/charts/mipEraBar";
 import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
@@ -14,9 +12,7 @@ import {
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
-import { mipEraSearchFields } from "@/lib/mipEras";
-
-const explorerSchema = z.object(mipEraSearchFields);
+import { mipEraSearchSchema } from "@/lib/mipEras";
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
@@ -90,14 +86,13 @@ const Explorer = () => {
           <CardTitle>Explorer</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-          <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+          <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
             <ExplorerPanels
               collectionId={parentData.aft_link.id}
               providerSlug={providerSlug}
               diagnosticSlug={diagnosticSlug}
             />
-          </MipEraProvider>
+          </MipEraScope>
         </CardContent>
       </Card>
     </div>
@@ -108,5 +103,5 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer",
 )({
   component: Explorer,
-  validateSearch: zodValidator(explorerSchema),
+  validateSearch: zodValidator(mipEraSearchSchema),
 });

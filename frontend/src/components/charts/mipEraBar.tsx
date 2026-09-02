@@ -1,8 +1,11 @@
+import type { ReactNode } from "react";
 import {
-  useMipEraSwitch,
-  useSelectedMipEra,
+  MipEraProvider,
+  type MipEraSelection,
+  useMipEraSelection,
 } from "@/components/charts/mipEraContext";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MIP_ERAS, type MipEra, otherMipEra } from "@/lib/mipEras";
 import { cn } from "@/lib/utils";
 
@@ -10,26 +13,38 @@ import { cn } from "@/lib/utils";
 const ERA_STYLES: Record<MipEra, { bar: string; active: string }> = {
   CMIP6: {
     bar: "border-cmip-mustard/60 bg-cmip-mustard/15",
-    active: "bg-cmip-mustard text-black hover:bg-cmip-mustard",
+    active:
+      "data-[state=active]:bg-cmip-mustard data-[state=active]:text-black",
   },
   CMIP7: {
     bar: "border-cmip-blue/40 bg-cmip-blue/10 dark:border-white/20 dark:bg-cmip-blue/60",
     active:
-      "bg-cmip-blue text-white hover:bg-cmip-blue dark:ring-1 dark:ring-white/40",
+      "data-[state=active]:bg-cmip-blue data-[state=active]:text-white dark:data-[state=active]:ring-1 dark:data-[state=active]:ring-white/40",
   },
 };
 
-interface MipEraBarProps {
-  mipEra: MipEra;
-  onChange: (mipEra: MipEra) => void;
-}
-
 /**
- * The strip at the top of a results page naming the MIP era every chart and table below reports.
+ * Wrap a results page in a MIP era, with the bar that names it at the top.
  *
  * Only one era shows at a time, because the CMIP6 and CMIP7 ensembles are not directly comparable.
  */
-export function MipEraBar({ mipEra, onChange }: MipEraBarProps) {
+export function MipEraScope({
+  mipEra,
+  setMipEra,
+  children,
+}: MipEraSelection & { children: ReactNode }) {
+  return (
+    <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+      <MipEraBar />
+      {children}
+    </MipEraProvider>
+  );
+}
+
+function MipEraBar() {
+  const selection = useMipEraSelection();
+  if (!selection) return null;
+  const { mipEra, setMipEra } = selection;
   return (
     <div
       className={cn(
@@ -39,27 +54,22 @@ export function MipEraBar({ mipEra, onChange }: MipEraBarProps) {
     >
       <div className="flex items-center gap-3">
         <span className="text-sm font-semibold">Showing</span>
-        <fieldset
-          aria-label="MIP era"
-          className="inline-flex rounded-md border border-border bg-background p-1"
-        >
-          {MIP_ERAS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={option === mipEra}
-              onClick={() => onChange(option)}
-              className={cn(
-                "rounded px-4 py-1.5 text-base font-semibold transition-colors",
-                option === mipEra
-                  ? ERA_STYLES[option].active
-                  : "text-muted-foreground hover:bg-muted",
-              )}
-            >
-              {option}
-            </button>
-          ))}
-        </fieldset>
+        <Tabs<MipEra> value={mipEra} onValueChange={setMipEra}>
+          <TabsList aria-label="MIP era" className="h-auto bg-background">
+            {MIP_ERAS.map((option) => (
+              <TabsTrigger
+                key={option}
+                value={option}
+                className={cn(
+                  "px-4 py-1.5 text-base font-semibold",
+                  ERA_STYLES[option].active,
+                )}
+              >
+                {option}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
       <div className="text-sm text-muted-foreground">
         The two eras are shown separately, because the ensembles are not
@@ -70,18 +80,21 @@ export function MipEraBar({ mipEra, onChange }: MipEraBarProps) {
 }
 
 /**
- * Offer the other era when the selected one has nothing to show.
+ * Say the selected era has none of `what`, and offer the other era.
  *
  * Renders nothing where the page has no era selector.
  */
-export function SwitchMipEraButton() {
-  const mipEra = useSelectedMipEra();
-  const setMipEra = useMipEraSwitch();
-  if (!mipEra || !setMipEra) return null;
+export function MipEraEmptyState({ what }: { what: string }) {
+  const selection = useMipEraSelection();
+  if (!selection) return null;
+  const { mipEra, setMipEra } = selection;
   const other = otherMipEra(mipEra);
   return (
-    <Button variant="outline" size="sm" onClick={() => setMipEra(other)}>
-      Show {other} instead
-    </Button>
+    <div className="flex flex-col items-center gap-3 py-8 text-center text-sm text-muted-foreground">
+      No {mipEra} {what} yet.
+      <Button variant="outline" size="sm" onClick={() => setMipEra(other)}>
+        Show {other} instead
+      </Button>
+    </div>
   );
 }

@@ -4,8 +4,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
-import { MipEraBar, SwitchMipEraButton } from "@/components/charts/mipEraBar";
-import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 import { FilterPanel as ExecutionsFilterPanel } from "@/components/execution/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
@@ -143,42 +142,42 @@ function ExecutionsListPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <title>{`Executions (${mipEra}) - Climate-REF`}</title>
-          <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-          {/* Advanced filter panel (kept for parity with other pages) */}
-          <ExecutionsFilterPanel
-            filters={search}
-            onFilterChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
+          <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
+            {/* Advanced filter panel (kept for parity with other pages) */}
+            <ExecutionsFilterPanel
+              filters={search}
+              onFilterChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
 
-          {isLoading && !data && <div>Loading executions...</div>}
-          {status === "error" && (
-            <div className="text-destructive">
-              Error loading executions: {String(error)}
-            </div>
-          )}
-          {!isLoading && executionGroups.length === 0 && (
-            <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
-              <div className="flex flex-col items-start gap-3 text-sm text-muted-foreground">
-                {hasOtherFilters
-                  ? "No execution groups match your filters."
-                  : `No ${mipEra} execution groups yet.`}
-                {hasOtherFilters ? null : <SwitchMipEraButton />}
+            {isLoading && !data && <div>Loading executions...</div>}
+            {status === "error" && (
+              <div className="text-destructive">
+                Error loading executions: {String(error)}
               </div>
-            </MipEraProvider>
-          )}
-          <ExecutionGroupTable executionGroups={executionGroups} />
-          {hasNextPage && (
-            <div className="flex justify-center">
-              <Button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="w-[200px]"
-              >
-                {isFetchingNextPage ? "Loading more..." : "Load More"}
-              </Button>
-            </div>
-          )}
+            )}
+            {!isLoading &&
+              executionGroups.length === 0 &&
+              (hasOtherFilters ? (
+                <div className="text-sm text-muted-foreground">
+                  No execution groups match your filters.
+                </div>
+              ) : (
+                <MipEraEmptyState what="execution groups" />
+              ))}
+            <ExecutionGroupTable executionGroups={executionGroups} />
+            {hasNextPage && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="w-[200px]"
+                >
+                  {isFetchingNextPage ? "Loading more..." : "Load More"}
+                </Button>
+              </div>
+            )}
+          </MipEraScope>
         </CardContent>
       </Card>
     </div>

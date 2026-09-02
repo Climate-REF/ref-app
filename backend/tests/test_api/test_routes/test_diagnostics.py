@@ -791,3 +791,18 @@ def test_diagnostics_list_counts_only_the_requested_era(client: TestClient) -> N
         cmip6[slug]["execution_group_count"] <= everything[slug]["execution_group_count"]
         for slug in everything
     )
+
+
+def test_execution_groups_filter_by_era(client: TestClient) -> None:
+    listing = client.get("/api/v1/diagnostics/").json()["data"]
+    diagnostic = next(d for d in listing if d["execution_group_count"] > 0)
+    base = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/execution_groups"
+
+    everything = client.get(base).json()["data"]
+    cmip6 = client.get(base, params={"mip_era": "CMIP6"}).json()["data"]
+    cmip7 = client.get(base, params={"mip_era": "CMIP7"}).json()["data"]
+
+    assert len(everything) > 0
+    assert {g["id"] for g in cmip6} == {g["id"] for g in everything}
+    # The fixture database only holds CMIP6 datasets.
+    assert cmip7 == []

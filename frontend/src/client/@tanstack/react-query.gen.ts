@@ -306,6 +306,8 @@ export const diagnosticsListExecutionGroupsQueryKey = (options: Options<Diagnost
  * List Execution Groups
  *
  * Fetch execution groups for a diagnostic.
+ *
+ * Pass `mip_era` to keep only the groups that ran against that era.
  */
 export const diagnosticsListExecutionGroupsOptions = (options: Options<DiagnosticsListExecutionGroupsData>) => queryOptions<DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, ReturnType<typeof diagnosticsListExecutionGroupsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

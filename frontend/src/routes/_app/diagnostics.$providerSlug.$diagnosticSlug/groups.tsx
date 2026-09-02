@@ -1,13 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
-import { MipEraBar } from "@/components/charts/mipEraBar";
-import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { useMipEra } from "@/hooks/useMipEra";
-import { mipEraSearchFields } from "@/lib/mipEras";
-
-const groupsSchema = z.object(mipEraSearchFields);
+import { mipEraSearchSchema } from "@/lib/mipEras";
 
 // Executions tab as nested route
 const Executions = () => {
@@ -17,13 +13,12 @@ const Executions = () => {
   return (
     <div className="space-y-4">
       <title>{`Execution Groups (${mipEra}) - ${diagnosticSlug} - Climate-REF`}</title>
-      <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-      <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+      <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
         <ExecutionGroupTable
           diagnosticSlug={diagnosticSlug}
           providerSlug={providerSlug}
         />
-      </MipEraProvider>
+      </MipEraScope>
     </div>
   );
 };
@@ -32,7 +27,7 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups",
 )({
   component: Executions,
-  validateSearch: zodValidator(groupsSchema),
+  validateSearch: zodValidator(mipEraSearchSchema),
   staticData: {
     title: "Execution Groups",
   },

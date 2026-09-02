@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { AlertTriangle, SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
-import { SwitchMipEraButton } from "@/components/charts/mipEraBar";
+import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
@@ -22,7 +22,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { formatDuration } from "@/lib/format";
-import { groupsInMipEra } from "@/lib/mipEras";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -199,13 +198,14 @@ function ExecutionGroupTableWithQuery({
     });
   };
 
+  const selectedMipEra = useSelectedMipEra();
   const { data, isLoading } = useSuspenseQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+      query: { mip_era: selectedMipEra ?? undefined },
     }),
   );
-  const selectedMipEra = useSelectedMipEra();
-  const groups = groupsInMipEra(data?.data ?? [], selectedMipEra);
+  const groups = data?.data ?? [];
 
   return (
     <Card>
@@ -219,10 +219,7 @@ function ExecutionGroupTableWithQuery({
       </CardHeader>
       <CardContent>
         {selectedMipEra && groups.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-8 text-sm text-muted-foreground">
-            No {selectedMipEra} execution groups yet.
-            <SwitchMipEraButton />
-          </div>
+          <MipEraEmptyState what="execution groups" />
         ) : (
           <DataTable
             data={groups}

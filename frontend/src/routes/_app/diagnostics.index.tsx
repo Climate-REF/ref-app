@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
-import { MipEraBar } from "@/components/charts/mipEraBar";
+import { MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
@@ -94,16 +94,15 @@ const Diagnostics = () => {
     metricValues: boolean | null,
   ) => {
     navigate({
-      search: {
-        view: searchParams.view,
-        mip_era: searchParams.mip_era,
+      search: (prev) => ({
+        ...prev,
         search: search || undefined,
         providers: providers.length > 0 ? providers.join(",") : undefined,
         aftIds: aftIds.length > 0 ? aftIds.join(",") : undefined,
         themes: themes.length > 0 ? themes.join(",") : undefined,
         metricValues:
           metricValues === null ? undefined : metricValues ? "true" : "false",
-      },
+      }),
     });
   };
 
@@ -218,32 +217,33 @@ const Diagnostics = () => {
       </Card>
 
       <div className="mb-6 space-y-4">
-        <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">
-              Loading diagnostics...
-            </span>
-          </div>
-        ) : (
-          <DiagnosticsFilter
-            diagnostics={data?.data || []}
-            onFilterChange={setFilteredDiagnostics}
-            onFilterParamsChange={handleFilterChange}
-            initialSearch={searchParams.search}
-            initialProviders={searchParams.providers?.split(",") ?? []}
-            initialAftIds={searchParams.aftIds?.split(",") ?? []}
-            initialThemes={searchParams.themes?.split(",") ?? []}
-            initialMetricValues={
-              searchParams.metricValues === "true"
-                ? true
-                : searchParams.metricValues === "false"
-                  ? false
-                  : null
-            }
-          />
-        )}
+        <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-muted-foreground">
+                Loading diagnostics...
+              </span>
+            </div>
+          ) : (
+            <DiagnosticsFilter
+              diagnostics={data?.data || []}
+              onFilterChange={setFilteredDiagnostics}
+              onFilterParamsChange={handleFilterChange}
+              initialSearch={searchParams.search}
+              initialProviders={searchParams.providers?.split(",") ?? []}
+              initialAftIds={searchParams.aftIds?.split(",") ?? []}
+              initialThemes={searchParams.themes?.split(",") ?? []}
+              initialMetricValues={
+                searchParams.metricValues === "true"
+                  ? true
+                  : searchParams.metricValues === "false"
+                    ? false
+                    : null
+              }
+            />
+          )}
+        </MipEraScope>
       </div>
 
       {isLoading ? (

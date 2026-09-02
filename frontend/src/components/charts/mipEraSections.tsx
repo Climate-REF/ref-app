@@ -1,6 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 import { type ReactNode, useMemo } from "react";
-import { SwitchMipEraButton } from "@/components/charts/mipEraBar";
+import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import type { DimensionedData } from "@/components/explorer/grouping";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -40,17 +40,7 @@ export function MipEraSections<T extends DimensionedData>({
   }, [values, selectedMipEra]);
 
   if (visible.length === 0) {
-    if (!selectedMipEra) return null;
-    return (
-      <Alert>
-        <Info />
-        <AlertTitle>No {selectedMipEra} results</AlertTitle>
-        <AlertDescription className="gap-3">
-          This diagnostic has no {selectedMipEra} data yet.
-          <SwitchMipEraButton />
-        </AlertDescription>
-      </Alert>
-    );
+    return <MipEraEmptyState what="results" />;
   }
 
   return (

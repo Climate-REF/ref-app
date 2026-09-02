@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_MIP_ERA,
   type MipEra,
@@ -15,7 +15,8 @@ import {
  */
 export function useMipEra(searchEra: MipEra | undefined) {
   const navigate = useNavigate();
-  const mipEra = searchEra ?? readStoredMipEra() ?? DEFAULT_MIP_ERA;
+  const [stored] = useState(readStoredMipEra);
+  const mipEra = searchEra ?? stored ?? DEFAULT_MIP_ERA;
 
   useEffect(() => {
     storeMipEra(mipEra);

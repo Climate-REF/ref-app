@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MipEraBar } from "@/components/charts/mipEraBar";
-import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraScope } from "@/components/charts/mipEraBar";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
@@ -32,10 +31,9 @@ const Themes = () => {
           Browse climate model evaluation results organized by scientific theme.
         </p>
       </div>
-      <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-      <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+      <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
         <ThematicContent />
-      </MipEraProvider>
+      </MipEraScope>
     </div>
   );
 };

@@ -1609,7 +1609,12 @@ export type DiagnosticsListExecutionGroupsData = {
          */
         diagnostic_slug: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups';
 };
 

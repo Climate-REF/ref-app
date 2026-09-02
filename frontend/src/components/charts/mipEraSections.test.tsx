@@ -27,7 +27,13 @@ const renderChart = (
     </MipEraSections>
   );
   return render(
-    mipEra ? <MipEraProvider mipEra={mipEra}>{chart}</MipEraProvider> : chart,
+    mipEra ? (
+      <MipEraProvider mipEra={mipEra} setMipEra={() => {}}>
+        {chart}
+      </MipEraProvider>
+    ) : (
+      chart
+    ),
   );
 };
 
@@ -56,7 +62,8 @@ describe("MipEraSections with a page selection", () => {
   it("says so when the selected era has no data here", () => {
     renderChart(four("CMIP6"), "CMIP7");
     expect(screen.queryByTestId("chart")).not.toBeInTheDocument();
-    expect(screen.getByText("No CMIP7 results")).toBeInTheDocument();
+    expect(screen.getByText(/No CMIP7 results yet/)).toBeInTheDocument();
+    expect(screen.getByText("Show CMIP6 instead")).toBeInTheDocument();
   });
 
   it("keeps values no era could be settled for, whichever era is selected", () => {

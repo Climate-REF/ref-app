@@ -24,6 +24,8 @@ export const mipEraSearchFields = {
   mip_era: z.enum(MIP_ERAS).optional(),
 };
 
+export const mipEraSearchSchema = z.object(mipEraSearchFields);
+
 export function isMipEra(value: unknown): value is MipEra {
   return MIP_ERAS.some((era) => era === value);
 }
@@ -66,30 +68,7 @@ export const MIN_FAMILIES_FOR_CONFIDENCE = 10;
  */
 export function mipEraOf(value: DimensionedData): MipEra | null {
   const label = value.dimensions.mip_era?.toUpperCase();
-  return MIP_ERAS.find((era) => era === label) ?? null;
-}
-
-/**
- * The MIP era an execution group ran against, read from the source types keying its selectors.
- *
- * Null when the group holds no CMIP selector at all, so the caller cannot rule an era out.
- */
-export function mipEraOfSelectors(
-  selectors: Record<string, unknown>,
-): MipEra | null {
-  const keys = Object.keys(selectors).map((key) => key.toUpperCase());
-  return MIP_ERAS.find((era) => keys.includes(era)) ?? null;
-}
-
-/** Groups from the era, plus those with no CMIP selector, which cannot be ruled out. */
-export function groupsInMipEra<
-  T extends { selectors: Record<string, unknown> },
->(groups: T[], mipEra: MipEra | null): T[] {
-  if (!mipEra) return groups;
-  return groups.filter((group) => {
-    const era = mipEraOfSelectors(group.selectors);
-    return era === null || era === mipEra;
-  });
+  return isMipEra(label) ? label : null;
 }
 
 /**

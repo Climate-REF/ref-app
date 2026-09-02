@@ -22,7 +22,7 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import cmip_dataset_filter
+from ref_backend.core.mip_eras import execution_group_filter
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
@@ -139,11 +139,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     if source_id or mip_era:
         facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
         matching_ids = set(
-            session.scalars(
-                select(models.ExecutionGroup.id).where(
-                    models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
-                )
-            )
+            session.scalars(select(models.ExecutionGroup.id).where(execution_group_filter(facets)))
         )
         groups = [group for group in groups if group.id in matching_ids]
 

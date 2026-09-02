@@ -1,14 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
-import { MipEraBar } from "@/components/charts/mipEraBar";
-import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraScope } from "@/components/charts/mipEraBar";
 import { FigureGallery } from "@/components/diagnostics/figureGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
-import { mipEraSearchFields } from "@/lib/mipEras";
-
-const figuresSchema = z.object(mipEraSearchFields);
+import { mipEraSearchSchema } from "@/lib/mipEras";
 
 // Figures tab as nested route
 const Figures = () => {
@@ -23,13 +19,12 @@ const Figures = () => {
           <CardTitle>Figures Gallery</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <MipEraBar mipEra={mipEra} onChange={setMipEra} />
-          <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+          <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
             <FigureGallery
               providerSlug={providerSlug}
               diagnosticSlug={diagnosticSlug}
             />
-          </MipEraProvider>
+          </MipEraScope>
         </CardContent>
       </Card>
     </div>
@@ -40,5 +35,5 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures",
 )({
   component: Figures,
-  validateSearch: zodValidator(figuresSchema),
+  validateSearch: zodValidator(mipEraSearchSchema),
 });

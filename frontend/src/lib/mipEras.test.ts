@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  groupsInMipEra,
   mipEraOf,
-  mipEraOfSelectors,
   modelFamily,
   sampleSize,
   splitByMipEra,
@@ -117,35 +115,5 @@ describe("sampleSize", () => {
     ]);
     expect(result.enoughModels).toBe(true);
     expect(result.sparseFamilies).toBe(false);
-  });
-});
-
-describe("mipEraOfSelectors", () => {
-  it("reads the era from the source type keying the selectors", () => {
-    expect(mipEraOfSelectors({ cmip6: [["experiment_id", "ssp126"]] })).toBe(
-      "CMIP6",
-    );
-    expect(mipEraOfSelectors({ cmip7: [], obs4mips: [] })).toBe("CMIP7");
-  });
-
-  it("returns null when no CMIP source type is present", () => {
-    expect(mipEraOfSelectors({ obs4mips: [["source_id", "ERA5"]] })).toBeNull();
-    expect(mipEraOfSelectors({})).toBeNull();
-  });
-});
-
-describe("groupsInMipEra", () => {
-  const groups = [
-    { id: 1, selectors: { cmip6: [] } },
-    { id: 2, selectors: { cmip7: [] } },
-    { id: 3, selectors: { obs4mips: [] } },
-  ];
-
-  it("keeps the era's groups and those with no CMIP selector", () => {
-    expect(groupsInMipEra(groups, "CMIP7").map((g) => g.id)).toEqual([2, 3]);
-  });
-
-  it("returns everything when no era is selected", () => {
-    expect(groupsInMipEra(groups, null)).toBe(groups);
   });
 });
