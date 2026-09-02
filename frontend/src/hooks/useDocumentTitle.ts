@@ -1,7 +1,7 @@
 import { useMatches } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-const BASE_TITLE = "Climate REF";
+const BASE_TITLE = "Climate-REF";
 
 /**
  * Hook that updates the document title based on the current route's staticData.

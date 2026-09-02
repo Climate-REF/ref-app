@@ -88,7 +88,7 @@ const Explorer = () => {
 
   return (
     <div className="space-y-4">
-      <title>{`Explorer - ${diagnosticSlug} - Climate REF`}</title>
+      <title>{`Explorer - ${diagnosticSlug} - Climate-REF`}</title>
       <Card>
         <CardHeader>
           <CardTitle>Explorer</CardTitle>

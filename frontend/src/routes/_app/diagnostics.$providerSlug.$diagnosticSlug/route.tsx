@@ -49,7 +49,7 @@ const DiagnosticInfoLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <title>{`${data?.name} - Climate REF`}</title>
+      <title>{`${data?.name} - Climate-REF`}</title>
       <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle className="mb-6">
