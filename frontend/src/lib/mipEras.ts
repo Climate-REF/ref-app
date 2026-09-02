@@ -57,8 +57,8 @@ export function storeMipEra(era: MipEra) {
 /** A chart needs at least this many distinct models before it is drawn at all. */
 export const MIN_MODELS_FOR_CHART = 4;
 
-/** A chart drawn from fewer than this many distinct model families carries a sparse-sample warning. */
-export const MIN_FAMILIES_FOR_CONFIDENCE = 10;
+/** A chart drawn from fewer than this many distinct models carries a sparse-sample warning. */
+export const MIN_MODELS_FOR_CONFIDENCE = 10;
 
 /**
  * The MIP era a value belongs to, from the `mip_era` dimension the API stamps on each model value.
@@ -71,35 +71,22 @@ export function mipEraOf(value: DimensionedData): MipEra | null {
   return isMipEra(label) ? label : null;
 }
 
-/**
- * The model family a `source_id` belongs to, taken as the segment before the first hyphen.
- *
- * ACCESS-CM2 and ACCESS-ESM1-5 are both ACCESS, so a centre contributing several models does not
- * read as several independent lines of evidence.
- */
-export function modelFamily(sourceId: string): string {
-  return sourceId.split("-")[0];
-}
-
 export interface SampleSize {
   models: number;
-  families: number;
   /** False when too few models contributed for the chart to be worth drawing. */
   enoughModels: boolean;
-  /** True when the models that did contribute come from too few families to be independent. */
-  sparseFamilies: boolean;
+  /** True when the models that did contribute are too few to read a spread from. */
+  sparseSample: boolean;
 }
 
 export function sampleSize(values: DimensionedData[]): SampleSize {
   const models = new Set<string>();
-  const families = new Set<string>();
 
   for (const value of values) {
     if (isReferenceItem(value)) continue;
     const sourceId = value.dimensions.source_id;
     if (!sourceId) continue;
     models.add(sourceId);
-    families.add(modelFamily(sourceId));
   }
 
   // A diagnostic that reports one value per region rather than per model has nothing to gate on.
@@ -107,9 +94,8 @@ export function sampleSize(values: DimensionedData[]): SampleSize {
 
   return {
     models: models.size,
-    families: families.size,
     enoughModels: !hasModels || models.size >= MIN_MODELS_FOR_CHART,
-    sparseFamilies: hasModels && families.size < MIN_FAMILIES_FOR_CONFIDENCE,
+    sparseSample: hasModels && models.size < MIN_MODELS_FOR_CONFIDENCE,
   };
 }
 

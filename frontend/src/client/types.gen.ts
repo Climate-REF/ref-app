@@ -379,8 +379,6 @@ export type AftDiagnosticSummary = {
 
 /**
  * About
- *
- * Version and freshness information about the deployment serving this API.
  */
 export type About = {
     /**
@@ -395,6 +393,10 @@ export type About = {
      * Last Updated
      */
     last_updated: string | null;
+    /**
+     * Environment
+     */
+    environment: 'local' | 'staging' | 'production';
 };
 
 /**
@@ -1747,6 +1749,12 @@ export type DiagnosticsListMetricValuesData = {
          * Comma-separated list of metric value IDs to exclude
          */
         exclude_ids?: string | null;
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };

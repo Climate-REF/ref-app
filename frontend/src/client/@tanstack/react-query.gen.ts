@@ -355,6 +355,8 @@ export const diagnosticsListMetricValuesQueryKey = (options: Options<Diagnostics
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
+ * - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
+ * see only the values the caller is charting
  */
 export const diagnosticsListMetricValuesOptions = (options: Options<DiagnosticsListMetricValuesData>) => queryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, ReturnType<typeof diagnosticsListMetricValuesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -380,6 +382,8 @@ export const diagnosticsListMetricValuesInfiniteQueryKey = (options: Options<Dia
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
+ * - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
+ * see only the values the caller is charting
  */
 export const diagnosticsListMetricValuesInfiniteOptions = (options: Options<DiagnosticsListMetricValuesData>) => {
     const opts = infiniteQueryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, InfiniteData<DiagnosticsListMetricValuesResponse>, QueryKey<Options<DiagnosticsListMetricValuesData>>, number | Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(

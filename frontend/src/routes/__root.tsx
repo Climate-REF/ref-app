@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/app/errorBoundary";
 import { ErrorFallback } from "@/components/app/errorFallback";
 import { Footer } from "@/components/app/footer";
 import { Navbar } from "@/components/app/navbar.tsx";
+import { StagingBanner } from "@/components/app/stagingBanner";
 import { WelcomeModal } from "@/components/app/welcomeModal";
 import { useApiEndpoint } from "@/hooks/useApiEndpoint";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -52,6 +53,7 @@ function AppLayout() {
       }}
     >
       <title>{title}</title>
+      <StagingBanner />
       <Navbar />
       <ErrorBoundary
         fallback={<ErrorFallback title="Page Error" showHomeButton={true} />}

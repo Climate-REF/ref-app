@@ -5,12 +5,8 @@ import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import type { DimensionedData } from "@/components/explorer/grouping";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import {
-  MIN_FAMILIES_FOR_CONFIDENCE,
-  MIN_MODELS_FOR_CHART,
-  sampleSize,
-  splitByMipEra,
-} from "@/lib/mipEras";
+import { useStagingMode } from "@/hooks/useStagingMode";
+import { MIN_MODELS_FOR_CHART, sampleSize, splitByMipEra } from "@/lib/mipEras";
 
 interface MipEraSectionsProps<T extends DimensionedData> {
   values: T[];
@@ -67,18 +63,22 @@ interface SampleSizeGateProps<T extends DimensionedData> {
 }
 
 /**
- * Suppress a chart drawn from too few models, and warn when too few families contributed.
+ * Suppress a chart drawn from too few models, and warn when only a few contributed.
+ *
+ * Staging drops the suppression so a chart can be eyeballed before enough models have run,
+ * and the banner at the top of the page is what says the floor is off.
  */
 function SampleSizeGate<T extends DimensionedData>({
   values,
   children,
 }: SampleSizeGateProps<T>) {
-  const { models, families, enoughModels, sparseFamilies } = useMemo(
+  const { models, enoughModels, sparseSample } = useMemo(
     () => sampleSize(values),
     [values],
   );
+  const isStaging = useStagingMode();
 
-  if (!enoughModels) {
+  if (!enoughModels && !isStaging) {
     return (
       <Alert>
         <Info />
@@ -96,16 +96,13 @@ function SampleSizeGate<T extends DimensionedData>({
 
   return (
     <>
-      {sparseFamilies ? (
+      {sparseSample ? (
         <Alert variant="destructive">
           <AlertTriangle />
-          <AlertTitle>Small and correlated sample</AlertTitle>
+          <AlertTitle>Small sample</AlertTitle>
           <AlertDescription>
-            These {models} models come from only {families}{" "}
-            {families === 1 ? "family" : "families"}. Models sharing a family
-            share code and biases, so fewer than {MIN_FAMILIES_FOR_CONFIDENCE}{" "}
-            families is not a spread of independent evidence. Read the spread
-            with care.
+            {models === 1 ? "Only 1 model has" : `Only ${models} models have`}{" "}
+            results. The spread may not be indicative of the full ensemble.
           </AlertDescription>
         </Alert>
       ) : null}

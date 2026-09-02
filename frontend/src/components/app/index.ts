@@ -8,4 +8,5 @@ export {
 export { Footer } from "./footer";
 export { Navbar } from "./navbar";
 export { NavbarLogo } from "./navbarLogo";
+export { StagingBanner } from "./stagingBanner";
 export { VersionInfo } from "./versionInfo";

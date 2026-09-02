@@ -1,5 +1,7 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { utilsAboutOptions } from "@/client/@tanstack/react-query.gen";
 import { MipEraProvider } from "./mipEraContext";
 import { MipEraSections } from "./mipEraSections";
 
@@ -18,7 +20,17 @@ const four = (era: string | undefined) =>
 const renderChart = (
   values: ReturnType<typeof model>[],
   mipEra?: "CMIP6" | "CMIP7",
+  environment: "production" | "staging" = "production",
 ) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(utilsAboutOptions().queryKey, {
+    app_version: "0.0.0",
+    ref_version: "0.0.0",
+    last_updated: null,
+    environment,
+  });
   const chart = (
     <MipEraSections values={values}>
       {(sectionValues) => (
@@ -27,13 +39,15 @@ const renderChart = (
     </MipEraSections>
   );
   return render(
-    mipEra ? (
-      <MipEraProvider mipEra={mipEra} setMipEra={() => {}}>
-        {chart}
-      </MipEraProvider>
-    ) : (
-      chart
-    ),
+    <QueryClientProvider client={queryClient}>
+      {mipEra ? (
+        <MipEraProvider mipEra={mipEra} setMipEra={() => {}}>
+          {chart}
+        </MipEraProvider>
+      ) : (
+        chart
+      )}
+    </QueryClientProvider>,
   );
 };
 
@@ -89,5 +103,13 @@ describe("MipEraSections with a page selection", () => {
     renderChart([model("CMIP6", "A"), model("CMIP6", "B")], "CMIP6");
     expect(screen.queryByTestId("chart")).not.toBeInTheDocument();
     expect(screen.getByText("Not enough models to plot")).toBeInTheDocument();
+  });
+
+  it("plots a chart with too few models on a staging site", () => {
+    renderChart([model("CMIP6", "A"), model("CMIP6", "B")], "CMIP6", "staging");
+    expect(screen.getByTestId("chart")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Not enough models to plot"),
+    ).not.toBeInTheDocument();
   });
 });

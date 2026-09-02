@@ -72,6 +72,26 @@ def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
 
 
+def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:
+    """
+    Find the executions of a diagnostic that ran against `mip_era`, plus any with no era at all.
+
+    An execution with no CMIP input carries no era, so dropping it would lose values rather than
+    label them. Scoping the values query this way is what keeps outlier detection and pagination
+    inside a single era.
+    """
+    no_cmip_input = ~cmip_dataset_filter({})
+    rows = session.execute(
+        select(models.Execution.id)
+        .join(models.Execution.execution_group)
+        .where(
+            models.ExecutionGroup.diagnostic_id == diagnostic_id,
+            or_(cmip_dataset_filter({"mip_era": mip_era}), no_cmip_input),
+        )
+    ).scalars()
+    return list(rows)
+
+
 def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
     """
     Map each execution onto the MIP era of the model datasets it ran against.
