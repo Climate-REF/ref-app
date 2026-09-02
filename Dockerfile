@@ -1,7 +1,7 @@
 # Build the API container for the REF compute engine
 # The frontend and backend are built separately and then combined into a single image
 
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm AS base
+FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS base
 
 FROM base AS backend
 
