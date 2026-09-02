@@ -1602,6 +1602,14 @@ export const ExecutionStatsSchema = {
             type: 'integer',
             title: 'Failed Execution Groups'
         },
+        running_execution_groups: {
+            type: 'integer',
+            title: 'Running Execution Groups'
+        },
+        not_started_execution_groups: {
+            type: 'integer',
+            title: 'Not Started Execution Groups'
+        },
         scalar_value_count: {
             type: 'integer',
             title: 'Scalar Value Count'
@@ -1640,6 +1648,8 @@ export const ExecutionStatsSchema = {
         'total_execution_groups',
         'successful_execution_groups',
         'failed_execution_groups',
+        'running_execution_groups',
+        'not_started_execution_groups',
         'scalar_value_count',
         'series_value_count',
         'total_datasets',
@@ -2492,6 +2502,14 @@ export const ExecutionStatsWritableSchema = {
             type: 'integer',
             title: 'Failed Execution Groups'
         },
+        running_execution_groups: {
+            type: 'integer',
+            title: 'Running Execution Groups'
+        },
+        not_started_execution_groups: {
+            type: 'integer',
+            title: 'Not Started Execution Groups'
+        },
         scalar_value_count: {
             type: 'integer',
             title: 'Scalar Value Count'
@@ -2524,6 +2542,8 @@ export const ExecutionStatsWritableSchema = {
         'total_execution_groups',
         'successful_execution_groups',
         'failed_execution_groups',
+        'running_execution_groups',
+        'not_started_execution_groups',
         'scalar_value_count',
         'series_value_count',
         'total_datasets',

@@ -409,8 +409,8 @@ export const executionsGetExecutionStatisticsQueryKey = (options?: Options<Execu
  *
  * Get execution statistics for the dashboard.
  *
- * Returns counts of total, successful, and failed execution groups,
- * plus recent activity count.
+ * Execution groups are counted at the promoted version of each diagnostic,
+ * and classified by the outcome of their latest execution.
  */
 export const executionsGetExecutionStatisticsOptions = (options?: Options<ExecutionsGetExecutionStatisticsData>) => queryOptions<ExecutionsGetExecutionStatisticsResponse, DefaultError, ExecutionsGetExecutionStatisticsResponse, ReturnType<typeof executionsGetExecutionStatisticsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -432,9 +432,11 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  *
  * List the most recent execution groups
  *
+ * Only groups at the promoted version of their diagnostic are returned.
+ *
  * Supports filtering by:
- * - diagnostic_name_contains
- * - provider_name_contains
+ * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
+ * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
  * - source_id (filters groups that include an execution whose datasets
@@ -461,9 +463,11 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  *
  * List the most recent execution groups
  *
+ * Only groups at the promoted version of their diagnostic are returned.
+ *
  * Supports filtering by:
- * - diagnostic_name_contains
- * - provider_name_contains
+ * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
+ * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
  * - source_id (filters groups that include an execution whose datasets

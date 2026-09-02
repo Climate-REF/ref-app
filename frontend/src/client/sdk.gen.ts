@@ -111,8 +111,8 @@ export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false
  *
  * Get execution statistics for the dashboard.
  *
- * Returns counts of total, successful, and failed execution groups,
- * plus recent activity count.
+ * Execution groups are counted at the promoted version of each diagnostic,
+ * and classified by the outcome of their latest execution.
  */
 export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsGetExecutionStatisticsData, ThrowOnError>): RequestResult<ExecutionsGetExecutionStatisticsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ExecutionsGetExecutionStatisticsResponses, unknown, ThrowOnError>({ url: '/api/v1/executions/statistics', ...options });
 
@@ -121,9 +121,11 @@ export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = 
  *
  * List the most recent execution groups
  *
+ * Only groups at the promoted version of their diagnostic are returned.
+ *
  * Supports filtering by:
- * - diagnostic_name_contains
- * - provider_name_contains
+ * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
+ * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
  * - source_id (filters groups that include an execution whose datasets
