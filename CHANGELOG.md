@@ -1,3 +1,15 @@
+## v0.5.1 (2026-09-02)
+
+### Improvements
+
+- Renamed the wall time roll-up on the resource usage page to make clear it is a sum across executions.
+  Executions run in parallel, so the sum can be larger than the elapsed time of the run. (#83)
+
+### Trivial Changes
+
+- Fixes the Biome pre-commit hooks, which passed staged filenames to `bash -lc` rather than to Biome and so checked the whole frontend tree on every commit. The hooks now run the Biome and TypeScript versions pinned in `frontend/package.json`. (#84)
+
+
 ## v0.5.0 (2026-09-02)
 
 ### Features
