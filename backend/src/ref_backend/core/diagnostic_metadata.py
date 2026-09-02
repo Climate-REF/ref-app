@@ -26,12 +26,10 @@ ReferenceDatasetSource = Literal[
     "recipe",
 ]
 """
-Where a reference dataset comes from.
+Who supplies a reference dataset, which the source type in the data requirement does not say.
 
-The source type alone does not say this. Most of the datasets a diagnostic requires as
-``obs4mips`` are served by the REF's own obs4REF collection ahead of publication, so the
-distinction between officially published data and pre-release data has to be recorded here.
-This mirrors the prefix on ``ReferenceDatasetLink.slug``.
+Most datasets required as ``obs4mips`` are served pre-release from obs4REF, so published and
+pre-release data have to be distinguishable.
 """
 
 

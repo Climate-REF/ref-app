@@ -294,8 +294,8 @@ const DiagnosticInfoLayout = () => {
                         uses for comparison. Primary references are essential
                         for the diagnostic to run, while secondary references
                         provide additional context. The dataset name says where
-                        the data comes from: obs4MIPs data is published, obs4REF
-                        data is pre-release.
+                        the data comes from. obs4MIPs data is published, while
+                        obs4REF data is pre-release.
                       </p>
                     </TooltipContent>
                   </Tooltip>
