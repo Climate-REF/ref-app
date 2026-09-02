@@ -756,6 +756,14 @@ export type ExecutionStats = {
      */
     failed_execution_groups: number;
     /**
+     * Running Execution Groups
+     */
+    running_execution_groups: number;
+    /**
+     * Not Started Execution Groups
+     */
+    not_started_execution_groups: number;
+    /**
      * Scalar Value Count
      */
     scalar_value_count: number;
@@ -1260,6 +1268,14 @@ export type ExecutionStatsWritable = {
      * Failed Execution Groups
      */
     failed_execution_groups: number;
+    /**
+     * Running Execution Groups
+     */
+    running_execution_groups: number;
+    /**
+     * Not Started Execution Groups
+     */
+    not_started_execution_groups: number;
     /**
      * Scalar Value Count
      */

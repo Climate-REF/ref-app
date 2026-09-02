@@ -118,7 +118,15 @@ class ExecutionStats(BaseModel):
     """
     failed_execution_groups: int
     """
-    Number of execution groups whose latest execution was not successful.
+    Number of execution groups whose latest execution failed.
+    """
+    running_execution_groups: int
+    """
+    Number of execution groups whose latest execution is still running.
+    """
+    not_started_execution_groups: int
+    """
+    Number of execution groups that have not been executed yet.
     """
     scalar_value_count: int
     """
