@@ -82,6 +82,11 @@ function ResourceUsagePage() {
               loading={statistics.isLoading}
             />
           </div>
+          {statistics.error && (
+            <div className="text-destructive">
+              Error loading statistics: {String(statistics.error)}
+            </div>
+          )}
           {diagnostics.isLoading && <div>Loading diagnostics...</div>}
           {diagnostics.error && (
             <div className="text-destructive">
