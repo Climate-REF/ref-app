@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   MIN_FAMILIES_FOR_CONFIDENCE,
   MIN_MODELS_FOR_CHART,
-  type MipEra,
   sampleSize,
   splitByMipEra,
 } from "@/lib/mipEras";
@@ -15,21 +14,7 @@ import {
 interface MipEraSectionsProps<T extends DimensionedData> {
   values: T[];
   /** Rendered once per MIP era, with only that era's values. */
-  children: (values: T[], mipEra: MipEra | null) => ReactNode;
-}
-
-/**
- * A page's selection hides the other era, but never the values no era could be settled for.
- * Dropping those would silently lose data rather than label it.
- */
-function visibleSections<T extends DimensionedData>(
-  sections: { mipEra: MipEra | null; values: T[] }[],
-  selected: MipEra | null,
-) {
-  if (!selected) return sections;
-  return sections.filter(
-    (section) => section.mipEra === selected || section.mipEra === null,
-  );
+  children: (values: T[]) => ReactNode;
 }
 
 /**
@@ -43,10 +28,15 @@ export function MipEraSections<T extends DimensionedData>({
 }: MipEraSectionsProps<T>) {
   const selectedMipEra = useSelectedMipEra();
   // Stable section identity keeps the charts from re-deriving on unrelated parent state.
-  const visible = useMemo(
-    () => visibleSections(splitByMipEra(values), selectedMipEra),
-    [values, selectedMipEra],
-  );
+  const visible = useMemo(() => {
+    const sections = splitByMipEra(values);
+    if (!selectedMipEra) return sections;
+    // A selection hides the other era, but never values no era could be settled for. Dropping
+    // those would lose data rather than label it.
+    return sections.filter(
+      (section) => section.mipEra === selectedMipEra || section.mipEra === null,
+    );
+  }, [values, selectedMipEra]);
 
   if (visible.length === 0) {
     if (!selectedMipEra) return null;
@@ -71,7 +61,7 @@ export function MipEraSections<T extends DimensionedData>({
             <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}
           <SampleSizeGate values={mipEraValues}>
-            {children(mipEraValues, mipEra)}
+            {children(mipEraValues)}
           </SampleSizeGate>
         </section>
       ))}

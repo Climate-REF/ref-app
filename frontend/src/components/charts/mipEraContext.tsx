@@ -8,7 +8,7 @@ export function MipEraProvider({
   mipEra,
   children,
 }: {
-  mipEra: MipEra | null;
+  mipEra: MipEra;
   children: ReactNode;
 }) {
   return (

@@ -15,7 +15,7 @@ interface MipEraSelectorProps {
 export function MipEraSelector({ mipEra, onChange }: MipEraSelectorProps) {
   return (
     <div className="flex items-center gap-3">
-      <Tabs value={mipEra} onValueChange={(value) => onChange(value as MipEra)}>
+      <Tabs<MipEra> value={mipEra} onValueChange={onChange}>
         <TabsList>
           {MIP_ERAS.map((option) => (
             <TabsTrigger key={option} value={option}>
