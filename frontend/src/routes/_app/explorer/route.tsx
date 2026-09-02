@@ -47,8 +47,9 @@ const ExplorerLayout = () => {
                 </li>
                 <li>
                   <strong>Visualizations:</strong> Interactive charts, time
-                  series, spatial plots, and comparison views across CMIP6
-                  models and observations. CMIP7 coming soon!
+                  series, spatial plots, and comparison views across CMIP6 and
+                  CMIP7 models and observations. The two eras are charted
+                  separately.
                 </li>
                 <li>
                   <strong>Model Comparisons:</strong> Side-by-side evaluation of

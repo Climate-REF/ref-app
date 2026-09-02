@@ -1,6 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
+import { EraSections } from "@/components/charts/eraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
 import {
@@ -65,6 +67,32 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
   return models;
 }
 
+interface TaylorDiagramSectionProps {
+  values: ScalarValue[];
+  width: number;
+  height: number;
+  referenceStddev?: number;
+}
+
+function TaylorDiagramSection({
+  values,
+  width,
+  height,
+  referenceStddev,
+}: TaylorDiagramSectionProps) {
+  const models = useMemo(() => transformToTaylorModels(values), [values]);
+
+  return (
+    <TaylorDiagramContent
+      models={models}
+      width={width}
+      height={height}
+      referenceStddev={referenceStddev}
+      marginTop={0}
+    />
+  );
+}
+
 export function TaylorDiagramContentWrapper({
   contentItem,
   height = 460,
@@ -87,10 +115,9 @@ export function TaylorDiagramContentWrapper({
   const collection = data as MetricValueCollection;
   const values = (collection?.data as ScalarValue[]) ?? [];
 
-  // Transform scalar values to Taylor diagram format
-  const models = transformToTaylorModels(values);
+  const allModels = useMemo(() => transformToTaylorModels(values), [values]);
 
-  if (models.length === 0) {
+  if (allModels.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
         <div className="text-center text-sm text-gray-500">
@@ -107,13 +134,16 @@ export function TaylorDiagramContentWrapper({
 
   return (
     <div className="mx-auto">
-      <TaylorDiagramContent
-        models={models}
-        width={width}
-        height={height}
-        referenceStddev={contentItem.referenceStddev}
-        marginTop={0}
-      />
+      <EraSections values={values}>
+        {(eraValues) => (
+          <TaylorDiagramSection
+            values={eraValues}
+            width={width}
+            height={height}
+            referenceStddev={contentItem.referenceStddev}
+          />
+        )}
+      </EraSections>
     </div>
   );
 }

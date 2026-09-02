@@ -700,3 +700,53 @@ def test_diagnostics_facets(client: TestClient, settings) -> None:
     assert "count" in data
     assert isinstance(data["dimensions"], dict)
     assert isinstance(data["count"], int)
+
+
+def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:
+    """A `mip_era` filter restricts executions to a single model era."""
+    diagnostic = get_diagnostic(client, settings)
+    base = (
+        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
+    )
+
+    unfiltered = client.get(base)
+    cmip6 = client.get(f"{base}?mip_era=CMIP6")
+    cmip7 = client.get(f"{base}?mip_era=CMIP7")
+
+    assert unfiltered.status_code == 200
+    assert cmip6.status_code == 200
+    assert cmip7.status_code == 200
+
+    # The test fixtures are CMIP6 only, so CMIP7 is empty and CMIP6 accounts for everything.
+    assert cmip7.json()["count"] == 0
+    assert cmip6.json()["count"] == unfiltered.json()["count"]
+
+
+def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
+    """Model values are stamped with the era of their inputs, even when the diagnostic omits it."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/"
+        f"{diagnostic['provider']['slug']}/{diagnostic['slug']}/values?value_type=scalar&limit=50"
+    )
+
+    assert r.status_code == 200
+    model_values = [item for item in r.json()["data"] if item["kind"] == "model"]
+    assert model_values
+    assert all(item["dimensions"]["mip_era"] == "CMIP6" for item in model_values)
+
+
+def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: TestClient, settings) -> None:
+    """An unrecognised query parameter is ignored without dropping the filters beside it."""
+    diagnostic = get_diagnostic(client, settings)
+    base = (
+        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
+    )
+
+    matching = client.get(f"{base}?source_id=ACCESS-ESM1-5&not_a_facet=zzz")
+    missing = client.get(f"{base}?source_id=NOT-A-MODEL&not_a_facet=zzz")
+
+    assert matching.status_code == 200
+    assert missing.status_code == 200
+    assert matching.json()["count"] > 0
+    assert missing.json()["count"] == 0

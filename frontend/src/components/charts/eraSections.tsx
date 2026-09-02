@@ -1,0 +1,101 @@
+import { AlertTriangle, Info } from "lucide-react";
+import { type ReactNode, useMemo } from "react";
+import type { DimensionedData } from "@/components/explorer/grouping";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  MIN_FAMILIES_FOR_CONFIDENCE,
+  MIN_MODELS_FOR_CHART,
+  type MipEra,
+  sampleSize,
+  splitByEra,
+} from "@/lib/modelEras";
+
+interface EraSectionsProps<T extends DimensionedData> {
+  values: T[];
+  /** Rendered once per era, with only that era's values. */
+  children: (values: T[], era: MipEra | null) => ReactNode;
+}
+
+/**
+ * Render a chart once per MIP era, gated on how many models contributed.
+ *
+ * CMIP6 and CMIP7 get separate charts because the two ensembles are not directly comparable.
+ */
+export function EraSections<T extends DimensionedData>({
+  values,
+  children,
+}: EraSectionsProps<T>) {
+  // Stable section identity keeps the charts from re-deriving on unrelated parent state.
+  const sections = useMemo(() => splitByEra(values), [values]);
+
+  if (sections.length === 0) return null;
+
+  return (
+    <div className="space-y-8">
+      {sections.map(({ era, values: eraValues }) => (
+        <section key={era ?? "unattributed"} className="space-y-3">
+          {sections.length > 1 || era ? (
+            <Badge variant="outline">{era ?? "Era not recorded"}</Badge>
+          ) : null}
+          <SampleSizeGate values={eraValues}>
+            {children(eraValues, era)}
+          </SampleSizeGate>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+interface SampleSizeGateProps<T extends DimensionedData> {
+  values: T[];
+  children: ReactNode;
+}
+
+/**
+ * Suppress a chart drawn from too few models, and warn when too few families contributed.
+ */
+function SampleSizeGate<T extends DimensionedData>({
+  values,
+  children,
+}: SampleSizeGateProps<T>) {
+  const { models, families, enoughModels, sparseFamilies } = useMemo(
+    () => sampleSize(values),
+    [values],
+  );
+
+  if (!enoughModels) {
+    return (
+      <Alert>
+        <Info />
+        <AlertTitle>Not enough models to plot</AlertTitle>
+        <AlertDescription>
+          {models === 1
+            ? "Only 1 model has results here."
+            : `Only ${models} models have results here.`}{" "}
+          A chart is shown once at least {MIN_MODELS_FOR_CHART} models are
+          available.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <>
+      {sparseFamilies ? (
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertTitle>Small and correlated sample</AlertTitle>
+          <AlertDescription>
+            These {models} models come from only {families}{" "}
+            {families === 1 ? "family" : "families"}. Models sharing a family
+            share code and biases, so fewer than {MIN_FAMILIES_FOR_CONFIDENCE}{" "}
+            families is not a spread of independent evidence. Read the spread
+            with care.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {children}
+    </>
+  );
+}

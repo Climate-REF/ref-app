@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { SOURCE_TYPES } from "@/lib/sourceTypes";
 import { FilterAddPopover } from "./filterAddPopover";
 
 interface FilterPanelProps {
@@ -17,8 +18,6 @@ interface FilterPanelProps {
   onFilterChange: (filters: Record<string, any>) => void;
   onClear: () => void;
 }
-
-const sources = ["cmip6", "obs4mips"];
 
 export function FilterPanel({
   facets,
@@ -45,7 +44,7 @@ export function FilterPanel({
             <SelectValue placeholder="Select a Source" />
           </SelectTrigger>
           <SelectContent>
-            {sources.map((key) => (
+            {SOURCE_TYPES.map((key) => (
               <SelectItem key={key} value={key}>
                 {key}
               </SelectItem>

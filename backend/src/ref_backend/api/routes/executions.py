@@ -8,21 +8,21 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
-from sqlalchemy import and_, exists, func, select
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
+from climate_ref.models.dataset import DatasetFile
 from climate_ref.results import MetricValueFilter
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.file_handling import file_iterator, resolve_artifact
-from ref_backend.core.filter_utils import build_filter_clause
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
+from ref_backend.core.mip_eras import cmip_dataset_filter
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
@@ -114,6 +114,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     dirty: bool | None = None,
     successful: bool | None = None,
     source_id: str | None = None,
+    mip_era: str | None = None,
 ) -> Collection[ExecutionGroup]:
     """
     List the most recent execution groups
@@ -124,7 +125,8 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     - dirty
     - successful (filters by latest execution success)
     - source_id (filters groups that include an execution whose datasets
-        include a CMIP6 dataset with this source_id)
+        include a CMIP6 or CMIP7 dataset with this source_id)
+    - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
     """
     session = app_context.session
 
@@ -163,20 +165,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
         )
 
     # Filter by source_id using a correlated EXISTS to avoid DISTINCT across joins
-    if source_id and CMIP6Dataset is not None:
-        EG = aliased(models.ExecutionGroup)
-        E = aliased(models.Execution)
-        DS = aliased(CMIP6Dataset)
-
-        # Build a SQLAlchemy Core selectable for EXISTS (required by typing/runtime)
-        source_condition = build_filter_clause(DS.source_id, source_id)
-        exists_select = (
-            select(E.id)
-            .join(EG, E.execution_group_id == EG.id)
-            .join(DS, E.datasets)
-            .where(and_(EG.id == models.ExecutionGroup.id, source_condition))
-        )
-        query = query.filter(exists(exists_select))
+    if source_id or mip_era:
+        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
+        query = query.filter(models.ExecutionGroup.executions.any(cmip_dataset_filter(facets)))
 
     total_count = query.count()
 

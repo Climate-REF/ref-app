@@ -122,3 +122,11 @@ def test_dataset_list_name_contains(client: TestClient, settings):
     returned_slugs = [ds["slug"] for ds in r.json()["data"]]
     assert slug in returned_slugs
     assert all(slug.lower() in returned.lower() for returned in returned_slugs)
+
+
+def test_dataset_carries_its_mip_era(client: TestClient, settings) -> None:
+    """CMIP datasets report the era that keeps them off each other's charts."""
+    r = client.get(f"{settings.API_V1_STR}/datasets/?dataset_type=cmip6&limit=1")
+
+    assert r.status_code == 200
+    assert r.json()["data"][0]["mip_era"] == "CMIP6"

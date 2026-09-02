@@ -12,7 +12,7 @@ from ref_backend.models.aft import (
     RefDiagnosticLink,
 )
 from ref_backend.models.common import Collection, GroupBy, ProviderSummary, T
-from ref_backend.models.datasets import CMIP6DatasetMetadata, Dataset
+from ref_backend.models.datasets import CMIPDatasetMetadata, Dataset
 from ref_backend.models.diagnostics import DiagnosticSummary
 from ref_backend.models.executions import (
     Execution,
@@ -34,7 +34,7 @@ __all__ = [
     "AFTDiagnosticBase",
     "AFTDiagnosticDetail",
     "AFTDiagnosticSummary",
-    "CMIP6DatasetMetadata",
+    "CMIPDatasetMetadata",
     "Collection",
     "Dataset",
     "DiagnosticSummary",
