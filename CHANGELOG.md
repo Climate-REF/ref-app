@@ -1,3 +1,12 @@
+## v0.6.1 (2026-09-02)
+
+### Features
+
+- Adds a `/api/v1/utils/about` endpoint exposing the ref-app version, the climate-ref version and the time the
+  results were last updated.
+  The footer now shows these alongside the version of the frontend bundle. (#86)
+
+
 ## v0.6.0 (2026-09-02)
 
 ### Features
