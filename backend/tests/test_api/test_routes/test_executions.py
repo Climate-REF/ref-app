@@ -432,8 +432,10 @@ def test_execution_carries_resource_usage(client: TestClient, settings) -> None:
     for execution in executions:
         assert set(execution) >= {"wall_seconds", "cpu_seconds", "peak_memory_bytes"}
     timed = [e for e in executions if e["wall_seconds"] is not None]
-    assert timed
-    assert all(e["cpu_seconds"] > 0 and e["peak_memory_bytes"] > 0 for e in timed)
+    untimed = [e for e in executions if e["wall_seconds"] is None]
+    assert timed and untimed, "fixture should hold both timed and untimed executions"
+    assert all(e["wall_seconds"] > 0 for e in timed)
+    assert all(e["cpu_seconds"] is None and e["peak_memory_bytes"] is None for e in untimed)
 
 
 def test_execution_statistics_resource_usage(client: TestClient, settings) -> None:

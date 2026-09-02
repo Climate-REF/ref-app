@@ -101,7 +101,8 @@ export const columns: ColumnDef<Execution>[] = [
     header: () => (
       <span title="Wall clock time taken by this execution.">Wall time</span>
     ),
-    accessorFn: (row) => formatDuration(row.wall_seconds),
+    accessorFn: (row) => row.wall_seconds,
+    cell: ({ getValue }) => formatDuration(getValue<number | null>()),
   },
   {
     id: "cpu_seconds",
@@ -110,7 +111,8 @@ export const columns: ColumnDef<Execution>[] = [
         CPU time
       </span>
     ),
-    accessorFn: (row) => formatDuration(row.cpu_seconds),
+    accessorFn: (row) => row.cpu_seconds,
+    cell: ({ getValue }) => formatDuration(getValue<number | null>()),
   },
   {
     id: "updated_at",

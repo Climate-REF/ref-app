@@ -758,6 +758,7 @@ def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClie
     diagnostics = r.json()["data"]
     timed = [d for d in diagnostics if d["resource_usage"] is not None]
     assert timed, "expected at least one diagnostic with timed executions"
+    assert any(d["resource_usage"] is None for d in diagnostics), "expected an untimed diagnostic"
 
     for diagnostic in diagnostics:
         rd = client.get(

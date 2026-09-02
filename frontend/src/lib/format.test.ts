@@ -16,6 +16,11 @@ describe("formatDuration", () => {
     expect(formatDuration(200)).toBe("3m 20s");
   });
 
+  it("rounds before splitting into units", () => {
+    expect(formatDuration(59.6)).toBe("1m 0s");
+    expect(formatDuration(3599.6)).toBe("1h 0m");
+  });
+
   it("uses hours and minutes under a day", () => {
     expect(formatDuration(7500)).toBe("2h 5m");
   });
@@ -37,5 +42,9 @@ describe("formatBytes", () => {
   it("scales to binary units", () => {
     expect(formatBytes(1536)).toBe("1.5 KiB");
     expect(formatBytes(6781140992)).toBe("6.3 GiB");
+  });
+
+  it("never prints 1024.0 of a unit", () => {
+    expect(formatBytes(1048570)).toBe("1.0 MiB");
   });
 });

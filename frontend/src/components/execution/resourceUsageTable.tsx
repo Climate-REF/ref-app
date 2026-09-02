@@ -13,11 +13,11 @@ function numericColumn(
   title: string,
   description: string,
   accessor: (row: DiagnosticSummary) => number | null | undefined,
-  render: (value: number | null | undefined) => string,
+  render: (value: number | undefined) => string,
 ): ColumnDef<DiagnosticSummary> {
   return {
     id,
-    accessorFn: (row) => accessor(row) ?? null,
+    accessorFn: (row) => accessor(row) ?? undefined,
     enableSorting: true,
     sortUndefined: "last",
     header: ({ column }) => (
@@ -25,7 +25,7 @@ function numericColumn(
     ),
     cell: (cell) => (
       <span className="tabular-nums" title={description}>
-        {render(cell.getValue<number | null>())}
+        {render(cell.getValue<number | undefined>())}
       </span>
     ),
   };
@@ -59,7 +59,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     "Timed",
     "Executions that recorded a wall time, out of all executions.",
     (row) => row.resource_usage?.timed_execution_count,
-    (v) => (v === null || v === undefined ? "—" : String(v)),
+    (v) => (v === undefined ? "—" : String(v)),
   ),
   numericColumn(
     "wall_total",

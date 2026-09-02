@@ -149,7 +149,8 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         Wall time
       </span>
     ),
-    accessorFn: (row) => formatDuration(row.latest_execution?.wall_seconds),
+    accessorFn: (row) => row.latest_execution?.wall_seconds,
+    cell: ({ getValue }) => formatDuration(getValue<number | null>()),
   },
   {
     id: "updated_at",
