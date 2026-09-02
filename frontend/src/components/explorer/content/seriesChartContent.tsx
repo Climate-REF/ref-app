@@ -114,8 +114,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   // Extract series values from the data
   const collection = data as MetricValueCollection;
-  // Split into regular and reference series based on role (kind).
-  // Missing/"model" kind is treated as a model series; only "reference" is a reference series.
+  // Missing or "model" kind is a model series, only "reference" is a reference series.
   // Memoised because the charts below key their own memos on these array identities.
   const { allSeriesValues, regularSeries, referenceSeries } = useMemo(() => {
     const all = (collection?.data ?? []).filter(isSeriesValue) as SeriesValue[];

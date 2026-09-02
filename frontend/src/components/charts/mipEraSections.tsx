@@ -55,8 +55,8 @@ export function MipEraSections<T extends DimensionedData>({
     <div className="space-y-8">
       {visible.map(({ mipEra, values: mipEraValues }) => (
         <section key={mipEra ?? "unattributed"} className="space-y-3">
-          {/* A badge is what names an era, so it is dropped only where nothing is ambiguous:
-              the section the page's selector already names, or a lone unattributed one. */}
+          {/* A badge is what names an era, so it is dropped only for the one section the page
+              itself already names. */}
           {mipEra !== selectedMipEra || visible.length > 1 ? (
             <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}
