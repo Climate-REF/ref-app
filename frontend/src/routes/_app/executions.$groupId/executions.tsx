@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const ExecutionsTab = () => {
+const ExecutionsTab = () => {
   const { groupId } = Route.useParams();
 
   const { data } = useSuspenseQuery(

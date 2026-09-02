@@ -27,9 +27,11 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
+from ref_backend.core.resource_usage import resource_usage_overall
 from ref_backend.models import (
     Collection,
     Dataset,
+    DiagnosticSummary,
     Execution,
     ExecutionGroup,
     ExecutionStats,
@@ -88,6 +90,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
         series_value_count=session.query(models.SeriesMetricValue).count(),
         total_datasets=session.query(models.Dataset).count(),
         total_files=session.query(DatasetFile).count(),
+        resource_usage=resource_usage_overall(session),
     )
 
 
@@ -148,9 +151,12 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     page_ids = [group.id for group in groups[offset : offset + limit]]
 
     data = []
+    summaries: dict[int, DiagnosticSummary] = {}
     for eg in _load_execution_groups(session, page_ids):
         try:
-            data.append(ExecutionGroup.build(eg, app_context))
+            if eg.diagnostic_id not in summaries:
+                summaries[eg.diagnostic_id] = DiagnosticSummary.build(eg.diagnostic, app_context)
+            data.append(ExecutionGroup.build(eg, app_context, summaries[eg.diagnostic_id]))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
             continue

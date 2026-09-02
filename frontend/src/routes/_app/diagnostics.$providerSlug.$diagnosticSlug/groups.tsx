@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 
 // Executions tab as nested route
-export const Executions = () => {
+const Executions = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
   return (
     <div className="space-y-4">

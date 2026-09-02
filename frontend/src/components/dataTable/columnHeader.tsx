@@ -33,9 +33,11 @@ export function DataTableColumnHeader<TData, TValue>({
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-accent"
+            className="-ml-3 h-auto min-h-8 py-1 data-[state=open]:bg-accent"
           >
-            <span>{title}</span>
+            <span className="whitespace-pre-line text-left leading-tight">
+              {title}
+            </span>
             {column.getIsSorted() === "desc" ? (
               <ArrowDown />
             ) : column.getIsSorted() === "asc" ? (

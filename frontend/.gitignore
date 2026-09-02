@@ -27,3 +27,6 @@ openapi.json
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# TanStack router scratch files
+.tanstack/

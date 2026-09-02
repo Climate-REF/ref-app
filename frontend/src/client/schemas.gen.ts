@@ -1258,6 +1258,16 @@ export const DiagnosticSummarySchema = {
                 }
             ],
             title: 'Tags'
+        },
+        resource_usage: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/ExecutionResourceSummary'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -1320,6 +1330,39 @@ export const ExecutionSchema = {
             },
             type: 'array',
             title: 'Outputs'
+        },
+        wall_seconds: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Wall Seconds'
+        },
+        cpu_seconds: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Cpu Seconds'
+        },
+        peak_memory_bytes: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Peak Memory Bytes'
         }
     },
     type: 'object',
@@ -1331,7 +1374,10 @@ export const ExecutionSchema = {
         'retracted',
         'created_at',
         'updated_at',
-        'outputs'
+        'outputs',
+        'wall_seconds',
+        'cpu_seconds',
+        'peak_memory_bytes'
     ],
     title: 'Execution'
 } as const;
@@ -1476,6 +1522,72 @@ export const ExecutionOutputSchema = {
     title: 'ExecutionOutput'
 } as const;
 
+export const ExecutionResourceSummarySchema = {
+    properties: {
+        timed_execution_count: {
+            type: 'integer',
+            title: 'Timed Execution Count'
+        },
+        wall_seconds_total: {
+            type: 'number',
+            title: 'Wall Seconds Total'
+        },
+        wall_seconds_mean: {
+            type: 'number',
+            title: 'Wall Seconds Mean'
+        },
+        wall_seconds_max: {
+            type: 'number',
+            title: 'Wall Seconds Max'
+        },
+        cpu_seconds_total: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Cpu Seconds Total'
+        },
+        cpu_seconds_mean: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Cpu Seconds Mean'
+        },
+        peak_memory_bytes_max: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Peak Memory Bytes Max'
+        }
+    },
+    type: 'object',
+    required: [
+        'timed_execution_count',
+        'wall_seconds_total',
+        'wall_seconds_mean',
+        'wall_seconds_max',
+        'cpu_seconds_total',
+        'cpu_seconds_mean',
+        'peak_memory_bytes_max'
+    ],
+    title: 'ExecutionResourceSummary',
+    description: 'Roll-up of the resource usage recorded across a set of executions.\n\nOnly executions that recorded a wall time are counted.\nCPU time and peak memory are optional, so they may be missing even when wall time is present.'
+} as const;
+
 export const ExecutionStatsSchema = {
     properties: {
         total_execution_groups: {
@@ -1514,6 +1626,16 @@ export const ExecutionStatsSchema = {
             type: 'integer',
             title: 'Total Files'
         },
+        resource_usage: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/ExecutionResourceSummary'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
         success_rate_percentage: {
             type: 'number',
             title: 'Success Rate Percentage',
@@ -1532,6 +1654,7 @@ export const ExecutionStatsSchema = {
         'series_value_count',
         'total_datasets',
         'total_files',
+        'resource_usage',
         'success_rate_percentage'
     ],
     title: 'ExecutionStats',
@@ -2402,6 +2525,16 @@ export const ExecutionStatsWritableSchema = {
         total_files: {
             type: 'integer',
             title: 'Total Files'
+        },
+        resource_usage: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/ExecutionResourceSummary'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -2414,7 +2547,8 @@ export const ExecutionStatsWritableSchema = {
         'scalar_value_count',
         'series_value_count',
         'total_datasets',
-        'total_files'
+        'total_files',
+        'resource_usage'
     ],
     title: 'ExecutionStats',
     description: 'Statistics for execution groups and their success rates.'

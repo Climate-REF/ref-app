@@ -13,6 +13,7 @@ from ref_backend.core.diagnostic_metadata import (
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
+from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
 
@@ -97,6 +98,12 @@ class DiagnosticSummary(BaseModel):
     tags: list[str] | None = None
     """
     Tags for categorizing the diagnostic (from metadata overrides)
+    """
+    resource_usage: ExecutionResourceSummary | None = None
+    """
+    Wall, CPU and memory usage rolled up across all executions of this diagnostic
+
+    Absent when no execution has recorded a wall time.
     """
 
     @staticmethod
@@ -252,6 +259,8 @@ class DiagnosticSummary(BaseModel):
             diagnostic.provider.slug, diagnostic.slug
         )
 
+        resource_usage = resource_usage_for_diagnostic(app_context.session, diagnostic.id)
+
         # Build the base diagnostic summary
         summary = DiagnosticSummary(
             id=diagnostic.id,
@@ -269,6 +278,7 @@ class DiagnosticSummary(BaseModel):
             successful_execution_group_count=successful_execution_group_count,
             group_by=group_by_summary,
             aft_link=aft,
+            resource_usage=resource_usage,
         )
 
         # Apply metadata overrides from YAML if available
@@ -286,6 +296,7 @@ class DiagnosticSummary(BaseModel):
         execution_stats: dict[str, int],
         execution_group_count: int,
         successful_execution_group_count: int,
+        resource_usage: ExecutionResourceSummary | None = None,
     ) -> "DiagnosticSummary":
         """Build a DiagnosticSummary with pre-computed statistics to avoid N+1 queries."""
         metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
@@ -321,6 +332,7 @@ class DiagnosticSummary(BaseModel):
             successful_execution_group_count=successful_execution_group_count,
             group_by=group_by_summary,
             aft_link=aft,
+            resource_usage=resource_usage,
         )
 
         # Apply metadata overrides from YAML if available

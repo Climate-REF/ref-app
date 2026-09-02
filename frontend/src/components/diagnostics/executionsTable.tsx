@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatBytes, formatDuration } from "@/lib/format";
 import { Route } from "@/routes/_app/executions.$groupId/index";
 
 const columnHelper = createColumnHelper<Execution>();
@@ -94,6 +95,34 @@ export const columns: ColumnDef<Execution>[] = [
       </span>
     ),
     cell: (context) => <LatestSelectedCell {...context} />,
+  },
+  {
+    id: "wall_seconds",
+    header: () => (
+      <span title="Wall clock time taken by this execution.">Wall time</span>
+    ),
+    accessorFn: (row) => row.wall_seconds,
+    cell: ({ getValue }) => formatDuration(getValue<number | null>()),
+  },
+  {
+    id: "cpu_seconds",
+    header: () => (
+      <span title="CPU time used by this execution and its child processes.">
+        CPU time
+      </span>
+    ),
+    accessorFn: (row) => row.cpu_seconds,
+    cell: ({ getValue }) => formatDuration(getValue<number | null>()),
+  },
+  {
+    id: "peak_memory_bytes",
+    header: () => (
+      <span title="Peak resident memory observed during this execution.">
+        Peak memory
+      </span>
+    ),
+    accessorFn: (row) => row.peak_memory_bytes,
+    cell: ({ getValue }) => formatBytes(getValue<number | null>()),
   },
   {
     id: "updated_at",

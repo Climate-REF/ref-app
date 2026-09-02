@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from climate_ref import models
 from climate_ref.models.execution import ResultOutputType
+from ref_backend.core.resource_usage import ExecutionResourceSummary
 from ref_backend.models.diagnostics import DiagnosticSummary
 
 if TYPE_CHECKING:
@@ -96,6 +97,18 @@ class Execution(BaseModel):
     created_at: datetime
     updated_at: datetime
     outputs: "list[ExecutionOutput]"
+    wall_seconds: float | None
+    """
+    Wall clock time taken by the execution, in seconds
+    """
+    cpu_seconds: float | None
+    """
+    CPU time consumed by the execution and its children, in seconds
+    """
+    peak_memory_bytes: int | None
+    """
+    Peak resident memory observed during the execution, in bytes
+    """
 
     @staticmethod
     def build(execution: models.Execution, app_context: "AppContext") -> "Execution":
@@ -109,6 +122,9 @@ class Execution(BaseModel):
             updated_at=execution.updated_at,
             created_at=execution.created_at,
             outputs=outputs,
+            wall_seconds=execution.wall_seconds,
+            cpu_seconds=execution.cpu_seconds,
+            peak_memory_bytes=execution.peak_memory_bytes,
         )
 
 
@@ -152,6 +168,12 @@ class ExecutionStats(BaseModel):
     total_files: int
     """
     Total number of files tracked across all datasets.
+    """
+    resource_usage: ExecutionResourceSummary | None
+    """
+    Wall, CPU and memory usage rolled up across every execution.
+
+    Absent when no execution has recorded a wall time.
     """
 
     @computed_field  # type: ignore

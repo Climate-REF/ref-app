@@ -25,6 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatBytes, formatDuration } from "@/lib/format";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   return (
@@ -210,6 +211,69 @@ const DiagnosticInfoLayout = () => {
               </p>
             </div>
           </div>
+
+          {data.resource_usage && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    Resource Usage
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        Wall clock time recorded by the workers, rolled up
+                        across the executions of this diagnostic that recorded
+                        it.
+                      </p>
+                      <p className="mt-2">
+                        CPU time and peak memory are optional, so they roll up
+                        over only the executions that recorded them.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      Wall time (total / mean)
+                    </p>
+                    <p className="font-medium tabular-nums">
+                      {formatDuration(data.resource_usage.wall_seconds_total)} /{" "}
+                      {formatDuration(data.resource_usage.wall_seconds_mean)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      Longest execution
+                    </p>
+                    <p className="font-medium tabular-nums">
+                      {formatDuration(data.resource_usage.wall_seconds_max)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      CPU time (total / mean)
+                    </p>
+                    <p className="font-medium tabular-nums">
+                      {formatDuration(data.resource_usage.cpu_seconds_total)} /{" "}
+                      {formatDuration(data.resource_usage.cpu_seconds_mean)}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Peak memory</p>
+                    <p className="font-medium tabular-nums">
+                      {formatBytes(data.resource_usage.peak_memory_bytes_max)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Reference Datasets Section */}
           {data.reference_datasets && data.reference_datasets.length > 0 && (

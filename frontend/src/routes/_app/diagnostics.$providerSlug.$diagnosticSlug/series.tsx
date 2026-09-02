@@ -23,7 +23,7 @@ const valuesSearchSchema = z
   })
   .catchall(z.string().optional());
 
-export const SeriesValuesTab = () => {
+const SeriesValuesTab = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });

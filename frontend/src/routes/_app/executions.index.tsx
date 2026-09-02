@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
@@ -106,7 +106,12 @@ function ExecutionsListPage() {
     <div className="container mx-auto p-4 space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Execution Groups</CardTitle>
+          <div className="flex items-start justify-between gap-4">
+            <CardTitle>Execution Groups</CardTitle>
+            <Button variant="outline" asChild>
+              <Link to="/executions/resources">Resource usage</Link>
+            </Button>
+          </div>
           <CardDescription>
             <p className="max-w-1/2">
               We group all executions for different versions of datasets

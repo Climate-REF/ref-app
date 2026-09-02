@@ -750,3 +750,23 @@ def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: T
     assert missing.status_code == 200
     assert matching.json()["count"] > 0
     assert missing.json()["count"] == 0
+
+
+def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/diagnostics/")
+    assert r.status_code == 200
+    diagnostics = r.json()["data"]
+    timed = [d for d in diagnostics if d["resource_usage"] is not None]
+    assert timed, "expected at least one diagnostic with timed executions"
+    assert any(d["resource_usage"] is None for d in diagnostics), "expected an untimed diagnostic"
+
+    for diagnostic in diagnostics:
+        rd = client.get(
+            f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+        )
+        assert rd.status_code == 200
+        assert rd.json()["resource_usage"] == diagnostic["resource_usage"]
+
+    usage = timed[0]["resource_usage"]
+    assert usage["timed_execution_count"] <= timed[0]["execution_count"]
+    assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
