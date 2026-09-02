@@ -39,6 +39,12 @@ function ExecutionsListPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const { mipEra, setMipEra } = useMipEra(search.mip_era);
+  const hasOtherFilters = Boolean(
+    search.diagnostic_name_contains ||
+      search.provider_name_contains ||
+      search.dirty ||
+      search.successful,
+  );
 
   // Coerce string flags to booleans for API compatibility
   const toBool = (v?: string) => (v === undefined ? undefined : v === "true");
@@ -136,6 +142,7 @@ function ExecutionsListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <title>{`Executions (${mipEra}) - Climate-REF`}</title>
           <MipEraBar mipEra={mipEra} onChange={setMipEra} />
           {/* Advanced filter panel (kept for parity with other pages) */}
           <ExecutionsFilterPanel
@@ -153,8 +160,10 @@ function ExecutionsListPage() {
           {!isLoading && executionGroups.length === 0 && (
             <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
               <div className="flex flex-col items-start gap-3 text-sm text-muted-foreground">
-                No {mipEra} execution groups match your filters.
-                <SwitchMipEraButton />
+                {hasOtherFilters
+                  ? "No execution groups match your filters."
+                  : `No ${mipEra} execution groups yet.`}
+                {hasOtherFilters ? null : <SwitchMipEraButton />}
               </div>
             </MipEraProvider>
           )}

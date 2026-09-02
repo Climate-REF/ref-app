@@ -18,8 +18,7 @@ export const DEFAULT_MIP_ERA: MipEra = "CMIP6";
 /**
  * The search parameter fields every page that selects a MIP era shares.
  *
- * The field is optional so a plain link opens in the visitor's last picked era. A link that
- * names an era still wins.
+ * Optional, so a plain link opens in the visitor's last picked era.
  */
 export const mipEraSearchFields = {
   mip_era: z.enum(MIP_ERAS).optional(),
@@ -49,7 +48,7 @@ export function storeMipEra(era: MipEra) {
   try {
     localStorage.setItem(STORAGE_KEY, era);
   } catch {
-    // Storage can be blocked, and the URL still carries the pick.
+    // Storage can be blocked.
   }
 }
 
@@ -80,6 +79,17 @@ export function mipEraOfSelectors(
 ): MipEra | null {
   const keys = Object.keys(selectors).map((key) => key.toUpperCase());
   return MIP_ERAS.find((era) => keys.includes(era)) ?? null;
+}
+
+/** Groups from the era, plus those with no CMIP selector, which cannot be ruled out. */
+export function groupsInMipEra<
+  T extends { selectors: Record<string, unknown> },
+>(groups: T[], mipEra: MipEra | null): T[] {
+  if (!mipEra) return groups;
+  return groups.filter((group) => {
+    const era = mipEraOfSelectors(group.selectors);
+    return era === null || era === mipEra;
+  });
 }
 
 /**

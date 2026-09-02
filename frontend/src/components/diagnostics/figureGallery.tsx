@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { mipEraOfSelectors } from "@/lib/mipEras";
+import { groupsInMipEra } from "@/lib/mipEras";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
 import {
@@ -191,15 +191,10 @@ export function FigureGallery({
     };
   }, [getColumns]);
 
-  // Groups with no CMIP selector cannot be placed in an era, so they are kept rather than lost.
-  const groups = useMemo(() => {
-    const all = executionGroups?.data ?? [];
-    if (!selectedMipEra) return all;
-    return all.filter((group) => {
-      const era = mipEraOfSelectors(group.selectors);
-      return era === null || era === selectedMipEra;
-    });
-  }, [executionGroups, selectedMipEra]);
+  const groups = useMemo(
+    () => groupsInMipEra(executionGroups?.data ?? [], selectedMipEra),
+    [executionGroups, selectedMipEra],
+  );
 
   const allFigures = useMemo<FigureWithGroup[]>(
     () =>

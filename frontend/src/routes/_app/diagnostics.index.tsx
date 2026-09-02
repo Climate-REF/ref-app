@@ -118,6 +118,7 @@ const Diagnostics = () => {
 
   return (
     <div className="container mx-auto py-10">
+      <title>{`Diagnostics (${mipEra}) - Climate-REF`}</title>
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>

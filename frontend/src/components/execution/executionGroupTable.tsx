@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { formatDuration } from "@/lib/format";
-import { mipEraOfSelectors } from "@/lib/mipEras";
+import { groupsInMipEra } from "@/lib/mipEras";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -205,12 +205,7 @@ function ExecutionGroupTableWithQuery({
     }),
   );
   const selectedMipEra = useSelectedMipEra();
-  // Groups with no CMIP selector cannot be placed in an era, so they are kept rather than lost.
-  const groups = (data?.data ?? []).filter((group) => {
-    if (!selectedMipEra) return true;
-    const era = mipEraOfSelectors(group.selectors);
-    return era === null || era === selectedMipEra;
-  });
+  const groups = groupsInMipEra(data?.data ?? [], selectedMipEra);
 
   return (
     <Card>
