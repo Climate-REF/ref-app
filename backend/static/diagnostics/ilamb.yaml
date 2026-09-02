@@ -3,7 +3,7 @@
 # Reference datasets and display metadata for ILAMB (International Land Model
 # Benchmarking) and IOMB (International Ocean Model Benchmarking) diagnostics.
 #
-# `slug` is `<supplier>.<source_id>`, and `source` says the same thing in a structured field.
+# `slug` is `<supplier>.<source_id>`, and `source_type` says the same thing in a structured field.
 # The prefix names who supplies the data, not the source type the requirement asks for, so a
 # dataset required as `obs4mips` but served pre-release reads `obs4ref.HadISST-1-1`.
 
@@ -12,15 +12,15 @@
 ilamb/gpp-wecann:
   reference_datasets:
     - slug: "obs4ref.WECANN-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "WECANN v1.0. Supplies gpp."
       type: "primary"
     - slug: "obs4ref.GPCP-2-3"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "GPCP v2.3. Supplies pr for the relationship analysis."
       type: "secondary"
     - slug: "ilamb.CRU4.02"
-      source: "ilamb"
+      source_type: "ilamb"
       description: "CRU TS v4.02. Supplies tas for the relationship analysis."
       type: "secondary"
   display_name: "Gross Primary Productivity (WECANN)"
@@ -30,7 +30,7 @@ ilamb/gpp-wecann:
 ilamb/gpp-fluxnet2015:
   reference_datasets:
     - slug: "obs4ref.FLUXNET2015-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "FLUXNET2015 v1.0 tower sites. Supplies gpp, referenced by registry key rather than ingested facets."
       type: "primary"
   display_name: "Gross Primary Productivity (FLUXNET2015)"
@@ -40,7 +40,7 @@ ilamb/gpp-fluxnet2015:
 ilamb/mrro-lora:
   reference_datasets:
     - slug: "obs4ref.LORA-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "LORA v1.0. Supplies mrro."
       type: "primary"
   display_name: "Runoff (LORA)"
@@ -50,7 +50,7 @@ ilamb/mrro-lora:
 ilamb/mrsos-wangmao:
   reference_datasets:
     - slug: "ilamb.WangMao"
-      source: "ilamb"
+      source_type: "ilamb"
       description: "Wang and Mao soil moisture. Supplies mrsol, converted to a surface volumetric fraction."
       type: "primary"
   display_name: "Surface Soil Moisture (WangMao)"
@@ -60,7 +60,7 @@ ilamb/mrsos-wangmao:
 ilamb/csoil-hwsd2:
   reference_datasets:
     - slug: "obs4ref.HWSD-2-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Harmonized World Soil Database v2.0. Supplies cSoil."
       type: "primary"
   display_name: "Soil Carbon (HWSD2)"
@@ -70,7 +70,7 @@ ilamb/csoil-hwsd2:
 ilamb/lai-avh15c1:
   reference_datasets:
     - slug: "obs4mips.NOAA-NCEI-LAI-AVHRR-5-0"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA NCEI AVHRR leaf area index v5.0. Supplies lai, coarsened to a common grid before comparison."
       type: "primary"
   display_name: "Leaf Area Index (AVH15C1)"
@@ -80,7 +80,7 @@ ilamb/lai-avh15c1:
 ilamb/nbp-hoffman:
   reference_datasets:
     - slug: "obs4ref.Hoffman-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Hoffman v1.0. Supplies nbp as a global mean."
       type: "primary"
   display_name: "Net Biome Productivity (Hoffman)"
@@ -90,7 +90,7 @@ ilamb/nbp-hoffman:
 ilamb/snc-esacci:
   reference_datasets:
     - slug: "obs4ref.CCI-CryoClim-FSC-1"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "ESA CCI CryoClim fractional snow cover v1. Supplies snc."
       type: "primary"
   display_name: "Snow Cover (ESA CCI)"
@@ -100,7 +100,7 @@ ilamb/snc-esacci:
 ilamb/burntfractionall-gfed:
   reference_datasets:
     - slug: "obs4ref.GFED-5-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Global Fire Emissions Database v5.0. Supplies burntFractionAll."
       type: "primary"
   display_name: "Burnt Fraction (GFED)"
@@ -110,11 +110,11 @@ ilamb/burntfractionall-gfed:
 ilamb/emp-gleamgpcp2.3:
   reference_datasets:
     - slug: "ilamb.GLEAMv3.3a"
-      source: "ilamb"
+      source_type: "ilamb"
       description: "GLEAM v3.3a. Supplies evapotranspiration (et)."
       type: "primary"
     - slug: "obs4ref.GPCP-2-3"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "GPCP v2.3. Supplies pr."
       type: "primary"
   display_name: "Evaporation minus Precipitation (GLEAM/GPCP)"
@@ -126,7 +126,7 @@ ilamb/emp-gleamgpcp2.3:
 ilamb/thetao-woa2023-surface:
   reference_datasets:
     - slug: "obs4ref.WOA-23"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "World Ocean Atlas 2023 monthly climatology (2005 to 2022). Supplies thetao, taken at the surface."
       type: "primary"
   display_name: "Sea Water Temperature (WOA2023 Surface)"
@@ -136,7 +136,7 @@ ilamb/thetao-woa2023-surface:
 ilamb/so-woa2023-surface:
   reference_datasets:
     - slug: "obs4ref.WOA-23"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "World Ocean Atlas 2023 monthly climatology (2005 to 2022). Supplies so, taken at the surface."
       type: "primary"
   display_name: "Sea Water Salinity (WOA2023 Surface)"
@@ -146,7 +146,7 @@ ilamb/so-woa2023-surface:
 ilamb/amoc-rapid:
   reference_datasets:
     - slug: "obs4ref.RAPID-2023-1a"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "RAPID array 2023 release 1a. Supplies msftmz, transformed into the RAPID AMOC index."
       type: "primary"
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"

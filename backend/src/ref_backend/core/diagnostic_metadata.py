@@ -17,7 +17,7 @@ import yaml
 from loguru import logger
 from pydantic import BaseModel, Field
 
-ReferenceDatasetSource = Literal[
+ReferenceDatasetSourceType = Literal[
     "obs4mips",
     "obs4ref",
     "pmp-climatology",
@@ -26,10 +26,10 @@ ReferenceDatasetSource = Literal[
     "recipe",
 ]
 """
-Who supplies a reference dataset, which the source type in the data requirement does not say.
+The source type of the data actually supplied for a reference dataset.
 
-Most datasets required as ``obs4mips`` are served pre-release from obs4REF, so published and
-pre-release data have to be distinguishable.
+A diagnostic can require ``obs4mips`` and be served the REF's pre-release ``obs4ref`` copy, so what
+is supplied has to be recorded separately from what the requirement asks for.
 """
 
 
@@ -52,10 +52,11 @@ class ReferenceDatasetLink(BaseModel):
     description: str | None = Field(
         None, description="Description of how this dataset is used in the diagnostic"
     )
-    source: ReferenceDatasetSource | None = Field(
+    source_type: ReferenceDatasetSourceType | None = Field(
         None,
         description=(
-            "Where the data comes from, which is not the same as its source type:\n"
+            "The source type of the data actually supplied, which is not always the one the "
+            "requirement asks for:\n"
             "- 'obs4mips': published on ESGF obs4MIPs\n"
             "- 'obs4ref': pre-release reference data served by the REF, not yet on obs4MIPs\n"
             "- 'pmp-climatology': the PMP climatology registry\n"
@@ -156,7 +157,7 @@ def load_diagnostic_metadata(path: Path) -> dict[str, DiagnosticMetadata]:
         pmp/annual-cycle:
           reference_datasets:
             - slug: "obs4mips.CERES-EBAF-4-2-1"
-              source: "obs4mips"
+              source_type: "obs4mips"
               description: "CERES Energy Balanced and Filled"
               type: "primary"
           display_name: "Annual Cycle Analysis"

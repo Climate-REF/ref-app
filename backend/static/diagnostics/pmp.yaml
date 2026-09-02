@@ -2,22 +2,22 @@
 #
 # Reference datasets and display metadata for PMP (PCMDI Metrics Package) diagnostics.
 #
-# `slug` is `<supplier>.<source_id>`, and `source` says the same thing in a structured field.
+# `slug` is `<supplier>.<source_id>`, and `source_type` says the same thing in a structured field.
 # The prefix names who supplies the data, not the source type the requirement asks for, so a
 # dataset required as `obs4mips` but served pre-release reads `obs4ref.HadISST-1-1`.
 
 pmp/annual-cycle:
   reference_datasets:
     - slug: "pmp-climatology.ERA-5"
-      source: "pmp-climatology"
+      source_type: "pmp-climatology"
       description: "ERA5 reanalysis climatology. Supplies ts, uas, vas, psl, ta, ua, va and zg."
       type: "primary"
     - slug: "pmp-climatology.GPCP-3-3"
-      source: "pmp-climatology"
+      source_type: "pmp-climatology"
       description: "Global Precipitation Climatology Project v3.3 climatology. Supplies pr."
       type: "primary"
     - slug: "pmp-climatology.CERES-EBAF-4-2"
-      source: "pmp-climatology"
+      source_type: "pmp-climatology"
       description: "CERES Energy Balanced and Filled v4.2 climatology. Supplies rlds, rlus, rlut, rsds, rsdt, rsus and rsut."
       type: "primary"
   display_name: "Annual Cycle Analysis"
@@ -31,15 +31,15 @@ pmp/annual-cycle:
 pmp/enso_tel:
   reference_datasets:
     - slug: "obs4ref.GPCP-Monthly-3-2"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Global Precipitation Climatology Project v3.2. Supplies pr."
       type: "primary"
     - slug: "obs4ref.HadISST-1-1"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1. Supplies ts."
       type: "primary"
     - slug: "obs4ref.TropFlux-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "TropFlux v1.0. Supplies air/sea flux and surface fields over the tropical oceans."
       type: "primary"
   display_name: "ENSO Teleconnections"
@@ -52,19 +52,19 @@ pmp/enso_tel:
 pmp/enso_proc:
   reference_datasets:
     - slug: "obs4ref.GPCP-Monthly-3-2"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Global Precipitation Climatology Project v3.2. Supplies pr."
       type: "primary"
     - slug: "obs4ref.HadISST-1-1"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1. Supplies ts."
       type: "primary"
     - slug: "obs4ref.TropFlux-1-0"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "TropFlux v1.0. Supplies zonal wind stress (tauu) and turbulent heat fluxes (hfls, hfss)."
       type: "primary"
     - slug: "obs4ref.CERES-EBAF-4-2"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "CERES Energy Balanced and Filled v4.2. Supplies surface radiation (rlds, rlus, rsds, rsus)."
       type: "primary"
   display_name: "ENSO Processes"
@@ -78,7 +78,7 @@ pmp/enso_proc:
 pmp/extratropical-modes-of-variability-pdo:
   reference_datasets:
     - slug: "obs4ref.HadISST-1-1"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1. Supplies ts."
       type: "primary"
   display_name: "Pacific Decadal Oscillation (PDO)"
@@ -90,7 +90,7 @@ pmp/extratropical-modes-of-variability-pdo:
 pmp/extratropical-modes-of-variability-npgo:
   reference_datasets:
     - slug: "obs4ref.HadISST-1-1"
-      source: "obs4ref"
+      source_type: "obs4ref"
       description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1. Supplies ts."
       type: "primary"
   display_name: "North Pacific Gyre Oscillation (NPGO)"
@@ -103,7 +103,7 @@ pmp/extratropical-modes-of-variability-npgo:
 pmp/extratropical-modes-of-variability-nao:
   reference_datasets:
     - slug: "obs4mips.20CR-V2"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA 20th Century Reanalysis v2. Supplies psl."
       type: "primary"
   display_name: "North Atlantic Oscillation (NAO)"
@@ -115,7 +115,7 @@ pmp/extratropical-modes-of-variability-nao:
 pmp/extratropical-modes-of-variability-nam:
   reference_datasets:
     - slug: "obs4mips.20CR-V2"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA 20th Century Reanalysis v2. Supplies psl."
       type: "primary"
   display_name: "Northern Annular Mode (NAM)"
@@ -127,7 +127,7 @@ pmp/extratropical-modes-of-variability-nam:
 pmp/extratropical-modes-of-variability-pna:
   reference_datasets:
     - slug: "obs4mips.20CR-V2"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA 20th Century Reanalysis v2. Supplies psl."
       type: "primary"
   display_name: "Pacific North American Pattern (PNA)"
@@ -139,7 +139,7 @@ pmp/extratropical-modes-of-variability-pna:
 pmp/extratropical-modes-of-variability-npo:
   reference_datasets:
     - slug: "obs4mips.20CR-V2"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA 20th Century Reanalysis v2. Supplies psl."
       type: "primary"
   display_name: "North Pacific Oscillation (NPO)"
@@ -151,7 +151,7 @@ pmp/extratropical-modes-of-variability-npo:
 pmp/extratropical-modes-of-variability-sam:
   reference_datasets:
     - slug: "obs4mips.20CR-V2"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "NOAA 20th Century Reanalysis v2. Supplies psl."
       type: "primary"
   display_name: "Southern Annular Mode (SAM)"

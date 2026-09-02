@@ -291,13 +291,13 @@ class TestLoadDiagnosticMetadata:
         assert full.reference_datasets is not None
         assert full.reference_datasets[0].description == "A test dataset"
 
-    def test_source_is_optional_and_validated(self, tmp_path: Path):
-        """Test that the reference dataset source is parsed and constrained to known values."""
+    def test_source_type_is_optional_and_validated(self, tmp_path: Path):
+        """Test that the reference dataset source type is parsed and constrained to known values."""
         yaml_content = {
             "with/source": {
                 "reference_datasets": [
-                    {"slug": "obs4mips.HadISST-1-1", "type": "primary", "source": "obs4ref"},
-                    {"slug": "obs4mips.ERA-5", "type": "primary", "source": "obs4mips"},
+                    {"slug": "obs4mips.HadISST-1-1", "type": "primary", "source_type": "obs4ref"},
+                    {"slug": "obs4mips.ERA-5", "type": "primary", "source_type": "obs4mips"},
                 ],
             },
             "without/source": {
@@ -305,7 +305,7 @@ class TestLoadDiagnosticMetadata:
             },
             "bad/source": {
                 "reference_datasets": [
-                    {"slug": "obs4mips.ERA-5", "type": "primary", "source": "not-a-collection"}
+                    {"slug": "obs4mips.ERA-5", "type": "primary", "source_type": "not-a-collection"}
                 ],
             },
         }
@@ -316,22 +316,22 @@ class TestLoadDiagnosticMetadata:
 
         result = load_diagnostic_metadata(yaml_path)
 
-        with_source = result["with/source"].reference_datasets
-        assert with_source is not None
-        assert [rd.source for rd in with_source] == ["obs4ref", "obs4mips"]
+        with_source_type = result["with/source"].reference_datasets
+        assert with_source_type is not None
+        assert [rd.source_type for rd in with_source_type] == ["obs4ref", "obs4mips"]
 
-        without_source = result["without/source"].reference_datasets
-        assert without_source is not None
-        assert without_source[0].source is None
+        without_source_type = result["without/source"].reference_datasets
+        assert without_source_type is not None
+        assert without_source_type[0].source_type is None
 
-        # An unknown source fails validation, so the entry is skipped rather than served.
+        # An unknown source type fails validation, so the entry is skipped rather than served.
         assert "bad/source" not in result
 
 
 class TestStaticDiagnosticMetadata:
     """Test the metadata files that ship with the backend."""
 
-    def test_every_reference_dataset_declares_a_source(self):
+    def test_every_reference_dataset_declares_a_source_type(self):
         """Test that each shipped reference dataset says where its data comes from."""
         metadata = load_diagnostic_metadata(Path(__file__).parents[2] / "static" / "diagnostics")
 
@@ -341,22 +341,22 @@ class TestStaticDiagnosticMetadata:
             (key, rd.slug)
             for key, entry in metadata.items()
             for rd in entry.reference_datasets or []
-            if rd.source is None
+            if rd.source_type is None
         ]
         assert missing == []
 
-    def test_slug_prefix_agrees_with_the_source(self):
-        """Test that the name a reader sees says the same thing as the structured source."""
+    def test_slug_prefix_agrees_with_the_source_type(self):
+        """Test that the name a reader sees says the same thing as the structured source type."""
         metadata = load_diagnostic_metadata(Path(__file__).parents[2] / "static" / "diagnostics")
 
         # The datasets named inside a recipe keep the provider's prefix rather than "recipe".
-        prefix_for_source = {"recipe": "esmvaltool"}
+        prefix_for_source_type = {"recipe": "esmvaltool"}
 
         mismatched = [
-            (key, rd.slug, rd.source)
+            (key, rd.slug, rd.source_type)
             for key, entry in metadata.items()
             for rd in entry.reference_datasets or []
-            if rd.source is not None
-            and rd.slug.partition(".")[0] != prefix_for_source.get(rd.source, rd.source)
+            if rd.source_type is not None
+            and rd.slug.partition(".")[0] != prefix_for_source_type.get(rd.source_type, rd.source_type)
         ]
         assert mismatched == []

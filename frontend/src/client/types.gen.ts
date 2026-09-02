@@ -1005,9 +1005,9 @@ export type ReferenceDatasetLink = {
      */
     description?: string | null;
     /**
-     * Source
+     * Source Type
      *
-     * Where the data comes from, which is not the same as its source type:
+     * The source type of the data actually supplied, which is not always the one the requirement asks for:
      * - 'obs4mips': published on ESGF obs4MIPs
      * - 'obs4ref': pre-release reference data served by the REF, not yet on obs4MIPs
      * - 'pmp-climatology': the PMP climatology registry
@@ -1015,7 +1015,7 @@ export type ReferenceDatasetLink = {
      * - 'ilamb': the ILAMB registry
      * - 'recipe': named inside the provider's recipe rather than ingested by the REF
      */
-    source?: 'obs4mips' | 'obs4ref' | 'pmp-climatology' | 'esmvaltool-reference' | 'ilamb' | 'recipe' | null;
+    source_type?: 'obs4mips' | 'obs4ref' | 'pmp-climatology' | 'esmvaltool-reference' | 'ilamb' | 'recipe' | null;
     /**
      * Type
      *

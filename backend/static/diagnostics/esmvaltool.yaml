@@ -2,14 +2,14 @@
 #
 # Reference datasets and display metadata for ESMValTool diagnostics.
 #
-# `slug` is `<supplier>.<source_id>`, and `source` says the same thing in a structured field.
+# `slug` is `<supplier>.<source_id>`, and `source_type` says the same thing in a structured field.
 # The prefix names who supplies the data, not the source type the requirement asks for, so a
 # dataset required as `obs4mips` but served pre-release reads `obs4ref.HadISST-1-1`.
 
 esmvaltool/cloud-radiative-effects:
   reference_datasets:
     - slug: "obs4mips.CERES-EBAF-4-2-1"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "CERES Energy Balanced and Filled v4.2.1. Supplies rlut, rlutcs, rsut and rsutcs."
       type: "primary"
   display_name: "Cloud Radiative Effects"
@@ -21,7 +21,7 @@ esmvaltool/cloud-radiative-effects:
 esmvaltool/cloud-scatterplots-cli-ta:
   reference_datasets:
     - slug: "esmvaltool.CALIPSO-ICECLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "CALIPSO ice cloud properties. Supplies cli, named in the recipe."
       type: "secondary"
   display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
@@ -34,11 +34,11 @@ esmvaltool/cloud-scatterplots-cli-ta:
 esmvaltool/cloud-scatterplots-clivi-lwcre:
   reference_datasets:
     - slug: "esmvaltool.CERES-EBAF"
-      source: "recipe"
+      source_type: "recipe"
       description: "CERES Energy Balanced and Filled. Supplies rlut and rlutcs (lwcre derived), named in the recipe."
       type: "primary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "ESA CCI cloud properties. Supplies clivi, named in the recipe."
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
@@ -48,11 +48,11 @@ esmvaltool/cloud-scatterplots-clivi-lwcre:
 esmvaltool/cloud-scatterplots-clt-swcre:
   reference_datasets:
     - slug: "esmvaltool.CERES-EBAF"
-      source: "recipe"
+      source_type: "recipe"
       description: "CERES Energy Balanced and Filled. Supplies rsut and rsutcs (swcre derived), named in the recipe."
       type: "primary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "ESA CCI cloud properties. Supplies clt, named in the recipe."
       type: "secondary"
   display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
@@ -62,15 +62,15 @@ esmvaltool/cloud-scatterplots-clt-swcre:
 esmvaltool/cloud-scatterplots-clwvi-pr:
   reference_datasets:
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "ESA CCI cloud properties. Supplies clwvi, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.CERES-EBAF"
-      source: "recipe"
+      source_type: "recipe"
       description: "CERES Energy Balanced and Filled. Supplies the radiation fields, named in the recipe."
       type: "primary"
   display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
@@ -80,23 +80,23 @@ esmvaltool/cloud-scatterplots-clwvi-pr:
 esmvaltool/cloud-scatterplots-reference:
   reference_datasets:
     - slug: "obs4mips.ERA-5"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "ERA5 reanalysis. Supplies ta over 2007 to 2014."
       type: "primary"
     - slug: "esmvaltool.CERES-EBAF"
-      source: "recipe"
+      source_type: "recipe"
       description: "CERES Energy Balanced and Filled. Supplies the radiation fields, named in the recipe."
       type: "primary"
     - slug: "esmvaltool.CALIPSO-ICECLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "CALIPSO ice cloud properties. Supplies cli, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      source: "recipe"
+      source_type: "recipe"
       description: "ESA CCI cloud properties. Supplies clt, clwvi and clivi, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe because it cannot be ingested (climate-ref issue 260)."
       type: "secondary"
   display_name: "Cloud Scatterplots for Reference dataset"
@@ -108,11 +108,11 @@ esmvaltool/cloud-scatterplots-reference:
 esmvaltool/enso-basic-climatology:
   reference_datasets:
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.TROPFLUX"
-      source: "recipe"
+      source_type: "recipe"
       description: "TropFlux. Supplies tos and tauu, named in the recipe."
       type: "secondary"
   display_name: "ENSO Basic Climatology"
@@ -124,7 +124,7 @@ esmvaltool/enso-basic-climatology:
 esmvaltool/enso-characteristics:
   reference_datasets:
     - slug: "esmvaltool.TROPFLUX"
-      source: "recipe"
+      source_type: "recipe"
       description: "TropFlux. Supplies tos, named in the recipe."
       type: "primary"
   display_name: "ENSO Characteristics"
@@ -136,7 +136,7 @@ esmvaltool/enso-characteristics:
 esmvaltool/ozone-annual-cycle:
   reference_datasets:
     - slug: "obs4mips.C3S-GTO-ECV-9-0"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "C3S GTO-ECV total column ozone v9.0. Supplies toz."
       type: "primary"
   display_name: "Ozone Annual Cycle"
@@ -146,7 +146,7 @@ esmvaltool/ozone-annual-cycle:
 esmvaltool/ozone-lat-time:
   reference_datasets:
     - slug: "obs4mips.C3S-GTO-ECV-9-0"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "C3S GTO-ECV total column ozone v9.0. Supplies toz."
       type: "primary"
   display_name: "Ozone Latitude vs Time"
@@ -156,7 +156,7 @@ esmvaltool/ozone-lat-time:
 esmvaltool/ozone-nh-mar:
   reference_datasets:
     - slug: "obs4mips.C3S-GTO-ECV-9-0"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "C3S GTO-ECV total column ozone v9.0. Supplies toz."
       type: "primary"
   display_name: "Ozone Northern Polar Cap (March)"
@@ -166,7 +166,7 @@ esmvaltool/ozone-nh-mar:
 esmvaltool/ozone-sh-oct:
   reference_datasets:
     - slug: "obs4mips.C3S-GTO-ECV-9-0"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "C3S GTO-ECV total column ozone v9.0. Supplies toz."
       type: "primary"
   display_name: "Ozone Southern Polar Cap (October)"
@@ -221,19 +221,19 @@ esmvaltool/zero-emission-commitment:
 esmvaltool/regional-historical-annual-cycle:
   reference_datasets:
     - slug: "obs4mips.ERA-5"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "ERA5 reanalysis. Supplies psl and ua."
       type: "primary"
     - slug: "esmvaltool.HadCRUT5"
-      source: "recipe"
+      source_type: "recipe"
       description: "HadCRUT5 v5.0.1.0 analysis. Supplies tas, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe because it cannot be ingested (climate-ref issue 260)."
       type: "secondary"
     - slug: "esmvaltool.ERA5-native6"
-      source: "recipe"
+      source_type: "recipe"
       description: "ERA5 native6. Supplies hus, which is not on obs4MIPs."
       type: "secondary"
   display_name: "Regional Historical Annual Cycle"
@@ -247,19 +247,19 @@ esmvaltool/regional-historical-annual-cycle:
 esmvaltool/regional-historical-timeseries:
   reference_datasets:
     - slug: "obs4mips.ERA-5"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "ERA5 reanalysis. Supplies psl and ua."
       type: "primary"
     - slug: "esmvaltool.HadCRUT5"
-      source: "recipe"
+      source_type: "recipe"
       description: "HadCRUT5 v5.0.1.0 analysis. Supplies tas, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe because it cannot be ingested (climate-ref issue 260)."
       type: "secondary"
     - slug: "esmvaltool.ERA5-native6"
-      source: "recipe"
+      source_type: "recipe"
       description: "ERA5 native6. Supplies hus, which is not on obs4MIPs."
       type: "secondary"
   display_name: "Regional Historical Timeseries"
@@ -273,19 +273,19 @@ esmvaltool/regional-historical-timeseries:
 esmvaltool/regional-historical-trend:
   reference_datasets:
     - slug: "obs4mips.ERA-5"
-      source: "obs4mips"
+      source_type: "obs4mips"
       description: "ERA5 reanalysis. Supplies psl, tas and ua."
       type: "primary"
     - slug: "esmvaltool.HadCRUT5"
-      source: "recipe"
+      source_type: "recipe"
       description: "HadCRUT5 v5.0.1.0 analysis. Supplies tas, named in the recipe."
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
-      source: "recipe"
+      source_type: "recipe"
       description: "GPCP v2.3. Supplies pr, named in the recipe because it cannot be ingested (climate-ref issue 260)."
       type: "secondary"
     - slug: "esmvaltool.ERA5-native6"
-      source: "recipe"
+      source_type: "recipe"
       description: "ERA5 native6. Supplies hus and pr, named in the recipe."
       type: "secondary"
   display_name: "Regional Historical Trends"
@@ -299,11 +299,11 @@ esmvaltool/regional-historical-trend:
 esmvaltool/sea-ice-area-basic:
   reference_datasets:
     - slug: "esmvaltool-reference.OSI-450-nh"
-      source: "esmvaltool-reference"
+      source_type: "esmvaltool-reference"
       description: "OSI-450 v3 Northern Hemisphere. Supplies sic and areacello."
       type: "primary"
     - slug: "esmvaltool-reference.OSI-450-sh"
-      source: "esmvaltool-reference"
+      source_type: "esmvaltool-reference"
       description: "OSI-450 v3 Southern Hemisphere. Supplies sic and areacello."
       type: "primary"
   display_name: "Arctic and Antarctic Sea Ice Area Seasonal Cycle"
