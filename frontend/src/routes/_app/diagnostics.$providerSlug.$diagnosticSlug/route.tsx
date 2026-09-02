@@ -293,7 +293,9 @@ const DiagnosticInfoLayout = () => {
                         Observational or reference datasets that this diagnostic
                         uses for comparison. Primary references are essential
                         for the diagnostic to run, while secondary references
-                        provide additional context.
+                        provide additional context. The dataset name says where
+                        the data comes from: obs4MIPs data is published, obs4REF
+                        data is pre-release.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -302,14 +304,6 @@ const DiagnosticInfoLayout = () => {
                   {data.reference_datasets.map((ref: ReferenceDatasetLink) => (
                     <Card key={ref.slug} className="p-3">
                       <div className="flex items-start gap-2">
-                        <Badge
-                          variant={
-                            ref.type === "primary" ? "default" : "secondary"
-                          }
-                          className="mt-0.5"
-                        >
-                          {ref.type}
-                        </Badge>
                         <div className="flex-1 space-y-1">
                           <code className="text-sm font-medium">
                             {ref.slug}
@@ -320,6 +314,13 @@ const DiagnosticInfoLayout = () => {
                             </p>
                           )}
                         </div>
+                        <Badge
+                          variant={
+                            ref.type === "primary" ? "default" : "secondary"
+                          }
+                        >
+                          {ref.type}
+                        </Badge>
                       </div>
                     </Card>
                   ))}

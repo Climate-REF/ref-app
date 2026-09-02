@@ -995,7 +995,7 @@ export type ReferenceDatasetLink = {
     /**
      * Slug
      *
-     * Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')
+     * Unique identifier for the dataset, `<supplier>.<source_id>`. The prefix names who supplies the data rather than the source type the requirement asks for, so a dataset required as obs4mips but served pre-release reads 'obs4ref.HadISST-1-1'
      */
     slug: string;
     /**
@@ -1004,6 +1004,18 @@ export type ReferenceDatasetLink = {
      * Description of how this dataset is used in the diagnostic
      */
     description?: string | null;
+    /**
+     * Source
+     *
+     * Where the data comes from, which is not the same as its source type:
+     * - 'obs4mips': published on ESGF obs4MIPs
+     * - 'obs4ref': pre-release reference data served by the REF, not yet on obs4MIPs
+     * - 'pmp-climatology': the PMP climatology registry
+     * - 'esmvaltool-reference': the ESMValTool reference registry
+     * - 'ilamb': the ILAMB registry
+     * - 'recipe': named inside the provider's recipe rather than ingested by the REF
+     */
+    source?: 'obs4mips' | 'obs4ref' | 'pmp-climatology' | 'esmvaltool-reference' | 'ilamb' | 'recipe' | null;
     /**
      * Type
      *
