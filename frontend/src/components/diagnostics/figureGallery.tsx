@@ -18,6 +18,8 @@ import {
 } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { MipEraEmptyState } from "@/components/charts/mipEraBar";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Figure } from "@/components/diagnostics/figure.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -170,10 +172,12 @@ export function FigureGallery({
   }, []);
 
   const [columns, setColumns] = useState(getColumns());
+  const selectedMipEra = useSelectedMipEra();
 
   const { data: executionGroups, isLoading } = useQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+      query: { mip_era: selectedMipEra ?? undefined },
     }),
   );
 
@@ -300,7 +304,7 @@ export function FigureGallery({
       </div>
 
       <SelectorFilterPanel
-        executionGroups={executionGroups?.data ?? []}
+        executionGroups={groups}
         filters={selectorFilters}
         onFiltersChange={setSelectorFilters}
       />
@@ -376,8 +380,12 @@ export function FigureGallery({
           </div>
         )
       ) : (
-        <div className="text-center text-sm text-muted-foreground py-8 min-h-[350px]">
-          No figures found matching your filters.
+        <div className="flex min-h-[350px] items-center justify-center text-sm text-muted-foreground">
+          {groups.length === 0 ? (
+            <MipEraEmptyState what="figures" />
+          ) : (
+            "No figures found matching your filters."
+          )}
         </div>
       )}
 

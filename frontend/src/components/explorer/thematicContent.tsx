@@ -11,6 +11,7 @@ import type {
   AftCollectionGroupingConfig,
   ThemeDetail,
 } from "@/client/types.gen";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Route } from "@/routes/_app/explorer/themes.tsx";
@@ -181,6 +182,7 @@ export function ThematicContent() {
   const { theme } = Route.useSearch();
   const navigate = useNavigate();
   const themeObj = themes.find((t) => t.name === theme);
+  const selectedMipEra = useSelectedMipEra();
   const [plainLanguage, setPlainLanguage] = useState(false);
 
   const { data: themeData } = useSuspenseQuery(
@@ -190,7 +192,7 @@ export function ThematicContent() {
 
   return (
     <>
-      <title>{`${themeObj?.title} Explorer - Climate-REF`}</title>
+      <title>{`${themeObj?.title} Explorer${selectedMipEra ? ` (${selectedMipEra})` : ""} - Climate-REF`}</title>
       <div className="space-y-4">
         <Tabs<ThemeName>
           value={theme}

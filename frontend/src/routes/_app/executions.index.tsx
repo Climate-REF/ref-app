@@ -4,6 +4,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
+import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 import { FilterPanel as ExecutionsFilterPanel } from "@/components/execution/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
@@ -14,12 +15,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useMipEra } from "@/hooks/useMipEra";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
 const ExecutionsSearchSchema = z.object({
   diagnostic_name_contains: z.string().optional(),
   provider_name_contains: z.string().optional(),
   dirty: z.enum(["true", "false"]).optional(),
   successful: z.enum(["true", "false"]).optional(),
+  ...mipEraSearchFields,
 });
 
 export const Route = createFileRoute("/_app/executions/")({
@@ -33,6 +37,13 @@ export const Route = createFileRoute("/_app/executions/")({
 function ExecutionsListPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const { mipEra, setMipEra } = useMipEra(search.mip_era);
+  const hasOtherFilters = Boolean(
+    search.diagnostic_name_contains ||
+      search.provider_name_contains ||
+      search.dirty ||
+      search.successful,
+  );
 
   // Coerce string flags to booleans for API compatibility
   const toBool = (v?: string) => (v === undefined ? undefined : v === "true");
@@ -44,6 +55,7 @@ function ExecutionsListPage() {
       provider_name_contains: search.provider_name_contains ?? undefined,
       dirty: toBool(search.dirty),
       successful: toBool(search.successful),
+      mip_era: mipEra,
     },
   };
 
@@ -99,7 +111,7 @@ function ExecutionsListPage() {
   };
 
   const handleClearFilters = () => {
-    navigate({ search: {} });
+    navigate({ search: { mip_era: search.mip_era } });
   };
 
   return (
@@ -129,36 +141,43 @@ function ExecutionsListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Advanced filter panel (kept for parity with other pages) */}
-          <ExecutionsFilterPanel
-            filters={search}
-            onFilterChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
+          <title>{`Executions (${mipEra}) - Climate-REF`}</title>
+          <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
+            {/* Advanced filter panel (kept for parity with other pages) */}
+            <ExecutionsFilterPanel
+              filters={search}
+              onFilterChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
 
-          {isLoading && !data && <div>Loading executions...</div>}
-          {status === "error" && (
-            <div className="text-destructive">
-              Error loading executions: {String(error)}
-            </div>
-          )}
-          {!isLoading && executionGroups.length === 0 && (
-            <div className="text-sm text-muted-foreground">
-              No execution groups match your filters.
-            </div>
-          )}
-          <ExecutionGroupTable executionGroups={executionGroups} />
-          {hasNextPage && (
-            <div className="flex justify-center">
-              <Button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="w-[200px]"
-              >
-                {isFetchingNextPage ? "Loading more..." : "Load More"}
-              </Button>
-            </div>
-          )}
+            {isLoading && !data && <div>Loading executions...</div>}
+            {status === "error" && (
+              <div className="text-destructive">
+                Error loading executions: {String(error)}
+              </div>
+            )}
+            {!isLoading &&
+              executionGroups.length === 0 &&
+              (hasOtherFilters ? (
+                <div className="text-sm text-muted-foreground">
+                  No execution groups match your filters.
+                </div>
+              ) : (
+                <MipEraEmptyState what="execution groups" />
+              ))}
+            <ExecutionGroupTable executionGroups={executionGroups} />
+            {hasNextPage && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="w-[200px]"
+                >
+                  {isFetchingNextPage ? "Loading more..." : "Load More"}
+                </Button>
+              </div>
+            )}
+          </MipEraScope>
         </CardContent>
       </Card>
     </div>

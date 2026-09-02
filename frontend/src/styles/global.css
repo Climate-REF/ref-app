@@ -104,6 +104,11 @@
   --color-icyBlue: #02fae9;
   --color-atmosphere-yellow: #f2eaa4;
   --color-land-green: #85e885;
+
+  /* CMIP brand palette, from the IPO branding guide */
+  --color-cmip-blue: #000546;
+  --color-cmip-mustard: #f2b30d;
+  --color-cmip-cyan: #22bfb7;
 }
 
 @layer base {

@@ -12,10 +12,47 @@ export const MIP_ERAS = ["CMIP6", "CMIP7"] as const;
 
 export type MipEra = (typeof MIP_ERAS)[number];
 
-/** The search parameter fields every page that selects a MIP era shares. */
+/** The era a page opens in when neither the URL nor the visitor's last pick settles it. */
+export const DEFAULT_MIP_ERA: MipEra = "CMIP6";
+
+/**
+ * The search parameter fields every page that selects a MIP era shares.
+ *
+ * Optional, so a plain link opens in the visitor's last picked era.
+ */
 export const mipEraSearchFields = {
-  mip_era: z.enum(MIP_ERAS).default("CMIP6"),
+  mip_era: z.enum(MIP_ERAS).optional(),
 };
+
+export const mipEraSearchSchema = z.object(mipEraSearchFields);
+
+export function isMipEra(value: unknown): value is MipEra {
+  return MIP_ERAS.some((era) => era === value);
+}
+
+export function otherMipEra(era: MipEra): MipEra {
+  return era === "CMIP6" ? "CMIP7" : "CMIP6";
+}
+
+const STORAGE_KEY = "mip_era";
+
+/** The era the visitor last picked, or null when there is none or storage is unavailable. */
+export function readStoredMipEra(): MipEra | null {
+  try {
+    const value = localStorage.getItem(STORAGE_KEY);
+    return isMipEra(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function storeMipEra(era: MipEra) {
+  try {
+    localStorage.setItem(STORAGE_KEY, era);
+  } catch {
+    // Storage can be blocked, and the URL still carries the pick.
+  }
+}
 
 /** A chart needs at least this many distinct models before it is drawn at all. */
 export const MIN_MODELS_FOR_CHART = 4;
@@ -31,7 +68,7 @@ export const MIN_FAMILIES_FOR_CONFIDENCE = 10;
  */
 export function mipEraOf(value: DimensionedData): MipEra | null {
   const label = value.dimensions.mip_era?.toUpperCase();
-  return MIP_ERAS.find((era) => era === label) ?? null;
+  return isMipEra(label) ? label : null;
 }
 
 /**

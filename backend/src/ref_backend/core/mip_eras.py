@@ -67,6 +67,11 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return or_(*branches)
 
 
+def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
+    """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
+    return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
+
+
 def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
     """
     Map each execution onto the MIP era of the model datasets it ran against.

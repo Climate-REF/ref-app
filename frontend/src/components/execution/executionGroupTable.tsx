@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { AlertTriangle, SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { MipEraEmptyState } from "@/components/charts/mipEraBar";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
@@ -196,11 +198,14 @@ function ExecutionGroupTableWithQuery({
     });
   };
 
+  const selectedMipEra = useSelectedMipEra();
   const { data, isLoading } = useSuspenseQuery(
     diagnosticsListExecutionGroupsOptions({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
+      query: { mip_era: selectedMipEra ?? undefined },
     }),
   );
+  const groups = data?.data ?? [];
 
   return (
     <Card>
@@ -213,12 +218,16 @@ function ExecutionGroupTableWithQuery({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <DataTable
-          data={data?.data ?? []}
-          columns={columns}
-          loading={isLoading}
-          onRowClick={handleRowClick}
-        />
+        {groups.length === 0 ? (
+          <MipEraEmptyState what="execution groups" />
+        ) : (
+          <DataTable
+            data={groups}
+            columns={columns}
+            loading={isLoading}
+            onRowClick={handleRowClick}
+          />
+        )}
       </CardContent>
     </Card>
   );

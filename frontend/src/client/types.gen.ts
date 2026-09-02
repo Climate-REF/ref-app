@@ -1520,9 +1520,23 @@ export type DatasetsExecutionsResponse = DatasetsExecutionsResponses[keyof Datas
 export type DiagnosticsListData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
     url: '/api/v1/diagnostics/';
 };
+
+export type DiagnosticsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsListError = DiagnosticsListErrors[keyof DiagnosticsListErrors];
 
 export type DiagnosticsListResponses = {
     /**
@@ -1595,7 +1609,12 @@ export type DiagnosticsListExecutionGroupsData = {
          */
         diagnostic_slug: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups';
 };
 
