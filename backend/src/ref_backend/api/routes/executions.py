@@ -135,7 +135,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
         reverse=True,
     )
 
-    # Selectors do not record source_id, so this filter still has to look at the datasets used.
+    # Selectors do not record source_id, so match on the datasets used.
     if source_id or mip_era:
         facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
         matching_ids = set(
@@ -173,8 +173,10 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     if app_context.reader.executions.group(group_id_int) is None:
         raise HTTPException(status_code=404, detail="Execution not found")
 
-    (execution_group,) = _load_execution_groups(app_context.session, [group_id_int])
-    return ExecutionGroup.build(execution_group, app_context)
+    execution_groups = _load_execution_groups(app_context.session, [group_id_int])
+    if not execution_groups:
+        raise HTTPException(status_code=404, detail="Execution not found")
+    return ExecutionGroup.build(execution_groups[0], app_context)
 
 
 async def _get_execution(
@@ -183,8 +185,7 @@ async def _get_execution(
     """
     Resolve the execution a route is asking about
 
-    The reader picks the execution (the latest for the group when none is named),
-    and the ORM row is then loaded because the response builders still need it.
+    The reader picks the execution, the latest for the group when none is named.
     """
     group_id_int = _parse_int_id(group_id, "Execution group")
     executions = app_context.reader.executions
@@ -194,10 +195,9 @@ async def _get_execution(
     else:
         view = executions.latest_execution(group_id_int)
 
-    if view is None or view.execution_group_id != group_id_int:
-        raise HTTPException(status_code=404, detail="Result not found")
-
-    execution = app_context.session.get(models.Execution, view.id)
+    execution = None
+    if view is not None and view.execution_group_id == group_id_int:
+        execution = app_context.session.get(models.Execution, view.id)
     if execution is None:
         raise HTTPException(status_code=404, detail="Result not found")
     return execution

@@ -422,3 +422,31 @@ def test_execution_statistics(client: TestClient, settings) -> None:
     assert isinstance(data["total_execution_groups"], int)
     assert isinstance(data["successful_execution_groups"], int)
     assert isinstance(data["failed_execution_groups"], int)
+    assert data["total_execution_groups"] == (
+        data["successful_execution_groups"]
+        + data["failed_execution_groups"]
+        + data["running_execution_groups"]
+        + data["not_started_execution_groups"]
+    )
+
+
+def test_execution_statistics_match_list(client: TestClient, settings) -> None:
+    """The list and the statistics count the same execution groups."""
+    stats = client.get(f"{settings.API_V1_STR}/executions/statistics").json()
+    listed = client.get(f"{settings.API_V1_STR}/executions?limit=1").json()
+    successful = client.get(f"{settings.API_V1_STR}/executions?limit=1&successful=true").json()
+    unsuccessful = client.get(f"{settings.API_V1_STR}/executions?limit=1&successful=false").json()
+
+    assert listed["total_count"] == stats["total_execution_groups"]
+    assert successful["total_count"] == stats["successful_execution_groups"]
+    # Not successful covers failed, running and never-run groups.
+    assert unsuccessful["total_count"] == listed["total_count"] - successful["total_count"]
+
+
+def test_execution_list_pagination(client: TestClient, settings) -> None:
+    page1 = client.get(f"{settings.API_V1_STR}/executions?limit=2&offset=0").json()
+    page2 = client.get(f"{settings.API_V1_STR}/executions?limit=2&offset=2").json()
+
+    assert page1["count"] == 2
+    assert page1["total_count"] == page2["total_count"]
+    assert {g["id"] for g in page1["data"]}.isdisjoint({g["id"] for g in page2["data"]})

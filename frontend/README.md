@@ -58,7 +58,7 @@ The client is generated with @hey-api/openapi-ts using the config in frontend/op
 - @tanstack/react-query.gen.ts — React Query hooks
 
 In this repo, make generate-client (at the repository root) prepares openapi.json and runs the generator.
-The generator needs the TypeScript 5 compiler API, which TypeScript 7 does not ship, so the script runs it through npx in a temp directory with its own TypeScript 5.
+The generator needs the TypeScript 5 compiler API, which TypeScript 7 does not ship. The script therefore runs it through npx in a temp directory with its own TypeScript 5.
 
 ## Routing
 Routes are file-based under src/routes using TanStack Router and the Vite plugin with auto code splitting. The route tree is generated into src/routeTree.gen.ts.
