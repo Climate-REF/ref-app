@@ -75,7 +75,8 @@ function ResourceUsagePage() {
               Wall clock time, CPU time and peak memory recorded by the workers
               for every execution, rolled up by diagnostic. Only executions that
               recorded a wall time are counted, so older executions may be
-              missing.
+              missing. Totals are sums over executions, which run in parallel,
+              so they are more than the elapsed time of the run.
             </p>
           </CardDescription>
         </CardHeader>
@@ -87,7 +88,7 @@ function ResourceUsagePage() {
               loading={statistics.isLoading}
             />
             <Stat
-              label="Total wall time"
+              label="Wall time sum"
               value={formatDuration(usage?.wall_seconds_total)}
               loading={statistics.isLoading}
             />

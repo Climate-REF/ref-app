@@ -71,8 +71,8 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
   ),
   numericColumn(
     "wall_total",
-    "Wall\ntotal",
-    "Sum of wall clock time across the timed executions.",
+    "Wall\nsum",
+    "Sum of wall clock time across the timed executions. Executions often run in parallel, so this is more than the real elapsed time of the run.",
     (row) => row.resource_usage?.wall_seconds_total,
     formatDuration,
   ),
