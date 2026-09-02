@@ -1,4 +1,4 @@
-"""Helpers for serving CMIP6 and CMIP7 side by side."""
+"""Helpers for telling the CMIP6 and CMIP7 eras apart."""
 
 from collections.abc import Collection, Mapping
 from typing import Any

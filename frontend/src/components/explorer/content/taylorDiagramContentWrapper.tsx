@@ -67,6 +67,32 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
   return models;
 }
 
+interface TaylorDiagramSectionProps {
+  values: ScalarValue[];
+  width: number;
+  height: number;
+  referenceStddev?: number;
+}
+
+function TaylorDiagramSection({
+  values,
+  width,
+  height,
+  referenceStddev,
+}: TaylorDiagramSectionProps) {
+  const models = useMemo(() => transformToTaylorModels(values), [values]);
+
+  return (
+    <TaylorDiagramContent
+      models={models}
+      width={width}
+      height={height}
+      referenceStddev={referenceStddev}
+      marginTop={0}
+    />
+  );
+}
+
 export function TaylorDiagramContentWrapper({
   contentItem,
   height = 460,
@@ -110,12 +136,11 @@ export function TaylorDiagramContentWrapper({
     <div className="mx-auto">
       <EraSections values={values}>
         {(eraValues) => (
-          <TaylorDiagramContent
-            models={transformToTaylorModels(eraValues)}
+          <TaylorDiagramSection
+            values={eraValues}
             width={width}
             height={height}
             referenceStddev={contentItem.referenceStddev}
-            marginTop={0}
           />
         )}
       </EraSections>

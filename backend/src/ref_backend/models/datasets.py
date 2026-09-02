@@ -6,7 +6,7 @@ from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref.results.datasets import DatasetView
 from climate_ref_core.source_types import SourceDatasetType
-from ref_backend.core.source_types import mip_era_for
+from ref_backend.core.mip_eras import mip_era_for
 
 
 class CMIPDatasetMetadata(BaseModel):

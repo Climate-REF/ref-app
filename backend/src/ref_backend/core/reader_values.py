@@ -13,7 +13,7 @@ from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.metric_values import MetricValueType
-from ref_backend.core.source_types import eras_for_executions
+from ref_backend.core.mip_eras import eras_for_executions
 from ref_backend.models import MetricValueCollection
 
 if TYPE_CHECKING:
@@ -131,8 +131,8 @@ def annotate_eras(app_context: "AppContext", collection: MetricValueCollection) 
     """
     Stamp each model value with the MIP era of the execution that produced it.
 
-    The charts split on this, and most diagnostics do not record it themselves. An era the
-    diagnostic did record wins, since it describes the value rather than merely its inputs.
+    The charts split on this, and most diagnostics do not record it themselves.
+    An execution whose datasets span both eras is left unstamped, because no single era describes it.
     """
     model_items = [item for item in collection.data if item.kind == "model"]
     eras = eras_for_executions(app_context.session, {item.execution_id for item in model_items})

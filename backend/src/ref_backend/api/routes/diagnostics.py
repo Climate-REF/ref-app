@@ -12,11 +12,11 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
+from ref_backend.core.mip_eras import cmip_dataset_filter
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.source_types import cmip_dataset_filter
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
