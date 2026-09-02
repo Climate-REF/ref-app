@@ -5,3 +5,6 @@
 .ruff_cache
 
 frontend/coverage/
+
+# Local climate-ref configuration
+climate-ref/
