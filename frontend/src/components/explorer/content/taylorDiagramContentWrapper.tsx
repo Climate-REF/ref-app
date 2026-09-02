@@ -135,9 +135,9 @@ export function TaylorDiagramContentWrapper({
   return (
     <div className="mx-auto">
       <MipEraSections values={values}>
-        {(eraValues) => (
+        {(mipEraValues) => (
           <TaylorDiagramSection
-            values={eraValues}
+            values={mipEraValues}
             width={width}
             height={height}
             referenceStddev={contentItem.referenceStddev}

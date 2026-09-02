@@ -208,9 +208,9 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
         />
       ) : (
         <MipEraSections values={regularSeries}>
-          {(eraSeries) => (
+          {(mipEraSeries) => (
             <SeriesVisualization
-              seriesValues={eraSeries}
+              seriesValues={mipEraSeries}
               referenceSeriesValues={referenceSeries}
               maxSeriesLimit={500} // Limit for performance in preview
               symmetricalAxes={contentItem.symmetricalAxes ?? false}

@@ -1,12 +1,7 @@
 import { createContext, type ReactNode, useContext } from "react";
 import type { MipEra } from "@/lib/mipEras";
 
-/**
- * The MIP era a page has selected, or null where the page offers no selector.
- *
- * A page that selects one renders a single chart per card. Without a selection each chart falls
- * back to showing every era it holds, stacked and badged.
- */
+/** The MIP era a page has selected, or null where the page offers no selector. */
 const SelectedMipEraContext = createContext<MipEra | null>(null);
 
 export function MipEraProvider({

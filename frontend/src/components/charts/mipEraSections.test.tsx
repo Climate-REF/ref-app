@@ -53,6 +53,18 @@ describe("MipEraSections with a page selection", () => {
     expect(screen.getByText("No CMIP7 results")).toBeInTheDocument();
   });
 
+  it("keeps values no era could be settled for, whichever era is selected", () => {
+    renderChart([...four("CMIP6"), ...four(undefined)], "CMIP6");
+    expect(screen.getAllByTestId("chart")).toHaveLength(2);
+    expect(screen.getByText("MIP era not recorded")).toBeInTheDocument();
+  });
+
+  it("shows unattributed values on their own rather than claiming no results", () => {
+    renderChart(four(undefined), "CMIP7");
+    expect(screen.getAllByTestId("chart")).toHaveLength(1);
+    expect(screen.queryByText("No CMIP7 results")).not.toBeInTheDocument();
+  });
+
   it("still suppresses a chart with too few models", () => {
     renderChart([model("CMIP6", "A"), model("CMIP6", "B")], "CMIP6");
     expect(screen.queryByTestId("chart")).not.toBeInTheDocument();

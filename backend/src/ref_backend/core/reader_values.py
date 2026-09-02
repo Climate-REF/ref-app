@@ -13,7 +13,7 @@ from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.metric_values import MetricValueType
-from ref_backend.core.mip_eras import eras_for_executions
+from ref_backend.core.mip_eras import mip_eras_for_executions
 from ref_backend.models import MetricValueCollection
 
 if TYPE_CHECKING:
@@ -127,7 +127,7 @@ def generate_csv_response_series(
     )
 
 
-def annotate_eras(app_context: "AppContext", collection: MetricValueCollection) -> MetricValueCollection:
+def annotate_mip_eras(app_context: "AppContext", collection: MetricValueCollection) -> MetricValueCollection:
     """
     Stamp each model value with the MIP era of the execution that produced it.
 
@@ -140,7 +140,7 @@ def annotate_eras(app_context: "AppContext", collection: MetricValueCollection) 
     if not unstamped:
         return collection
 
-    eras = eras_for_executions(app_context.session, {item.execution_id for item in unstamped})
+    eras = mip_eras_for_executions(app_context.session, {item.execution_id for item in unstamped})
 
     for item in unstamped:
         # A diagnostic's own `mip_id` stands in when the inputs do not settle the era.
@@ -190,7 +190,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             offset=offset,
             limit=limit,
         )
-        return annotate_eras(
+        return annotate_mip_eras(
             app_context, MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
         )
 
@@ -206,6 +206,8 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             offset=offset,
             limit=limit,
         )
-        return annotate_eras(app_context, MetricValueCollection.build_series_from_reader(series_collection))
+        return annotate_mip_eras(
+            app_context, MetricValueCollection.build_series_from_reader(series_collection)
+        )
 
     raise HTTPException(status_code=500, detail="Unknown value_type")

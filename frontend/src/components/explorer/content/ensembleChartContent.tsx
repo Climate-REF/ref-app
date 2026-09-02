@@ -87,9 +87,9 @@ export function EnsembleChartContent({
       )}
 
       <MipEraSections values={values}>
-        {(eraValues) => (
+        {(mipEraValues) => (
           <EnsembleChart
-            data={eraValues}
+            data={mipEraValues}
             metricName={contentItem.title}
             metricUnits={contentItem.metricUnits ?? "unitless"}
             clipMin={contentItem.clipMin}

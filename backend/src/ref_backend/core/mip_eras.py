@@ -67,7 +67,7 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return or_(*branches)
 
 
-def eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
+def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
     """
     Map each execution onto the MIP era of the model datasets it ran against.
 

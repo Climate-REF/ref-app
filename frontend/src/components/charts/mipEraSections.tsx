@@ -19,11 +19,23 @@ interface MipEraSectionsProps<T extends DimensionedData> {
 }
 
 /**
+ * A page's selection hides the other era, but never the values no era could be settled for.
+ * Dropping those would silently lose data rather than label it.
+ */
+function visibleSections<T extends DimensionedData>(
+  sections: { mipEra: MipEra | null; values: T[] }[],
+  selected: MipEra | null,
+) {
+  if (!selected) return sections;
+  return sections.filter(
+    (section) => section.mipEra === selected || section.mipEra === null,
+  );
+}
+
+/**
  * Render a chart per MIP era, gated on how many models contributed.
  *
  * CMIP6 and CMIP7 never share a chart because the two ensembles are not directly comparable.
- * A page that selects a MIP era narrows this to that era alone, so the badge and the stacking
- * fall away and the page's own selector carries the labelling.
  */
 export function MipEraSections<T extends DimensionedData>({
   values,
@@ -32,40 +44,33 @@ export function MipEraSections<T extends DimensionedData>({
   const selectedMipEra = useSelectedMipEra();
   // Stable section identity keeps the charts from re-deriving on unrelated parent state.
   const sections = useMemo(() => splitByMipEra(values), [values]);
+  const visible = visibleSections(sections, selectedMipEra);
 
-  if (selectedMipEra) {
-    const selected = sections.find(
-      (section) => section.mipEra === selectedMipEra,
-    );
-    if (!selected) {
-      return (
-        <Alert>
-          <Info />
-          <AlertTitle>No {selectedMipEra} results</AlertTitle>
-          <AlertDescription>
-            This diagnostic has no {selectedMipEra} data yet.
-          </AlertDescription>
-        </Alert>
-      );
-    }
+  if (visible.length === 0) {
+    if (!selectedMipEra) return null;
     return (
-      <SampleSizeGate values={selected.values}>
-        {children(selected.values, selectedMipEra)}
-      </SampleSizeGate>
+      <Alert>
+        <Info />
+        <AlertTitle>No {selectedMipEra} results</AlertTitle>
+        <AlertDescription>
+          This diagnostic has no {selectedMipEra} data yet.
+        </AlertDescription>
+      </Alert>
     );
   }
 
-  if (sections.length === 0) return null;
+  // A selected era is already named by the page's selector, so only the leftovers need a badge.
+  const badged = visible.length > 1 || !selectedMipEra;
 
   return (
     <div className="space-y-8">
-      {sections.map(({ mipEra, values: eraValues }) => (
+      {visible.map(({ mipEra, values: mipEraValues }) => (
         <section key={mipEra ?? "unattributed"} className="space-y-3">
-          {sections.length > 1 || mipEra ? (
+          {badged && (visible.length > 1 || mipEra) ? (
             <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}
-          <SampleSizeGate values={eraValues}>
-            {children(eraValues, mipEra)}
+          <SampleSizeGate values={mipEraValues}>
+            {children(mipEraValues, mipEra)}
           </SampleSizeGate>
         </section>
       ))}

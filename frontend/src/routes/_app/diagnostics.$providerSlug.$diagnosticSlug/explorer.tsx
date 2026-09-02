@@ -18,10 +18,10 @@ import {
 } from "@/components/explorer/explorerCardContent";
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MIP_ERAS } from "@/lib/mipEras";
+import { mipEraSearchSchema } from "@/lib/mipEras";
 
 const explorerSchema = z.object({
-  mip_era: z.enum(MIP_ERAS).default("CMIP6"),
+  ...mipEraSearchSchema,
 });
 
 const parentRoute = getRouteApi(

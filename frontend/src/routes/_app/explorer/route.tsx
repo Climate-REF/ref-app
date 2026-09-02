@@ -48,8 +48,8 @@ const ExplorerLayout = () => {
                 <li>
                   <strong>Visualizations:</strong> Interactive charts, time
                   series, spatial plots, and comparison views across CMIP6 and
-                  CMIP7 models and observations. The two eras are charted
-                  separately.
+                  CMIP7 models and observations. Pick one era at a time, because
+                  the two are not directly comparable.
                 </li>
                 <li>
                   <strong>Model Comparisons:</strong> Side-by-side evaluation of

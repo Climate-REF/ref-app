@@ -2,6 +2,7 @@
  * Keeping CMIP6 and CMIP7 apart, and deciding when a chart has enough models to be worth drawing.
  */
 
+import { z } from "zod";
 import {
   type DimensionedData,
   isReferenceItem,
@@ -10,6 +11,11 @@ import {
 export const MIP_ERAS = ["CMIP6", "CMIP7"] as const;
 
 export type MipEra = (typeof MIP_ERAS)[number];
+
+/** The search parameter every page that selects an era shares. */
+export const mipEraSearchSchema = {
+  mip_era: z.enum(MIP_ERAS).default("CMIP6"),
+};
 
 /** A chart needs at least this many distinct models before it is drawn at all. */
 export const MIN_MODELS_FOR_CHART = 4;
@@ -88,10 +94,10 @@ export function splitByMipEra<T extends DimensionedData>(
       references.push(value);
       continue;
     }
-    const era = mipEraOf(value);
-    const bucket = buckets.get(era);
+    const mipEra = mipEraOf(value);
+    const bucket = buckets.get(mipEra);
     if (bucket) bucket.push(value);
-    else buckets.set(era, [value]);
+    else buckets.set(mipEra, [value]);
   }
 
   if (buckets.size === 0) {

@@ -134,9 +134,9 @@ export function ValuesFigure({
         </div>
       ) : null}
       <MipEraSections values={values}>
-        {(eraValues) => (
+        {(mipEraValues) => (
           <EnsembleChart
-            data={eraValues}
+            data={mipEraValues}
             metricName="Values"
             metricUnits="unitless"
             groupingConfig={groupingConfig}
