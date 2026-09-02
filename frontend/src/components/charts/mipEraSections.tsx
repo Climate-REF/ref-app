@@ -43,8 +43,10 @@ export function MipEraSections<T extends DimensionedData>({
 }: MipEraSectionsProps<T>) {
   const selectedMipEra = useSelectedMipEra();
   // Stable section identity keeps the charts from re-deriving on unrelated parent state.
-  const sections = useMemo(() => splitByMipEra(values), [values]);
-  const visible = visibleSections(sections, selectedMipEra);
+  const visible = useMemo(
+    () => visibleSections(splitByMipEra(values), selectedMipEra),
+    [values, selectedMipEra],
+  );
 
   if (visible.length === 0) {
     if (!selectedMipEra) return null;
@@ -63,7 +65,8 @@ export function MipEraSections<T extends DimensionedData>({
     <div className="space-y-8">
       {visible.map(({ mipEra, values: mipEraValues }) => (
         <section key={mipEra ?? "unattributed"} className="space-y-3">
-          {/* Only the section the page's selector already names can go unbadged. */}
+          {/* A badge is what names an era, so it is dropped only where nothing is ambiguous:
+              the section the page's selector already names, or a lone unattributed one. */}
           {mipEra !== selectedMipEra || visible.length > 1 ? (
             <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}

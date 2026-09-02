@@ -131,7 +131,7 @@ def annotate_mip_eras(app_context: "AppContext", collection: MetricValueCollecti
     """
     Stamp each model value with the MIP era of the execution that produced it.
 
-    The charts split on this single key, and most diagnostics do not record an era at all.
+    The charts split on this single key, and most diagnostics do not record a MIP era at all.
     An execution whose datasets span both eras is left unstamped, because no single era describes it.
     """
     unstamped = [
@@ -140,13 +140,13 @@ def annotate_mip_eras(app_context: "AppContext", collection: MetricValueCollecti
     if not unstamped:
         return collection
 
-    eras = mip_eras_for_executions(app_context.session, {item.execution_id for item in unstamped})
+    mip_eras = mip_eras_for_executions(app_context.session, {item.execution_id for item in unstamped})
 
     for item in unstamped:
         # A diagnostic's own `mip_id` stands in when the inputs do not settle the era.
-        era = eras.get(item.execution_id) or item.dimensions.get("mip_id")
-        if era:
-            item.dimensions["mip_era"] = era.upper()
+        mip_era = mip_eras.get(item.execution_id) or item.dimensions.get("mip_id")
+        if mip_era:
+            item.dimensions["mip_era"] = mip_era.upper()
 
     return collection
 

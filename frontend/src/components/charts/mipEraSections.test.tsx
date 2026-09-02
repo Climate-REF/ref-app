@@ -32,6 +32,12 @@ const renderChart = (
 };
 
 describe("MipEraSections without a page selection", () => {
+  it("leaves a lone unattributed chart unbadged, since no era is claimed", () => {
+    renderChart(four(undefined));
+    expect(screen.getAllByTestId("chart")).toHaveLength(1);
+    expect(screen.queryByText("MIP era not recorded")).not.toBeInTheDocument();
+  });
+
   it("stacks a badged chart per era", () => {
     renderChart([...four("CMIP6"), ...four("CMIP7")]);
     expect(screen.getAllByTestId("chart")).toHaveLength(2);
