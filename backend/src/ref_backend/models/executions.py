@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, computed_field
+from sqlalchemy.orm import selectinload
 
 from climate_ref import models
 from climate_ref.models.execution import ResultOutputType
@@ -39,6 +40,14 @@ class ExecutionOutput(BaseModel):
             updated_at=output.updated_at,
             url=f"{app_context.settings.BACKEND_HOST}{app_context.settings.API_V1_STR}/results/{output.id}",
         )
+
+
+# Everything ExecutionGroup.build touches, so a page of groups loads in a fixed number of queries.
+EXECUTION_GROUP_LOAD_OPTIONS = (
+    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
+    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
+    selectinload(models.ExecutionGroup.diagnostic),
+)
 
 
 class ExecutionGroup(BaseModel):

@@ -9,7 +9,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -35,6 +35,7 @@ from ref_backend.models import (
     ExecutionStats,
     MetricValueCollection,
 )
+from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
@@ -58,11 +59,7 @@ def _load_execution_groups(session: Session, group_ids: Sequence[int]) -> list[m
 
     rows = (
         session.query(models.ExecutionGroup)
-        .options(
-            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
-            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
-            selectinload(models.ExecutionGroup.diagnostic),
-        )
+        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
         .filter(models.ExecutionGroup.id.in_(group_ids))
         .all()
     )
@@ -170,9 +167,6 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     Inspect a specific execution
     """
     group_id_int = _parse_int_id(group_id, "Execution group")
-    if app_context.reader.executions.group(group_id_int) is None:
-        raise HTTPException(status_code=404, detail="Execution not found")
-
     execution_groups = _load_execution_groups(app_context.session, [group_id_int])
     if not execution_groups:
         raise HTTPException(status_code=404, detail="Execution not found")
@@ -185,20 +179,20 @@ async def _get_execution(
     """
     Resolve the execution a route is asking about
 
-    The reader picks the execution, the latest for the group when none is named.
+    When no execution is named, the reader picks the latest for the group.
     """
     group_id_int = _parse_int_id(group_id, "Execution group")
-    executions = app_context.reader.executions
 
     if execution_id is not None:
-        view = executions.execution(_parse_int_id(execution_id, "Execution"))
+        execution_id_int = _parse_int_id(execution_id, "Execution")
     else:
-        view = executions.latest_execution(group_id_int)
+        latest = app_context.reader.executions.latest_execution(group_id_int)
+        if latest is None:
+            raise HTTPException(status_code=404, detail="Result not found")
+        execution_id_int = latest.id
 
-    execution = None
-    if view is not None and view.execution_group_id == group_id_int:
-        execution = app_context.session.get(models.Execution, view.id)
-    if execution is None:
+    execution = app_context.session.get(models.Execution, execution_id_int)
+    if execution is None or execution.execution_group_id != group_id_int:
         raise HTTPException(status_code=404, detail="Result not found")
     return execution
 

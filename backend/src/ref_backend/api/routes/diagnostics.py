@@ -2,7 +2,6 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import Integer, func
-from sqlalchemy.orm import selectinload
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -25,6 +24,7 @@ from ref_backend.models import (
     MetricValueCollection,
     MetricValueFacetSummary,
 )
+from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
 router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
@@ -228,11 +228,7 @@ async def list_execution_groups(
     # Eager-load relationships to avoid per-item queries
     execution_groups = (
         app_context.session.query(models.ExecutionGroup)
-        .options(
-            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
-            selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
-            selectinload(models.ExecutionGroup.diagnostic),
-        )
+        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
         .all()
     )
