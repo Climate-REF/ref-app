@@ -9,7 +9,6 @@ export default {
     "@hey-api/typescript",
     "@hey-api/sdk",
     "@hey-api/client-fetch",
-    "@hey-api/schemas",
     "@tanstack/react-query",
   ],
 } satisfies UserConfig;

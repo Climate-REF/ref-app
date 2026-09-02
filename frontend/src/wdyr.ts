@@ -1,7 +1,5 @@
 import * as React from "react";
 
-console.log(import.meta.env);
-
 if (
   import.meta.env.DEV &&
   import.meta.env.VITE_ENABLE_WHY_DID_YOU_RENDER === "true"
@@ -9,8 +7,6 @@ if (
   const { default: wdyr } = await import(
     "@welldone-software/why-did-you-render"
   );
-  console.log("Initializing why-did-you-render");
-
   wdyr(React, {
     // include: [/.*/],
     exclude: [/^BrowserRouter/, /^Link/, /^Route/],
