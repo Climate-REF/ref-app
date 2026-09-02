@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
 import { EraSections } from "@/components/charts/eraSections";
@@ -88,7 +89,9 @@ export function TaylorDiagramContentWrapper({
   const collection = data as MetricValueCollection;
   const values = (collection?.data as ScalarValue[]) ?? [];
 
-  if (transformToTaylorModels(values).length === 0) {
+  const allModels = useMemo(() => transformToTaylorModels(values), [values]);
+
+  if (allModels.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
         <div className="text-center text-sm text-gray-500">

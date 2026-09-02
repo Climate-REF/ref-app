@@ -19,14 +19,17 @@ export type Dimensioned = {
 };
 
 /**
- * The era a value belongs to, taken from the `mip_id` dimension.
+ * The era a value belongs to.
  *
- * Values predating that dimension return null, so callers must not assume a null era means
- * observational data.
+ * `mip_era` is stamped on by the API from the execution's inputs, and `mip_id` is the dimension a
+ * diagnostic may record itself. Either can be absent, so callers must not read a null era as
+ * meaning observational data.
  */
 export function eraOf(value: Dimensioned): MipEra | null {
-  const mipId = value.dimensions.mip_id?.toUpperCase();
-  return MIP_ERAS.find((era) => era === mipId) ?? null;
+  const label = (
+    value.dimensions.mip_era ?? value.dimensions.mip_id
+  )?.toUpperCase();
+  return MIP_ERAS.find((era) => era === label) ?? null;
 }
 
 export function isReference(value: Dimensioned): boolean {

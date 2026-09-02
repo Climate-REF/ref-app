@@ -720,3 +720,17 @@ def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings)
     # The test fixtures are CMIP6 only, so CMIP7 is empty and CMIP6 accounts for everything.
     assert cmip7.json()["count"] == 0
     assert cmip6.json()["count"] == unfiltered.json()["count"]
+
+
+def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
+    """Model values are stamped with the era of their inputs, even when the diagnostic omits it."""
+    diagnostic = get_diagnostic(client, settings)
+    r = client.get(
+        f"{settings.API_V1_STR}/diagnostics/"
+        f"{diagnostic['provider']['slug']}/{diagnostic['slug']}/values?value_type=scalar&limit=50"
+    )
+
+    assert r.status_code == 200
+    model_values = [item for item in r.json()["data"] if item["kind"] == "model"]
+    assert model_values
+    assert all(item["dimensions"]["mip_era"] == "CMIP6" for item in model_values)

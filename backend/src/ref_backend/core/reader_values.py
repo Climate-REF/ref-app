@@ -13,6 +13,7 @@ from climate_ref.results import MetricValueFilter, OutlierPolicy
 from climate_ref.results.values import ScalarValueCollection, SeriesValueCollection
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.metric_values import MetricValueType
+from ref_backend.core.source_types import eras_for_executions
 from ref_backend.models import MetricValueCollection
 
 if TYPE_CHECKING:
@@ -126,6 +127,24 @@ def generate_csv_response_series(
     )
 
 
+def annotate_eras(app_context: "AppContext", collection: MetricValueCollection) -> MetricValueCollection:
+    """
+    Stamp each model value with the MIP era of the execution that produced it.
+
+    The charts split on this, and most diagnostics do not record it themselves. An era the
+    diagnostic did record wins, since it describes the value rather than merely its inputs.
+    """
+    model_items = [item for item in collection.data if item.kind == "model"]
+    eras = eras_for_executions(app_context.session, {item.execution_id for item in model_items})
+
+    for item in model_items:
+        era = eras.get(item.execution_id)
+        if era and not item.dimensions.get("mip_era"):
+            item.dimensions["mip_era"] = era
+
+    return collection
+
+
 def fetch_metric_values(  # noqa: PLR0913, PLR0917
     app_context: "AppContext",
     metric_filter: MetricValueFilter,
@@ -165,7 +184,9 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             offset=offset,
             limit=limit,
         )
-        return MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
+        return annotate_eras(
+            app_context, MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
+        )
 
     if value_type == MetricValueType.SERIES:
         if format == "csv":
@@ -179,6 +200,6 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             offset=offset,
             limit=limit,
         )
-        return MetricValueCollection.build_series_from_reader(series_collection)
+        return annotate_eras(app_context, MetricValueCollection.build_series_from_reader(series_collection))
 
     raise HTTPException(status_code=500, detail="Unknown value_type")

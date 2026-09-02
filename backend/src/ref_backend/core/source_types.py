@@ -1,9 +1,10 @@
 """Helpers for serving CMIP6 and CMIP7 side by side."""
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, and_, false, or_, true
+from sqlalchemy import ColumnElement, and_, false, or_, select, true
+from sqlalchemy.orm import Session
 
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
@@ -30,10 +31,7 @@ def _facet_column(dataset_model: Any, key: str) -> Any:
     return column if column is not None and hasattr(column, "type") else None
 
 
-def cmip_dataset_filter(
-    facets: Mapping[str, str],
-    execution: Any = models.Execution,
-) -> ColumnElement[bool]:
+def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     """
     Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.
 
@@ -50,7 +48,7 @@ def cmip_dataset_filter(
     branches = []
 
     for source_type, dataset_model in CMIP_ERAS.items():
-        if requested_era and requested_era.upper() != str(source_type.value).upper():
+        if requested_era and requested_era.upper() != mip_era_for(source_type):
             continue
 
         columns = {key: _facet_column(dataset_model, key) for key in known}
@@ -59,9 +57,34 @@ def cmip_dataset_filter(
 
         conditions = [build_filter_clause(columns[key], value) for key, value in known.items()]
         # `and_()` with no arguments is deprecated, so seed it for the unfiltered case.
-        branches.append(execution.datasets.of_type(dataset_model).any(and_(true(), *conditions)))
+        branches.append(models.Execution.datasets.of_type(dataset_model).any(and_(true(), *conditions)))
 
     if not branches:
         # Nothing can satisfy the request, so match no rows rather than every row.
         return false()
     return or_(*branches)
+
+
+def eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
+    """
+    Map each execution onto the MIP era of the model datasets it ran against.
+
+    Most diagnostics never record an era on their own values, so this recovers it from the inputs.
+    An execution mixing eras is left out, because no single era describes it.
+    """
+    if not execution_ids:
+        return {}
+
+    eras: dict[int, str | None] = {}
+    for source_type, dataset_model in CMIP_ERAS.items():
+        era = mip_era_for(source_type)
+        rows = session.execute(
+            select(models.Execution.id)
+            .join(models.Execution.datasets.of_type(dataset_model))
+            .where(models.Execution.id.in_(execution_ids))
+            .distinct()
+        ).scalars()
+        for execution_id in rows:
+            eras[execution_id] = era if execution_id not in eras else None
+
+    return {execution_id: era for execution_id, era in eras.items() if era is not None}

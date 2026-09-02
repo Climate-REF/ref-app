@@ -21,6 +21,11 @@ describe("eraOf", () => {
     expect(eraOf(model({ mip_id: "CMIP7" }))).toBe("CMIP7");
   });
 
+  it("prefers the mip_era the API stamps on over a diagnostic's own mip_id", () => {
+    expect(eraOf(model({ mip_era: "CMIP7", mip_id: "CMIP6" }))).toBe("CMIP7");
+    expect(eraOf(model({ mip_id: "CMIP6" }))).toBe("CMIP6");
+  });
+
   it("returns null when the era is missing or unknown", () => {
     expect(eraOf(model({}))).toBeNull();
     expect(eraOf(model({ mip_id: "CMIP5" }))).toBeNull();
