@@ -4,7 +4,7 @@ import { z } from "zod";
 import { MipEraProvider } from "@/components/charts/mipEraContext";
 import { MipEraSelector } from "@/components/charts/mipEraSelector";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
-import { mipEraSearchSchema } from "@/lib/mipEras";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
 const themesSchema = z.object({
   theme: z
@@ -16,7 +16,7 @@ const themesSchema = z.object({
       "ocean",
     ])
     .default("atmosphere"),
-  ...mipEraSearchSchema,
+  ...mipEraSearchFields,
 });
 
 const Themes = () => {

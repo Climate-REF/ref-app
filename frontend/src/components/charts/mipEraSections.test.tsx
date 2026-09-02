@@ -63,6 +63,13 @@ describe("MipEraSections with a page selection", () => {
     renderChart(four(undefined), "CMIP7");
     expect(screen.getAllByTestId("chart")).toHaveLength(1);
     expect(screen.queryByText("No CMIP7 results")).not.toBeInTheDocument();
+    // Unbadged here would read as CMIP7 data, which is what the selector says.
+    expect(screen.getByText("MIP era not recorded")).toBeInTheDocument();
+  });
+
+  it("leaves the selected era unbadged, since the selector already names it", () => {
+    renderChart(four("CMIP6"), "CMIP6");
+    expect(screen.queryByText("CMIP6")).not.toBeInTheDocument();
   });
 
   it("still suppresses a chart with too few models", () => {

@@ -18,11 +18,9 @@ import {
 } from "@/components/explorer/explorerCardContent";
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mipEraSearchSchema } from "@/lib/mipEras";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
-const explorerSchema = z.object({
-  ...mipEraSearchSchema,
-});
+const explorerSchema = z.object(mipEraSearchFields);
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",

@@ -59,14 +59,12 @@ export function MipEraSections<T extends DimensionedData>({
     );
   }
 
-  // A selected era is already named by the page's selector, so only the leftovers need a badge.
-  const badged = visible.length > 1 || !selectedMipEra;
-
   return (
     <div className="space-y-8">
       {visible.map(({ mipEra, values: mipEraValues }) => (
         <section key={mipEra ?? "unattributed"} className="space-y-3">
-          {badged && (visible.length > 1 || mipEra) ? (
+          {/* Only the section the page's selector already names can go unbadged. */}
+          {mipEra !== selectedMipEra || visible.length > 1 ? (
             <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}
           <SampleSizeGate values={mipEraValues}>

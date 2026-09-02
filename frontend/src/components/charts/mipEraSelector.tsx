@@ -3,6 +3,7 @@ import { MIP_ERAS, type MipEra } from "@/lib/mipEras";
 
 interface MipEraSelectorProps {
   mipEra: MipEra;
+  // The router types a search update against its own route, so the caller owns the navigation.
   onChange: (mipEra: MipEra) => void;
 }
 

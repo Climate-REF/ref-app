@@ -12,8 +12,8 @@ export const MIP_ERAS = ["CMIP6", "CMIP7"] as const;
 
 export type MipEra = (typeof MIP_ERAS)[number];
 
-/** The search parameter every page that selects an era shares. */
-export const mipEraSearchSchema = {
+/** The search parameter fields every page that selects a MIP era shares. */
+export const mipEraSearchFields = {
   mip_era: z.enum(MIP_ERAS).default("CMIP6"),
 };
 
