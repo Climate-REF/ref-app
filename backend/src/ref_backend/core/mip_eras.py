@@ -4,6 +4,8 @@ from collections.abc import Collection, Mapping
 from typing import Any
 
 from sqlalchemy import ColumnElement, and_, false, or_, select
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import ColumnCollection
 
 from climate_ref import models
 from climate_ref_core.datasets import SourceDatasetType
@@ -13,7 +15,7 @@ from ref_backend.core.filter_utils import build_filter_clause
 CMIP_ERAS: tuple[SourceDatasetType, ...] = (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
 
 
-def dataset_model_for(source_type: SourceDatasetType) -> Any:
+def dataset_model_for(source_type: SourceDatasetType) -> type[models.Dataset]:
     """Resolve the mapped class backing a source type."""
     return models.Dataset.__mapper__.polymorphic_map[source_type].class_
 
@@ -25,7 +27,7 @@ def mip_era_for(source_type: SourceDatasetType) -> str | None:
     return str(source_type.value).upper()
 
 
-def _mapped_columns(source_type: SourceDatasetType) -> Any:
+def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any]:
     """Return the columns an era's dataset table actually carries."""
     return dataset_model_for(source_type).__mapper__.columns
 
@@ -39,10 +41,11 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     all of CMIP6.
     """
     requested_era = facets.get("mip_era")
+    columns_by_era = {era: _mapped_columns(era) for era in CMIP_ERAS}
     known = {
         key: value
         for key, value in facets.items()
-        if key != "mip_era" and any(key in _mapped_columns(era) for era in CMIP_ERAS)
+        if key != "mip_era" and any(key in columns for columns in columns_by_era.values())
     }
 
     branches = []
@@ -51,7 +54,7 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
             continue
 
         dataset_model = dataset_model_for(source_type)
-        if any(key not in _mapped_columns(source_type) for key in known):
+        if any(key not in columns_by_era[source_type] for key in known):
             continue
 
         conditions = [build_filter_clause(getattr(dataset_model, key), value) for key, value in known.items()]
@@ -64,7 +67,7 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return or_(*branches)
 
 
-def eras_for_executions(session: Any, execution_ids: Collection[int]) -> dict[int, str]:
+def eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
     """
     Map each execution onto the MIP era of the model datasets it ran against.
 

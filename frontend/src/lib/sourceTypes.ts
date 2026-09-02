@@ -1,4 +1,6 @@
-export type SourceType = "cmip6" | "cmip7" | "obs4mips";
+export const SOURCE_TYPES = ["cmip6", "cmip7", "obs4mips"] as const;
+
+export type SourceType = (typeof SOURCE_TYPES)[number];
 
 export function getSourceTypeColour(sourceType: string | SourceType) {
   switch (sourceType) {

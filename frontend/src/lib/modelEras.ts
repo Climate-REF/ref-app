@@ -60,13 +60,13 @@ export function sampleSize(values: DimensionedData[]): SampleSize {
   }
 
   // A diagnostic that reports one value per region rather than per model has nothing to gate on.
-  const gated = models.size > 0;
+  const hasModels = models.size > 0;
 
   return {
     models: models.size,
     families: families.size,
-    enoughModels: !gated || models.size >= MIN_MODELS_FOR_CHART,
-    sparseFamilies: gated && families.size < MIN_FAMILIES_FOR_CONFIDENCE,
+    enoughModels: !hasModels || models.size >= MIN_MODELS_FOR_CHART,
+    sparseFamilies: hasModels && families.size < MIN_FAMILIES_FOR_CONFIDENCE,
   };
 }
 
