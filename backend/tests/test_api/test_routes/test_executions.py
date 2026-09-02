@@ -422,3 +422,25 @@ def test_execution_statistics(client: TestClient, settings) -> None:
     assert isinstance(data["total_execution_groups"], int)
     assert isinstance(data["successful_execution_groups"], int)
     assert isinstance(data["failed_execution_groups"], int)
+
+
+def test_execution_carries_resource_usage(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?limit=50")
+    assert r.status_code == 200
+    executions = [g["latest_execution"] for g in r.json()["data"] if g["latest_execution"]]
+    assert executions
+    for execution in executions:
+        assert set(execution) >= {"wall_seconds", "cpu_seconds", "peak_memory_bytes"}
+    timed = [e for e in executions if e["wall_seconds"] is not None]
+    assert timed
+    assert all(e["cpu_seconds"] > 0 and e["peak_memory_bytes"] > 0 for e in timed)
+
+
+def test_execution_statistics_resource_usage(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/statistics")
+    assert r.status_code == 200
+    usage = r.json()["resource_usage"]
+    assert usage["timed_execution_count"] > 0
+    assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
+    assert usage["cpu_seconds_total"] > 0
+    assert usage["peak_memory_bytes_max"] > 0

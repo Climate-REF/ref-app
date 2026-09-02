@@ -613,6 +613,7 @@ export type DiagnosticSummary = {
      * Tags
      */
     tags?: Array<string> | null;
+    resource_usage?: ExecutionResourceSummary | null;
 };
 
 /**
@@ -651,6 +652,18 @@ export type Execution = {
      * Outputs
      */
     outputs: Array<ExecutionOutput>;
+    /**
+     * Wall Seconds
+     */
+    wall_seconds: number | null;
+    /**
+     * Cpu Seconds
+     */
+    cpu_seconds: number | null;
+    /**
+     * Peak Memory Bytes
+     */
+    peak_memory_bytes: number | null;
 };
 
 /**
@@ -738,6 +751,49 @@ export type ExecutionOutput = {
 };
 
 /**
+ * ExecutionResourceSummary
+ *
+ * Roll-up of the resource usage recorded across a set of executions.
+ *
+ * Only executions that recorded a wall time are counted.
+ * CPU time and peak memory are optional, so they may be missing even when wall time is present.
+ */
+export type ExecutionResourceSummary = {
+    /**
+     * Timed Execution Count
+     */
+    timed_execution_count: number;
+    /**
+     * Wall Seconds Total
+     */
+    wall_seconds_total: number;
+    /**
+     * Wall Seconds Mean
+     */
+    wall_seconds_mean: number;
+    /**
+     * Wall Seconds Max
+     */
+    wall_seconds_max: number;
+    /**
+     * Cpu Seconds Total
+     */
+    cpu_seconds_total: number | null;
+    /**
+     * Cpu Seconds Mean
+     */
+    cpu_seconds_mean: number | null;
+    /**
+     * Cpu Seconds Max
+     */
+    cpu_seconds_max: number | null;
+    /**
+     * Peak Memory Bytes Max
+     */
+    peak_memory_bytes_max: number | null;
+};
+
+/**
  * ExecutionStats
  *
  * Statistics for execution groups and their success rates.
@@ -771,6 +827,7 @@ export type ExecutionStats = {
      * Total Files
      */
     total_files: number;
+    resource_usage: ExecutionResourceSummary | null;
     /**
      * Success Rate Percentage
      *
@@ -1276,6 +1333,7 @@ export type ExecutionStatsWritable = {
      * Total Files
      */
     total_files: number;
+    resource_usage: ExecutionResourceSummary | null;
 };
 
 export type Cmip7AssessmentFastTrackAftListAftDiagnosticsData = {

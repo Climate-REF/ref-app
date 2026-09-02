@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatBytes, formatDuration } from "@/lib/format";
 
 const ExecutionInfoLayout = () => {
   const { groupId } = Route.useParams();
@@ -105,14 +106,28 @@ const ExecutionInfoLayout = () => {
                 ),
               },
               {
-                label: "Execution Time",
-                value:
-                  // Currently not implemented in backend
-                  execution.updated_at
-                    ? (() => {
-                        return "—";
-                      })()
-                    : "—",
+                label: "Wall time",
+                value: (
+                  <span title="Wall clock time taken by the selected execution.">
+                    {formatDuration(execution.wall_seconds)}
+                  </span>
+                ),
+              },
+              {
+                label: "CPU time",
+                value: (
+                  <span title="CPU time used by the selected execution and its child processes.">
+                    {formatDuration(execution.cpu_seconds)}
+                  </span>
+                ),
+              },
+              {
+                label: "Peak memory",
+                value: (
+                  <span title="Peak resident memory observed during the selected execution.">
+                    {formatBytes(execution.peak_memory_bytes)}
+                  </span>
+                ),
               },
               {
                 label: "Number of outputs",

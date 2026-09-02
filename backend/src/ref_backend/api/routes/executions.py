@@ -27,6 +27,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
+from ref_backend.core.resource_usage import resource_usage_overall
 from ref_backend.models import (
     Collection,
     Dataset,
@@ -101,6 +102,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
         series_value_count=series_value_count,
         total_datasets=total_datasets,
         total_files=total_files,
+        resource_usage=resource_usage_overall(session),
     )
 
 

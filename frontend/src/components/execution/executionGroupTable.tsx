@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import { formatDuration } from "@/lib/format";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -140,6 +141,15 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
           No
         </Badge>
       ),
+  },
+  {
+    id: "wall_seconds",
+    header: () => (
+      <span title="Wall clock time taken by the latest execution in this group.">
+        Wall time
+      </span>
+    ),
+    accessorFn: (row) => formatDuration(row.latest_execution?.wall_seconds),
   },
   {
     id: "updated_at",

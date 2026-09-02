@@ -17,6 +17,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
+from ref_backend.core.resource_usage import resource_usage_by_diagnostic
 from ref_backend.models import (
     Collection,
     DiagnosticSummary,
@@ -150,6 +151,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
         .all()
     )
     successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
+    resource_usage = resource_usage_by_diagnostic(app_context.session, diagnostic_ids)
 
     return Collection(
         data=[
@@ -161,6 +163,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
                 execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
                 execution_group_count=group_counts.get(m.id, 0),
                 successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
+                resource_usage=resource_usage.get(m.id),
             )
             for m in diagnostics
         ]
