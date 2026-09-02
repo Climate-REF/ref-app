@@ -35,6 +35,18 @@ export function mipEraOf(value: DimensionedData): MipEra | null {
 }
 
 /**
+ * The MIP era an execution group ran against, read from the source types keying its selectors.
+ *
+ * Null when the group holds no CMIP selector at all, so the caller cannot rule an era out.
+ */
+export function mipEraOfSelectors(
+  selectors: Record<string, unknown>,
+): MipEra | null {
+  const keys = Object.keys(selectors).map((key) => key.toUpperCase());
+  return MIP_ERAS.find((era) => keys.includes(era)) ?? null;
+}
+
+/**
  * The model family a `source_id` belongs to, taken as the segment before the first hyphen.
  *
  * ACCESS-CM2 and ACCESS-ESM1-5 are both ACCESS, so a centre contributing several models does not

@@ -18,6 +18,7 @@ import {
 } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Figure } from "@/components/diagnostics/figure.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { mipEraOfSelectors } from "@/lib/mipEras";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
 import {
@@ -170,6 +172,7 @@ export function FigureGallery({
   }, []);
 
   const [columns, setColumns] = useState(getColumns());
+  const selectedMipEra = useSelectedMipEra();
 
   const { data: executionGroups, isLoading } = useQuery(
     diagnosticsListExecutionGroupsOptions({
@@ -187,7 +190,15 @@ export function FigureGallery({
     };
   }, [getColumns]);
 
-  const groups = executionGroups?.data ?? [];
+  // Groups with no CMIP selector cannot be placed in an era, so they are kept rather than lost.
+  const groups = useMemo(() => {
+    const all = executionGroups?.data ?? [];
+    if (!selectedMipEra) return all;
+    return all.filter((group) => {
+      const era = mipEraOfSelectors(group.selectors);
+      return era === null || era === selectedMipEra;
+    });
+  }, [executionGroups, selectedMipEra]);
 
   const allFigures = useMemo<FigureWithGroup[]>(
     () =>
@@ -300,7 +311,7 @@ export function FigureGallery({
       </div>
 
       <SelectorFilterPanel
-        executionGroups={executionGroups?.data ?? []}
+        executionGroups={groups}
         filters={selectorFilters}
         onFiltersChange={setSelectorFilters}
       />

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   mipEraOf,
+  mipEraOfSelectors,
   modelFamily,
   sampleSize,
   splitByMipEra,
@@ -115,5 +116,19 @@ describe("sampleSize", () => {
     ]);
     expect(result.enoughModels).toBe(true);
     expect(result.sparseFamilies).toBe(false);
+  });
+});
+
+describe("mipEraOfSelectors", () => {
+  it("reads the era from the source type keying the selectors", () => {
+    expect(mipEraOfSelectors({ cmip6: [["experiment_id", "ssp126"]] })).toBe(
+      "CMIP6",
+    );
+    expect(mipEraOfSelectors({ cmip7: [], obs4mips: [] })).toBe("CMIP7");
+  });
+
+  it("returns null when no CMIP source type is present", () => {
+    expect(mipEraOfSelectors({ obs4mips: [["source_id", "ERA5"]] })).toBeNull();
+    expect(mipEraOfSelectors({})).toBeNull();
   });
 });
