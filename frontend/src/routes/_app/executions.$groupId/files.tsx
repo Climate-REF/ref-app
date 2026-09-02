@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { executionsExecutionOptions } from "@/client/@tanstack/react-query.gen";
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
 
-export const FilesTab = () => {
+const FilesTab = () => {
   const { groupId } = Route.useParams();
   // const { executionId } = Route.useSearch();
 

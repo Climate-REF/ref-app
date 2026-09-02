@@ -3,7 +3,7 @@ import { FigureGallery } from "@/components/diagnostics/figureGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Figures tab as nested route
-export const Figures = () => {
+const Figures = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
   return (
     <div className="space-y-4">

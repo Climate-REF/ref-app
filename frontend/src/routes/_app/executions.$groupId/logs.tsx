@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const LogsTab = () => {
+const LogsTab = () => {
   const { groupId } = Route.useParams();
   // const { executionId } = Route.useSearch();
 

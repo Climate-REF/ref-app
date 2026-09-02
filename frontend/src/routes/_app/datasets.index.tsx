@@ -147,5 +147,3 @@ function SourcesIndexPage() {
     </div>
   );
 }
-
-export default SourcesIndexPage;

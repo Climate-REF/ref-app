@@ -24,7 +24,7 @@ const scalarValuesSearchSchema = z
   })
   .catchall(z.string().optional());
 
-export const ScalarValuesTab = () => {
+const ScalarValuesTab = () => {
   const { groupId } = Route.useParams();
   const search = Route.useSearch();
   const { detect_outliers, include_unverified } = search;

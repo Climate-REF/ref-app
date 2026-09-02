@@ -24,7 +24,7 @@ const seriesValuesSearchSchema = z
   })
   .catchall(z.string().optional());
 
-export const SeriesValuesTab = () => {
+const SeriesValuesTab = () => {
   const { groupId } = Route.useParams();
   const search = Route.useSearch();
   const { detect_outliers, include_unverified } = search;

@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const DatasetsTab = () => {
+const DatasetsTab = () => {
   const { groupId } = Route.useParams();
   // const { executionId } = Route.useSearch();
 
