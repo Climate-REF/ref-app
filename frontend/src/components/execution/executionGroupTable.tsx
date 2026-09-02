@@ -218,7 +218,7 @@ function ExecutionGroupTableWithQuery({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {selectedMipEra && groups.length === 0 ? (
+        {groups.length === 0 ? (
           <MipEraEmptyState what="execution groups" />
         ) : (
           <DataTable

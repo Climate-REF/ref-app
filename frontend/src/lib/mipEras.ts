@@ -50,7 +50,7 @@ export function storeMipEra(era: MipEra) {
   try {
     localStorage.setItem(STORAGE_KEY, era);
   } catch {
-    // Storage can be blocked.
+    // Storage can be blocked, and the URL still carries the pick.
   }
 }
 

@@ -111,7 +111,7 @@ function ExecutionsListPage() {
   };
 
   const handleClearFilters = () => {
-    navigate({ search: {} });
+    navigate({ search: { mip_era: search.mip_era } });
   };
 
   return (
