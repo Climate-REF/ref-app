@@ -16,27 +16,22 @@ describe("modelFamily", () => {
 });
 
 describe("eraOf", () => {
-  it("reads the mip_id dimension case-insensitively", () => {
-    expect(eraOf(model({ mip_id: "cmip6" }))).toBe("CMIP6");
-    expect(eraOf(model({ mip_id: "CMIP7" }))).toBe("CMIP7");
-  });
-
-  it("prefers the mip_era the API stamps on over a diagnostic's own mip_id", () => {
-    expect(eraOf(model({ mip_era: "CMIP7", mip_id: "CMIP6" }))).toBe("CMIP7");
-    expect(eraOf(model({ mip_id: "CMIP6" }))).toBe("CMIP6");
+  it("reads the mip_era dimension case-insensitively", () => {
+    expect(eraOf(model({ mip_era: "cmip6" }))).toBe("CMIP6");
+    expect(eraOf(model({ mip_era: "CMIP7" }))).toBe("CMIP7");
   });
 
   it("returns null when the era is missing or unknown", () => {
     expect(eraOf(model({}))).toBeNull();
-    expect(eraOf(model({ mip_id: "CMIP5" }))).toBeNull();
+    expect(eraOf(model({ mip_era: "CMIP5" }))).toBeNull();
   });
 });
 
 describe("splitByEra", () => {
   it("keeps the two eras in separate buckets", () => {
     const sections = splitByEra([
-      model({ mip_id: "CMIP7", source_id: "A" }),
-      model({ mip_id: "CMIP6", source_id: "B" }),
+      model({ mip_era: "CMIP7", source_id: "A" }),
+      model({ mip_era: "CMIP6", source_id: "B" }),
     ]);
     expect(sections.map((s) => s.era)).toEqual(["CMIP6", "CMIP7"]);
     expect(sections[0].values).toHaveLength(1);
@@ -45,8 +40,8 @@ describe("splitByEra", () => {
   it("repeats reference values in every bucket", () => {
     const baseline = reference({ source_id: "HadISST" });
     const sections = splitByEra([
-      model({ mip_id: "CMIP6", source_id: "A" }),
-      model({ mip_id: "CMIP7", source_id: "B" }),
+      model({ mip_era: "CMIP6", source_id: "A" }),
+      model({ mip_era: "CMIP7", source_id: "B" }),
       baseline,
     ]);
     expect(sections).toHaveLength(2);
@@ -58,7 +53,7 @@ describe("splitByEra", () => {
   it("never repeats an untagged model value into an era bucket", () => {
     const untagged = model({ source_id: "A" });
     const sections = splitByEra([
-      model({ mip_id: "CMIP7", source_id: "B" }),
+      model({ mip_era: "CMIP7", source_id: "B" }),
       untagged,
     ]);
     expect(sections.map((s) => s.era)).toEqual(["CMIP7", null]);
@@ -113,7 +108,6 @@ describe("sampleSize", () => {
       model({ region: "global" }),
       model({ region: "tropics" }),
     ]);
-    expect(result.gated).toBe(false);
     expect(result.enoughModels).toBe(true);
     expect(result.sparseFamilies).toBe(false);
   });

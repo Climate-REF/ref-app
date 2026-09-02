@@ -3,19 +3,19 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, and_, false, or_, select, true
-from sqlalchemy.orm import Session
+from sqlalchemy import ColumnElement, and_, false, or_, select
 
 from climate_ref import models
-from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref_core.datasets import SourceDatasetType
 from ref_backend.core.filter_utils import build_filter_clause
 
 #: The model eras the app presents. Data from the two is never combined on a chart.
-CMIP_ERAS: dict[SourceDatasetType, Any] = {
-    SourceDatasetType.CMIP6: CMIP6Dataset,
-    SourceDatasetType.CMIP7: CMIP7Dataset,
-}
+CMIP_ERAS: tuple[SourceDatasetType, ...] = (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
+
+
+def dataset_model_for(source_type: SourceDatasetType) -> Any:
+    """Resolve the mapped class backing a source type."""
+    return models.Dataset.__mapper__.polymorphic_map[source_type].class_
 
 
 def mip_era_for(source_type: SourceDatasetType) -> str | None:
@@ -25,10 +25,9 @@ def mip_era_for(source_type: SourceDatasetType) -> str | None:
     return str(source_type.value).upper()
 
 
-def _facet_column(dataset_model: Any, key: str) -> Any:
-    """Return the mapped column for a facet, or None when the era does not carry it."""
-    column = getattr(dataset_model, key, None)
-    return column if column is not None and hasattr(column, "type") else None
+def _mapped_columns(source_type: SourceDatasetType) -> Any:
+    """Return the columns an era's dataset table actually carries."""
+    return dataset_model_for(source_type).__mapper__.columns
 
 
 def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
@@ -43,21 +42,21 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     known = {
         key: value
         for key, value in facets.items()
-        if key != "mip_era" and any(_facet_column(model, key) is not None for model in CMIP_ERAS.values())
+        if key != "mip_era" and any(key in _mapped_columns(era) for era in CMIP_ERAS)
     }
-    branches = []
 
-    for source_type, dataset_model in CMIP_ERAS.items():
+    branches = []
+    for source_type in CMIP_ERAS:
         if requested_era and requested_era.upper() != mip_era_for(source_type):
             continue
 
-        columns = {key: _facet_column(dataset_model, key) for key in known}
-        if any(column is None for column in columns.values()):
+        dataset_model = dataset_model_for(source_type)
+        if any(key not in _mapped_columns(source_type) for key in known):
             continue
 
-        conditions = [build_filter_clause(columns[key], value) for key, value in known.items()]
-        # `and_()` with no arguments is deprecated, so seed it for the unfiltered case.
-        branches.append(models.Execution.datasets.of_type(dataset_model).any(and_(true(), *conditions)))
+        conditions = [build_filter_clause(getattr(dataset_model, key), value) for key, value in known.items()]
+        datasets = models.Execution.datasets.of_type(dataset_model)
+        branches.append(datasets.any(and_(*conditions)) if conditions else datasets.any())
 
     if not branches:
         # Nothing can satisfy the request, so match no rows rather than every row.
@@ -65,7 +64,7 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return or_(*branches)
 
 
-def eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
+def eras_for_executions(session: Any, execution_ids: Collection[int]) -> dict[int, str]:
     """
     Map each execution onto the MIP era of the model datasets it ran against.
 
@@ -75,16 +74,19 @@ def eras_for_executions(session: Session, execution_ids: Collection[int]) -> dic
     if not execution_ids:
         return {}
 
+    rows = session.execute(
+        select(models.Execution.id, models.Dataset.dataset_type)
+        .join(models.Execution.datasets)
+        .where(
+            models.Execution.id.in_(execution_ids),
+            models.Dataset.dataset_type.in_(CMIP_ERAS),
+        )
+        .distinct()
+    ).all()
+
     eras: dict[int, str | None] = {}
-    for source_type, dataset_model in CMIP_ERAS.items():
-        era = mip_era_for(source_type)
-        rows = session.execute(
-            select(models.Execution.id)
-            .join(models.Execution.datasets.of_type(dataset_model))
-            .where(models.Execution.id.in_(execution_ids))
-            .distinct()
-        ).scalars()
-        for execution_id in rows:
-            eras[execution_id] = era if execution_id not in eras else None
+    for execution_id, dataset_type in rows:
+        era = mip_era_for(dataset_type)
+        eras[execution_id] = era if execution_id not in eras else None
 
     return {execution_id: era for execution_id, era in eras.items() if era is not None}

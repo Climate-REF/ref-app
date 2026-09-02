@@ -166,7 +166,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
 
     # Filter by source_id using a correlated EXISTS to avoid DISTINCT across joins
     if source_id or mip_era:
-        facets = {k: v for k, v in (("source_id", source_id), ("mip_era", mip_era)) if v}
+        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
         query = query.filter(models.ExecutionGroup.executions.any(cmip_dataset_filter(facets)))
 
     total_count = query.count()

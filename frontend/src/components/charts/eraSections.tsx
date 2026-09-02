@@ -1,9 +1,9 @@
 import { AlertTriangle, Info } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
+import type { DimensionedData } from "@/components/explorer/grouping";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
-  type Dimensioned,
   MIN_FAMILIES_FOR_CONFIDENCE,
   MIN_MODELS_FOR_CHART,
   type MipEra,
@@ -11,7 +11,7 @@ import {
   splitByEra,
 } from "@/lib/modelEras";
 
-interface EraSectionsProps<T extends Dimensioned> {
+interface EraSectionsProps<T extends DimensionedData> {
   values: T[];
   /** Rendered once per era, with only that era's values. */
   children: (values: T[], era: MipEra | null) => ReactNode;
@@ -22,11 +22,12 @@ interface EraSectionsProps<T extends Dimensioned> {
  *
  * CMIP6 and CMIP7 get separate charts because the two ensembles are not directly comparable.
  */
-export function EraSections<T extends Dimensioned>({
+export function EraSections<T extends DimensionedData>({
   values,
   children,
 }: EraSectionsProps<T>) {
-  const sections = splitByEra(values);
+  // Stable section identity keeps the charts from re-deriving on unrelated parent state.
+  const sections = useMemo(() => splitByEra(values), [values]);
 
   if (sections.length === 0) return null;
 
@@ -46,7 +47,7 @@ export function EraSections<T extends Dimensioned>({
   );
 }
 
-interface SampleSizeGateProps<T extends Dimensioned> {
+interface SampleSizeGateProps<T extends DimensionedData> {
   values: T[];
   children: ReactNode;
 }
@@ -54,11 +55,14 @@ interface SampleSizeGateProps<T extends Dimensioned> {
 /**
  * Suppress a chart drawn from too few models, and warn when too few families contributed.
  */
-export function SampleSizeGate<T extends Dimensioned>({
+function SampleSizeGate<T extends DimensionedData>({
   values,
   children,
 }: SampleSizeGateProps<T>) {
-  const { models, families, enoughModels, sparseFamilies } = sampleSize(values);
+  const { models, families, enoughModels, sparseFamilies } = useMemo(
+    () => sampleSize(values),
+    [values],
+  );
 
   if (!enoughModels) {
     return (

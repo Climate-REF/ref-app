@@ -734,3 +734,19 @@ def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
     model_values = [item for item in r.json()["data"] if item["kind"] == "model"]
     assert model_values
     assert all(item["dimensions"]["mip_era"] == "CMIP6" for item in model_values)
+
+
+def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: TestClient, settings) -> None:
+    """An unrecognised query parameter is ignored without dropping the filters beside it."""
+    diagnostic = get_diagnostic(client, settings)
+    base = (
+        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
+    )
+
+    matching = client.get(f"{base}?source_id=ACCESS-ESM1-5&not_a_facet=zzz")
+    missing = client.get(f"{base}?source_id=NOT-A-MODEL&not_a_facet=zzz")
+
+    assert matching.status_code == 200
+    assert missing.status_code == 200
+    assert matching.json()["count"] > 0
+    assert missing.json()["count"] == 0

@@ -2,6 +2,11 @@
  * Keeping CMIP6 and CMIP7 apart, and deciding when a chart has enough models to be worth drawing.
  */
 
+import {
+  type DimensionedData,
+  isReferenceItem,
+} from "@/components/explorer/grouping";
+
 export const MIP_ERAS = ["CMIP6", "CMIP7"] as const;
 
 export type MipEra = (typeof MIP_ERAS)[number];
@@ -12,28 +17,15 @@ export const MIN_MODELS_FOR_CHART = 4;
 /** A chart drawn from fewer than this many distinct model families carries a sparse-sample warning. */
 export const MIN_FAMILIES_FOR_CONFIDENCE = 10;
 
-/** The shape every chart value shares: a dimensions bag, and sometimes a top-level kind. */
-export type Dimensioned = {
-  dimensions: { [key: string]: string };
-  kind?: "model" | "reference";
-};
-
 /**
- * The era a value belongs to.
+ * The era a value belongs to, from the `mip_era` dimension the API stamps on each model value.
  *
- * `mip_era` is stamped on by the API from the execution's inputs, and `mip_id` is the dimension a
- * diagnostic may record itself. Either can be absent, so callers must not read a null era as
- * meaning observational data.
+ * It is absent when the execution's inputs did not settle an era, so callers must not read a null
+ * era as meaning observational data.
  */
-export function eraOf(value: Dimensioned): MipEra | null {
-  const label = (
-    value.dimensions.mip_era ?? value.dimensions.mip_id
-  )?.toUpperCase();
+export function eraOf(value: DimensionedData): MipEra | null {
+  const label = value.dimensions.mip_era?.toUpperCase();
   return MIP_ERAS.find((era) => era === label) ?? null;
-}
-
-export function isReference(value: Dimensioned): boolean {
-  return (value.kind ?? value.dimensions.kind) === "reference";
 }
 
 /**
@@ -53,16 +45,14 @@ export interface SampleSize {
   enoughModels: boolean;
   /** True when the models that did contribute come from too few families to be independent. */
   sparseFamilies: boolean;
-  /** False when nothing in the data is dimensioned by model, so neither rule applies. */
-  gated: boolean;
 }
 
-export function sampleSize(values: Dimensioned[]): SampleSize {
+export function sampleSize(values: DimensionedData[]): SampleSize {
   const models = new Set<string>();
   const families = new Set<string>();
 
   for (const value of values) {
-    if (isReference(value)) continue;
+    if (isReferenceItem(value)) continue;
     const sourceId = value.dimensions.source_id;
     if (!sourceId) continue;
     models.add(sourceId);
@@ -77,7 +67,6 @@ export function sampleSize(values: Dimensioned[]): SampleSize {
     families: families.size,
     enoughModels: !gated || models.size >= MIN_MODELS_FOR_CHART,
     sparseFamilies: gated && families.size < MIN_FAMILIES_FOR_CONFIDENCE,
-    gated,
   };
 }
 
@@ -88,14 +77,14 @@ export function sampleSize(values: Dimensioned[]): SampleSize {
  * A model value carrying no era gets its own unlabelled section rather than being repeated, since
  * repeating it would put CMIP6 results on the CMIP7 chart.
  */
-export function splitByEra<T extends Dimensioned>(
+export function splitByEra<T extends DimensionedData>(
   values: T[],
 ): { era: MipEra | null; values: T[] }[] {
   const buckets = new Map<MipEra | null, T[]>();
   const references: T[] = [];
 
   for (const value of values) {
-    if (isReference(value)) {
+    if (isReferenceItem(value)) {
       references.push(value);
       continue;
     }

@@ -5,8 +5,7 @@ from pydantic import BaseModel, computed_field
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref.results.datasets import DatasetView
-from climate_ref_core.source_types import SourceDatasetType
-from ref_backend.core.mip_eras import mip_era_for
+from ref_backend.core.mip_eras import CMIP_ERAS, mip_era_for
 
 
 class CMIPDatasetMetadata(BaseModel):
@@ -53,7 +52,7 @@ class Dataset(BaseModel):
 
     @staticmethod
     def build_from_view(dataset: DatasetView) -> "Dataset":
-        if dataset.dataset_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
+        if dataset.dataset_type in CMIP_ERAS:
             metadata = CMIPDatasetMetadata.model_validate(dataset.facets)
         else:
             metadata = None
