@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { Download } from "lucide-react";
 import {
   diagnosticsListOptions,
   executionsGetExecutionStatisticsOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { ResourceUsageTable } from "@/components/execution/resourceUsageTable";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,7 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { downloadTextFile } from "@/lib/downloadUtils";
 import { formatBytes, formatCount, formatDuration } from "@/lib/format";
+import { resourceUsageCsv } from "@/lib/resourceUsageCsv";
 
 export const Route = createFileRoute("/_app/executions/resources")({
   component: ResourceUsagePage,
@@ -49,7 +53,23 @@ function ResourceUsagePage() {
     <div className="container mx-auto p-4 space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Resource Usage</CardTitle>
+          <div className="flex items-start justify-between gap-4">
+            <CardTitle>Resource Usage</CardTitle>
+            <Button
+              variant="outline"
+              disabled={!diagnostics.data}
+              onClick={() =>
+                downloadTextFile(
+                  resourceUsageCsv(diagnostics.data?.data ?? []),
+                  "resource-usage.csv",
+                  "text/csv",
+                )
+              }
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </Button>
+          </div>
           <CardDescription>
             <p className="max-w-1/2">
               Wall clock time, CPU time and peak memory recorded by the workers

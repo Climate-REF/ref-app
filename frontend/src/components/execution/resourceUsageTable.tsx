@@ -41,7 +41,7 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     cell: ({ getValue }) => {
       const val = String(getValue() ?? "");
       return (
-        <span className="block truncate max-w-[280px]" title={val}>
+        <span className="block truncate max-w-[200px]" title={val}>
           {val}
         </span>
       );
@@ -53,6 +53,14 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Provider" />
     ),
+    cell: ({ getValue }) => {
+      const val = String(getValue() ?? "");
+      return (
+        <span className="block truncate max-w-[110px]" title={val}>
+          {val}
+        </span>
+      );
+    },
   },
   numericColumn(
     "timed_executions",
@@ -63,42 +71,42 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
   ),
   numericColumn(
     "wall_total",
-    "Wall (total)",
+    "Wall\ntotal",
     "Sum of wall clock time across the timed executions.",
     (row) => row.resource_usage?.wall_seconds_total,
     formatDuration,
   ),
   numericColumn(
     "wall_mean",
-    "Wall (mean)",
+    "Wall\nmean",
     "Mean wall clock time per timed execution.",
     (row) => row.resource_usage?.wall_seconds_mean,
     formatDuration,
   ),
   numericColumn(
     "wall_max",
-    "Wall (max)",
+    "Wall\nmax",
     "Longest wall clock time of any execution.",
     (row) => row.resource_usage?.wall_seconds_max,
     formatDuration,
   ),
   numericColumn(
     "cpu_total",
-    "CPU (total)",
+    "CPU\ntotal",
     "Sum of CPU time across the executions that recorded it.",
     (row) => row.resource_usage?.cpu_seconds_total,
     formatDuration,
   ),
   numericColumn(
     "cpu_mean",
-    "CPU (mean)",
+    "CPU\nmean",
     "Mean CPU time per execution that recorded it.",
     (row) => row.resource_usage?.cpu_seconds_mean,
     formatDuration,
   ),
   numericColumn(
     "memory_max",
-    "Peak memory",
+    "Peak\nmemory",
     "Largest peak resident memory of any execution.",
     (row) => row.resource_usage?.peak_memory_bytes_max,
     formatBytes,
