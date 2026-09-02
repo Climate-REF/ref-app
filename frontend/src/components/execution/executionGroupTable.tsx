@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { AlertTriangle, SquareArrowOutUpRight } from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { SwitchMipEraButton } from "@/components/charts/mipEraBar";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
@@ -20,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { formatDuration } from "@/lib/format";
+import { mipEraOfSelectors } from "@/lib/mipEras";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
 
@@ -201,6 +204,13 @@ function ExecutionGroupTableWithQuery({
       path: { provider_slug: providerSlug, diagnostic_slug: diagnosticSlug },
     }),
   );
+  const selectedMipEra = useSelectedMipEra();
+  // Groups with no CMIP selector cannot be placed in an era, so they are kept rather than lost.
+  const groups = (data?.data ?? []).filter((group) => {
+    if (!selectedMipEra) return true;
+    const era = mipEraOfSelectors(group.selectors);
+    return era === null || era === selectedMipEra;
+  });
 
   return (
     <Card>
@@ -213,12 +223,19 @@ function ExecutionGroupTableWithQuery({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <DataTable
-          data={data?.data ?? []}
-          columns={columns}
-          loading={isLoading}
-          onRowClick={handleRowClick}
-        />
+        {selectedMipEra && groups.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-sm text-muted-foreground">
+            No {selectedMipEra} execution groups yet.
+            <SwitchMipEraButton />
+          </div>
+        ) : (
+          <DataTable
+            data={groups}
+            columns={columns}
+            loading={isLoading}
+            onRowClick={handleRowClick}
+          />
+        )}
       </CardContent>
     </Card>
   );

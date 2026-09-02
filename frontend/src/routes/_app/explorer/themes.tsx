@@ -1,9 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { MipEraBar } from "@/components/charts/mipEraBar";
 import { MipEraProvider } from "@/components/charts/mipEraContext";
-import { MipEraSelector } from "@/components/charts/mipEraSelector";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
+import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
 const themesSchema = z.object({
@@ -20,8 +21,8 @@ const themesSchema = z.object({
 });
 
 const Themes = () => {
-  const { mip_era: mipEra } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
+  const { mip_era } = Route.useSearch();
+  const { mipEra, setMipEra } = useMipEra(mip_era);
 
   return (
     <div className="space-y-6">
@@ -31,13 +32,8 @@ const Themes = () => {
           Browse climate model evaluation results organized by scientific theme.
         </p>
       </div>
-      <MipEraSelector
-        mipEra={mipEra}
-        onChange={(next) =>
-          navigate({ search: (prev) => ({ ...prev, mip_era: next }) })
-        }
-      />
-      <MipEraProvider mipEra={mipEra}>
+      <MipEraBar mipEra={mipEra} onChange={setMipEra} />
+      <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
         <ThematicContent />
       </MipEraProvider>
     </div>

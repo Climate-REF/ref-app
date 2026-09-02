@@ -4,6 +4,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
+import { MipEraBar, SwitchMipEraButton } from "@/components/charts/mipEraBar";
+import { MipEraProvider } from "@/components/charts/mipEraContext";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 import { FilterPanel as ExecutionsFilterPanel } from "@/components/execution/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
@@ -14,12 +16,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useMipEra } from "@/hooks/useMipEra";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
 const ExecutionsSearchSchema = z.object({
   diagnostic_name_contains: z.string().optional(),
   provider_name_contains: z.string().optional(),
   dirty: z.enum(["true", "false"]).optional(),
   successful: z.enum(["true", "false"]).optional(),
+  ...mipEraSearchFields,
 });
 
 export const Route = createFileRoute("/_app/executions/")({
@@ -33,6 +38,7 @@ export const Route = createFileRoute("/_app/executions/")({
 function ExecutionsListPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const { mipEra, setMipEra } = useMipEra(search.mip_era);
 
   // Coerce string flags to booleans for API compatibility
   const toBool = (v?: string) => (v === undefined ? undefined : v === "true");
@@ -44,6 +50,7 @@ function ExecutionsListPage() {
       provider_name_contains: search.provider_name_contains ?? undefined,
       dirty: toBool(search.dirty),
       successful: toBool(search.successful),
+      mip_era: mipEra,
     },
   };
 
@@ -129,6 +136,7 @@ function ExecutionsListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <MipEraBar mipEra={mipEra} onChange={setMipEra} />
           {/* Advanced filter panel (kept for parity with other pages) */}
           <ExecutionsFilterPanel
             filters={search}
@@ -143,9 +151,12 @@ function ExecutionsListPage() {
             </div>
           )}
           {!isLoading && executionGroups.length === 0 && (
-            <div className="text-sm text-muted-foreground">
-              No execution groups match your filters.
-            </div>
+            <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
+              <div className="flex flex-col items-start gap-3 text-sm text-muted-foreground">
+                No {mipEra} execution groups match your filters.
+                <SwitchMipEraButton />
+              </div>
+            </MipEraProvider>
           )}
           <ExecutionGroupTable executionGroups={executionGroups} />
           {hasNextPage && (

@@ -18,6 +18,7 @@ import {
 } from "react";
 import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { SwitchMipEraButton } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Figure } from "@/components/diagnostics/figure.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -387,8 +388,11 @@ export function FigureGallery({
           </div>
         )
       ) : (
-        <div className="text-center text-sm text-muted-foreground py-8 min-h-[350px]">
-          No figures found matching your filters.
+        <div className="flex min-h-[350px] flex-col items-center justify-center gap-3 py-8 text-center text-sm text-muted-foreground">
+          {selectedMipEra && groups.length === 0
+            ? `No ${selectedMipEra} figures yet.`
+            : "No figures found matching your filters."}
+          {groups.length === 0 ? <SwitchMipEraButton /> : null}
         </div>
       )}
 
