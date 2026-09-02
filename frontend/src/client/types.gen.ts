@@ -378,6 +378,26 @@ export type AftDiagnosticSummary = {
 };
 
 /**
+ * About
+ *
+ * Version and freshness information about the deployment serving this API.
+ */
+export type About = {
+    /**
+     * App Version
+     */
+    app_version: string;
+    /**
+     * Ref Version
+     */
+    ref_version: string;
+    /**
+     * Last Updated
+     */
+    last_updated: string | null;
+};
+
+/**
  * CMECMetric
  *
  * CMEC diagnostic bundle object
@@ -2244,3 +2264,19 @@ export type UtilsHealthCheckResponses = {
 };
 
 export type UtilsHealthCheckResponse = UtilsHealthCheckResponses[keyof UtilsHealthCheckResponses];
+
+export type UtilsAboutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/utils/about';
+};
+
+export type UtilsAboutResponses = {
+    /**
+     * Successful Response
+     */
+    200: About;
+};
+
+export type UtilsAboutResponse = UtilsAboutResponses[keyof UtilsAboutResponses];

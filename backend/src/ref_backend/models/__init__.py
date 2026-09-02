@@ -5,6 +5,7 @@ These are the response models for the API, and drive the generated frontend clie
 They are deliberately separate from the SQLAlchemy models in `climate_ref.models`.
 """
 
+from ref_backend.models.about import About
 from ref_backend.models.aft import (
     AFTDiagnosticBase,
     AFTDiagnosticDetail,
@@ -34,6 +35,7 @@ __all__ = [
     "AFTDiagnosticBase",
     "AFTDiagnosticDetail",
     "AFTDiagnosticSummary",
+    "About",
     "CMIPDatasetMetadata",
     "Collection",
     "Dataset",

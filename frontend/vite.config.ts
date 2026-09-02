@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import mdx from "@mdx-js/rollup";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -5,6 +6,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, type ProxyOptions } from "vite";
+
+const { version } = createRequire(import.meta.url)("./package.json");
 
 const proxyDataUrl = process.env.VITE_PROXY_DATA_URL;
 
@@ -36,6 +39,9 @@ const proxyConfig: Record<string, ProxyOptions> = proxyDataUrl
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+  },
   build: {
     sourcemap: true, // Source map generation must be turned on
     rollupOptions: {

@@ -8,3 +8,4 @@ export {
 export { Footer } from "./footer";
 export { Navbar } from "./navbar";
 export { NavbarLogo } from "./navbarLogo";
+export { VersionInfo } from "./versionInfo";

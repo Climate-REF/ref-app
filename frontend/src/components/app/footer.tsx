@@ -1,4 +1,5 @@
 import { LinkExternal } from "../ui/link";
+import { VersionInfo } from "./versionInfo";
 
 const funders = [
   {
@@ -143,11 +144,14 @@ export const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-8 flex justify-center text-center gap-4">
-          <p className="text-gray-500">Licensed under Apache 2.0.</p>
-          <LinkExternal href="https://github.com/Climate-REF/ref-app">
-            Website Source
-          </LinkExternal>
+        <div className="mt-8 flex flex-col items-center gap-2 text-center">
+          <div className="flex justify-center gap-4">
+            <p className="text-gray-500">Licensed under Apache 2.0.</p>
+            <LinkExternal href="https://github.com/Climate-REF/ref-app">
+              Website Source
+            </LinkExternal>
+          </div>
+          <VersionInfo />
         </div>
       </div>
     </footer>
