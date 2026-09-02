@@ -195,19 +195,32 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           }
         />
       )}
-      <EraSections values={regularSeries}>
-        {(eraSeries) => (
-          <SeriesVisualization
-            seriesValues={eraSeries}
-            referenceSeriesValues={referenceSeries}
-            maxSeriesLimit={500} // Limit for performance in preview
-            symmetricalAxes={contentItem.symmetricalAxes ?? false}
-            labelTemplate={contentItem.labelTemplate}
-            metricName={contentItem.title}
-            units={contentItem.metricUnits}
-          />
-        )}
-      </EraSections>
+      {regularSeries.length === 0 ? (
+        // Nothing to split on, so show the references rather than an empty panel.
+        <SeriesVisualization
+          seriesValues={regularSeries}
+          referenceSeriesValues={referenceSeries}
+          maxSeriesLimit={500} // Limit for performance in preview
+          symmetricalAxes={contentItem.symmetricalAxes ?? false}
+          labelTemplate={contentItem.labelTemplate}
+          metricName={contentItem.title}
+          units={contentItem.metricUnits}
+        />
+      ) : (
+        <EraSections values={regularSeries}>
+          {(eraSeries) => (
+            <SeriesVisualization
+              seriesValues={eraSeries}
+              referenceSeriesValues={referenceSeries}
+              maxSeriesLimit={500} // Limit for performance in preview
+              symmetricalAxes={contentItem.symmetricalAxes ?? false}
+              labelTemplate={contentItem.labelTemplate}
+              metricName={contentItem.title}
+              units={contentItem.metricUnits}
+            />
+          )}
+        </EraSections>
+      )}
     </div>
   );
 }

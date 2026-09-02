@@ -724,7 +724,7 @@ def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings)
 
 def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
     """Model values are stamped with the era of their inputs, even when the diagnostic omits it."""
-    diagnostic = get_diagnostic(client, settings)
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
     r = client.get(
         f"{settings.API_V1_STR}/diagnostics/"
         f"{diagnostic['provider']['slug']}/{diagnostic['slug']}/values?value_type=scalar&limit=50"
