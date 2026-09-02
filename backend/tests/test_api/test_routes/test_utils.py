@@ -35,3 +35,4 @@ def test_about(client: TestClient, settings) -> None:
         last_updated = session.scalar(select(func.max(ExecutionGroup.updated_at)))
 
     assert data["last_updated"] == last_updated.isoformat()
+    assert data["environment"] == settings.ENVIRONMENT

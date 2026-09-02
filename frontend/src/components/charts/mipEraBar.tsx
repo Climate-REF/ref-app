@@ -71,10 +71,6 @@ function MipEraBar() {
           </TabsList>
         </Tabs>
       </div>
-      <div className="text-sm text-muted-foreground">
-        The two eras are shown separately, because the ensembles are not
-        directly comparable.
-      </div>
     </div>
   );
 }

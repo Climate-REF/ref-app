@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import {
   EmptyEnsembleChart,
@@ -20,6 +21,9 @@ export function EnsembleChartContent({
   contentItem,
 }: EnsembleChartContentProps) {
   const [includeUnverified, setIncludeUnverified] = useState(false);
+  // Outlier detection runs over whatever the query returns, so the era has to be filtered
+  // here rather than when the sections are split.
+  const selectedMipEra = useSelectedMipEra();
 
   // Extract potential ID filters (isolate/exclude) from otherFilters and pass
   // them through to the backend. Backend expects 'isolate_ids' and 'exclude_ids'
@@ -38,6 +42,7 @@ export function EnsembleChartContent({
         // Ensure explicit flags for type and outlier handling
         value_type: "scalar",
         limit: 500,
+        mip_era: selectedMipEra ?? undefined,
         detect_outliers: "iqr",
         include_unverified: includeUnverified,
         // Only include isolate/exclude params if present

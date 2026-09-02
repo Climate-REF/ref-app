@@ -11,7 +11,11 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import cmip_dataset_filter, execution_group_filter
+from ref_backend.core.mip_eras import (
+    cmip_dataset_filter,
+    execution_group_filter,
+    executions_in_mip_era,
+)
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
@@ -306,6 +310,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
     isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
     exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+    mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic (both scalar and series)
@@ -314,9 +319,17 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     - `format`: Return format - 'json' (default) or 'csv'
     - `offset`: Number of items to skip (default 0)
     - `limit`: Maximum number of items to return (default 50, max 500)
+    - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
+      see only the values the caller is charting
     """
     # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
-    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+
+    execution_ids = None
+    if mip_era:
+        # The reader reads an empty id list as unconstrained, so an era that matched no execution
+        # needs an id no value can carry rather than no filter at all.
+        execution_ids = executions_in_mip_era(app_context.session, mip_era, diagnostic.id) or [0]
 
     # Scope to this diagnostic/provider via exact-match slugs. ``promoted_only`` keeps only the
     # promoted diagnostic version, so values from superseded versions are hidden. Exposing
@@ -324,6 +337,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     metric_filter = MetricValueFilter(
         diagnostic_slug=diagnostic_slug,
         provider_slug=provider_slug,
+        execution_ids=execution_ids,
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,

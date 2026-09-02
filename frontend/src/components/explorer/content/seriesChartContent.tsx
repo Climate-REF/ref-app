@@ -1,6 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
@@ -57,6 +58,8 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
     buildInitialFilterValues(contentItem.filterControls),
   );
 
+  const selectedMipEra = useSelectedMipEra();
+
   const queryFilters = buildQueryFilters(
     contentItem.otherFilters,
     filterValues,
@@ -76,6 +79,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
         ...queryFilters,
         value_type: "series",
         limit: 500,
+        mip_era: selectedMipEra ?? undefined,
         ...(isolateIdsParam ? { isolate_ids: isolateIdsParam } : {}),
         ...(excludeIdsParam ? { exclude_ids: excludeIdsParam } : {}),
       },
@@ -107,6 +111,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
         ...facetQueryFilters,
         value_type: "series",
         limit: 1,
+        mip_era: selectedMipEra ?? undefined,
       },
     }),
     enabled: !!hasFilterControls,

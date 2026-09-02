@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from climate_ref.models import ExecutionGroup
-from ref_backend.api.deps import SessionDep
+from ref_backend.api.deps import SessionDep, SettingsDep
 from ref_backend.models import About
 
 router = APIRouter(prefix="/utils", tags=["utils"])
@@ -16,7 +16,7 @@ async def health_check() -> bool:
 
 
 @router.get("/about")
-async def about(session: SessionDep) -> About:
+async def about(session: SessionDep, settings: SettingsDep) -> About:
     """
     Version and freshness information about the deployment serving this API
     """
@@ -26,6 +26,7 @@ async def about(session: SessionDep) -> About:
         app_version=version("ref-backend"),
         ref_version=version("climate-ref"),
         last_updated=last_updated,
+        environment=settings.ENVIRONMENT,
     )
 
 

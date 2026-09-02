@@ -736,6 +736,27 @@ def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
     assert all(item["dimensions"]["mip_era"] == "CMIP6" for item in model_values)
 
 
+def test_diagnostic_values_filtered_by_mip_era(client: TestClient, settings) -> None:
+    """A `mip_era` filter scopes the values themselves, so outlier detection sees one era."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    base = (
+        f"{settings.API_V1_STR}/diagnostics/"
+        f"{diagnostic['provider']['slug']}/{diagnostic['slug']}/values?value_type=scalar&limit=500"
+    )
+
+    unfiltered = client.get(base)
+    cmip6 = client.get(f"{base}&mip_era=CMIP6")
+    cmip7 = client.get(f"{base}&mip_era=CMIP7")
+
+    assert unfiltered.status_code == 200
+    assert cmip6.status_code == 200
+    assert cmip7.status_code == 200
+
+    # The test fixtures are CMIP6 only, so CMIP7 keeps nothing and CMIP6 keeps everything.
+    assert cmip7.json()["total_count"] == 0
+    assert cmip6.json()["total_count"] == unfiltered.json()["total_count"]
+
+
 def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: TestClient, settings) -> None:
     """An unrecognised query parameter is ignored without dropping the filters beside it."""
     diagnostic = get_diagnostic(client, settings)

@@ -1,23 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-  mipEraOf,
-  modelFamily,
-  sampleSize,
-  splitByMipEra,
-} from "@/lib/mipEras";
+import { mipEraOf, sampleSize, splitByMipEra } from "@/lib/mipEras";
 
 const model = (dimensions: Record<string, string>) => ({ dimensions });
 const reference = (dimensions: Record<string, string>) => ({
   dimensions,
   kind: "reference" as const,
-});
-
-describe("modelFamily", () => {
-  it("takes the segment before the first hyphen", () => {
-    expect(modelFamily("ACCESS-ESM1-5")).toBe("ACCESS");
-    expect(modelFamily("ACCESS-CM2")).toBe("ACCESS");
-    expect(modelFamily("MIROC6")).toBe("MIROC6");
-  });
 });
 
 describe("mipEraOf", () => {
@@ -78,7 +65,7 @@ describe("splitByMipEra", () => {
 });
 
 describe("sampleSize", () => {
-  it("counts distinct models and families, ignoring references", () => {
+  it("counts distinct models, ignoring references", () => {
     const result = sampleSize([
       model({ source_id: "ACCESS-CM2" }),
       model({ source_id: "ACCESS-CM2" }),
@@ -87,7 +74,6 @@ describe("sampleSize", () => {
       reference({ source_id: "HadISST" }),
     ]);
     expect(result.models).toBe(3);
-    expect(result.families).toBe(2);
   });
 
   it("needs more than three models before a chart is drawn", () => {
@@ -98,14 +84,14 @@ describe("sampleSize", () => {
     );
   });
 
-  it("flags a sample drawn from fewer than ten families", () => {
+  it("flags a sample drawn from fewer than ten models", () => {
     const nine = Array.from({ length: 9 }, (_, i) =>
       model({ source_id: `M${i}` }),
     );
-    expect(sampleSize(nine).sparseFamilies).toBe(true);
-    expect(
-      sampleSize([...nine, model({ source_id: "M9" })]).sparseFamilies,
-    ).toBe(false);
+    expect(sampleSize(nine).sparseSample).toBe(true);
+    expect(sampleSize([...nine, model({ source_id: "M9" })]).sparseSample).toBe(
+      false,
+    );
   });
 
   it("does not gate data that is not dimensioned by model", () => {
@@ -114,6 +100,6 @@ describe("sampleSize", () => {
       model({ region: "tropics" }),
     ]);
     expect(result.enoughModels).toBe(true);
-    expect(result.sparseFamilies).toBe(false);
+    expect(result.sparseSample).toBe(false);
   });
 });

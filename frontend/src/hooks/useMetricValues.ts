@@ -37,6 +37,7 @@ const EXCLUDED_FROM_FACET_FILTERS = [
   "style",
   "detect_outliers",
   "include_unverified",
+  "mip_era",
   "isolate_ids",
   "exclude_ids",
   "offset",
@@ -69,6 +70,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
     style: searchStyle,
     detect_outliers: searchDetectOutliers,
     include_unverified: searchIncludeUnverified,
+    mip_era: searchMipEra,
     limit: searchLimit,
   } = search;
 
@@ -199,6 +201,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
         ...(searchIncludeUnverified !== undefined
           ? { include_unverified: String(searchIncludeUnverified) }
           : {}),
+        ...(searchMipEra ? { mip_era: String(searchMipEra) } : {}),
       };
 
       // Add isolate/exclude params if present
@@ -226,6 +229,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
       searchStyle,
       searchDetectOutliers,
       searchIncludeUnverified,
+      searchMipEra,
       searchLimit,
       navigate,
     ],
