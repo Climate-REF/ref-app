@@ -51,7 +51,7 @@ def _load_execution_groups(session: Session, group_ids: Sequence[int]) -> list[m
     """
     Load the ORM rows for execution groups the reader has already selected
 
-    The response builders still need ORM objects, so the reader decides which groups to show
+    The response builders need ORM objects, so the reader decides which groups to show
     and this hydrates them, preserving the order of ``group_ids``.
     """
     if not group_ids:

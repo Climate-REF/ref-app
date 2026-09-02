@@ -10,7 +10,7 @@ pushd backend
 uv run python -c "import ref_backend.main; import json; print(json.dumps(ref_backend.main.app.openapi()))" > ../frontend/openapi.json
 popd
 
-# openapi-ts needs the TypeScript 5 compiler API, which TypeScript 7 no longer ships.
+# openapi-ts needs the TypeScript 5 compiler API, which TypeScript 7 does not ship.
 # Running from a temp directory stops npx reusing the project's node_modules.
 OPENAPI_TS_VERSION=$(node -p "require('./frontend/package.json').devDependencies['@hey-api/openapi-ts']")
 CONFIG="$(pwd)/frontend/openapi-ts.config.ts"
