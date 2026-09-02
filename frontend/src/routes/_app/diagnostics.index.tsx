@@ -5,12 +5,15 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
+import { MipEraBar } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
+import { useMipEra } from "@/hooks/useMipEra";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
 const diagnosticNotes: { slug: string; note: string; noteUrl?: string }[] = [
   {
@@ -28,6 +31,7 @@ const diagnosticsSearchSchema = z.object({
   themes: z.string().optional().catch(undefined),
   metricValues: z.enum(["true", "false"]).optional().catch(undefined),
   view: z.enum(["cards", "table"]).default("cards"),
+  ...mipEraSearchFields,
 });
 
 const ErrorComponent = ({ message }: { message: string }) => {
@@ -57,9 +61,12 @@ const ErrorComponent = ({ message }: { message: string }) => {
 };
 
 const Diagnostics = () => {
-  const { data, isLoading, error } = useQuery(diagnosticsListOptions());
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
+  const { mipEra, setMipEra } = useMipEra(searchParams.mip_era);
+  const { data, isLoading, error } = useQuery(
+    diagnosticsListOptions({ query: { mip_era: mipEra } }),
+  );
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
     DiagnosticSummary[]
   >([]);
@@ -89,6 +96,7 @@ const Diagnostics = () => {
     navigate({
       search: {
         view: searchParams.view,
+        mip_era: searchParams.mip_era,
         search: search || undefined,
         providers: providers.length > 0 ? providers.join(",") : undefined,
         aftIds: aftIds.length > 0 ? aftIds.join(",") : undefined,
@@ -208,7 +216,8 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
+        <MipEraBar mipEra={mipEra} onChange={setMipEra} />
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />

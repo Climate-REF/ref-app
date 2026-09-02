@@ -7,15 +7,19 @@ import { Button } from "@/components/ui/button";
 import { MIP_ERAS, type MipEra, otherMipEra } from "@/lib/mipEras";
 import { cn } from "@/lib/utils";
 
-/** Colours match the dataset type badges, so an era looks the same everywhere it appears. */
+/**
+ * CMIP brand colours, matching the dataset type badges so an era looks the same everywhere.
+ * The current phase takes the primary blue and the previous one the support mustard.
+ */
 const TINT: Record<MipEra, { bar: string; active: string }> = {
   CMIP6: {
-    bar: "border-sky-300 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/40",
-    active: "bg-sky-600 text-white hover:bg-sky-600",
+    bar: "border-cmip-mustard/60 bg-cmip-mustard/15",
+    active: "bg-cmip-mustard text-black hover:bg-cmip-mustard",
   },
   CMIP7: {
-    bar: "border-violet-300 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/40",
-    active: "bg-violet-600 text-white hover:bg-violet-600",
+    bar: "border-cmip-blue/40 bg-cmip-blue/10 dark:border-white/20 dark:bg-cmip-blue/60",
+    active:
+      "bg-cmip-blue text-white hover:bg-cmip-blue dark:ring-1 dark:ring-white/40",
   },
 };
 

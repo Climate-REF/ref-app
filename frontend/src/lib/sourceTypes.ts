@@ -5,11 +5,11 @@ export type SourceType = (typeof SOURCE_TYPES)[number];
 export function getSourceTypeColour(sourceType: string | SourceType) {
   switch (sourceType) {
     case "cmip6":
-      return "bg-sky-200 text-foreground";
+      return "bg-cmip-mustard/30 text-foreground";
     case "cmip7":
-      return "bg-violet-200 text-foreground";
+      return "bg-cmip-blue text-white dark:ring-1 dark:ring-white/40";
     case "obs4mips":
-      return "bg-amber-200 text-foreground";
+      return "bg-cmip-cyan/30 text-foreground";
     default:
       return "bg-gray-500";
   }

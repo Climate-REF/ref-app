@@ -770,3 +770,24 @@ def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClie
     usage = timed[0]["resource_usage"]
     assert usage["timed_execution_count"] <= timed[0]["execution_count"]
     assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
+
+
+def test_diagnostics_list_counts_only_the_requested_era(client: TestClient) -> None:
+    everything = {d["slug"]: d for d in client.get("/api/v1/diagnostics/").json()["data"]}
+    cmip6 = {
+        d["slug"]: d for d in client.get("/api/v1/diagnostics/", params={"mip_era": "CMIP6"}).json()["data"]
+    }
+    cmip7 = {
+        d["slug"]: d for d in client.get("/api/v1/diagnostics/", params={"mip_era": "CMIP7"}).json()["data"]
+    }
+
+    # Every diagnostic is still listed, only its statistics change with the era.
+    assert set(cmip6) == set(everything) == set(cmip7)
+    assert sum(d["execution_group_count"] for d in cmip6.values()) > 0
+    # The fixture database only holds CMIP6 datasets.
+    assert all(d["execution_group_count"] == 0 for d in cmip7.values())
+    assert all(not d["has_metric_values"] for d in cmip7.values())
+    assert all(
+        cmip6[slug]["execution_group_count"] <= everything[slug]["execution_group_count"]
+        for slug in everything
+    )

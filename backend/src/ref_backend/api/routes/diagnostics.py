@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import Integer, func
+from sqlalchemy import ColumnElement, Integer, func
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -56,9 +56,11 @@ async def _get_diagnostic(
 
 
 @router.get("/", name="list")
-async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
+async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Collection[DiagnosticSummary]:
     """
     List the currently registered diagnostics
+
+    Pass `mip_era` to count only the execution groups that ran against that era.
     """
     diagnostics_query = app_context.session.query(models.Diagnostic)
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
@@ -78,12 +80,17 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
     # Batch fetch all diagnostic statistics to avoid N+1 queries
     diagnostic_ids = [d.id for d in diagnostics]
 
+    # Every statistic below counts only groups matching the era, when one is requested.
+    group_scope: list[ColumnElement[bool]] = [models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids)]
+    if mip_era:
+        group_scope.append(models.ExecutionGroup.executions.any(cmip_dataset_filter({"mip_era": mip_era})))
+
     # Check for scalar values existence
     scalar_values_exist = (
         app_context.session.query(models.ExecutionGroup.diagnostic_id)
         .join(models.Execution)
         .join(models.ScalarMetricValue)
-        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .filter(*group_scope)
         .distinct()
         .all()
     )
@@ -94,7 +101,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
         app_context.session.query(models.ExecutionGroup.diagnostic_id)
         .join(models.Execution)
         .join(models.SeriesMetricValue)
-        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .filter(*group_scope)
         .distinct()
         .all()
     )
@@ -109,7 +116,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
             *RESOURCE_AGGREGATES,
         )
         .join(models.Execution)
-        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .filter(*group_scope)
         .group_by(models.ExecutionGroup.diagnostic_id)
         .all()
     )
@@ -124,7 +131,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
         app_context.session.query(
             models.ExecutionGroup.diagnostic_id, func.count(models.ExecutionGroup.id).label("group_count")
         )
-        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .filter(*group_scope)
         .group_by(models.ExecutionGroup.diagnostic_id)
         .all()
     )
@@ -138,7 +145,7 @@ async def _list(app_context: AppContextDep) -> Collection[DiagnosticSummary]:
             func.max(models.Execution.id).label("latest_exec_id"),
         )
         .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
-        .filter(models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids))
+        .filter(*group_scope)
         .group_by(models.Execution.execution_group_id)
         .subquery()
     )
