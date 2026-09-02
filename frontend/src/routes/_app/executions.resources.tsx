@@ -52,9 +52,10 @@ function ResourceUsagePage() {
           <CardTitle>Resource Usage</CardTitle>
           <CardDescription>
             <p className="max-w-1/2">
-              Wall clock and CPU time recorded by the workers for every
-              execution, rolled up by diagnostic. Only executions that recorded
-              a wall time are counted, so older executions may be missing.
+              Wall clock time, CPU time and peak memory recorded by the workers
+              for every execution, rolled up by diagnostic. Only executions that
+              recorded a wall time are counted, so older executions may be
+              missing.
             </p>
           </CardDescription>
         </CardHeader>
@@ -62,7 +63,7 @@ function ResourceUsagePage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat
               label="Timed executions"
-              value={formatCount(usage?.timed_execution_count ?? 0)}
+              value={formatCount(usage?.timed_execution_count)}
               loading={statistics.isLoading}
             />
             <Stat

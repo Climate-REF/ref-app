@@ -13,7 +13,7 @@ from ref_backend.core.diagnostic_metadata import (
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
-from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_by_diagnostic
+from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
 
@@ -259,7 +259,7 @@ class DiagnosticSummary(BaseModel):
             diagnostic.provider.slug, diagnostic.slug
         )
 
-        resource_usage = resource_usage_by_diagnostic(app_context.session, [diagnostic.id]).get(diagnostic.id)
+        resource_usage = resource_usage_for_diagnostic(app_context.session, diagnostic.id)
 
         # Build the base diagnostic summary
         summary = DiagnosticSummary(

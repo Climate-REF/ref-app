@@ -1,6 +1,5 @@
 """Aggregates of the wall, CPU and memory usage recorded against executions."""
 
-from collections.abc import Iterable
 from typing import Any
 
 from pydantic import BaseModel
@@ -61,7 +60,7 @@ RESOURCE_AGGREGATES = (
 
 def summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
     """
-    Build a summary from a row that carries the ``RESOURCERESOURCE_AGGREGATES`` labels.
+    Build a summary from a row that carries the ``RESOURCE_AGGREGATES`` labels.
 
     Returns ``None`` when the row holds no timed executions.
     """
@@ -71,27 +70,16 @@ def summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
     return ExecutionResourceSummary.model_validate(dict(values))
 
 
-def resource_usage_by_diagnostic(
-    session: Session, diagnostic_ids: Iterable[int]
-) -> dict[int, ExecutionResourceSummary]:
-    """
-    Roll up the resource usage of every execution, grouped by diagnostic.
-
-    Diagnostics without any timed executions are absent from the result.
-    """
-    rows = (
-        session.query(models.ExecutionGroup.diagnostic_id, *RESOURCE_AGGREGATES)
-        .join(models.Execution)
-        .filter(models.ExecutionGroup.diagnostic_id.in_(list(diagnostic_ids)))
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
+def resource_usage_for_diagnostic(session: Session, diagnostic_id: int) -> ExecutionResourceSummary | None:
+    """Roll up the resource usage of every execution of one diagnostic."""
+    row = (
+        session.query(*RESOURCE_AGGREGATES)
+        .select_from(models.Execution)
+        .join(models.ExecutionGroup)
+        .filter(models.ExecutionGroup.diagnostic_id == diagnostic_id)
+        .one()
     )
-    result = {}
-    for row in rows:
-        summary = summary_from_row(row)
-        if summary is not None:
-            result[row.diagnostic_id] = summary
-    return result
+    return summary_from_row(row)
 
 
 def resource_usage_overall(session: Session) -> ExecutionResourceSummary | None:

@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDuration } from "@/lib/format";
+import { formatBytes, formatDuration } from "@/lib/format";
 import { Route } from "@/routes/_app/executions.$groupId/index";
 
 const columnHelper = createColumnHelper<Execution>();
@@ -113,6 +113,16 @@ export const columns: ColumnDef<Execution>[] = [
     ),
     accessorFn: (row) => row.cpu_seconds,
     cell: ({ getValue }) => formatDuration(getValue<number | null>()),
+  },
+  {
+    id: "peak_memory_bytes",
+    header: () => (
+      <span title="Peak resident memory observed during this execution.">
+        Peak memory
+      </span>
+    ),
+    accessorFn: (row) => row.peak_memory_bytes,
+    cell: ({ getValue }) => formatBytes(getValue<number | null>()),
   },
   {
     id: "updated_at",
