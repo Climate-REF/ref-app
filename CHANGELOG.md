@@ -1,3 +1,71 @@
+## v0.5.0 (2026-09-02)
+
+### Features
+
+- Adds CMIP7 alongside CMIP6.
+  Both eras are listed, filtered and served through the same endpoints.
+  The executions endpoint takes a new `mip_era` filter.
+
+  Results from the two eras are never drawn on the same chart,
+  because the ensembles are not directly comparable.
+  Every model value now reports the era of the datasets its execution ran against,
+  so charts split correctly even for the diagnostics that record no era of their own.
+  Observational values carry no era, so they appear on both charts as the shared baseline. (#70)
+- Adds a CMIP6/CMIP7 selector to the top of both explorer pages.
+  Each page now shows one era of chart data at a time,
+  rather than stacking both inside every card.
+
+  The choice is held in the URL as `mip_era`, so a shared link keeps it.
+  A card with nothing for the selected era says so instead of rendering empty.
+  Values that record no era are always shown, labelled as such, since no era describes them.
+  Figure galleries are unaffected, because they hold output images rather than values with an era.
+  Pages that show a single chart, such as a diagnostic's scalar and series tabs,
+  still label and stack their eras in place. (#71)
+- Added the wall time, CPU time and peak memory recorded for each execution to the execution pages and tables.
+
+  - Each diagnostic page now shows a roll-up of these values across its executions.
+  - A new resource usage page under Executions lists the roll-up for every diagnostic.
+
+  (#80)
+
+### Improvements
+
+- Gates charts built from model data on how many models contributed to them.
+
+  - A chart drawn from fewer than four models is no longer shown, because the spread is not meaningful.
+  - A chart drawn from fewer than ten model families is still shown,
+    with a warning that the sample is small and correlated.
+    Models in a family share code and biases,
+    so ACCESS-CM2 and ACCESS-ESM1-5 are not two independent lines of evidence.
+  - Data that is not dimensioned by model, such as a per-region diagnostic, is not gated at all.
+
+  (#70)
+- Updated the logo and branding to the new Climate-REF marks, including the navbar wordmark and the favicons. (#73)
+- Improved the executions list and statistics.
+
+  - Execution groups from superseded diagnostic versions are no longer shown or counted.
+  - The statistics now report running and not-yet-run groups separately from failed ones.
+
+  (#76)
+
+### Breaking Changes
+
+- Renames the `CMIP6DatasetMetadata` API schema to `CMIPDatasetMetadata`,
+  since it now describes CMIP7 datasets as well.
+  Consumers of the generated client should update the type name. (#70)
+
+### Trivial Changes
+
+- Updates the backend to Python 3.14, including the uv base image. (#62)
+- Updates TypeScript to v7, dropping the removed `baseUrl` option and referencing the mdx types explicitly. (#68)
+- Updates Vite to v8, switching the katex chunk to the `manualChunks` function form that rolldown requires. (#69)
+- Renames the era handling onto `mip_era`, which is the WCRP term
+  and a required attribute in the CMIP7 controlled vocabulary. (#71)
+- Fixed `make generate-client`, which crashed under TypeScript 7. (#76)
+- Stopped exporting page components from route files so the router can code-split them. (#80)
+- Removes 14 unreferenced frontend files, the unused `globals` and `@testing-library/user-event` dev dependencies, and the commented-out example provider scaffolding in the backend. (#81)
+
+
 ## v0.4.2 (2026-08-14)
 
 ### Improvements
