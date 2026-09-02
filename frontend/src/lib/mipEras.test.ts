@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { eraOf, modelFamily, sampleSize, splitByEra } from "@/lib/modelEras";
+import {
+  mipEraOf,
+  modelFamily,
+  sampleSize,
+  splitByMipEra,
+} from "@/lib/mipEras";
 
 const model = (dimensions: Record<string, string>) => ({ dimensions });
 const reference = (dimensions: Record<string, string>) => ({
@@ -15,31 +20,31 @@ describe("modelFamily", () => {
   });
 });
 
-describe("eraOf", () => {
+describe("mipEraOf", () => {
   it("reads the mip_era dimension case-insensitively", () => {
-    expect(eraOf(model({ mip_era: "cmip6" }))).toBe("CMIP6");
-    expect(eraOf(model({ mip_era: "CMIP7" }))).toBe("CMIP7");
+    expect(mipEraOf(model({ mip_era: "cmip6" }))).toBe("CMIP6");
+    expect(mipEraOf(model({ mip_era: "CMIP7" }))).toBe("CMIP7");
   });
 
   it("returns null when the era is missing or unknown", () => {
-    expect(eraOf(model({}))).toBeNull();
-    expect(eraOf(model({ mip_era: "CMIP5" }))).toBeNull();
+    expect(mipEraOf(model({}))).toBeNull();
+    expect(mipEraOf(model({ mip_era: "CMIP5" }))).toBeNull();
   });
 });
 
-describe("splitByEra", () => {
+describe("splitByMipEra", () => {
   it("keeps the two eras in separate buckets", () => {
-    const sections = splitByEra([
+    const sections = splitByMipEra([
       model({ mip_era: "CMIP7", source_id: "A" }),
       model({ mip_era: "CMIP6", source_id: "B" }),
     ]);
-    expect(sections.map((s) => s.era)).toEqual(["CMIP6", "CMIP7"]);
+    expect(sections.map((s) => s.mipEra)).toEqual(["CMIP6", "CMIP7"]);
     expect(sections[0].values).toHaveLength(1);
   });
 
   it("repeats reference values in every bucket", () => {
     const baseline = reference({ source_id: "HadISST" });
-    const sections = splitByEra([
+    const sections = splitByMipEra([
       model({ mip_era: "CMIP6", source_id: "A" }),
       model({ mip_era: "CMIP7", source_id: "B" }),
       baseline,
@@ -52,23 +57,23 @@ describe("splitByEra", () => {
 
   it("never repeats an untagged model value into an era bucket", () => {
     const untagged = model({ source_id: "A" });
-    const sections = splitByEra([
+    const sections = splitByMipEra([
       model({ mip_era: "CMIP7", source_id: "B" }),
       untagged,
     ]);
-    expect(sections.map((s) => s.era)).toEqual(["CMIP7", null]);
+    expect(sections.map((s) => s.mipEra)).toEqual(["CMIP7", null]);
     expect(sections[0].values).not.toContain(untagged);
     expect(sections[1].values).toEqual([untagged]);
   });
 
   it("returns a single unlabelled bucket when no era is recorded", () => {
-    const sections = splitByEra([model({ source_id: "A" })]);
+    const sections = splitByMipEra([model({ source_id: "A" })]);
     expect(sections).toHaveLength(1);
-    expect(sections[0].era).toBeNull();
+    expect(sections[0].mipEra).toBeNull();
   });
 
   it("returns nothing for no values", () => {
-    expect(splitByEra([])).toEqual([]);
+    expect(splitByMipEra([])).toEqual([]);
   });
 });
 

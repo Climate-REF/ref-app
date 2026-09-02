@@ -11,7 +11,7 @@ from climate_ref import models
 from climate_ref_core.datasets import SourceDatasetType
 from ref_backend.core.filter_utils import build_filter_clause
 
-#: The model eras the app presents. Data from the two is never combined on a chart.
+#: The MIP eras the app presents. Data from the two is never combined on a chart.
 CMIP_ERAS: tuple[SourceDatasetType, ...] = (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
 
 

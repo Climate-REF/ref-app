@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
-import { EraSections } from "@/components/charts/eraSections";
+import { MipEraSections } from "@/components/charts/mipEraSections";
 import {
   EmptyEnsembleChart,
   EnsembleChart,
@@ -86,7 +86,7 @@ export function EnsembleChartContent({
         </div>
       )}
 
-      <EraSections values={values}>
+      <MipEraSections values={values}>
         {(eraValues) => (
           <EnsembleChart
             data={eraValues}
@@ -101,7 +101,7 @@ export function EnsembleChartContent({
             symmetricalAxes={contentItem.symmetricalAxes ?? false}
           />
         )}
-      </EraSections>
+      </MipEraSections>
     </div>
   );
 }

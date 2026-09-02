@@ -1,14 +1,28 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  getRouteApi,
+  Navigate,
+  useNavigate,
+} from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Suspense } from "react";
+import { z } from "zod";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
 import { ErrorBoundary, ErrorFallback } from "@/components/app";
+import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraSelector } from "@/components/charts/mipEraSelector";
 import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
 } from "@/components/explorer/explorerCardContent";
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MIP_ERAS } from "@/lib/mipEras";
+
+const explorerSchema = z.object({
+  mip_era: z.enum(MIP_ERAS).default("CMIP6"),
+});
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
@@ -61,6 +75,8 @@ function ExplorerPanels({
 
 const Explorer = () => {
   const { providerSlug, diagnosticSlug } = Route.useParams();
+  const { mip_era: mipEra } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const parentData = parentRoute.useLoaderData();
 
   if (!parentData.aft_link) {
@@ -79,12 +95,20 @@ const Explorer = () => {
         <CardHeader>
           <CardTitle>Explorer</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ExplorerPanels
-            collectionId={parentData.aft_link.id}
-            providerSlug={providerSlug}
-            diagnosticSlug={diagnosticSlug}
+        <CardContent className="space-y-4">
+          <MipEraSelector
+            mipEra={mipEra}
+            onChange={(next) =>
+              navigate({ search: (prev) => ({ ...prev, mip_era: next }) })
+            }
           />
+          <MipEraProvider mipEra={mipEra}>
+            <ExplorerPanels
+              collectionId={parentData.aft_link.id}
+              providerSlug={providerSlug}
+              diagnosticSlug={diagnosticSlug}
+            />
+          </MipEraProvider>
         </CardContent>
       </Card>
     </div>
@@ -95,4 +119,5 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer",
 )({
   component: Explorer,
+  validateSearch: zodValidator(explorerSchema),
 });

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
-import { EraSections } from "@/components/charts/eraSections";
+import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
 import {
@@ -134,7 +134,7 @@ export function TaylorDiagramContentWrapper({
 
   return (
     <div className="mx-auto">
-      <EraSections values={values}>
+      <MipEraSections values={values}>
         {(eraValues) => (
           <TaylorDiagramSection
             values={eraValues}
@@ -143,7 +143,7 @@ export function TaylorDiagramContentWrapper({
             referenceStddev={contentItem.referenceStddev}
           />
         )}
-      </EraSections>
+      </MipEraSections>
     </div>
   );
 }

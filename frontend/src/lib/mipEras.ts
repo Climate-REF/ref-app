@@ -18,12 +18,12 @@ export const MIN_MODELS_FOR_CHART = 4;
 export const MIN_FAMILIES_FOR_CONFIDENCE = 10;
 
 /**
- * The era a value belongs to, from the `mip_era` dimension the API stamps on each model value.
+ * The MIP era a value belongs to, from the `mip_era` dimension the API stamps on each model value.
  *
- * It is absent when the execution's inputs did not settle an era, so callers must not read a null
- * era as meaning observational data.
+ * It is absent when the execution's inputs did not settle an era, so callers must not read a
+ * null result as meaning observational data.
  */
-export function eraOf(value: DimensionedData): MipEra | null {
+export function mipEraOf(value: DimensionedData): MipEra | null {
   const label = value.dimensions.mip_era?.toUpperCase();
   return MIP_ERAS.find((era) => era === label) ?? null;
 }
@@ -71,15 +71,15 @@ export function sampleSize(values: DimensionedData[]): SampleSize {
 }
 
 /**
- * Split values into one chart's worth per era.
+ * Split values into one chart's worth per MIP era.
  *
  * Only reference values are shared across eras, because they are the baseline every chart needs.
  * A model value carrying no era gets its own unlabelled section rather than being repeated, since
  * repeating it would put CMIP6 results on the CMIP7 chart.
  */
-export function splitByEra<T extends DimensionedData>(
+export function splitByMipEra<T extends DimensionedData>(
   values: T[],
-): { era: MipEra | null; values: T[] }[] {
+): { mipEra: MipEra | null; values: T[] }[] {
   const buckets = new Map<MipEra | null, T[]>();
   const references: T[] = [];
 
@@ -88,14 +88,14 @@ export function splitByEra<T extends DimensionedData>(
       references.push(value);
       continue;
     }
-    const era = eraOf(value);
+    const era = mipEraOf(value);
     const bucket = buckets.get(era);
     if (bucket) bucket.push(value);
     else buckets.set(era, [value]);
   }
 
   if (buckets.size === 0) {
-    return references.length ? [{ era: null, values: references }] : [];
+    return references.length ? [{ mipEra: null, values: references }] : [];
   }
 
   // Unlabelled data sorts last, behind the eras it could not be attributed to.
@@ -103,7 +103,7 @@ export function splitByEra<T extends DimensionedData>(
   return order
     .filter((era) => buckets.has(era))
     .map((era) => ({
-      era,
+      mipEra: era,
       values: [...(buckets.get(era) ?? []), ...references],
     }));
 }

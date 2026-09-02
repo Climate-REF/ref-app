@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
-import { EraSections } from "@/components/charts/eraSections";
+import { MipEraSections } from "@/components/charts/mipEraSections";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
   MetricValueCollection,
@@ -207,7 +207,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           units={contentItem.metricUnits}
         />
       ) : (
-        <EraSections values={regularSeries}>
+        <MipEraSections values={regularSeries}>
           {(eraSeries) => (
             <SeriesVisualization
               seriesValues={eraSeries}
@@ -219,7 +219,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
               units={contentItem.metricUnits}
             />
           )}
-        </EraSections>
+        </MipEraSections>
       )}
     </div>
   );

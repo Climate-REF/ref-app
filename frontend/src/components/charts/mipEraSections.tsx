@@ -1,5 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 import { type ReactNode, useMemo } from "react";
+import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import type { DimensionedData } from "@/components/explorer/grouping";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -8,38 +9,63 @@ import {
   MIN_MODELS_FOR_CHART,
   type MipEra,
   sampleSize,
-  splitByEra,
-} from "@/lib/modelEras";
+  splitByMipEra,
+} from "@/lib/mipEras";
 
-interface EraSectionsProps<T extends DimensionedData> {
+interface MipEraSectionsProps<T extends DimensionedData> {
   values: T[];
-  /** Rendered once per era, with only that era's values. */
-  children: (values: T[], era: MipEra | null) => ReactNode;
+  /** Rendered once per MIP era, with only that era's values. */
+  children: (values: T[], mipEra: MipEra | null) => ReactNode;
 }
 
 /**
- * Render a chart once per MIP era, gated on how many models contributed.
+ * Render a chart per MIP era, gated on how many models contributed.
  *
- * CMIP6 and CMIP7 get separate charts because the two ensembles are not directly comparable.
+ * CMIP6 and CMIP7 never share a chart because the two ensembles are not directly comparable.
+ * A page that selects a MIP era narrows this to that era alone, so the badge and the stacking
+ * fall away and the page's own selector carries the labelling.
  */
-export function EraSections<T extends DimensionedData>({
+export function MipEraSections<T extends DimensionedData>({
   values,
   children,
-}: EraSectionsProps<T>) {
+}: MipEraSectionsProps<T>) {
+  const selectedMipEra = useSelectedMipEra();
   // Stable section identity keeps the charts from re-deriving on unrelated parent state.
-  const sections = useMemo(() => splitByEra(values), [values]);
+  const sections = useMemo(() => splitByMipEra(values), [values]);
+
+  if (selectedMipEra) {
+    const selected = sections.find(
+      (section) => section.mipEra === selectedMipEra,
+    );
+    if (!selected) {
+      return (
+        <Alert>
+          <Info />
+          <AlertTitle>No {selectedMipEra} results</AlertTitle>
+          <AlertDescription>
+            This diagnostic has no {selectedMipEra} data yet.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return (
+      <SampleSizeGate values={selected.values}>
+        {children(selected.values, selectedMipEra)}
+      </SampleSizeGate>
+    );
+  }
 
   if (sections.length === 0) return null;
 
   return (
     <div className="space-y-8">
-      {sections.map(({ era, values: eraValues }) => (
-        <section key={era ?? "unattributed"} className="space-y-3">
-          {sections.length > 1 || era ? (
-            <Badge variant="outline">{era ?? "Era not recorded"}</Badge>
+      {sections.map(({ mipEra, values: eraValues }) => (
+        <section key={mipEra ?? "unattributed"} className="space-y-3">
+          {sections.length > 1 || mipEra ? (
+            <Badge variant="outline">{mipEra ?? "MIP era not recorded"}</Badge>
           ) : null}
           <SampleSizeGate values={eraValues}>
-            {children(eraValues, era)}
+            {children(eraValues, mipEra)}
           </SampleSizeGate>
         </section>
       ))}

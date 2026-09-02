@@ -703,7 +703,7 @@ def test_diagnostics_facets(client: TestClient, settings) -> None:
 
 
 def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:
-    """A `mip_era` filter restricts executions to a single model era."""
+    """A `mip_era` filter restricts executions to a single MIP era."""
     diagnostic = get_diagnostic(client, settings)
     base = (
         f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
