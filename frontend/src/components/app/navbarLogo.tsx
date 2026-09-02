@@ -1,15 +1,16 @@
 export function NavbarLogo() {
   return (
-    <div className="flex items-center justify-between gap-2 bg-white rounded p-1 hover:shadow-md transition-shadow">
+    <>
       <img
-        src="/logos/logo_cmip_ref.png"
-        alt="Rapid Evaluation Framework"
-        className="w-12 h-10 min-w-12"
+        src="/logos/REF/REF_RGB_logo_positive.png"
+        alt="Climate-REF"
+        className="dark:hidden h-10 w-auto"
       />
-      <h1 className="font-display font-medium text-md hidden md:inline text-black">
-        Rapid Evaluation <br />
-        Framework
-      </h1>
-    </div>
+      <img
+        src="/logos/REF/REF_RGB_logo_negative.png"
+        alt="Climate-REF"
+        className="hidden dark:block h-10 w-auto"
+      />
+    </>
   );
 }

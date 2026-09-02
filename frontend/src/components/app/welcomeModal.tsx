@@ -48,9 +48,9 @@ export function WelcomeModal() {
           <DialogTitle className="text-center text-2xl font-bold mb-4 flex flex-row items-center justify-center gap-4">
             Welcome to the Climate-REF
             <img
-              src="/logos/logo_cmip_ref.png"
-              alt="CMIP Rapid Evaluation Framework"
-              className="h-10 w-12"
+              src="/logos/REF/REF_mark.png"
+              alt="Climate-REF"
+              className="h-10 w-10"
             />
           </DialogTitle>
           <DialogDescription>
