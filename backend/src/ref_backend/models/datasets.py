@@ -21,12 +21,8 @@ class Dataset(BaseModel):
     slug: str
     dataset_type: str
     metadata: CMIPDatasetMetadata | None
-
-    @computed_field  # type: ignore
-    @property
-    def mip_era(self) -> str | None:
-        """The model era this dataset belongs to, or None for non-CMIP sources."""
-        return mip_era_for(self.dataset_type)
+    #: The model era this dataset belongs to, or None for non-CMIP sources.
+    mip_era: str | None = None
 
     @computed_field  # type: ignore
     @property
@@ -52,6 +48,7 @@ class Dataset(BaseModel):
             slug=dataset.slug,
             dataset_type=str(dataset.dataset_type),
             metadata=metadata,
+            mip_era=mip_era_for(dataset.dataset_type),
         )
 
     @staticmethod
@@ -66,4 +63,5 @@ class Dataset(BaseModel):
             slug=dataset.slug,
             dataset_type=str(dataset.dataset_type),
             metadata=metadata,
+            mip_era=mip_era_for(dataset.dataset_type),
         )

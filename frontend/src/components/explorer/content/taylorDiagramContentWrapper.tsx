@@ -88,9 +88,7 @@ export function TaylorDiagramContentWrapper({
   const collection = data as MetricValueCollection;
   const values = (collection?.data as ScalarValue[]) ?? [];
 
-  const models = transformToTaylorModels(values);
-
-  if (models.length === 0) {
+  if (transformToTaylorModels(values).length === 0) {
     return (
       <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
         <div className="text-center text-sm text-gray-500">

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { eraOf, modelFamily, sampleSize, splitByEra } from "@/lib/modelEras";
 
-const value = (dimensions: Record<string, string>) => ({ dimensions });
+const model = (dimensions: Record<string, string>) => ({ dimensions });
+const reference = (dimensions: Record<string, string>) => ({
+  dimensions,
+  kind: "reference" as const,
+});
 
 describe("modelFamily", () => {
   it("takes the segment before the first hyphen", () => {
@@ -13,44 +17,54 @@ describe("modelFamily", () => {
 
 describe("eraOf", () => {
   it("reads the mip_id dimension case-insensitively", () => {
-    expect(eraOf(value({ mip_id: "cmip6" }))).toBe("CMIP6");
-    expect(eraOf(value({ mip_id: "CMIP7" }))).toBe("CMIP7");
+    expect(eraOf(model({ mip_id: "cmip6" }))).toBe("CMIP6");
+    expect(eraOf(model({ mip_id: "CMIP7" }))).toBe("CMIP7");
   });
 
   it("returns null when the era is missing or unknown", () => {
-    expect(eraOf(value({}))).toBeNull();
-    expect(eraOf(value({ mip_id: "CMIP5" }))).toBeNull();
+    expect(eraOf(model({}))).toBeNull();
+    expect(eraOf(model({ mip_id: "CMIP5" }))).toBeNull();
   });
 });
 
 describe("splitByEra", () => {
   it("keeps the two eras in separate buckets", () => {
     const sections = splitByEra([
-      value({ mip_id: "CMIP7", source_id: "A" }),
-      value({ mip_id: "CMIP6", source_id: "B" }),
+      model({ mip_id: "CMIP7", source_id: "A" }),
+      model({ mip_id: "CMIP6", source_id: "B" }),
     ]);
     expect(sections.map((s) => s.era)).toEqual(["CMIP6", "CMIP7"]);
     expect(sections[0].values).toHaveLength(1);
   });
 
-  it("repeats era-less values in every bucket", () => {
-    const reference = value({ source_id: "HadISST" });
+  it("repeats reference values in every bucket", () => {
+    const baseline = reference({ source_id: "HadISST" });
     const sections = splitByEra([
-      value({ mip_id: "CMIP6", source_id: "A" }),
-      value({ mip_id: "CMIP7", source_id: "B" }),
-      reference,
+      model({ mip_id: "CMIP6", source_id: "A" }),
+      model({ mip_id: "CMIP7", source_id: "B" }),
+      baseline,
     ]);
     expect(sections).toHaveLength(2);
     for (const section of sections) {
-      expect(section.values).toContain(reference);
+      expect(section.values).toContain(baseline);
     }
   });
 
-  it("returns a single unlabelled bucket when no era is recorded", () => {
-    const sections = splitByEra([value({ source_id: "A" })]);
-    expect(sections).toEqual([
-      { era: null, values: [value({ source_id: "A" })] },
+  it("never repeats an untagged model value into an era bucket", () => {
+    const untagged = model({ source_id: "A" });
+    const sections = splitByEra([
+      model({ mip_id: "CMIP7", source_id: "B" }),
+      untagged,
     ]);
+    expect(sections.map((s) => s.era)).toEqual(["CMIP7", null]);
+    expect(sections[0].values).not.toContain(untagged);
+    expect(sections[1].values).toEqual([untagged]);
+  });
+
+  it("returns a single unlabelled bucket when no era is recorded", () => {
+    const sections = splitByEra([model({ source_id: "A" })]);
+    expect(sections).toHaveLength(1);
+    expect(sections[0].era).toBeNull();
   });
 
   it("returns nothing for no values", () => {
@@ -61,31 +75,41 @@ describe("splitByEra", () => {
 describe("sampleSize", () => {
   it("counts distinct models and families, ignoring references", () => {
     const result = sampleSize([
-      value({ source_id: "ACCESS-CM2" }),
-      value({ source_id: "ACCESS-CM2" }),
-      value({ source_id: "ACCESS-ESM1-5" }),
-      value({ source_id: "MIROC6" }),
-      { dimensions: { source_id: "HadISST" }, kind: "reference" as const },
+      model({ source_id: "ACCESS-CM2" }),
+      model({ source_id: "ACCESS-CM2" }),
+      model({ source_id: "ACCESS-ESM1-5" }),
+      model({ source_id: "MIROC6" }),
+      reference({ source_id: "HadISST" }),
     ]);
     expect(result.models).toBe(3);
     expect(result.families).toBe(2);
   });
 
   it("needs more than three models before a chart is drawn", () => {
-    const models = ["a", "b", "c"].map((s) => value({ source_id: s }));
-    expect(sampleSize(models).enoughModels).toBe(false);
-    expect(
-      sampleSize([...models, value({ source_id: "d" })]).enoughModels,
-    ).toBe(true);
+    const three = ["a", "b", "c"].map((s) => model({ source_id: s }));
+    expect(sampleSize(three).enoughModels).toBe(false);
+    expect(sampleSize([...three, model({ source_id: "d" })]).enoughModels).toBe(
+      true,
+    );
   });
 
   it("flags a sample drawn from fewer than ten families", () => {
     const nine = Array.from({ length: 9 }, (_, i) =>
-      value({ source_id: `M${i}` }),
+      model({ source_id: `M${i}` }),
     );
     expect(sampleSize(nine).sparseFamilies).toBe(true);
     expect(
-      sampleSize([...nine, value({ source_id: "M9" })]).sparseFamilies,
+      sampleSize([...nine, model({ source_id: "M9" })]).sparseFamilies,
     ).toBe(false);
+  });
+
+  it("does not gate data that is not dimensioned by model", () => {
+    const result = sampleSize([
+      model({ region: "global" }),
+      model({ region: "tropics" }),
+    ]);
+    expect(result.gated).toBe(false);
+    expect(result.enoughModels).toBe(true);
+    expect(result.sparseFamilies).toBe(false);
   });
 });

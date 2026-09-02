@@ -17,14 +17,11 @@ CMIP_ERAS: dict[SourceDatasetType, Any] = {
 }
 
 
-def mip_era_for(dataset_type: str) -> str | None:
+def mip_era_for(source_type: SourceDatasetType) -> str | None:
     """Map a source dataset type onto the MIP era label used to keep the eras apart."""
-    # `str()` of the enum can render as "SourceDatasetType.CMIP6", so compare the trailing name.
-    name = dataset_type.rsplit(".", 1)[-1].lower()
-    for source_type in CMIP_ERAS:
-        if str(source_type.value).lower() == name:
-            return str(source_type.value).upper()
-    return None
+    if source_type not in CMIP_ERAS:
+        return None
+    return str(source_type.value).upper()
 
 
 def _facet_column(dataset_model: Any, key: str) -> Any:
@@ -40,8 +37,9 @@ def cmip_dataset_filter(
     """
     Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.
 
-    A facet no CMIP era carries is ignored, which keeps unknown query parameters harmless. A facet
-    only one era carries excludes the other, so a CMIP7-only facet does not pull in all of CMIP6.
+    A facet no CMIP era carries is ignored, which keeps unknown query parameters harmless.
+    A facet only one era carries excludes the other, so a CMIP7-only facet does not pull in
+    all of CMIP6.
     """
     requested_era = facets.get("mip_era")
     known = {
@@ -55,14 +53,13 @@ def cmip_dataset_filter(
         if requested_era and requested_era.upper() != str(source_type.value).upper():
             continue
 
-        conditions = []
-        for key, value in known.items():
-            column = _facet_column(dataset_model, key)
-            if column is None:
-                break
-            conditions.append(build_filter_clause(column, value))
-        else:
-            branches.append(execution.datasets.of_type(dataset_model).any(and_(true(), *conditions)))
+        columns = {key: _facet_column(dataset_model, key) for key in known}
+        if any(column is None for column in columns.values()):
+            continue
+
+        conditions = [build_filter_clause(columns[key], value) for key, value in known.items()]
+        # `and_()` with no arguments is deprecated, so seed it for the unfiltered case.
+        branches.append(execution.datasets.of_type(dataset_model).any(and_(true(), *conditions)))
 
     if not branches:
         # Nothing can satisfy the request, so match no rows rather than every row.

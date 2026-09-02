@@ -1132,9 +1132,7 @@ export const DatasetSchema = {
                     type: 'null'
                 }
             ],
-            title: 'Mip Era',
-            description: 'The model era this dataset belongs to, or None for non-CMIP sources.',
-            readOnly: true
+            title: 'Mip Era'
         },
         more_info_url: {
             anyOf: [
@@ -1155,7 +1153,6 @@ export const DatasetSchema = {
         'slug',
         'dataset_type',
         'metadata',
-        'mip_era',
         'more_info_url'
     ],
     title: 'Dataset'
@@ -2335,6 +2332,17 @@ export const DatasetWritableSchema = {
                     type: 'null'
                 }
             ]
+        },
+        mip_era: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Mip Era'
         }
     },
     type: 'object',

@@ -3,17 +3,13 @@ import type { ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
+  type Dimensioned,
   MIN_FAMILIES_FOR_CONFIDENCE,
   MIN_MODELS_FOR_CHART,
   type MipEra,
   sampleSize,
   splitByEra,
 } from "@/lib/modelEras";
-
-type Dimensioned = {
-  dimensions: { [key: string]: string };
-  kind?: "model" | "reference";
-};
 
 interface EraSectionsProps<T extends Dimensioned> {
   values: T[];
@@ -37,11 +33,9 @@ export function EraSections<T extends Dimensioned>({
   return (
     <div className="space-y-8">
       {sections.map(({ era, values: eraValues }) => (
-        <section key={era ?? "unknown"} className="space-y-3">
-          {era ? (
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{era}</Badge>
-            </div>
+        <section key={era ?? "unattributed"} className="space-y-3">
+          {sections.length > 1 || era ? (
+            <Badge variant="outline">{era ?? "Era not recorded"}</Badge>
           ) : null}
           <SampleSizeGate values={eraValues}>
             {children(eraValues, era)}
@@ -75,7 +69,7 @@ export function SampleSizeGate<T extends Dimensioned>({
           {models === 1
             ? "Only 1 model has results here."
             : `Only ${models} models have results here.`}{" "}
-          A chart is shown once more than {MIN_MODELS_FOR_CHART} models are
+          A chart is shown once at least {MIN_MODELS_FOR_CHART} models are
           available.
         </AlertDescription>
       </Alert>

@@ -534,10 +534,8 @@ export type Dataset = {
     metadata: CmipDatasetMetadata | null;
     /**
      * Mip Era
-     *
-     * The model era this dataset belongs to, or None for non-CMIP sources.
      */
-    readonly mip_era: string | null;
+    mip_era?: string | null;
     /**
      * More Info Url
      */
@@ -1238,6 +1236,10 @@ export type DatasetWritable = {
      */
     dataset_type: string;
     metadata: CmipDatasetMetadata | null;
+    /**
+     * Mip Era
+     */
+    mip_era?: string | null;
 };
 
 /**
