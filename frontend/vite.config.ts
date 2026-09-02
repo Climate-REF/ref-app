@@ -40,9 +40,8 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true, // Source map generation must be turned on
     rollupOptions: {
       output: {
-        manualChunks: {
-          katex: ["katex"],
-        },
+        manualChunks: (id: string) =>
+          id.includes("node_modules/katex") ? "katex" : undefined,
       },
     },
   },
