@@ -1,3 +1,25 @@
+## v0.6.2 (2026-09-02)
+
+### Features
+
+- Adds a staging mode, driven by the `ENVIRONMENT` setting the `/api/v1/utils/about` endpoint now reports.
+  A staging deployment carries a banner naming it as one, and drops the sample-size floor so a chart is
+  drawn even when only one or two models have results. (#87)
+
+### Improvements
+
+- Drops the model-family grouping behind the sparse-sample warning.
+  The warning now counts distinct `source_id` values, so a chart drawn from fewer than ten models is
+  flagged whatever centres they came from. (#87)
+
+### Bug Fixes
+
+- Applies the MIP era selection to the metric values query rather than only to the charts drawn from it.
+  Outlier detection pooled CMIP6 and CMIP7 into one IQR group, so the era a reader had selected did not
+  decide which values were flagged. Pagination counted both eras as well.
+  The scalar and series value tabs now carry the era selector too, so a table shows one era at a time. (#87)
+
+
 ## v0.6.1 (2026-09-02)
 
 ### Features
