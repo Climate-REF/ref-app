@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { MipEraProvider } from "@/components/charts/mipEraContext";
+import { MipEraSelector } from "@/components/charts/mipEraSelector";
 import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
+import { mipEraSearchFields } from "@/lib/mipEras";
 
 const themesSchema = z.object({
   theme: z
@@ -13,9 +16,13 @@ const themesSchema = z.object({
       "ocean",
     ])
     .default("atmosphere"),
+  ...mipEraSearchFields,
 });
 
 const Themes = () => {
+  const { mip_era: mipEra } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
   return (
     <div className="space-y-6">
       <div>
@@ -24,7 +31,15 @@ const Themes = () => {
           Browse climate model evaluation results organized by scientific theme.
         </p>
       </div>
-      <ThematicContent />
+      <MipEraSelector
+        mipEra={mipEra}
+        onChange={(next) =>
+          navigate({ search: (prev) => ({ ...prev, mip_era: next }) })
+        }
+      />
+      <MipEraProvider mipEra={mipEra}>
+        <ThematicContent />
+      </MipEraProvider>
     </div>
   );
 };

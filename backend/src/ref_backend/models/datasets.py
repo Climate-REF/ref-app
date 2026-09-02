@@ -20,7 +20,7 @@ class Dataset(BaseModel):
     slug: str
     dataset_type: str
     metadata: CMIPDatasetMetadata | None
-    #: The model era this dataset belongs to, or None for non-CMIP sources.
+    #: The MIP era this dataset belongs to, or None for non-CMIP sources.
     mip_era: str | None = None
 
     @computed_field  # type: ignore

@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
-import { EraSections } from "@/components/charts/eraSections";
+import { MipEraSections } from "@/components/charts/mipEraSections";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type {
   MetricValueCollection,
@@ -114,18 +114,16 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   // Extract series values from the data
   const collection = data as MetricValueCollection;
-  const allSeriesValues = (collection?.data ?? []).filter(
-    isSeriesValue,
-  ) as SeriesValue[];
-
-  // Split into regular and reference series based on role (kind).
-  // Missing/"model" kind is treated as a model series; only "reference" is a reference series.
-  const regularSeries = allSeriesValues.filter(
-    (series) => series.kind !== "reference",
-  );
-  const referenceSeries = allSeriesValues.filter(
-    (series) => series.kind === "reference",
-  );
+  // Missing or "model" kind is a model series, only "reference" is a reference series.
+  // Memoised because the charts below key their own memos on these array identities.
+  const { allSeriesValues, regularSeries, referenceSeries } = useMemo(() => {
+    const all = (collection?.data ?? []).filter(isSeriesValue) as SeriesValue[];
+    return {
+      allSeriesValues: all,
+      regularSeries: all.filter((series) => series.kind !== "reference"),
+      referenceSeries: all.filter((series) => series.kind === "reference"),
+    };
+  }, [collection?.data]);
 
   // Auto-select the first available facet value for filter controls that
   // have no current value (no defaultValue configured, or configured default
@@ -207,10 +205,10 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           units={contentItem.metricUnits}
         />
       ) : (
-        <EraSections values={regularSeries}>
-          {(eraSeries) => (
+        <MipEraSections values={regularSeries}>
+          {(mipEraSeries) => (
             <SeriesVisualization
-              seriesValues={eraSeries}
+              seriesValues={mipEraSeries}
               referenceSeriesValues={referenceSeries}
               maxSeriesLimit={500} // Limit for performance in preview
               symmetricalAxes={contentItem.symmetricalAxes ?? false}
@@ -219,7 +217,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
               units={contentItem.metricUnits}
             />
           )}
-        </EraSections>
+        </MipEraSections>
       )}
     </div>
   );

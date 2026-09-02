@@ -197,7 +197,7 @@ export function ThematicContent() {
           onValueChange={(value) => {
             navigate({
               to: Route.fullPath,
-              search: { theme: value },
+              search: (prev) => ({ ...prev, theme: value }),
             });
           }}
         >

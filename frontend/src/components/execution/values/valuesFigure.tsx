@@ -1,6 +1,6 @@
 import { Download } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { EraSections } from "@/components/charts/eraSections";
+import { MipEraSections } from "@/components/charts/mipEraSections";
 import {
   EmptyEnsembleChart,
   EnsembleChart,
@@ -133,10 +133,10 @@ export function ValuesFigure({
           </div>
         </div>
       ) : null}
-      <EraSections values={values}>
-        {(eraValues) => (
+      <MipEraSections values={values}>
+        {(mipEraValues) => (
           <EnsembleChart
-            data={eraValues}
+            data={mipEraValues}
             metricName="Values"
             metricUnits="unitless"
             groupingConfig={groupingConfig}
@@ -144,7 +144,7 @@ export function ValuesFigure({
             symmetricalAxes={symmetricalAxes}
           />
         )}
-      </EraSections>
+      </MipEraSections>
     </>
   );
 }
