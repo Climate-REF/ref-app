@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
-import { MipEraScope } from "@/components/charts/mipEraBar";
+import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
@@ -70,13 +70,6 @@ const Diagnostics = () => {
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
     DiagnosticSummary[]
   >([]);
-
-  // Update filtered diagnostics when data arrives
-  useEffect(() => {
-    if (data?.data) {
-      setFilteredDiagnostics(data.data);
-    }
-  }, [data]);
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -216,8 +209,8 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6 space-y-4">
-        <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
+      <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
+        <div className="mb-6 space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -243,55 +236,58 @@ const Diagnostics = () => {
               }
             />
           )}
-        </MipEraScope>
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Card
-              key={`diagnostic-skeleton-${Date.now()}-${index}`}
-              className="animate-pulse"
-            >
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded mb-2" />
-                <div className="h-3 bg-muted rounded mb-1 w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
         </div>
-      ) : (
-        <>
-          {searchParams.view === "cards" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDiagnostics.map((diagnostic) => {
-                const note = diagnosticNotes.find(
-                  (n) => n.slug === diagnostic.slug,
-                );
-                return (
-                  <DiagnosticCard
-                    key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
-                    diagnostic={diagnostic}
-                    note={note?.note}
-                    noteURL={note?.noteUrl}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <DiagnosticSummaryTable summaries={filteredDiagnostics} />
-          )}
 
-          {filteredDiagnostics.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No diagnostics found matching your filters.
-              </p>
-            </div>
-          )}
-        </>
-      )}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Card
+                key={`diagnostic-skeleton-${Date.now()}-${index}`}
+                className="animate-pulse"
+              >
+                <CardContent className="p-6">
+                  <div className="h-4 bg-muted rounded mb-2" />
+                  <div className="h-3 bg-muted rounded mb-1 w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <>
+            {searchParams.view === "cards" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredDiagnostics.map((diagnostic) => {
+                  const note = diagnosticNotes.find(
+                    (n) => n.slug === diagnostic.slug,
+                  );
+                  return (
+                    <DiagnosticCard
+                      key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
+                      diagnostic={diagnostic}
+                      note={note?.note}
+                      noteURL={note?.noteUrl}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <DiagnosticSummaryTable summaries={filteredDiagnostics} />
+            )}
+
+            {filteredDiagnostics.length === 0 &&
+              (data?.data.length === 0 ? (
+                <MipEraEmptyState what="diagnostics" />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No diagnostics found matching your filters.
+                  </p>
+                </div>
+              ))}
+          </>
+        )}
+      </MipEraScope>
     </div>
   );
 };

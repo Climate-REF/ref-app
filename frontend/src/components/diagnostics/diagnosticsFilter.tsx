@@ -145,8 +145,8 @@ export function DiagnosticsFilter({
     [diagnostics, onFilterChange, onFilterParamsChange],
   );
 
-  // Apply initial filters from URL on mount only
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run on initial mount to apply URL params
+  // Apply the current filters on mount and whenever the list itself changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: user edits apply their own filters
   useEffect(() => {
     applyFilters(
       searchTerm,
@@ -154,9 +154,9 @@ export function DiagnosticsFilter({
       selectedAftIds,
       selectedThemes,
       showWithMetricValues,
-      false, // Don't update URL on initial mount
+      false, // Don't update URL
     );
-  }, []);
+  }, [diagnostics]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);

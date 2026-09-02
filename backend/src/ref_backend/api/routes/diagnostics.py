@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import ColumnElement, Integer, func, select
+from sqlalchemy import ColumnElement, Integer, func
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -83,8 +83,7 @@ async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Colle
     # Every statistic below counts only groups matching the era, when one is requested.
     group_scope: list[ColumnElement[bool]] = [models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids)]
     if mip_era:
-        era_groups = select(models.ExecutionGroup.id).where(execution_group_filter({"mip_era": mip_era}))
-        group_scope.append(models.ExecutionGroup.id.in_(era_groups))
+        group_scope.append(execution_group_filter({"mip_era": mip_era}))
 
     # Check for scalar values existence
     scalar_values_exist = (

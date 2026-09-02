@@ -235,7 +235,7 @@ export function FigureGallery({
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset page on filter change
   useEffect(() => {
     setCurrentPage(0);
-  }, [filter, selectorFilters]);
+  }, [filter, selectorFilters, selectedMipEra]);
 
   const usePagination = pageSize !== undefined && pageSize > 0;
   const totalPages = usePagination
