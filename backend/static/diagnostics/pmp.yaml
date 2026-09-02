@@ -4,7 +4,7 @@
 #
 # `slug` is `<supplier>.<source_id>`, and `source_type` says the same thing in a structured field.
 # The prefix names who supplies the data, not the source type the requirement asks for, so a
-# dataset required as `obs4mips` but served pre-release reads `obs4ref.HadISST-1-1`.
+# dataset required as `obs4mips` but supplied from obs4REF reads `obs4ref.HadISST-1-1`.
 
 pmp/annual-cycle:
   reference_datasets:

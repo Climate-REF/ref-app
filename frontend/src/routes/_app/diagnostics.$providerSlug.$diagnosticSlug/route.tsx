@@ -295,7 +295,7 @@ const DiagnosticInfoLayout = () => {
                         for the diagnostic to run, while secondary references
                         provide additional context. The dataset name says where
                         the data comes from. obs4MIPs data is published, while
-                        obs4REF data is pre-release.
+                        obs4REF data is not on obs4MIPs yet.
                       </p>
                     </TooltipContent>
                   </Tooltip>
