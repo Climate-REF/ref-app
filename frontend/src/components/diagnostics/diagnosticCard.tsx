@@ -107,7 +107,7 @@ export function DiagnosticCard({
                         rel="noreferrer"
                         className="text-sm text-blue-600 hover:underline"
                       >
-                        Learn more
+                        Read the note about this diagnostic
                       </a>
                     )}
                   </TooltipContent>
