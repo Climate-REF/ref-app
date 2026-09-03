@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useState } from "react";
@@ -31,13 +31,11 @@ const Themes = () => {
   const { mipEra, setMipEra } = useMipEra(mip_era);
   const [plainLanguage, setPlainLanguage] = useState(false);
 
-  // Only decides whether the toggle belongs in the bar, so a pending query just hides it.
-  const { data: themeData } = useQuery(
+  // The same query ThematicContent suspends on, so the toggle never pops in late.
+  const { data: themeData } = useSuspenseQuery(
     explorerGetThemeOptions({ path: { theme_slug: theme } }),
   );
-  const showPlainLanguageToggle = themeData
-    ? hasPlainLanguageContent(themeData)
-    : false;
+  const showPlainLanguageToggle = hasPlainLanguageContent(themeData);
 
   return (
     <div className="space-y-6">

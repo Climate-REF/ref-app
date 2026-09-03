@@ -164,10 +164,10 @@ export function PlainLanguageToggle({
 }) {
   return (
     <Button
-      variant="outline"
+      variant={plainLanguage ? "default" : "outline"}
       size="sm"
       onClick={() => setPlainLanguage(!plainLanguage)}
-      className="gap-2 shrink-0 bg-background"
+      className="gap-2 shrink-0"
       title="Toggle between technical descriptions and plain language summaries"
     >
       {plainLanguage ? (

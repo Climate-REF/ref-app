@@ -5,15 +5,10 @@ import {
   diagnosticsListOptions,
   executionsGetExecutionStatisticsOptions,
 } from "@/client/@tanstack/react-query.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import { ResourceUsageTable } from "@/components/execution/resourceUsageTable";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { downloadTextFile } from "@/lib/downloadUtils";
 import { formatBytes, formatCount, formatDuration } from "@/lib/format";
 import { resourceUsageCsv } from "@/lib/resourceUsageCsv";
@@ -50,36 +45,29 @@ function ResourceUsagePage() {
   const usage = statistics.data?.resource_usage;
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className="container mx-auto p-4 space-y-6">
+      <PageHeader
+        title="Resource Usage"
+        description="Wall clock time, CPU time and peak memory recorded by the workers for every execution, rolled up by diagnostic. Only executions that recorded a wall time are counted, so older executions may be missing. Totals are sums over executions, which run in parallel, so they can be larger than the elapsed time of the run."
+        actions={
+          <Button
+            variant="outline"
+            disabled={!diagnostics.data}
+            onClick={() =>
+              downloadTextFile(
+                resourceUsageCsv(diagnostics.data?.data ?? []),
+                "resource-usage.csv",
+                "text/csv",
+              )
+            }
+          >
+            <Download className="h-4 w-4" />
+            Download CSV
+          </Button>
+        }
+      />
+
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle>Resource Usage</CardTitle>
-            <Button
-              variant="outline"
-              disabled={!diagnostics.data}
-              onClick={() =>
-                downloadTextFile(
-                  resourceUsageCsv(diagnostics.data?.data ?? []),
-                  "resource-usage.csv",
-                  "text/csv",
-                )
-              }
-            >
-              <Download className="h-4 w-4" />
-              Download CSV
-            </Button>
-          </div>
-          <CardDescription>
-            <p className="max-w-1/2">
-              Wall clock time, CPU time and peak memory recorded by the workers
-              for every execution, rolled up by diagnostic. Only executions that
-              recorded a wall time are counted, so older executions may be
-              missing. Totals are sums over executions, which run in parallel,
-              so they can be larger than the elapsed time of the run.
-            </p>
-          </CardDescription>
-        </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat

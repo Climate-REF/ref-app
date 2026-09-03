@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Dataset } from "@/client";
-import { Badge } from "@/components/ui/badge";
+import { SourceTypeBadge } from "@/components/ui/badge";
 
 const columnHelper = createColumnHelper<Dataset>();
 
@@ -31,9 +31,9 @@ export const columns: ColumnDef<Dataset>[] = [
   columnHelper.accessor("dataset_type", {
     header: "Dataset Type",
     cell: (cellContext) => (
-      <Badge variant="outline" className="uppercase">
+      <SourceTypeBadge sourceType={cellContext.row.original.dataset_type}>
         {cellContext.getValue()}
-      </Badge>
+      </SourceTypeBadge>
     ),
   }) as ColumnDef<Dataset>,
   ...METADATA_COLUMNS.map(
