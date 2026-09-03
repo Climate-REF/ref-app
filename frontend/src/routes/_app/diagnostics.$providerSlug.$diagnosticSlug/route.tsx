@@ -25,7 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatBytes, formatDuration } from "@/lib/format";
+import { formatBytes, formatCoreHours, formatDuration } from "@/lib/format";
 
 const GroupByItem = ({ source_type, group_by }: GroupBy) => {
   return (
@@ -226,13 +226,13 @@ const DiagnosticInfoLayout = () => {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>
-                        Wall clock time recorded by the workers, summed across
-                        the executions of this diagnostic that recorded it.
-                        Executions run in parallel, so the sum can be larger
-                        than the elapsed time of the run.
+                        Core hours consumed by the executions of this
+                        diagnostic. A core hour is one CPU core busy for an
+                        hour, so it measures the compute an execution consumed
+                        rather than how long it took.
                       </p>
                       <p className="mt-2">
-                        CPU time and peak memory are optional, so they roll up
+                        Core hours and peak memory are optional, so they roll up
                         over only the executions that recorded them.
                       </p>
                     </TooltipContent>
@@ -241,10 +241,9 @@ const DiagnosticInfoLayout = () => {
                 <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      Wall time (sum / mean)
+                      Mean wall time
                     </p>
                     <p className="font-medium tabular-nums">
-                      {formatDuration(data.resource_usage.wall_seconds_total)} /{" "}
                       {formatDuration(data.resource_usage.wall_seconds_mean)}
                     </p>
                   </div>
@@ -258,11 +257,11 @@ const DiagnosticInfoLayout = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      CPU time (sum / mean)
+                      Core hours (sum / mean)
                     </p>
                     <p className="font-medium tabular-nums">
-                      {formatDuration(data.resource_usage.cpu_seconds_total)} /{" "}
-                      {formatDuration(data.resource_usage.cpu_seconds_mean)}
+                      {formatCoreHours(data.resource_usage.cpu_seconds_total)} /{" "}
+                      {formatCoreHours(data.resource_usage.cpu_seconds_mean)}
                     </p>
                   </div>
                   <div className="space-y-1">
