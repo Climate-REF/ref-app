@@ -33,6 +33,7 @@ function diagnostic(name: string, cpu: number | null): DiagnosticSummary {
             wall_seconds_max: cpu,
             cpu_seconds_total: cpu,
             cpu_seconds_mean: cpu / 2,
+            peak_memory_bytes_min: 512,
             peak_memory_bytes_max: 1024,
           },
   } as DiagnosticSummary;
@@ -47,12 +48,12 @@ describe("resourceUsageCsv", () => {
     ]);
     const lines = csv.split("\n");
     expect(lines[0]).toBe(
-      "provider,diagnostic,slug,timed_execution_count,wall_seconds_total,wall_seconds_mean,wall_seconds_max,cpu_seconds_total,cpu_seconds_mean,peak_memory_bytes_max",
+      "provider,diagnostic,slug,timed_execution_count,wall_seconds_total,wall_seconds_mean,wall_seconds_max,cpu_seconds_total,cpu_seconds_mean,peak_memory_bytes_min,peak_memory_bytes_max",
     );
     expect(lines[1]).toBe(
-      'PMP,"Fast, quick","fast, quick",2,100,50,100,100,50,1024',
+      'PMP,"Fast, quick","fast, quick",2,100,50,100,100,50,512,1024',
     );
-    expect(lines[2]).toBe("PMP,Slow,slow,2,10,5,10,10,5,1024");
-    expect(lines[3]).toBe("PMP,Untimed,untimed,,,,,,,");
+    expect(lines[2]).toBe("PMP,Slow,slow,2,10,5,10,10,5,512,1024");
+    expect(lines[3]).toBe("PMP,Untimed,untimed,,,,,,,,");
   });
 });

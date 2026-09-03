@@ -10,6 +10,7 @@ const COLUMNS = [
   "wall_seconds_max",
   "cpu_seconds_total",
   "cpu_seconds_mean",
+  "peak_memory_bytes_min",
   "peak_memory_bytes_max",
 ];
 
@@ -44,6 +45,7 @@ export function resourceUsageCsv(diagnostics: DiagnosticSummary[]): string {
         d.resource_usage?.wall_seconds_max,
         d.resource_usage?.cpu_seconds_total,
         d.resource_usage?.cpu_seconds_mean,
+        d.resource_usage?.peak_memory_bytes_min,
         d.resource_usage?.peak_memory_bytes_max,
       ]
         .map(csvField)

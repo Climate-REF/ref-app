@@ -266,8 +266,11 @@ const DiagnosticInfoLayout = () => {
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Peak memory</p>
+                    <p className="text-sm text-muted-foreground">
+                      Peak memory (min / max)
+                    </p>
                     <p className="font-medium tabular-nums">
+                      {formatBytes(data.resource_usage.peak_memory_bytes_min)} /{" "}
                       {formatBytes(data.resource_usage.peak_memory_bytes_max)}
                     </p>
                   </div>

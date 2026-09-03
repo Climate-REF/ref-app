@@ -81,8 +81,10 @@ function ResourceUsagePage() {
               loading={statistics.isLoading}
             />
             <Stat
-              label="Peak memory"
-              value={formatBytes(usage?.peak_memory_bytes_max)}
+              label="Peak memory (min / max)"
+              value={`${formatBytes(usage?.peak_memory_bytes_min)} / ${formatBytes(
+                usage?.peak_memory_bytes_max,
+              )}`}
               loading={statistics.isLoading}
             />
           </div>

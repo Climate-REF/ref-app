@@ -18,7 +18,7 @@ function numericColumn(
   title: string,
   description: string,
   accessor: (row: DiagnosticSummary) => number | null | undefined,
-  render: (value: number | undefined) => string,
+  render: (value: number | undefined, row: DiagnosticSummary) => string,
 ): ColumnDef<DiagnosticSummary> {
   return {
     id,
@@ -30,7 +30,7 @@ function numericColumn(
     ),
     cell: (cell) => (
       <span className="tabular-nums" title={description}>
-        {render(cell.getValue<number | undefined>())}
+        {render(cell.getValue<number | undefined>(), cell.row.original)}
       </span>
     ),
   };
@@ -104,10 +104,13 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
   ),
   numericColumn(
     "memory_max",
-    "Peak\nmemory",
-    "Largest peak resident memory of any execution.",
+    "Peak memory\nmin / max",
+    "Smallest and largest peak resident memory of any execution.",
     (row) => row.resource_usage?.peak_memory_bytes_max,
-    formatBytes,
+    (max, row) =>
+      max === undefined
+        ? formatBytes(undefined)
+        : `${formatBytes(row.resource_usage?.peak_memory_bytes_min)} / ${formatBytes(max)}`,
   ),
   columnHelper.display({
     id: "link",
