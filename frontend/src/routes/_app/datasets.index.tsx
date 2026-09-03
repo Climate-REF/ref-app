@@ -9,13 +9,7 @@ import {
 import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DatasetsSearchSchema = z.object({
   dataset_type: z.string().default("cmip6"),
@@ -99,20 +93,17 @@ function SourcesIndexPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className="container mx-auto p-4 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Ingested Datasets</h1>
+        <p className="text-muted-foreground mt-2 max-w-prose">
+          Browse the datasets that have been imported into the system. Use the
+          filter panel to narrow the list down by dataset type, name, or
+          metadata facets.
+        </p>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Ingested Datasets</CardTitle>
-          <CardDescription>
-            Browse the list of datasets that have been imported into the system.
-            <p>
-              Here you can view available datasets, filter them by various
-              facets, and load more results as needed. Use the filter panel to
-              narrow down your search by dataset type, name, or specific
-              metadata attributes.
-            </p>
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4">
             <FilterPanel
