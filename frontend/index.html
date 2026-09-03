@@ -21,7 +21,8 @@
           const mql = window.matchMedia?.("(prefers-color-scheme: dark)");
           const systemPrefersDark = () => mql?.matches;
           const stored = getStored();
-          const shouldDark = stored ? stored === "dark" : systemPrefersDark();
+          const explicit = stored === "dark" || stored === "light";
+          const shouldDark = explicit ? stored === "dark" : systemPrefersDark();
           if (shouldDark) {
             document.documentElement.classList.add("dark");
           } else {
