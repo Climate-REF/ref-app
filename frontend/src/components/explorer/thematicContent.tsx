@@ -1,7 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { BookOpen, FlaskConical } from "lucide-react";
-import { useState } from "react";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
 import type {
   AftCollectionCard,
@@ -155,7 +154,34 @@ function buildCollectionGroups(theme: ThemeDetail) {
     .filter((group) => group.cards.length > 0);
 }
 
-function hasPlainLanguageContent(theme: ThemeDetail): boolean {
+/** Swap the collection descriptions between the technical wording and the plain language one. */
+export function PlainLanguageToggle({
+  plainLanguage,
+  setPlainLanguage,
+}: {
+  plainLanguage: boolean;
+  setPlainLanguage: (value: boolean) => void;
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setPlainLanguage(!plainLanguage)}
+      className="gap-2 shrink-0 bg-background"
+      title="Toggle between technical descriptions and plain language summaries"
+    >
+      {plainLanguage ? (
+        <BookOpen className="h-4 w-4" />
+      ) : (
+        <FlaskConical className="h-4 w-4" />
+      )}
+      {plainLanguage ? "Plain Language" : "Technical"}
+    </Button>
+  );
+}
+
+/** True when at least one collection carries a plain language summary worth toggling to. */
+export function hasPlainLanguageContent(theme: ThemeDetail): boolean {
   return theme.collections.some((c) => {
     const pl = c.content?.plain_language;
     return pl?.description || pl?.why_it_matters || pl?.takeaway;
@@ -178,17 +204,15 @@ function ThemeContent({
   );
 }
 
-export function ThematicContent() {
+export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
   const { theme } = Route.useSearch();
   const navigate = useNavigate();
   const themeObj = themes.find((t) => t.name === theme);
   const selectedMipEra = useSelectedMipEra();
-  const [plainLanguage, setPlainLanguage] = useState(false);
 
   const { data: themeData } = useSuspenseQuery(
     explorerGetThemeOptions({ path: { theme_slug: theme } }),
   );
-  const showPlainLanguageToggle = hasPlainLanguageContent(themeData);
 
   return (
     <>
@@ -211,26 +235,6 @@ export function ThematicContent() {
             ))}
           </TabsList>
         </Tabs>
-        {showPlainLanguageToggle && (
-          <div className="flex items-center gap-3">
-            <Button
-              variant={plainLanguage ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPlainLanguage(!plainLanguage)}
-              className="gap-2 shrink-0"
-            >
-              {plainLanguage ? (
-                <BookOpen className="h-4 w-4" />
-              ) : (
-                <FlaskConical className="h-4 w-4" />
-              )}
-              {plainLanguage ? "Plain Language" : "Technical"}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Toggle between technical descriptions and plain language summaries
-            </p>
-          </div>
-        )}
       </div>
       <div className="mt-6">
         {theme && (

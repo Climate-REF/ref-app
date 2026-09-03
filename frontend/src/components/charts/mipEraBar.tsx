@@ -31,17 +31,19 @@ const ERA_STYLES: Record<MipEra, { bar: string; active: string }> = {
 export function MipEraScope({
   mipEra,
   setMipEra,
+  actions,
   children,
-}: MipEraSelection & { children: ReactNode }) {
+}: MipEraSelection & { actions?: ReactNode; children: ReactNode }) {
   return (
     <MipEraProvider mipEra={mipEra} setMipEra={setMipEra}>
-      <MipEraBar />
+      <MipEraBar actions={actions} />
       {children}
     </MipEraProvider>
   );
 }
 
-function MipEraBar() {
+/** `actions` sit on the right of the bar, for controls that scope the same results. */
+function MipEraBar({ actions }: { actions?: ReactNode }) {
   const selection = useMipEraSelection();
   if (!selection) return null;
   const { mipEra, setMipEra } = selection;
@@ -71,6 +73,7 @@ function MipEraBar() {
           </TabsList>
         </Tabs>
       </div>
+      {actions ? <div className="ml-auto">{actions}</div> : null}
     </div>
   );
 }

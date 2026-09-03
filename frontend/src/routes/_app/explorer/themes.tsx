@@ -1,8 +1,15 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { useState } from "react";
 import { z } from "zod";
+import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
 import { MipEraScope } from "@/components/charts/mipEraBar";
-import { ThematicContent } from "@/components/explorer/thematicContent.tsx";
+import {
+  hasPlainLanguageContent,
+  PlainLanguageToggle,
+  ThematicContent,
+} from "@/components/explorer/thematicContent.tsx";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
@@ -20,8 +27,17 @@ const themesSchema = z.object({
 });
 
 const Themes = () => {
-  const { mip_era } = Route.useSearch();
+  const { mip_era, theme } = Route.useSearch();
   const { mipEra, setMipEra } = useMipEra(mip_era);
+  const [plainLanguage, setPlainLanguage] = useState(false);
+
+  // Already fetched by ThematicContent, so this only decides whether the toggle belongs in the bar.
+  const { data: themeData } = useQuery(
+    explorerGetThemeOptions({ path: { theme_slug: theme } }),
+  );
+  const showPlainLanguageToggle = themeData
+    ? hasPlainLanguageContent(themeData)
+    : false;
 
   return (
     <div className="space-y-6">
@@ -31,8 +47,19 @@ const Themes = () => {
           Browse climate model evaluation results organized by scientific theme.
         </p>
       </div>
-      <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
-        <ThematicContent />
+      <MipEraScope
+        mipEra={mipEra}
+        setMipEra={setMipEra}
+        actions={
+          showPlainLanguageToggle ? (
+            <PlainLanguageToggle
+              plainLanguage={plainLanguage}
+              setPlainLanguage={setPlainLanguage}
+            />
+          ) : null
+        }
+      >
+        <ThematicContent plainLanguage={plainLanguage} />
       </MipEraScope>
     </div>
   );
