@@ -13,7 +13,7 @@ const METADATA_COLUMNS = [
   { key: "variable_id", header: "Variable" },
 ] as const;
 
-export const columns: ColumnDef<Dataset>[] = [
+const baseColumns: ColumnDef<Dataset>[] = [
   columnHelper.accessor("slug", {
     header: "Slug",
     cell: (cellContext) => {
@@ -36,14 +36,6 @@ export const columns: ColumnDef<Dataset>[] = [
       </SourceTypeBadge>
     ),
   }) as ColumnDef<Dataset>,
-  ...METADATA_COLUMNS.map(
-    ({ key, header }) =>
-      columnHelper.display({
-        id: key,
-        header,
-        cell: (cellContext) => cellContext.row.original.metadata?.[key] ?? "",
-      }) as ColumnDef<Dataset>,
-  ),
   columnHelper.display({
     id: "esgf_link",
     cell: (cellContext) => {
@@ -62,3 +54,27 @@ export const columns: ColumnDef<Dataset>[] = [
     header: "More Info",
   }),
 ];
+
+/**
+ * The columns for a table of `sourceType` datasets.
+ *
+ * Only the CMIP sources carry the facet metadata, so other sources would get blank columns.
+ */
+export function datasetColumns(sourceType: string): ColumnDef<Dataset>[] {
+  if (!sourceType.startsWith("cmip")) return baseColumns;
+
+  const [slug, datasetType, ...rest] = baseColumns;
+  return [
+    slug,
+    datasetType,
+    ...METADATA_COLUMNS.map(
+      ({ key, header }) =>
+        columnHelper.display({
+          id: key,
+          header,
+          cell: (cellContext) => cellContext.row.original.metadata?.[key] ?? "",
+        }) as ColumnDef<Dataset>,
+    ),
+    ...rest,
+  ];
+}

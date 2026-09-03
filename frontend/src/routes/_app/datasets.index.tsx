@@ -118,6 +118,7 @@ function SourcesIndexPage() {
             )}
             <DatasetTable
               data={datasets}
+              sourceType={search.dataset_type}
               loading={isLoading || isFetchingNextPage}
             />
             {hasNextPage && (

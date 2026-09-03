@@ -54,7 +54,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, totalCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {count(perEra.CMIP6 ?? 0)} CMIP6, {count(perEra.CMIP7 ?? 0)} CMIP7
+            {count(perEra.CMIP6 ?? 0)} ran against CMIP6,{" "}
+            {count(perEra.CMIP7 ?? 0)} against CMIP7
           </p>
         </CardContent>
       </Card>
