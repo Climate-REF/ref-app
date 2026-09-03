@@ -18,7 +18,7 @@ import "./styles/global.css";
 const RELOAD_KEY = "chunk-reload-at";
 const RELOAD_COOLDOWN_MS = 30_000;
 
-// Storage access throws when the browser blocks site data, so it must not stop the reload.
+// Storage access throws when the browser blocks site data, so both calls are guarded.
 const readReloadedAt = (): number => {
   try {
     return Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
@@ -27,11 +27,12 @@ const readReloadedAt = (): number => {
   }
 };
 
-const markReloaded = () => {
+const markReloaded = (): boolean => {
   try {
     sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+    return true;
   } catch {
-    // Without storage the cooldown cannot be recorded, but the reload still matters more.
+    return false;
   }
 };
 
@@ -39,7 +40,10 @@ window.addEventListener("vite:preloadError", (event) => {
   if (Date.now() - readReloadedAt() < RELOAD_COOLDOWN_MS) {
     return;
   }
-  markReloaded();
+  // Without a recorded timestamp there is no cooldown, so let the error surface instead of looping.
+  if (!markReloaded()) {
+    return;
+  }
   event.preventDefault();
   window.location.reload();
 });
