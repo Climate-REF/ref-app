@@ -6,6 +6,7 @@ import {
   datasetsListInfiniteOptions,
   datasetsListOptions,
 } from "@/client/@tanstack/react-query.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
@@ -94,14 +95,10 @@ function SourcesIndexPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ingested Datasets</h1>
-        <p className="text-muted-foreground mt-2 max-w-prose">
-          Browse the datasets that have been imported into the system. Use the
-          filter panel to narrow the list down by dataset type, name, or
-          metadata facets.
-        </p>
-      </div>
+      <PageHeader
+        title="Ingested Datasets"
+        description="Browse the datasets that have been imported into the system. Use the filter panel to narrow the list down by dataset type, name, or metadata facets."
+      />
 
       <Card>
         <CardContent>

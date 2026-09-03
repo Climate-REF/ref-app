@@ -22,7 +22,7 @@ function NavItem({ title, to }: { title: string; to: string }) {
   );
 }
 
-const THEME_LABELS = {
+const THEME_DISPLAY = {
   light: { icon: Sun, label: "Light" },
   dark: { icon: Moon, label: "Dark" },
   system: { icon: Monitor, label: "System" },
@@ -30,7 +30,7 @@ const THEME_LABELS = {
 
 export function Navbar() {
   const { mode, cycle } = useTheme();
-  const { icon: ThemeIcon, label: themeLabel } = THEME_LABELS[mode];
+  const { icon: ThemeIcon, label: themeLabel } = THEME_DISPLAY[mode];
 
   return (
     <NavigationMenu className="w-screen px-8 py-4">

@@ -31,7 +31,7 @@ const Themes = () => {
   const { mipEra, setMipEra } = useMipEra(mip_era);
   const [plainLanguage, setPlainLanguage] = useState(false);
 
-  // Already fetched by ThematicContent, so this only decides whether the toggle belongs in the bar.
+  // Only decides whether the toggle belongs in the bar, so a pending query just hides it.
   const { data: themeData } = useQuery(
     explorerGetThemeOptions({ path: { theme_slug: theme } }),
   );

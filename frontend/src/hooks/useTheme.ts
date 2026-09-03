@@ -75,5 +75,5 @@ export function useTheme() {
     setMode((current) => CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]);
   }, []);
 
-  return { mode, theme, setTheme: setMode, cycle };
+  return { mode, theme, cycle };
 }

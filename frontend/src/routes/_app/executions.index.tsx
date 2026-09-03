@@ -4,6 +4,7 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 import { FilterPanel as ExecutionsFilterPanel } from "@/components/execution/filterPanel";
@@ -110,12 +111,10 @@ function ExecutionsListPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Execution Groups
-          </h1>
-          <div className="text-muted-foreground mt-2 max-w-prose space-y-2">
+      <PageHeader
+        title="Execution Groups"
+        description={
+          <div className="space-y-2">
             <p>
               We group all executions for different versions of datasets
               together into an execution group. Each execution group has a
@@ -127,11 +126,13 @@ function ExecutionsListPage() {
             </p>
             <p>Use the filters to narrow the list down.</p>
           </div>
-        </div>
-        <Button variant="outline" asChild>
-          <Link to="/executions/resources">Resource usage</Link>
-        </Button>
-      </div>
+        }
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/executions/resources">Resource usage</Link>
+          </Button>
+        }
+      />
 
       <Card>
         <CardContent className="space-y-4">

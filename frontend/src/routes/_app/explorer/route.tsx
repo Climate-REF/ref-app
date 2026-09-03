@@ -1,10 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import { PageHeader } from "@/components/app/pageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import DataHealthWarning from "@/content/data-health-warning.mdx";
 
 /** What the explorer offers that the theme tabs and the catalog link do not already say. */
-const AVAILABLE = [
+const EXPLORER_FEATURES = [
   {
     term: "Visualizations",
     detail:
@@ -28,31 +29,28 @@ const ExplorerLayout = () => {
   return (
     <div className="flex flex-col gap-6 mx-8">
       <div className="space-y-6 border-b pb-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Data Explorer</h1>
-            <p className="text-muted-foreground mt-2 max-w-prose">
-              Explore and visualize climate model evaluation diagnostics across
-              different Earth system components and scientific themes.
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <a
-              href="/diagnostics"
-              className="text-primary hover:underline font-medium whitespace-nowrap"
-            >
-              Full diagnostic catalog →
-            </a>
-            <a
-              href="https://github.com/Climate-REF/ref-app/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium whitespace-nowrap"
-            >
-              Feedback on GitHub →
-            </a>
-          </div>
-        </div>
+        <PageHeader
+          title="Data Explorer"
+          description="Explore and visualize climate model evaluation diagnostics across different Earth system components and scientific themes."
+          actions={
+            <>
+              <a
+                href="/diagnostics"
+                className="text-primary hover:underline font-medium whitespace-nowrap"
+              >
+                Full diagnostic catalog →
+              </a>
+              <a
+                href="https://github.com/Climate-REF/ref-app/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-medium whitespace-nowrap"
+              >
+                Feedback on GitHub →
+              </a>
+            </>
+          }
+        />
 
         <div className="grid gap-8 md:grid-cols-[340px_minmax(0,1fr)]">
           <Card className="bg-muted/40 h-fit max-w-md">
@@ -73,7 +71,7 @@ const ExplorerLayout = () => {
 
           <div className="space-y-4">
             <dl className="grid gap-x-8 gap-y-3 text-sm text-muted-foreground sm:grid-cols-2">
-              {AVAILABLE.map((item) => (
+              {EXPLORER_FEATURES.map((item) => (
                 <div key={item.term}>
                   <dt className="font-medium text-foreground">{item.term}</dt>
                   <dd>{item.detail}</dd>

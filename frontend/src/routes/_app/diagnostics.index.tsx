@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
@@ -38,15 +39,10 @@ const ErrorComponent = ({ message }: { message: string }) => {
   return (
     <div className="container mx-auto py-10">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Diagnostics Catalog</h1>
-            <p className="text-muted-foreground">
-              A set of standardised diagnostics for evaluating climate model
-              performance against observations and benchmarks.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Diagnostics Catalog"
+          description="A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks."
+        />
       </div>
 
       <Alert variant="destructive" className="mb-6">
@@ -119,19 +115,16 @@ const Diagnostics = () => {
     <div className="container mx-auto py-10">
       <title>{`Diagnostics (${mipEra}) - Climate-REF`}</title>
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Diagnostics Catalog</h1>
-            <p className="text-muted-foreground">
-              A set of standardised diagnostics for evaluating climate model
-              performance against observations and benchmarks.
-            </p>
-          </div>
-          <ViewToggle
-            view={searchParams.view}
-            onViewChange={handleViewChange}
-          />
-        </div>
+        <PageHeader
+          title="Diagnostics Catalog"
+          description="A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks."
+          actions={
+            <ViewToggle
+              view={searchParams.view}
+              onViewChange={handleViewChange}
+            />
+          }
+        />
       </div>
 
       <Card className="mb-6">

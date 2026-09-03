@@ -42,7 +42,7 @@ export function MipEraScope({
   );
 }
 
-/** `actions` sit on the right of the bar, for controls that scope the same results. */
+/** `actions` carries controls that scope the same results the era selector does. */
 function MipEraBar({ actions }: { actions?: ReactNode }) {
   const selection = useMipEraSelection();
   if (!selection) return null;

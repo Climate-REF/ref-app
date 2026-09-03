@@ -20,13 +20,13 @@ def dataset_model_for(source_type: SourceDatasetType) -> type[models.Dataset]:
     return models.Dataset.__mapper__.polymorphic_map[source_type].class_
 
 
-def dataset_type_label(source_type: SourceDatasetType | str) -> str:
+def dataset_type_label(source_type: SourceDatasetType) -> str:
     """
     Render a source type as the short name the API exposes, such as `cmip7`.
 
     `SourceDatasetType` is a plain enum, so `str()` on it yields `SourceDatasetType.CMIP7`.
     """
-    return str(getattr(source_type, "value", source_type))
+    return str(source_type.value)
 
 
 def mip_era_for(source_type: SourceDatasetType) -> str | None:
@@ -86,7 +86,7 @@ def execution_groups_per_era(session: Session) -> dict[str, int]:
     counts = {}
     for source_type in CMIP_ERAS:
         label = mip_era_for(source_type)
-        if label is None:  # pragma: no cover - CMIP_ERAS only holds CMIP eras
+        if label is None:  # pragma: no cover. CMIP_ERAS only holds CMIP eras.
             continue
         counts[label] = (
             session.query(models.ExecutionGroup).filter(execution_group_filter({"mip_era": label})).count()
