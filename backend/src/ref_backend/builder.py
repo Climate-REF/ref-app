@@ -72,9 +72,15 @@ class SPAStaticFiles(StaticFiles):
 
     async def get_response(self, path: str, scope: Scope) -> Response:
         try:
-            return await super().get_response(path, scope)
+            response = await super().get_response(path, scope)
         except HTTPException:
-            return await super().get_response(".", scope)
+            response = await super().get_response(".", scope)
+
+        # The HTML names hashed asset files that the next deploy removes, so it must be revalidated.
+        if response.headers.get("content-type", "").startswith("text/html"):
+            response.headers["Cache-Control"] = "no-cache"
+
+        return response
 
 
 def build_app(settings: Settings, ref_config: Config, database: Database) -> FastAPI:
