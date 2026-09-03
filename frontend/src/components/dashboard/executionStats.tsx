@@ -11,6 +11,8 @@ import {
 const maybeShowLoading = (isLoading: boolean, content: React.ReactNode) =>
   isLoading ? "..." : content?.toLocaleString();
 
+const count = (value: number) => value.toLocaleString();
+
 export function ExecutionStats() {
   const { data, isLoading, error } = useQuery(
     executionsGetExecutionStatisticsOptions(),
@@ -23,6 +25,7 @@ export function ExecutionStats() {
   const scalarCount = data?.scalar_value_count ?? 0;
   const seriesCount = data?.series_value_count ?? 0;
   const metricValueCount = scalarCount + seriesCount;
+  const perEra = data?.execution_groups_by_mip_era ?? {};
   const totalDatasets = data?.total_datasets ?? 0;
   const totalFiles = data?.total_files ?? 0;
 
@@ -51,7 +54,7 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, totalCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            All diagnostic execution groups
+            {count(perEra.CMIP6 ?? 0)} CMIP6, {count(perEra.CMIP7 ?? 0)} CMIP7
           </p>
         </CardContent>
       </Card>
@@ -68,7 +71,7 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, `${successRate}%`)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {successCount} successful, {failedCount} failed
+            {count(successCount)} successful, {count(failedCount)} failed
           </p>
         </CardContent>
       </Card>
@@ -85,7 +88,7 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, metricValueCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {scalarCount} scalars, {seriesCount} series
+            {count(scalarCount)} scalars, {count(seriesCount)} series
           </p>
         </CardContent>
       </Card>
