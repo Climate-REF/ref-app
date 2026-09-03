@@ -20,6 +20,15 @@ def dataset_model_for(source_type: SourceDatasetType) -> type[models.Dataset]:
     return models.Dataset.__mapper__.polymorphic_map[source_type].class_
 
 
+def dataset_type_label(source_type: SourceDatasetType | str) -> str:
+    """
+    Render a source type as the short name the API exposes, such as `cmip7`.
+
+    `SourceDatasetType` is a plain enum, so `str()` on it yields `SourceDatasetType.CMIP7`.
+    """
+    return str(getattr(source_type, "value", source_type))
+
+
 def mip_era_for(source_type: SourceDatasetType) -> str | None:
     """Map a source dataset type onto the MIP era label used to keep the eras apart."""
     if source_type not in CMIP_ERAS:
@@ -70,6 +79,19 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
 def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
     return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
+
+
+def execution_groups_per_era(session: Session) -> dict[str, int]:
+    """Count the execution groups that ran against each MIP era, keyed by era label."""
+    counts = {}
+    for source_type in CMIP_ERAS:
+        label = mip_era_for(source_type)
+        if label is None:  # pragma: no cover - CMIP_ERAS only holds CMIP eras
+            continue
+        counts[label] = (
+            session.query(models.ExecutionGroup).filter(execution_group_filter({"mip_era": label})).count()
+        )
+    return counts
 
 
 def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:

@@ -838,6 +838,12 @@ export type ExecutionStats = {
      */
     not_started_execution_groups: number;
     /**
+     * Execution Groups By Mip Era
+     */
+    execution_groups_by_mip_era: {
+        [key: string]: number;
+    };
+    /**
      * Scalar Value Count
      */
     scalar_value_count: number;
@@ -1351,6 +1357,12 @@ export type ExecutionStatsWritable = {
      * Not Started Execution Groups
      */
     not_started_execution_groups: number;
+    /**
+     * Execution Groups By Mip Era
+     */
+    execution_groups_by_mip_era: {
+        [key: string]: number;
+    };
     /**
      * Scalar Value Count
      */
