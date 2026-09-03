@@ -1,3 +1,15 @@
+## v0.7.0 (2026-09-03)
+
+### Improvements
+
+- Reported resource usage in core hours instead of CPU time formatted as days.
+  Reported the peak memory of a diagnostic as a min and max range, which shows how widely executions of the same diagnostic vary. (#91)
+
+### Breaking Changes
+
+- Removed the summed wall time from the resource usage and diagnostic overviews. Executions run in parallel, so the sum was not comparable to the elapsed time of a run. (#91)
+
+
 ## v0.6.3 (2026-09-03)
 
 ### Features
