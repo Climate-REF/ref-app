@@ -1,3 +1,31 @@
+## v0.6.3 (2026-09-03)
+
+### Features
+
+- Cycles the theme through light, dark and system rather than flipping between light and dark.
+  Once a theme was picked there was no way back to following the operating system.
+  The dashboard also reports how many execution groups ran against CMIP6 and how many against CMIP7,
+  and the datasets table gains experiment, source and variable columns. (#89)
+
+### Improvements
+
+- Reworks the Data Explorer header, which put roughly 600px of prose above the first result.
+  The title, the catalog link and the feedback link now sit above the card rather than inside it,
+  and the help text keeps only the points the theme tabs do not already make.
+  The datasets and executions pages move their headers out of the first card to match.
+  The plain language toggle moves onto the MIP era bar, because both controls scope the same results. (#89)
+
+### Bug Fixes
+
+- Reloads the page when a chunk fails to load, so a tab left open across a deployment recovers instead of showing an error. (#88)
+- Renders dataset types as `cmip7` rather than `SourceDatasetType.CMIP7`.
+  `SourceDatasetType` is a plain enum, so `str()` on it leaked the Python repr into every dataset response.
+  This also fills in the More Info column for CMIP6 rows on the datasets page,
+  because the lookup that builds the link tested for `cmip6` in a string that never contained it.
+  Groups the digits in the dashboard counts, which ran together as `954217 scalars`,
+  and spaces the labels and values in the version footer. (#89)
+
+
 ## v0.6.2 (2026-09-02)
 
 ### Features
