@@ -22,7 +22,7 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import execution_group_filter
+from ref_backend.core.mip_eras import execution_group_filter, execution_groups_per_era
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
@@ -86,6 +86,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
         failed_execution_groups=sum(s.failed for s in stats),
         running_execution_groups=sum(s.running for s in stats),
         not_started_execution_groups=sum(s.not_started for s in stats),
+        execution_groups_by_mip_era=execution_groups_per_era(session),
         scalar_value_count=session.query(models.ScalarMetricValue).count(),
         series_value_count=session.query(models.SeriesMetricValue).count(),
         total_datasets=session.query(models.Dataset).count(),

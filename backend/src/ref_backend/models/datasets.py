@@ -5,7 +5,7 @@ from pydantic import BaseModel, computed_field
 from climate_ref import models
 from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref.results.datasets import DatasetView
-from ref_backend.core.mip_eras import CMIP_ERAS, mip_era_for
+from ref_backend.core.mip_eras import CMIP_ERAS, dataset_type_label, mip_era_for
 
 
 class CMIPDatasetMetadata(BaseModel):
@@ -45,7 +45,7 @@ class Dataset(BaseModel):
         return Dataset(
             id=dataset.id,
             slug=dataset.slug,
-            dataset_type=str(dataset.dataset_type),
+            dataset_type=dataset_type_label(dataset.dataset_type),
             metadata=metadata,
             mip_era=mip_era_for(dataset.dataset_type),
         )
@@ -60,7 +60,7 @@ class Dataset(BaseModel):
         return Dataset(
             id=dataset.id,
             slug=dataset.slug,
-            dataset_type=str(dataset.dataset_type),
+            dataset_type=dataset_type_label(dataset.dataset_type),
             metadata=metadata,
             mip_era=mip_era_for(dataset.dataset_type),
         )

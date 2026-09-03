@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { NavbarLogo } from "@/components/app/navbarLogo.tsx";
 import {
   NavigationMenu,
@@ -22,8 +22,15 @@ function NavItem({ title, to }: { title: string; to: string }) {
   );
 }
 
+const THEME_DISPLAY = {
+  light: { icon: Sun, label: "Light" },
+  dark: { icon: Moon, label: "Dark" },
+  system: { icon: Monitor, label: "System" },
+} as const;
+
 export function Navbar() {
-  const { theme, toggle } = useTheme();
+  const { mode, cycle } = useTheme();
+  const { icon: ThemeIcon, label: themeLabel } = THEME_DISPLAY[mode];
 
   return (
     <NavigationMenu className="w-screen px-8 py-4">
@@ -42,25 +49,16 @@ export function Navbar() {
         <div className="ml-auto">
           <button
             type="button"
-            aria-label="Toggle theme"
-            onClick={toggle}
+            aria-label={`Theme: ${themeLabel}. Switch theme.`}
+            onClick={cycle}
             className={cn(
               "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               "bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground",
               "border border-border",
             )}
           >
-            {theme === "dark" ? (
-              <>
-                <Sun className="h-4 w-4" />
-                <span className="hidden md:inline">Light</span>
-              </>
-            ) : (
-              <>
-                <Moon className="h-4 w-4" />
-                <span className="hidden md:inline">Dark</span>
-              </>
-            )}
+            <ThemeIcon className="h-4 w-4" />
+            <span className="hidden md:inline">{themeLabel}</span>
           </button>
         </div>
       </div>

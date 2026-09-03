@@ -6,16 +6,11 @@ import {
   datasetsListInfiniteOptions,
   datasetsListOptions,
 } from "@/client/@tanstack/react-query.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DatasetsSearchSchema = z.object({
   dataset_type: z.string().default("cmip6"),
@@ -99,20 +94,13 @@ function SourcesIndexPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className="container mx-auto p-4 space-y-6">
+      <PageHeader
+        title="Ingested Datasets"
+        description="Browse the datasets that have been imported into the system. Use the filter panel to narrow the list down by dataset type, name, or metadata facets."
+      />
+
       <Card>
-        <CardHeader>
-          <CardTitle>Ingested Datasets</CardTitle>
-          <CardDescription>
-            Browse the list of datasets that have been imported into the system.
-            <p>
-              Here you can view available datasets, filter them by various
-              facets, and load more results as needed. Use the filter panel to
-              narrow down your search by dataset type, name, or specific
-              metadata attributes.
-            </p>
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4">
             <FilterPanel
@@ -130,6 +118,7 @@ function SourcesIndexPage() {
             )}
             <DatasetTable
               data={datasets}
+              sourceType={search.dataset_type}
               loading={isLoading || isFetchingNextPage}
             />
             {hasNextPage && (

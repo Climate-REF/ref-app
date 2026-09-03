@@ -3,7 +3,7 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, and_, false, or_, select
+from sqlalchemy import ColumnElement, and_, distinct, false, func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import ColumnCollection
 
@@ -20,11 +20,20 @@ def dataset_model_for(source_type: SourceDatasetType) -> type[models.Dataset]:
     return models.Dataset.__mapper__.polymorphic_map[source_type].class_
 
 
+def dataset_type_label(source_type: SourceDatasetType) -> str:
+    """
+    Render a source type as the short name the API exposes, such as `cmip7`.
+
+    `SourceDatasetType` is a plain enum, so `str()` on it yields `SourceDatasetType.CMIP7`.
+    """
+    return str(source_type.value)
+
+
 def mip_era_for(source_type: SourceDatasetType) -> str | None:
     """Map a source dataset type onto the MIP era label used to keep the eras apart."""
     if source_type not in CMIP_ERAS:
         return None
-    return str(source_type.value).upper()
+    return dataset_type_label(source_type).upper()
 
 
 def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any]:
@@ -70,6 +79,29 @@ def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
 def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
     return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
+
+
+def execution_groups_per_era(session: Session) -> dict[str, int]:
+    """
+    Count the execution groups that ran against each MIP era, keyed by era label.
+
+    A group holding both eras counts once for each, so the counts do not partition the total.
+    Groups are counted at the promoted version of each diagnostic, matching the overall statistics.
+    """
+    rows = session.execute(
+        select(models.Dataset.dataset_type, func.count(distinct(models.ExecutionGroup.id)))
+        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
+        .join(models.ExecutionGroup.executions)
+        .join(models.Execution.datasets)
+        .where(
+            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+            models.Dataset.dataset_type.in_(CMIP_ERAS),
+        )
+        .group_by(models.Dataset.dataset_type)
+    ).all()
+
+    counts = {mip_era_for(source_type): count for source_type, count in rows}
+    return {label: counts.get(label, 0) for era in CMIP_ERAS if (label := mip_era_for(era))}
 
 
 def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:

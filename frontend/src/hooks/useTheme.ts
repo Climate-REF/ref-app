@@ -1,64 +1,56 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export type ThemeMode = "light" | "dark";
+/** What the visitor picked. "system" follows the OS rather than pinning a theme. */
+export type ThemeMode = "light" | "dark" | "system";
+
+/** The theme actually applied to the document. */
+export type ResolvedTheme = "light" | "dark";
 
 const STORAGE_KEY = "theme";
+
+/** The order the toggle button walks through. */
+const CYCLE: ThemeMode[] = ["light", "dark", "system"];
 
 function getStored(): ThemeMode | null {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    if (v === "light" || v === "dark") return v;
+    if (v === "light" || v === "dark" || v === "system") return v;
     return null;
   } catch {
     return null;
   }
 }
 
-function getSystem(): ThemeMode {
+function getSystem(): ResolvedTheme {
   if (window?.matchMedia?.("(prefers-color-scheme: dark)").matches) {
     return "dark";
   }
   return "light";
 }
 
-function getInitial(): ThemeMode {
-  return getStored() ?? getSystem();
+function applyTheme(resolved: ResolvedTheme) {
+  document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
 /**
  * useTheme
- * - Manages light/dark theme
- * - Persists preference in localStorage
- * - Syncs with system preference changes when no explicit user pref is stored
- * - Applies/removes the "dark" class on document.documentElement
+ * - Cycles light, then dark, then system
+ * - Persists the pick in localStorage, and applies the "dark" class to the document
+ * - Follows the OS while the pick is "system"
  */
 export function useTheme() {
-  const [theme, setThemeState] = useState<ThemeMode>(getInitial);
+  const [mode, setMode] = useState<ThemeMode>(() => getStored() ?? "system");
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystem);
 
-  // Apply theme and persist
+  const theme: ResolvedTheme = mode === "system" ? systemTheme : mode;
+
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      // ignore
-    }
+    applyTheme(theme);
   }, [theme]);
 
-  // Sync with system changes if user hasn't explicitly set a preference
   useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      const stored = getStored();
-      if (!stored) {
-        setThemeState(getSystem());
-      }
-    };
+    const handler = () => setSystemTheme(mql.matches ? "dark" : "light");
     try {
       mql.addEventListener("change", handler);
       return () => mql.removeEventListener("change", handler);
@@ -71,8 +63,17 @@ export function useTheme() {
     }
   }, []);
 
-  const setTheme = (value: ThemeMode) => setThemeState(value);
-  const toggle = () => setThemeState((t) => (t === "dark" ? "light" : "dark"));
+  const cycle = useCallback(() => {
+    setMode((current) => {
+      const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // Storage can be blocked, and the theme still applies for this visit.
+      }
+      return next;
+    });
+  }, []);
 
-  return { theme, setTheme, toggle };
+  return { mode, theme, cycle };
 }

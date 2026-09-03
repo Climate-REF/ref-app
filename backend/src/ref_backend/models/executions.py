@@ -153,6 +153,10 @@ class ExecutionStats(BaseModel):
     """
     Number of execution groups that have not been executed yet.
     """
+    execution_groups_by_mip_era: dict[str, int]
+    """
+    Number of execution groups that ran against each MIP era, keyed by era label.
+    """
     scalar_value_count: int
     """
     Number of scalar metric values available.

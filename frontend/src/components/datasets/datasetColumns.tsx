@@ -2,10 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Dataset } from "@/client";
+import { SourceTypeBadge } from "@/components/ui/badge";
+import { isCmipSourceType } from "@/lib/sourceTypes";
 
 const columnHelper = createColumnHelper<Dataset>();
 
-export const columns: ColumnDef<Dataset>[] = [
+const LEADING_COLUMNS: ColumnDef<Dataset>[] = [
   columnHelper.accessor("slug", {
     header: "Slug",
     cell: (cellContext) => {
@@ -22,7 +24,30 @@ export const columns: ColumnDef<Dataset>[] = [
   }) as ColumnDef<Dataset>,
   columnHelper.accessor("dataset_type", {
     header: "Dataset Type",
+    cell: (cellContext) => (
+      <SourceTypeBadge sourceType={cellContext.row.original.dataset_type}>
+        {cellContext.getValue()}
+      </SourceTypeBadge>
+    ),
   }) as ColumnDef<Dataset>,
+];
+
+/** Facets only the CMIP sources carry, shown as their own columns rather than hidden in the slug. */
+const METADATA_COLUMNS: ColumnDef<Dataset>[] = (
+  [
+    { key: "experiment_id", header: "Experiment" },
+    { key: "source_id", header: "Source ID" },
+    { key: "variable_id", header: "Variable" },
+  ] as const
+).map(
+  ({ key, header }) =>
+    columnHelper.accessor((row) => row.metadata?.[key] ?? "", {
+      id: key,
+      header,
+    }) as ColumnDef<Dataset>,
+);
+
+const TRAILING_COLUMNS: ColumnDef<Dataset>[] = [
   columnHelper.display({
     id: "esgf_link",
     cell: (cellContext) => {
@@ -41,3 +66,15 @@ export const columns: ColumnDef<Dataset>[] = [
     header: "More Info",
   }),
 ];
+
+const cmipColumns = [
+  ...LEADING_COLUMNS,
+  ...METADATA_COLUMNS,
+  ...TRAILING_COLUMNS,
+];
+const otherColumns = [...LEADING_COLUMNS, ...TRAILING_COLUMNS];
+
+/** The columns for a table of `sourceType` datasets, as a reference stable across renders. */
+export function datasetColumns(sourceType: string): ColumnDef<Dataset>[] {
+  return isCmipSourceType(sourceType) ? cmipColumns : otherColumns;
+}

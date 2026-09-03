@@ -4,17 +4,12 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
 import { FilterPanel as ExecutionsFilterPanel } from "@/components/execution/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
@@ -115,17 +110,12 @@ function ExecutionsListPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle>Execution Groups</CardTitle>
-            <Button variant="outline" asChild>
-              <Link to="/executions/resources">Resource usage</Link>
-            </Button>
-          </div>
-          <CardDescription>
-            <p className="max-w-1/2">
+    <div className="container mx-auto p-4 space-y-6">
+      <PageHeader
+        title="Execution Groups"
+        description={
+          <div className="space-y-2">
+            <p>
               We group all executions for different versions of datasets
               together into an execution group. Each execution group has a
               unique identifier consisting of the unique keys used to group the
@@ -134,12 +124,17 @@ function ExecutionsListPage() {
               <code>experiment_id</code>, then an example execution group would
               be <code>cmip6_historical_ACCESS-ESM1-5</code>.
             </p>
-            <p className="mt-2">
-              Browse the list of execution groups. Use the filters to narrow
-              down your search.
-            </p>
-          </CardDescription>
-        </CardHeader>
+            <p>Use the filters to narrow the list down.</p>
+          </div>
+        }
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/executions/resources">Resource usage</Link>
+          </Button>
+        }
+      />
+
+      <Card>
         <CardContent className="space-y-4">
           <title>{`Executions (${mipEra}) - Climate-REF`}</title>
           <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>

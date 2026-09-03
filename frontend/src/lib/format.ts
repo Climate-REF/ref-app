@@ -48,5 +48,5 @@ export function formatBytes(bytes: number | null | undefined): string {
  * Formats a count, using the same missing marker as the other helpers.
  */
 export function formatCount(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : String(value);
+  return value === null || value === undefined ? "—" : value.toLocaleString();
 }

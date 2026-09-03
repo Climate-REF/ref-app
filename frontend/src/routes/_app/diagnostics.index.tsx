@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
+import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
 import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
@@ -34,22 +35,20 @@ const diagnosticsSearchSchema = z.object({
   ...mipEraSearchFields,
 });
 
+const CATALOG_HEADER = {
+  title: "Diagnostics Catalog",
+  description:
+    "A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks.",
+};
+
 const ErrorComponent = ({ message }: { message: string }) => {
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Diagnostics Catalog</h1>
-            <p className="text-muted-foreground">
-              A set of standardised diagnostics for evaluating climate model
-              performance against observations and benchmarks.
-            </p>
-          </div>
-        </div>
+    <div className="container mx-auto p-4 space-y-6">
+      <div>
+        <PageHeader {...CATALOG_HEADER} />
       </div>
 
-      <Alert variant="destructive" className="mb-6">
+      <Alert variant="destructive">
         <AlertDescription>
           Failed to load diagnostics. Please try again later.
           <br />
@@ -116,25 +115,21 @@ const Diagnostics = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto p-4 space-y-6">
       <title>{`Diagnostics (${mipEra}) - Climate-REF`}</title>
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Diagnostics Catalog</h1>
-            <p className="text-muted-foreground">
-              A set of standardised diagnostics for evaluating climate model
-              performance against observations and benchmarks.
-            </p>
-          </div>
-          <ViewToggle
-            view={searchParams.view}
-            onViewChange={handleViewChange}
-          />
-        </div>
+      <div>
+        <PageHeader
+          {...CATALOG_HEADER}
+          actions={
+            <ViewToggle
+              view={searchParams.view}
+              onViewChange={handleViewChange}
+            />
+          }
+        />
       </div>
 
-      <Card className="mb-6">
+      <Card>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
             <h3 className="font-semibold text-foreground mb-2">
@@ -216,7 +211,7 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6 space-y-4">
+      <div className="space-y-4">
         <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">

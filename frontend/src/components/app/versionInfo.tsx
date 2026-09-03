@@ -3,8 +3,9 @@ import { format } from "date-fns";
 import { utilsAboutOptions } from "@/client/@tanstack/react-query.gen";
 
 const Item = ({ label, value }: { label: string; value: string }) => (
-  <span>
-    {label} <span className="font-mono">{value}</span>
+  <span className="inline-flex items-baseline gap-1.5">
+    {label}
+    <span className="font-mono">{value}</span>
   </span>
 );
 

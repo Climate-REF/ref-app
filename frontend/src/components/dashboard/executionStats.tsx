@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatCount } from "@/lib/format";
 
 const maybeShowLoading = (isLoading: boolean, content: React.ReactNode) =>
   isLoading ? "..." : content?.toLocaleString();
@@ -23,6 +24,7 @@ export function ExecutionStats() {
   const scalarCount = data?.scalar_value_count ?? 0;
   const seriesCount = data?.series_value_count ?? 0;
   const metricValueCount = scalarCount + seriesCount;
+  const perEra = data?.execution_groups_by_mip_era;
   const totalDatasets = data?.total_datasets ?? 0;
   const totalFiles = data?.total_files ?? 0;
 
@@ -51,7 +53,9 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, totalCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            All diagnostic execution groups
+            {perEra
+              ? `${formatCount(perEra.CMIP6 ?? 0)} ran against CMIP6, ${formatCount(perEra.CMIP7 ?? 0)} against CMIP7`
+              : "..."}
           </p>
         </CardContent>
       </Card>
@@ -68,7 +72,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, `${successRate}%`)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {successCount} successful, {failedCount} failed
+            {formatCount(successCount)} successful, {formatCount(failedCount)}{" "}
+            failed
           </p>
         </CardContent>
       </Card>
@@ -85,7 +90,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, metricValueCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {scalarCount} scalars, {seriesCount} series
+            {formatCount(scalarCount)} scalars, {formatCount(seriesCount)}{" "}
+            series
           </p>
         </CardContent>
       </Card>
