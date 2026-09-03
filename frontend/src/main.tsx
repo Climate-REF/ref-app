@@ -13,6 +13,41 @@ import { routeTree } from "@/routeTree.gen";
 
 import "./styles/global.css";
 
+// A deploy replaces the hashed asset files, so a tab left open asks for chunks that are gone.
+// Reload once to pick up the new build, rate limited so a persistent failure cannot loop.
+const RELOAD_KEY = "chunk-reload-at";
+const RELOAD_COOLDOWN_MS = 30_000;
+
+// Storage access throws when the browser blocks site data, so both calls are guarded.
+const readReloadedAt = (): number => {
+  try {
+    return Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
+  } catch {
+    return 0;
+  }
+};
+
+const markReloaded = (): boolean => {
+  try {
+    sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+window.addEventListener("vite:preloadError", (event) => {
+  if (Date.now() - readReloadedAt() < RELOAD_COOLDOWN_MS) {
+    return;
+  }
+  // Without a recorded timestamp there is no cooldown, so let the error surface instead of looping.
+  if (!markReloaded()) {
+    return;
+  }
+  event.preventDefault();
+  window.location.reload();
+});
+
 client.setConfig({ baseUrl: getStoredApiEndpoint() });
 const queryClient = new QueryClient();
 
