@@ -24,7 +24,7 @@ export function ExecutionStats() {
   const scalarCount = data?.scalar_value_count ?? 0;
   const seriesCount = data?.series_value_count ?? 0;
   const metricValueCount = scalarCount + seriesCount;
-  const perEra = data?.execution_groups_by_mip_era ?? {};
+  const perEra = data?.execution_groups_by_mip_era;
   const totalDatasets = data?.total_datasets ?? 0;
   const totalFiles = data?.total_files ?? 0;
 
@@ -53,8 +53,9 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, totalCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {formatCount(perEra.CMIP6 ?? 0)} ran against CMIP6,{" "}
-            {formatCount(perEra.CMIP7 ?? 0)} against CMIP7
+            {perEra
+              ? `${formatCount(perEra.CMIP6 ?? 0)} ran against CMIP6, ${formatCount(perEra.CMIP7 ?? 0)} against CMIP7`
+              : "..."}
           </p>
         </CardContent>
       </Card>

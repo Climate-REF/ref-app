@@ -86,12 +86,17 @@ def execution_groups_per_era(session: Session) -> dict[str, int]:
     Count the execution groups that ran against each MIP era, keyed by era label.
 
     A group holding both eras counts once for each, so the counts do not partition the total.
+    Groups are counted at the promoted version of each diagnostic, matching the overall statistics.
     """
     rows = session.execute(
         select(models.Dataset.dataset_type, func.count(distinct(models.ExecutionGroup.id)))
+        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
         .join(models.ExecutionGroup.executions)
         .join(models.Execution.datasets)
-        .where(models.Dataset.dataset_type.in_(CMIP_ERAS))
+        .where(
+            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+            models.Dataset.dataset_type.in_(CMIP_ERAS),
+        )
         .group_by(models.Dataset.dataset_type)
     ).all()
 
