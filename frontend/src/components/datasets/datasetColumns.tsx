@@ -3,17 +3,11 @@ import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Dataset } from "@/client";
 import { SourceTypeBadge } from "@/components/ui/badge";
+import { isCmipSourceType } from "@/lib/sourceTypes";
 
 const columnHelper = createColumnHelper<Dataset>();
 
-/** Facets every CMIP dataset carries, shown as their own columns rather than hidden in the slug. */
-const METADATA_COLUMNS = [
-  { key: "experiment_id", header: "Experiment" },
-  { key: "source_id", header: "Source ID" },
-  { key: "variable_id", header: "Variable" },
-] as const;
-
-const baseColumns: ColumnDef<Dataset>[] = [
+const LEADING_COLUMNS: ColumnDef<Dataset>[] = [
   columnHelper.accessor("slug", {
     header: "Slug",
     cell: (cellContext) => {
@@ -36,6 +30,24 @@ const baseColumns: ColumnDef<Dataset>[] = [
       </SourceTypeBadge>
     ),
   }) as ColumnDef<Dataset>,
+];
+
+/** Facets only the CMIP sources carry, shown as their own columns rather than hidden in the slug. */
+const METADATA_COLUMNS: ColumnDef<Dataset>[] = (
+  [
+    { key: "experiment_id", header: "Experiment" },
+    { key: "source_id", header: "Source ID" },
+    { key: "variable_id", header: "Variable" },
+  ] as const
+).map(
+  ({ key, header }) =>
+    columnHelper.accessor((row) => row.metadata?.[key] ?? "", {
+      id: key,
+      header,
+    }) as ColumnDef<Dataset>,
+);
+
+const TRAILING_COLUMNS: ColumnDef<Dataset>[] = [
   columnHelper.display({
     id: "esgf_link",
     cell: (cellContext) => {
@@ -55,26 +67,14 @@ const baseColumns: ColumnDef<Dataset>[] = [
   }),
 ];
 
-/**
- * The columns for a table of `sourceType` datasets.
- *
- * Only the CMIP sources carry the facet metadata, so other sources would get blank columns.
- */
-export function datasetColumns(sourceType: string): ColumnDef<Dataset>[] {
-  if (!sourceType.startsWith("cmip")) return baseColumns;
+const cmipColumns = [
+  ...LEADING_COLUMNS,
+  ...METADATA_COLUMNS,
+  ...TRAILING_COLUMNS,
+];
+const otherColumns = [...LEADING_COLUMNS, ...TRAILING_COLUMNS];
 
-  const [slug, datasetType, ...rest] = baseColumns;
-  return [
-    slug,
-    datasetType,
-    ...METADATA_COLUMNS.map(
-      ({ key, header }) =>
-        columnHelper.display({
-          id: key,
-          header,
-          cell: (cellContext) => cellContext.row.original.metadata?.[key] ?? "",
-        }) as ColumnDef<Dataset>,
-    ),
-    ...rest,
-  ];
+/** The columns for a table of `sourceType` datasets, as a reference stable across renders. */
+export function datasetColumns(sourceType: string): ColumnDef<Dataset>[] {
+  return isCmipSourceType(sourceType) ? cmipColumns : otherColumns;
 }

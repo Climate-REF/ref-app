@@ -42,7 +42,7 @@ export function MipEraScope({
   );
 }
 
-/** `actions` carries controls that scope the same results the era selector does. */
+/** `actions` carries the page controls that belong on the same row as the era selector. */
 function MipEraBar({ actions }: { actions?: ReactNode }) {
   const selection = useMipEraSelection();
   if (!selection) return null;

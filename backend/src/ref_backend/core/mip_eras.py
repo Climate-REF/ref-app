@@ -3,7 +3,7 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, and_, false, or_, select
+from sqlalchemy import ColumnElement, and_, distinct, false, func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import ColumnCollection
 
@@ -33,7 +33,7 @@ def mip_era_for(source_type: SourceDatasetType) -> str | None:
     """Map a source dataset type onto the MIP era label used to keep the eras apart."""
     if source_type not in CMIP_ERAS:
         return None
-    return str(source_type.value).upper()
+    return dataset_type_label(source_type).upper()
 
 
 def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any]:
@@ -82,16 +82,21 @@ def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
 
 
 def execution_groups_per_era(session: Session) -> dict[str, int]:
-    """Count the execution groups that ran against each MIP era, keyed by era label."""
-    counts = {}
-    for source_type in CMIP_ERAS:
-        label = mip_era_for(source_type)
-        if label is None:  # pragma: no cover. CMIP_ERAS only holds CMIP eras.
-            continue
-        counts[label] = (
-            session.query(models.ExecutionGroup).filter(execution_group_filter({"mip_era": label})).count()
-        )
-    return counts
+    """
+    Count the execution groups that ran against each MIP era, keyed by era label.
+
+    A group holding both eras counts once for each, so the counts do not partition the total.
+    """
+    rows = session.execute(
+        select(models.Dataset.dataset_type, func.count(distinct(models.ExecutionGroup.id)))
+        .join(models.ExecutionGroup.executions)
+        .join(models.Execution.datasets)
+        .where(models.Dataset.dataset_type.in_(CMIP_ERAS))
+        .group_by(models.Dataset.dataset_type)
+    ).all()
+
+    counts = {mip_era_for(source_type): count for source_type, count in rows}
+    return {label: counts.get(label, 0) for era in CMIP_ERAS if (label := mip_era_for(era))}
 
 
 def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:

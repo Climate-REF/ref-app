@@ -36,7 +36,7 @@ const ExplorerLayout = () => {
             <>
               <a
                 href="/diagnostics"
-                className="text-primary hover:underline font-medium whitespace-nowrap"
+                className="text-sm text-primary hover:underline font-medium whitespace-nowrap"
               >
                 Full diagnostic catalog →
               </a>
@@ -44,7 +44,7 @@ const ExplorerLayout = () => {
                 href="https://github.com/Climate-REF/ref-app/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium whitespace-nowrap"
+                className="text-sm text-primary hover:underline font-medium whitespace-nowrap"
               >
                 Feedback on GitHub →
               </a>

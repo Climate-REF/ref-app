@@ -21,7 +21,7 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex items-center gap-4 text-sm">{actions}</div>
+        <div className="flex items-center gap-4">{actions}</div>
       ) : null}
     </div>
   );

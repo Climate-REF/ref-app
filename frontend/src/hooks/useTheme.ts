@@ -49,14 +49,6 @@ export function useTheme() {
   }, [theme]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // Storage can be blocked, and the theme still applies for this visit.
-    }
-  }, [mode]);
-
-  useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => setSystemTheme(mql.matches ? "dark" : "light");
     try {
@@ -72,7 +64,15 @@ export function useTheme() {
   }, []);
 
   const cycle = useCallback(() => {
-    setMode((current) => CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]);
+    setMode((current) => {
+      const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // Storage can be blocked, and the theme still applies for this visit.
+      }
+      return next;
+    });
   }, []);
 
   return { mode, theme, cycle };

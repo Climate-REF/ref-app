@@ -35,14 +35,17 @@ const diagnosticsSearchSchema = z.object({
   ...mipEraSearchFields,
 });
 
+const CATALOG_HEADER = {
+  title: "Diagnostics Catalog",
+  description:
+    "A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks.",
+};
+
 const ErrorComponent = ({ message }: { message: string }) => {
   return (
     <div className="container mx-auto py-10">
       <div className="mb-8">
-        <PageHeader
-          title="Diagnostics Catalog"
-          description="A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks."
-        />
+        <PageHeader {...CATALOG_HEADER} />
       </div>
 
       <Alert variant="destructive" className="mb-6">
@@ -116,8 +119,7 @@ const Diagnostics = () => {
       <title>{`Diagnostics (${mipEra}) - Climate-REF`}</title>
       <div className="mb-8">
         <PageHeader
-          title="Diagnostics Catalog"
-          description="A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks."
+          {...CATALOG_HEADER}
           actions={
             <ViewToggle
               view={searchParams.view}

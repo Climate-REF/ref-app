@@ -7,11 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatCount } from "@/lib/format";
 
 const maybeShowLoading = (isLoading: boolean, content: React.ReactNode) =>
   isLoading ? "..." : content?.toLocaleString();
-
-const count = (value: number) => value.toLocaleString();
 
 export function ExecutionStats() {
   const { data, isLoading, error } = useQuery(
@@ -54,8 +53,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, totalCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {count(perEra.CMIP6 ?? 0)} ran against CMIP6,{" "}
-            {count(perEra.CMIP7 ?? 0)} against CMIP7
+            {formatCount(perEra.CMIP6 ?? 0)} ran against CMIP6,{" "}
+            {formatCount(perEra.CMIP7 ?? 0)} against CMIP7
           </p>
         </CardContent>
       </Card>
@@ -72,7 +71,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, `${successRate}%`)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {count(successCount)} successful, {count(failedCount)} failed
+            {formatCount(successCount)} successful, {formatCount(failedCount)}{" "}
+            failed
           </p>
         </CardContent>
       </Card>
@@ -89,7 +89,8 @@ export function ExecutionStats() {
             {maybeShowLoading(isLoading, metricValueCount)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {count(scalarCount)} scalars, {count(seriesCount)} series
+            {formatCount(scalarCount)} scalars, {formatCount(seriesCount)}{" "}
+            series
           </p>
         </CardContent>
       </Card>
