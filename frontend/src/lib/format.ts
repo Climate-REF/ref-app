@@ -53,13 +53,20 @@ export function formatCount(value: number | null | undefined): string {
 
 /**
  * Formats CPU seconds as a count of core hours, the unit used for compute allocation.
+ *
+ * Small values keep more decimals so a short execution does not render as a bare zero.
  */
 export function formatCoreHours(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined || Number.isNaN(seconds)) {
     return "—";
   }
   const hours = seconds / 3600;
-  const digits = hours < 10 ? 1 : 0;
+  let digits = 0;
+  if (hours < 1) {
+    digits = 2;
+  } else if (hours < 10) {
+    digits = 1;
+  }
   return hours.toLocaleString(undefined, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,

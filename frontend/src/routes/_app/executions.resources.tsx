@@ -48,7 +48,7 @@ function ResourceUsagePage() {
     <div className="container mx-auto p-4 space-y-6">
       <PageHeader
         title="Resource Usage"
-        description="Core hours and peak memory recorded by the workers for every execution, rolled up by diagnostic. A core hour is one CPU core busy for an hour, so it measures the compute an execution consumed rather than how long it took. Only executions that recorded a wall time are counted, so older executions may be missing."
+        description="Core hours, wall clock time and peak memory recorded by the workers for every execution, rolled up by diagnostic. A core hour is one CPU core busy for an hour, so it measures the compute an execution consumed rather than how long it took. Only executions that recorded resource usage are counted, so older executions may be missing."
         actions={
           <Button
             variant="outline"

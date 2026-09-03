@@ -24,14 +24,14 @@ function csvField(value: string | number | null | undefined): string {
 /**
  * Serialises the per-diagnostic resource roll-up as CSV, with raw seconds and bytes.
  *
- * Rows are ordered by summed wall time, with untimed diagnostics last.
+ * Rows are ordered by core hours to match the table, with diagnostics that recorded no CPU time last.
  */
 export function resourceUsageCsv(diagnostics: DiagnosticSummary[]): string {
   const rows = [...diagnostics]
     .sort(
       (a, b) =>
-        (b.resource_usage?.wall_seconds_total ?? -1) -
-        (a.resource_usage?.wall_seconds_total ?? -1),
+        (b.resource_usage?.cpu_seconds_total ?? -1) -
+        (a.resource_usage?.cpu_seconds_total ?? -1),
     )
     .map((d) =>
       [

@@ -227,9 +227,10 @@ const DiagnosticInfoLayout = () => {
                     <TooltipContent className="max-w-xs">
                       <p>
                         Core hours consumed by the executions of this
-                        diagnostic. A core hour is one CPU core busy for an
-                        hour, so it measures the compute an execution consumed
-                        rather than how long it took.
+                        diagnostic, alongside how long they took to run. A core
+                        hour is one CPU core busy for an hour, so it measures
+                        the compute an execution consumed rather than its
+                        elapsed time.
                       </p>
                       <p className="mt-2">
                         Core hours and peak memory are optional, so they roll up
