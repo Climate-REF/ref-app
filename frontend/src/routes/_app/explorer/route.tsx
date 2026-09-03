@@ -27,7 +27,7 @@ const STEPS = [
 
 const ExplorerLayout = () => {
   return (
-    <div className="flex flex-col gap-6 mx-8">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="space-y-6 border-b pb-6">
         <PageHeader
           title="Data Explorer"

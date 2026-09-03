@@ -43,12 +43,12 @@ const CATALOG_HEADER = {
 
 const ErrorComponent = ({ message }: { message: string }) => {
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8">
+    <div className="container mx-auto p-4 space-y-6">
+      <div>
         <PageHeader {...CATALOG_HEADER} />
       </div>
 
-      <Alert variant="destructive" className="mb-6">
+      <Alert variant="destructive">
         <AlertDescription>
           Failed to load diagnostics. Please try again later.
           <br />
@@ -115,9 +115,9 @@ const Diagnostics = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto p-4 space-y-6">
       <title>{`Diagnostics (${mipEra}) - Climate-REF`}</title>
-      <div className="mb-8">
+      <div>
         <PageHeader
           {...CATALOG_HEADER}
           actions={
@@ -129,7 +129,7 @@ const Diagnostics = () => {
         />
       </div>
 
-      <Card className="mb-6">
+      <Card>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
             <h3 className="font-semibold text-foreground mb-2">
@@ -211,7 +211,7 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6 space-y-4">
+      <div className="space-y-4">
         <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
