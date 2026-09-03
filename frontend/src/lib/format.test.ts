@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBytes, formatDuration } from "./format";
+import { formatBytes, formatCoreHours, formatDuration } from "./format";
 
 describe("formatDuration", () => {
   it("returns a dash for missing values", () => {
@@ -46,5 +46,24 @@ describe("formatBytes", () => {
 
   it("never prints 1024.0 of a unit", () => {
     expect(formatBytes(1048570)).toBe("1.0 MiB");
+  });
+});
+
+describe("formatCoreHours", () => {
+  it("returns a dash for missing values", () => {
+    expect(formatCoreHours(null)).toBe("—");
+    expect(formatCoreHours(undefined)).toBe("—");
+  });
+
+  it("keeps two decimals below an hour", () => {
+    expect(formatCoreHours(180)).toBe("0.05");
+  });
+
+  it("keeps one decimal up to ten hours", () => {
+    expect(formatCoreHours(9000)).toBe("2.5");
+  });
+
+  it("rounds to whole core hours above ten", () => {
+    expect(formatCoreHours(360000)).toBe("100");
   });
 });

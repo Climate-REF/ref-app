@@ -4,7 +4,12 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import type { DiagnosticSummary } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { formatBytes, formatCount, formatDuration } from "@/lib/format";
+import {
+  formatBytes,
+  formatCoreHours,
+  formatCount,
+  formatDuration,
+} from "@/lib/format";
 
 const columnHelper = createColumnHelper<DiagnosticSummary>();
 
@@ -13,7 +18,7 @@ function numericColumn(
   title: string,
   description: string,
   accessor: (row: DiagnosticSummary) => number | null | undefined,
-  render: (value: number | undefined) => string,
+  render: (value: number | undefined, row: DiagnosticSummary) => string,
 ): ColumnDef<DiagnosticSummary> {
   return {
     id,
@@ -25,7 +30,7 @@ function numericColumn(
     ),
     cell: (cell) => (
       <span className="tabular-nums" title={description}>
-        {render(cell.getValue<number | undefined>())}
+        {render(cell.getValue<number | undefined>(), cell.row.original)}
       </span>
     ),
   };
@@ -70,13 +75,6 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     formatCount,
   ),
   numericColumn(
-    "wall_total",
-    "Wall\nsum",
-    "Sum of wall clock time across the timed executions, which run in parallel.",
-    (row) => row.resource_usage?.wall_seconds_total,
-    formatDuration,
-  ),
-  numericColumn(
     "wall_mean",
     "Wall\nmean",
     "Mean wall clock time per timed execution.",
@@ -91,25 +89,28 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     formatDuration,
   ),
   numericColumn(
-    "cpu_total",
-    "CPU\nsum",
-    "Sum of CPU time across the executions that recorded it.",
+    "core_hours",
+    "Core\nhours",
+    "Core hours consumed across the executions that recorded CPU time.",
     (row) => row.resource_usage?.cpu_seconds_total,
-    formatDuration,
+    formatCoreHours,
   ),
   numericColumn(
-    "cpu_mean",
-    "CPU\nmean",
-    "Mean CPU time per execution that recorded it.",
+    "core_hours_mean",
+    "Core hours\nmean",
+    "Mean core hours per execution that recorded CPU time.",
     (row) => row.resource_usage?.cpu_seconds_mean,
-    formatDuration,
+    formatCoreHours,
   ),
   numericColumn(
     "memory_max",
-    "Peak\nmemory",
-    "Largest peak resident memory of any execution.",
+    "Peak memory\nmin / max",
+    "Smallest and largest peak resident memory of any execution.",
     (row) => row.resource_usage?.peak_memory_bytes_max,
-    formatBytes,
+    (max, row) =>
+      max === undefined
+        ? formatBytes(undefined)
+        : `${formatBytes(row.resource_usage?.peak_memory_bytes_min)} / ${formatBytes(max)}`,
   ),
   columnHelper.display({
     id: "link",
@@ -148,7 +149,7 @@ export function ResourceUsageTable({ diagnostics }: ResourceUsageTableProps) {
       data={diagnostics}
       columns={columns}
       onRowClick={handleRowClick}
-      initialSorting={[{ id: "wall_total", desc: true }]}
+      initialSorting={[{ id: "core_hours", desc: true }]}
     />
   );
 }

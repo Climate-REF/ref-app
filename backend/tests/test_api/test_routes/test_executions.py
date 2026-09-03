@@ -474,4 +474,4 @@ def test_execution_statistics_resource_usage(client: TestClient, settings) -> No
     assert usage["timed_execution_count"] > 0
     assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
     assert usage["cpu_seconds_total"] > 0
-    assert usage["peak_memory_bytes_max"] > 0
+    assert usage["peak_memory_bytes_max"] >= usage["peak_memory_bytes_min"] > 0

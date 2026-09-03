@@ -43,6 +43,10 @@ class ExecutionResourceSummary(BaseModel):
     """
     Mean CPU time per execution that recorded it, in seconds
     """
+    peak_memory_bytes_min: int | None
+    """
+    Smallest peak resident memory of any execution that recorded it, in bytes
+    """
     peak_memory_bytes_max: int | None
     """
     Largest peak resident memory of any execution that recorded it, in bytes
@@ -56,6 +60,7 @@ RESOURCE_AGGREGATES = (
     func.max(models.Execution.wall_seconds).label("wall_seconds_max"),
     func.sum(models.Execution.cpu_seconds).label("cpu_seconds_total"),
     func.avg(models.Execution.cpu_seconds).label("cpu_seconds_mean"),
+    func.min(models.Execution.peak_memory_bytes).label("peak_memory_bytes_min"),
     func.max(models.Execution.peak_memory_bytes).label("peak_memory_bytes_max"),
 )
 
