@@ -85,6 +85,17 @@ const ExplorerLayout = () => {
                   p(props: React.ComponentProps<"p">) {
                     return <span {...props} />;
                   },
+                  // The note sits outside a prose block, so the link needs its own styling.
+                  a(props: React.ComponentProps<"a">) {
+                    return (
+                      <a
+                        {...props}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      />
+                    );
+                  },
                 }}
               />
             </p>
