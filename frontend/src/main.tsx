@@ -13,8 +13,8 @@ import { routeTree } from "@/routeTree.gen";
 
 import "./styles/global.css";
 
-// A deploy replaces the hashed asset files, so a tab left open asks for chunks that no longer
-// exist. Reload once to pick up the new build, rate limited so a persistent failure cannot loop.
+// A deploy replaces the hashed asset files, so a tab left open asks for chunks that no longer exist.
+// Reload once to pick up the new build, rate limited so a persistent failure cannot loop.
 const RELOAD_KEY = "chunk-reload-at";
 const RELOAD_COOLDOWN_MS = 30_000;
 window.addEventListener("vite:preloadError", (event) => {
