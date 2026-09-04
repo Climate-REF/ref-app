@@ -58,7 +58,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
       - type: box-whisker-chart
         provider: ilamb
         diagnostic: burntfractionall-gfed
@@ -72,7 +72,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
       # - type: series-chart
       #   provider: ilamb
       #   diagnostic: burntfractionall-gfed
@@ -100,7 +100,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id
       - type: figure-gallery
         provider: esmvaltool
         diagnostic: climate-drivers-for-fire

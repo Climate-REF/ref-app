@@ -59,4 +59,4 @@ explorer_cards:
           statistic: zonal_mean
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id

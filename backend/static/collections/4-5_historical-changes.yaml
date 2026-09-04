@@ -45,7 +45,7 @@ explorer_cards:
           metric: trend
         grouping_config:
           group_by: region
-          hue: region
+          hue: experiment_id
       - type: box-whisker-chart
         provider: esmvaltool
         diagnostic: regional-historical-trend
@@ -60,7 +60,7 @@ explorer_cards:
           metric: trend
         grouping_config:
           group_by: region
-          hue: region
+          hue: experiment_id
       - type: series-chart
         provider: esmvaltool
         diagnostic: regional-historical-annual-cycle
@@ -79,7 +79,7 @@ explorer_cards:
               - Global
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id
       - type: series-chart
         provider: esmvaltool
         diagnostic: regional-historical-annual-cycle
@@ -98,7 +98,7 @@ explorer_cards:
               - Global
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id
       - type: figure-gallery
         provider: esmvaltool
         diagnostic: regional-historical-trend

@@ -31,4 +31,4 @@ explorer_cards:
           statistic: Bias
         grouping_config:
           group_by: region
-          hue: region
+          hue: experiment_id

@@ -26,5 +26,5 @@ explorer_cards:
         clip_max: 2000
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
         placeholder: true

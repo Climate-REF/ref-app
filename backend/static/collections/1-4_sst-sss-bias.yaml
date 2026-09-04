@@ -52,7 +52,7 @@ explorer_cards:
         metric_units: "psu"
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
         other_filters:
           region: "None"
           metric: Bias
@@ -64,7 +64,7 @@ explorer_cards:
         metric_units: "K"
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
         other_filters:
           region: "None"
           metric: Bias
@@ -97,7 +97,7 @@ explorer_cards:
           statistic: Bias
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id
       - type: taylor-diagram
         provider: ilamb
         diagnostic: so-woa2023-surface

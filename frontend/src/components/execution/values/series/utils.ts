@@ -1,3 +1,4 @@
+import { getFixedDimensionColor } from "@/components/charts/experimentColors";
 import type { SeriesMetadata, SeriesValue } from "../types";
 
 export interface ChartDataPoint {
@@ -155,12 +156,34 @@ function getLabelColor(label: string): string {
 }
 
 /**
+ * Colour a series by one dimension when asked, otherwise by its label.
+ * Experiments keep their reserved colours so they match across charts.
+ */
+function getSeriesColor(
+  series: SeriesValue,
+  label: string,
+  colorDimension?: string,
+): string {
+  const dimensionValue = colorDimension
+    ? series.dimensions[colorDimension]
+    : undefined;
+  if (dimensionValue) {
+    return (
+      getFixedDimensionColor(colorDimension, dimensionValue) ??
+      getLabelColor(dimensionValue)
+    );
+  }
+  return getLabelColor(label);
+}
+
+/**
  * Create chart data structure with all series
  */
 export function createChartData(
   seriesValues: SeriesValue[],
   referenceSeriesValues: SeriesValue[],
   labelTemplate?: string,
+  colorDimension?: string,
 ): {
   chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
@@ -265,7 +288,9 @@ export function createChartData(
   const seriesMetadata: SeriesMetadata[] = allSeries.map((series, idx) => {
     const label = applyLabelTemplate(series, labelTemplate);
     const isReference = series.kind === "reference";
-    const color = isReference ? "#000000" : getLabelColor(label);
+    const color = isReference
+      ? "#000000"
+      : getSeriesColor(series, label, colorDimension);
     return {
       seriesIndex: idx,
       label,

@@ -9,6 +9,7 @@ interface TaylorDiagramModel {
   name: string;
   stddev: number; // normalized standard deviation
   correlation: number; // Pearson correlation coefficient
+  color?: string; // point colour, defaults to orange
 }
 
 interface TaylorDiagramProps {
@@ -152,21 +153,23 @@ export function TaylorDiagramContent({
       const angle = corrToAngle(model.correlation);
       const x = center.x + r(model.stddev) * Math.cos(angle);
       const y = center.y - r(model.stddev) * Math.sin(angle);
+      const fill = model.color ?? "orange";
+      const hoverFill = d3.color(fill)?.darker(0.6).formatHex() ?? fill;
 
       svg
         .append("circle")
         .attr("cx", x)
         .attr("cy", y)
         .attr("r", 6)
-        .attr("fill", "orange")
+        .attr("fill", fill)
         .style("cursor", "pointer")
         .style("transition", "r 0.2s ease, fill 0.2s ease")
         .on("mouseenter", function () {
-          d3.select(this).attr("r", 9).attr("fill", "#d97706");
+          d3.select(this).attr("r", 9).attr("fill", hoverFill);
           setHoveredModel(model);
         })
         .on("mouseleave", function () {
-          d3.select(this).attr("r", 6).attr("fill", "orange");
+          d3.select(this).attr("r", 6).attr("fill", fill);
           setHoveredModel(null);
         });
     });

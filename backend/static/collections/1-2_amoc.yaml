@@ -45,7 +45,7 @@ explorer_cards:
         metric_units: "Sv"
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
         other_filters:
           region: "None"
           metric: timeseries

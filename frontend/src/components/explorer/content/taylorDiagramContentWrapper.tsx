@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
+import { getFixedDimensionColor } from "@/components/charts/experimentColors";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
@@ -26,21 +27,25 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
   // Group values by model/dataset identifier
   const modelGroups = new Map<
     string,
-    { correlation?: number; stddev?: number }
+    { correlation?: number; stddev?: number; color?: string }
   >();
 
   for (const value of values) {
     // Check if this is a Spatial Distribution metric
     if (value.dimensions.metric !== "Spatial Distribution") continue;
 
-    // Create unique identifier for each model/dataset combination
-    const modelId =
+    // A model can run both historical and esm-hist, so key on both.
+    const sourceId =
       value.dimensions.source_id ||
       value.dimensions.reference_dataset_slug ||
       "unknown";
+    const experimentId = value.dimensions.experiment_id;
+    const modelId = experimentId ? `${sourceId} (${experimentId})` : sourceId;
 
     if (!modelGroups.has(modelId)) {
-      modelGroups.set(modelId, {});
+      modelGroups.set(modelId, {
+        color: getFixedDimensionColor("experiment_id", experimentId),
+      });
     }
 
     const group = modelGroups.get(modelId)!;
@@ -61,6 +66,7 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
         name,
         correlation: data.correlation,
         stddev: data.stddev,
+        color: data.color,
       });
     }
   }

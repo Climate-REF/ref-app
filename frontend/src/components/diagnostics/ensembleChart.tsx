@@ -13,6 +13,10 @@ import {
   YAxis,
 } from "recharts";
 import type { ScalarValue } from "@/client/types.gen";
+import {
+  compareDimensionValues,
+  getFixedDimensionColor,
+} from "@/components/charts/experimentColors";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
 import {
@@ -181,7 +185,8 @@ export const EnsembleChart = ({
             __outliers: {},
             __rawData: [],
             __categoryColor: isSelfHued
-              ? COLORS[categoryIndex % COLORS.length]
+              ? (getFixedDimensionColor(groupByDimension, groupName) ??
+                COLORS[categoryIndex % COLORS.length])
               : undefined,
           };
         }
@@ -247,7 +252,8 @@ export const EnsembleChart = ({
           __outliers: outliers,
           __rawData: allRawData,
           __categoryColor: isSelfHued
-            ? COLORS[categoryIndex % COLORS.length]
+            ? (getFixedDimensionColor(groupByDimension, groupName) ??
+              COLORS[categoryIndex % COLORS.length])
             : undefined,
         };
       },
@@ -274,8 +280,10 @@ export const EnsembleChart = ({
         names.add(groupName);
       });
     });
-    return Array.from(names).sort();
-  }, [sortedChartData]);
+    return Array.from(names).sort((a, b) =>
+      compareDimensionValues(hueDimension, a, b),
+    );
+  }, [sortedChartData, hueDimension]);
 
   const scale = useMemo(() => {
     const allFiniteValues = sortedChartData
@@ -323,8 +331,11 @@ export const EnsembleChart = ({
   const yDomain = scale.domain() as [number, number];
 
   // Get color for a group
-  const getGroupColor = (_groupName: string, index: number) => {
-    return COLORS[index % COLORS.length];
+  const getGroupColor = (groupName: string, index: number) => {
+    return (
+      getFixedDimensionColor(hueDimension, groupName) ??
+      COLORS[index % COLORS.length]
+    );
   };
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
