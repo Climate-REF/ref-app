@@ -2,6 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
+import {
+  experimentLegend,
+  getFixedDimensionColor,
+} from "@/components/charts/experimentColors";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
@@ -26,24 +30,26 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
   // Group values by model/dataset identifier
   const modelGroups = new Map<
     string,
-    { correlation?: number; stddev?: number }
+    { correlation?: number; stddev?: number; color?: string }
   >();
 
   for (const value of values) {
     // Check if this is a Spatial Distribution metric
     if (value.dimensions.metric !== "Spatial Distribution") continue;
 
-    // Create unique identifier for each model/dataset combination
-    const modelId =
+    // A model can run both historical and esm-hist, so key on both.
+    const sourceId =
       value.dimensions.source_id ||
       value.dimensions.reference_dataset_slug ||
       "unknown";
+    const experimentId = value.dimensions.experiment_id;
+    const modelId = experimentId ? `${sourceId} (${experimentId})` : sourceId;
 
-    if (!modelGroups.has(modelId)) {
-      modelGroups.set(modelId, {});
+    let group = modelGroups.get(modelId);
+    if (!group) {
+      group = { color: getFixedDimensionColor("experiment_id", experimentId) };
+      modelGroups.set(modelId, group);
     }
-
-    const group = modelGroups.get(modelId)!;
 
     // Extract the relevant statistics
     if (value.dimensions.statistic === "Correlation") {
@@ -61,6 +67,7 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
         name,
         correlation: data.correlation,
         stddev: data.stddev,
+        color: data.color,
       });
     }
   }
@@ -82,15 +89,34 @@ function TaylorDiagramSection({
   referenceStddev,
 }: TaylorDiagramSectionProps) {
   const models = useMemo(() => transformToTaylorModels(values), [values]);
+  const legend = useMemo(
+    () => experimentLegend(values.map((v) => v.dimensions.experiment_id)),
+    [values],
+  );
 
   return (
-    <TaylorDiagramContent
-      models={models}
-      width={width}
-      height={height}
-      referenceStddev={referenceStddev}
-      marginTop={0}
-    />
+    <div>
+      <TaylorDiagramContent
+        models={models}
+        width={width}
+        height={height}
+        referenceStddev={referenceStddev}
+        marginTop={0}
+      />
+      {legend.length > 1 && (
+        <div className="flex justify-center gap-4 text-sm">
+          {legend.map((entry) => (
+            <span key={entry.label} className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              {entry.label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

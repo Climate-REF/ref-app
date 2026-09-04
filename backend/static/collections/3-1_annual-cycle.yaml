@@ -46,7 +46,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
       - type: box-whisker-chart
         provider: pmp
         diagnostic: annual-cycle
@@ -62,7 +62,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
       - type: box-whisker-chart
         provider: pmp
         diagnostic: annual-cycle
@@ -78,7 +78,7 @@ explorer_cards:
         show_zero_line: true
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
       - type: box-whisker-chart
         provider: pmp
         diagnostic: annual-cycle
@@ -93,4 +93,4 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id

@@ -91,10 +91,9 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
         y_min: 0
         y_max: 1.5
       - type: box-whisker-chart
@@ -107,10 +106,9 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
         y_min: 0
         y_max: 1.5
       - type: box-whisker-chart
@@ -123,10 +121,9 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
         y_min: 0
         y_max: 1.5
       - type: box-whisker-chart
@@ -139,10 +136,9 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
         y_min: 0
         y_max: 1.5
       - type: box-whisker-chart
@@ -155,10 +151,9 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
-          hue: season
+          hue: experiment_id
         y_min: 0
       - type: box-whisker-chart
         provider: pmp
@@ -170,7 +165,6 @@ explorer_cards:
         other_filters:
           method: cbf
           statistic: rms
-          experiment_id: historical
         grouping_config:
           group_by: season
           hue: experiment_id

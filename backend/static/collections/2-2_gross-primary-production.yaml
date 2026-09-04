@@ -40,7 +40,7 @@ explorer_cards:
           region: global
         grouping_config:
           group_by: source_id
-          hue: source_id
+          hue: experiment_id
       - type: taylor-diagram
         provider: ilamb
         diagnostic: gpp-fluxnet2015

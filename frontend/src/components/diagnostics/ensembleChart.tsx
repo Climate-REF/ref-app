@@ -13,6 +13,10 @@ import {
   YAxis,
 } from "recharts";
 import type { ScalarValue } from "@/client/types.gen";
+import {
+  EXPERIMENT_ORDER,
+  getFixedDimensionColor,
+} from "@/components/charts/experimentColors";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
 import {
@@ -25,6 +29,7 @@ import { createScaledTickFormatter } from "../execution/values/series/utils";
 export const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
   // Meteorological seasons (Annual first, then chronological)
   season: ["Annual", "annual", "ANN", "DJF", "MAM", "JJA", "SON"],
+  experiment_id: EXPERIMENT_ORDER,
 };
 
 /**
@@ -76,6 +81,17 @@ const COLORS = [
   "#ff8042",
   "#8dd1e1",
 ];
+
+// Reserved colours win, so an experiment looks the same on every chart.
+function groupColor(
+  dimension: string | undefined,
+  value: string,
+  index: number,
+): string {
+  return (
+    getFixedDimensionColor(dimension, value) ?? COLORS[index % COLORS.length]
+  );
+}
 
 interface EnsembleChartProps {
   data: ScalarValue[];
@@ -181,7 +197,7 @@ export const EnsembleChart = ({
             __outliers: {},
             __rawData: [],
             __categoryColor: isSelfHued
-              ? COLORS[categoryIndex % COLORS.length]
+              ? groupColor(groupByDimension, groupName, categoryIndex)
               : undefined,
           };
         }
@@ -247,7 +263,7 @@ export const EnsembleChart = ({
           __outliers: outliers,
           __rawData: allRawData,
           __categoryColor: isSelfHued
-            ? COLORS[categoryIndex % COLORS.length]
+            ? groupColor(groupByDimension, groupName, categoryIndex)
             : undefined,
         };
       },
@@ -274,8 +290,14 @@ export const EnsembleChart = ({
         names.add(groupName);
       });
     });
-    return Array.from(names).sort();
-  }, [sortedChartData]);
+    const sorted = Array.from(names)
+      .sort()
+      .map((name) => ({ name }));
+    return sortCategories(
+      sorted,
+      hueDimension ? KNOWN_CATEGORY_ORDERS[hueDimension] : undefined,
+    ).map((item) => item.name);
+  }, [sortedChartData, hueDimension]);
 
   const scale = useMemo(() => {
     const allFiniteValues = sortedChartData
@@ -321,11 +343,6 @@ export const EnsembleChart = ({
       .nice();
   }, [sortedChartData, symmetricalAxes, yMin, yMax]);
   const yDomain = scale.domain() as [number, number];
-
-  // Get color for a group
-  const getGroupColor = (_groupName: string, index: number) => {
-    return COLORS[index % COLORS.length];
-  };
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
@@ -615,7 +632,7 @@ export const EnsembleChart = ({
               key={groupName}
               dataKey={(d) => d?.groups?.[groupName]?.median}
               name={groupName}
-              fill={getGroupColor(groupName, index)}
+              fill={groupColor(hueDimension, groupName, index)}
               isAnimationActive={false}
               shape={
                 <BoxWhiskerShape

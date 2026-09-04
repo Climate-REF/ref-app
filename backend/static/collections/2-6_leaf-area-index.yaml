@@ -35,7 +35,7 @@ explorer_cards:
         metric_units: "1"
         grouping_config:
           group_by: statistic
-          hue: statistic
+          hue: experiment_id
         other_filters:
           region: global
           metric: Bias

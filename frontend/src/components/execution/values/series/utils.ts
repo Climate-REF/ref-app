@@ -1,3 +1,7 @@
+import {
+  getFixedDimensionColor,
+  unreservedPalette,
+} from "@/components/charts/experimentColors";
 import type { SeriesMetadata, SeriesValue } from "../types";
 
 export interface ChartDataPoint {
@@ -146,12 +150,34 @@ const COLORS = [
 /**
  * Get consistent color for a label using hash-based assignment
  */
-function getLabelColor(label: string): string {
+function getLabelColor(label: string, palette = COLORS): string {
   const hash = label.split("").reduce((acc, char) => {
     const newAcc = (acc << 5) - acc + char.charCodeAt(0);
     return newAcc | 0;
   }, 0);
-  return COLORS[Math.abs(hash) % COLORS.length];
+  return palette[Math.abs(hash) % palette.length];
+}
+
+// Other dimension values must not borrow an experiment's colour.
+const UNRESERVED_COLORS = unreservedPalette(COLORS);
+
+/**
+ * Colour a series by one dimension when asked, otherwise by its label.
+ * Experiments keep their reserved colours so they match across charts.
+ */
+function getSeriesColor(
+  series: SeriesValue,
+  label: string,
+  colorDimension?: string,
+): string {
+  const dimensionValue = colorDimension
+    ? series.dimensions[colorDimension]
+    : undefined;
+  if (!dimensionValue) return getLabelColor(label);
+  return (
+    getFixedDimensionColor(colorDimension, dimensionValue) ??
+    getLabelColor(dimensionValue, UNRESERVED_COLORS)
+  );
 }
 
 /**
@@ -161,6 +187,7 @@ export function createChartData(
   seriesValues: SeriesValue[],
   referenceSeriesValues: SeriesValue[],
   labelTemplate?: string,
+  colorDimension?: string,
 ): {
   chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
@@ -265,7 +292,9 @@ export function createChartData(
   const seriesMetadata: SeriesMetadata[] = allSeries.map((series, idx) => {
     const label = applyLabelTemplate(series, labelTemplate);
     const isReference = series.kind === "reference";
-    const color = isReference ? "#000000" : getLabelColor(label);
+    const color = isReference
+      ? "#000000"
+      : getSeriesColor(series, label, colorDimension);
     return {
       seriesIndex: idx,
       label,

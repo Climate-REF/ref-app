@@ -206,6 +206,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           maxSeriesLimit={500} // Limit for performance in preview
           symmetricalAxes={contentItem.symmetricalAxes ?? false}
           labelTemplate={contentItem.labelTemplate}
+          colorDimension={contentItem.groupingConfig?.hue}
           metricName={contentItem.title}
           units={contentItem.metricUnits}
         />
@@ -218,6 +219,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
               maxSeriesLimit={500} // Limit for performance in preview
               symmetricalAxes={contentItem.symmetricalAxes ?? false}
               labelTemplate={contentItem.labelTemplate}
+              colorDimension={contentItem.groupingConfig?.hue}
               metricName={contentItem.title}
               units={contentItem.metricUnits}
             />

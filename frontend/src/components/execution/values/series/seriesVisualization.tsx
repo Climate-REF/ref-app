@@ -15,6 +15,8 @@ interface SimpleSeriesVisualizationProps {
   seriesValues: SeriesValue[];
   referenceSeriesValues?: SeriesValue[];
   labelTemplate?: string;
+  /** Dimension that decides a series' colour, defaults to the label */
+  colorDimension?: string;
   maxSeriesLimit?: number;
   symmetricalAxes?: boolean;
   metricName?: string;
@@ -27,6 +29,7 @@ export function SeriesVisualization({
   seriesValues,
   referenceSeriesValues = [],
   labelTemplate,
+  colorDimension,
   maxSeriesLimit = 500,
   symmetricalAxes = false,
   metricName,
@@ -75,8 +78,14 @@ export function SeriesVisualization({
     valueUnits,
     indexUnits,
   } = useMemo(
-    () => createChartData(seriesValues, referenceSeriesValues, labelTemplate),
-    [seriesValues, referenceSeriesValues, labelTemplate],
+    () =>
+      createChartData(
+        seriesValues,
+        referenceSeriesValues,
+        labelTemplate,
+        colorDimension,
+      ),
+    [seriesValues, referenceSeriesValues, labelTemplate, colorDimension],
   );
 
   // Prefer per-series value_units for the Y-axis/tooltip unit label; fall
