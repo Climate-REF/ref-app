@@ -2,19 +2,26 @@
 #
 # Reference datasets and display metadata for ILAMB (International Land Model
 # Benchmarking) and IOMB (International Ocean Model Benchmarking) diagnostics.
+#
+# `slug` is `<supplier>.<source_id>`, and `source_type` says the same thing in a structured field.
+# The prefix names who supplies the data, not the source type the requirement asks for, so a
+# dataset required as `obs4mips` but supplied from obs4REF reads `obs4ref.HadISST-1-1`.
 
 # Land diagnostics
 
 ilamb/gpp-wecann:
   reference_datasets:
-    - slug: "obs4REF.WECANN"
-      description: "WECANN GPP dataset - Gross primary productivity (gpp)"
+    - slug: "obs4ref.WECANN-1-0"
+      source_type: "obs4ref"
+      description: "WECANN v1.0. Supplies gpp."
       type: "primary"
-    - slug: "obs4REF.GPCPv2.3"
-      description: "GPCP v2.3 - Precipitation (pr), relationship dataset"
+    - slug: "obs4ref.GPCP-2-3"
+      source_type: "obs4ref"
+      description: "GPCP v2.3. Supplies pr for the relationship analysis."
       type: "secondary"
     - slug: "ilamb.CRU4.02"
-      description: "CRU TS v4.02 - Near-surface air temperature (tas), relationship dataset"
+      source_type: "ilamb"
+      description: "CRU TS v4.02. Supplies tas for the relationship analysis."
       type: "secondary"
   display_name: "Gross Primary Productivity (WECANN)"
   description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the WECANN reference dataset."
@@ -22,8 +29,9 @@ ilamb/gpp-wecann:
 
 ilamb/gpp-fluxnet2015:
   reference_datasets:
-    - slug: "obs4REF.FLUXNET2015"
-      description: "FLUXNET2015 - Tower-based GPP measurements"
+    - slug: "obs4ref.FLUXNET2015-1-0"
+      source_type: "obs4ref"
+      description: "FLUXNET2015 v1.0 tower sites. Supplies gpp, referenced by registry key rather than ingested facets."
       type: "primary"
   display_name: "Gross Primary Productivity (FLUXNET2015)"
   description: "Apply the standard ILAMB analysis of gross primary productivity (gpp) with respect to the FLUXNET2015 tower-based reference dataset."
@@ -31,8 +39,9 @@ ilamb/gpp-fluxnet2015:
 
 ilamb/mrro-lora:
   reference_datasets:
-    - slug: "obs4REF.LORA"
-      description: "LORA dataset - Runoff observations"
+    - slug: "obs4ref.LORA-1-0"
+      source_type: "obs4ref"
+      description: "LORA v1.0. Supplies mrro."
       type: "primary"
   display_name: "Runoff (LORA)"
   description: "Apply the standard ILAMB analysis of total runoff (mrro) with respect to the LORA reference dataset."
@@ -40,8 +49,9 @@ ilamb/mrro-lora:
 
 ilamb/mrsos-wangmao:
   reference_datasets:
-    - slug: "obs4REF.WangMao"
-      description: "Wang-Mao dataset - Soil moisture (mrsos)"
+    - slug: "ilamb.WangMao"
+      source_type: "ilamb"
+      description: "Wang and Mao soil moisture. Supplies mrsol, converted to a surface volumetric fraction."
       type: "primary"
   display_name: "Surface Soil Moisture (WangMao)"
   description: "Apply the standard ILAMB analysis of moisture in upper portion of soil column (mrsos) with respect to the WangMao reference dataset."
@@ -49,8 +59,9 @@ ilamb/mrsos-wangmao:
 
 ilamb/csoil-hwsd2:
   reference_datasets:
-    - slug: "obs4REF.HWSD2"
-      description: "Harmonized World Soil Database v2 - Soil carbon content"
+    - slug: "obs4ref.HWSD-2-0"
+      source_type: "obs4ref"
+      description: "Harmonized World Soil Database v2.0. Supplies cSoil."
       type: "primary"
   display_name: "Soil Carbon (HWSD2)"
   description: "Apply the standard ILAMB analysis of carbon mass in soil pool (cSoil) with respect to the HWSD2 reference dataset."
@@ -58,8 +69,9 @@ ilamb/csoil-hwsd2:
 
 ilamb/lai-avh15c1:
   reference_datasets:
-    - slug: "obs4REF.AVH15C1"
-      description: "AVHRR - Leaf area index observations"
+    - slug: "obs4mips.NOAA-NCEI-LAI-AVHRR-5-0"
+      source_type: "obs4mips"
+      description: "NOAA NCEI AVHRR leaf area index v5.0. Supplies lai, coarsened to a common grid before comparison."
       type: "primary"
   display_name: "Leaf Area Index (AVH15C1)"
   description: "Apply the standard ILAMB analysis of leaf area index (lai) with respect to the AVH15C1 (AVHRR) reference dataset."
@@ -67,8 +79,9 @@ ilamb/lai-avh15c1:
 
 ilamb/nbp-hoffman:
   reference_datasets:
-    - slug: "obs4REF.Hoffman"
-      description: "Hoffman dataset - Net biome productivity"
+    - slug: "obs4ref.Hoffman-1-0"
+      source_type: "obs4ref"
+      description: "Hoffman v1.0. Supplies nbp as a global mean."
       type: "primary"
   display_name: "Net Biome Productivity (Hoffman)"
   description: "Apply the standard ILAMB analysis of net biome productivity (nbp) with respect to the Hoffman reference dataset."
@@ -76,8 +89,9 @@ ilamb/nbp-hoffman:
 
 ilamb/snc-esacci:
   reference_datasets:
-    - slug: "obs4REF.CCI-CryoClim-FSC"
-      description: "ESA CCI Snow - Snow cover fraction"
+    - slug: "obs4ref.CCI-CryoClim-FSC-1"
+      source_type: "obs4ref"
+      description: "ESA CCI CryoClim fractional snow cover v1. Supplies snc."
       type: "primary"
   display_name: "Snow Cover (ESA CCI)"
   description: "Apply the standard ILAMB analysis of snow cover fraction (snc) with respect to the ESA CCI CryoClim fractional snow cover reference dataset."
@@ -85,20 +99,23 @@ ilamb/snc-esacci:
 
 ilamb/burntfractionall-gfed:
   reference_datasets:
-    - slug: "obs4REF.GFED"
-      description: "Global Fire Emissions Database - Burnt area fraction"
+    - slug: "obs4ref.GFED-5-0"
+      source_type: "obs4ref"
+      description: "Global Fire Emissions Database v5.0. Supplies burntFractionAll."
       type: "primary"
   display_name: "Burnt Fraction (GFED)"
   description: "Apply the standard ILAMB analysis of burnt area fraction (burntFractionAll) with respect to the GFED reference dataset."
   tags: ["land", "fire", "disturbance"]
 
-ilamb/emp-gleamgpcp:
+ilamb/emp-gleamgpcp2.3:
   reference_datasets:
-    - slug: "obs4REF.GLEAMv3.3a"
-      description: "GLEAM v3.3a - Evapotranspiration (et)"
+    - slug: "ilamb.GLEAMv3.3a"
+      source_type: "ilamb"
+      description: "GLEAM v3.3a. Supplies evapotranspiration (et)."
       type: "primary"
-    - slug: "obs4REF.GPCP-2-3"
-      description: "GPCP v2.3 (obs4REF) - Precipitation (pr)"
+    - slug: "obs4ref.GPCP-2-3"
+      source_type: "obs4ref"
+      description: "GPCP v2.3. Supplies pr."
       type: "primary"
   display_name: "Evaporation minus Precipitation (GLEAM/GPCP)"
   description: "Apply the standard ILAMB analysis of evaporation minus precipitation (E-P) using GLEAMv3.3a evapotranspiration and GPCP v2.3 precipitation reference datasets."
@@ -108,8 +125,9 @@ ilamb/emp-gleamgpcp:
 
 ilamb/thetao-woa2023-surface:
   reference_datasets:
-    - slug: "obs4REF.WOA2023"
-      description: "World Ocean Atlas 2023 - Sea water potential temperature (thetao, surface, mapped to tos)"
+    - slug: "obs4ref.WOA-23"
+      source_type: "obs4ref"
+      description: "World Ocean Atlas 2023 monthly climatology (2005 to 2022). Supplies thetao, taken at the surface."
       type: "primary"
   display_name: "Sea Water Temperature (WOA2023 Surface)"
   description: "Apply the standard ILAMB analysis of sea water potential temperature (thetao) at the surface with respect to the WOA2023 reference dataset."
@@ -117,8 +135,9 @@ ilamb/thetao-woa2023-surface:
 
 ilamb/so-woa2023-surface:
   reference_datasets:
-    - slug: "obs4REF.WOA2023"
-      description: "World Ocean Atlas 2023 - Sea water salinity (so, surface)"
+    - slug: "obs4ref.WOA-23"
+      source_type: "obs4ref"
+      description: "World Ocean Atlas 2023 monthly climatology (2005 to 2022). Supplies so, taken at the surface."
       type: "primary"
   display_name: "Sea Water Salinity (WOA2023 Surface)"
   description: "Apply the standard ILAMB analysis of sea water salinity (so) at the surface with respect to the WOA2023 reference dataset."
@@ -126,8 +145,9 @@ ilamb/so-woa2023-surface:
 
 ilamb/amoc-rapid:
   reference_datasets:
-    - slug: "obs4REF.RAPID"
-      description: "RAPID array - Atlantic Meridional Overturning Circulation (amoc, from msftmz)"
+    - slug: "obs4ref.RAPID-2023-1a"
+      source_type: "obs4ref"
+      description: "RAPID array 2023 release 1a. Supplies msftmz, transformed into the RAPID AMOC index."
       type: "primary"
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
   description: "Apply the standard ILAMB analysis of the Atlantic Meridional Overturning Circulation (AMOC) with respect to the RAPID array reference dataset."

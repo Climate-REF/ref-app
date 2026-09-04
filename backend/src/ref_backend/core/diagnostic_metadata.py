@@ -17,6 +17,21 @@ import yaml
 from loguru import logger
 from pydantic import BaseModel, Field
 
+ReferenceDatasetSourceType = Literal[
+    "obs4mips",
+    "obs4ref",
+    "pmp-climatology",
+    "esmvaltool-reference",
+    "ilamb",
+    "recipe",
+]
+"""
+The source type of the data actually supplied for a reference dataset.
+
+A diagnostic can require ``obs4mips`` and be served the REF's own ``obs4ref`` copy, so what is
+supplied has to be recorded separately from what the requirement asks for.
+"""
+
 
 class ReferenceDatasetLink(BaseModel):
     """
@@ -26,9 +41,29 @@ class ReferenceDatasetLink(BaseModel):
     compare model outputs against. They can be classified by their role in the analysis.
     """
 
-    slug: str = Field(..., description="Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')")
+    slug: str = Field(
+        ...,
+        description=(
+            "Unique identifier for the dataset, `<supplier>.<source_id>`. The prefix names who "
+            "supplies the data rather than the source type the requirement asks for, so a dataset "
+            "required as obs4mips but supplied from obs4REF reads 'obs4ref.HadISST-1-1'"
+        ),
+    )
     description: str | None = Field(
         None, description="Description of how this dataset is used in the diagnostic"
+    )
+    source_type: ReferenceDatasetSourceType | None = Field(
+        None,
+        description=(
+            "The source type of the data actually supplied, which is not always the one the "
+            "requirement asks for:\n"
+            "- 'obs4mips': published on ESGF obs4MIPs\n"
+            "- 'obs4ref': reference data served by the REF, not yet published on obs4MIPs\n"
+            "- 'pmp-climatology': the PMP climatology registry\n"
+            "- 'esmvaltool-reference': the ESMValTool reference registry\n"
+            "- 'ilamb': the ILAMB registry\n"
+            "- 'recipe': named inside the provider's recipe rather than ingested by the REF"
+        ),
     )
     type: Literal["primary", "secondary", "comparison"] = Field(
         ...,
@@ -121,7 +156,8 @@ def load_diagnostic_metadata(path: Path) -> dict[str, DiagnosticMetadata]:
 
         pmp/annual-cycle:
           reference_datasets:
-            - slug: "obs4mips.CERES-EBAF.v4.2"
+            - slug: "obs4mips.CERES-EBAF-4-2-1"
+              source_type: "obs4mips"
               description: "CERES Energy Balanced and Filled"
               type: "primary"
           display_name: "Annual Cycle Analysis"
