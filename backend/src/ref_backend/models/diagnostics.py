@@ -81,6 +81,12 @@ class DiagnosticSummary(BaseModel):
     """
     Number of execution groups whose latest execution is successful
     """
+    promoted_version: int
+    """
+    Diagnostic version the counts and the values endpoints are scoped to
+
+    Runs from earlier versions stay in the database but are not shown.
+    """
     group_by: list[GroupBy]
     """
     Dimensions used for grouping datasets
@@ -128,7 +134,10 @@ class DiagnosticSummary(BaseModel):
             key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,  # type: ignore
         )
 
+        # A diagnostic often declares one data requirement per variable, all grouping the same way,
+        # so the same pairing would otherwise be listed dozens of times.
         group_by_summary: list[GroupBy] = []
+        seen: set[tuple[str, tuple[str, ...] | None]] = set()
         for dr in data_requirements:
             if isinstance(dr, tuple):
                 dr_ = dr[0]  # unwrap (DataRequirement, Optional[Any]) tuples to DataRequirement
@@ -136,12 +145,12 @@ class DiagnosticSummary(BaseModel):
                 dr_ = dr
             # Normalize group_by to list[str] | None
             gb = list(dr_.group_by) if getattr(dr_, "group_by", None) is not None else None  # pyright: ignore
-            group_by_summary.append(
-                GroupBy(
-                    source_type=dr_.source_type.value,  # pyright: ignore
-                    group_by=gb,
-                )
-            )
+            source_type = dr_.source_type.value  # pyright: ignore
+            key = (source_type, tuple(gb) if gb is not None else None)
+            if key in seen:
+                continue
+            seen.add(key)
+            group_by_summary.append(GroupBy(source_type=source_type, group_by=gb))
         return group_by_summary
 
     @staticmethod
@@ -207,18 +216,26 @@ class DiagnosticSummary(BaseModel):
 
         has_metric_values = has_scalar_values or has_series_values
 
+        # Every count below is scoped to the promoted version, matching the values endpoints.
+        # Without that scoping a page can report thousands of successful groups and still show an
+        # empty table, because the values of a superseded version are hidden.
+        promoted_scope = (
+            models.ExecutionGroup.diagnostic_id == diagnostic.id,
+            models.ExecutionGroup.diagnostic_version == diagnostic.promoted_version,
+        )
+
         # Execution counts for this diagnostic
         execution_count = (
             app_context.session.query(models.Execution)
             .join(models.ExecutionGroup)
-            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
+            .filter(*promoted_scope)
             .count()
         )
         successful_execution_count = (
             app_context.session.query(models.Execution)
             .join(models.ExecutionGroup)
             .filter(
-                models.ExecutionGroup.diagnostic_id == diagnostic.id,
+                *promoted_scope,
                 models.Execution.successful.is_(True),
             )
             .count()
@@ -226,9 +243,7 @@ class DiagnosticSummary(BaseModel):
 
         # Execution group counts for this diagnostic
         execution_group_count = (
-            app_context.session.query(models.ExecutionGroup)
-            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-            .count()
+            app_context.session.query(models.ExecutionGroup).filter(*promoted_scope).count()
         )
 
         # Count execution groups whose latest execution is successful
@@ -242,7 +257,7 @@ class DiagnosticSummary(BaseModel):
                 func.max(Execution.id).label("latest_exec_id"),
             )
             .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-            .filter(ExecutionGroup.diagnostic_id == diagnostic.id)
+            .filter(*promoted_scope)
             .group_by(Execution.execution_group_id)
             .subquery()
         )
@@ -276,6 +291,7 @@ class DiagnosticSummary(BaseModel):
             successful_execution_count=successful_execution_count,
             execution_group_count=execution_group_count,
             successful_execution_group_count=successful_execution_group_count,
+            promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
             resource_usage=resource_usage,
@@ -330,6 +346,7 @@ class DiagnosticSummary(BaseModel):
             successful_execution_count=execution_stats["successful"],
             execution_group_count=execution_group_count,
             successful_execution_group_count=successful_execution_group_count,
+            promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
             resource_usage=resource_usage,

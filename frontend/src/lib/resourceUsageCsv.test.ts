@@ -13,6 +13,7 @@ const base = {
   successful_execution_count: 1,
   execution_group_count: 1,
   successful_execution_group_count: 1,
+  promoted_version: 1,
   group_by: [],
   aft_link: null,
 };
