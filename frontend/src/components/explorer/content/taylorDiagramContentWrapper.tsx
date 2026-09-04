@@ -45,13 +45,11 @@ function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
     const experimentId = value.dimensions.experiment_id;
     const modelId = experimentId ? `${sourceId} (${experimentId})` : sourceId;
 
-    if (!modelGroups.has(modelId)) {
-      modelGroups.set(modelId, {
-        color: getFixedDimensionColor("experiment_id", experimentId),
-      });
+    let group = modelGroups.get(modelId);
+    if (!group) {
+      group = { color: getFixedDimensionColor("experiment_id", experimentId) };
+      modelGroups.set(modelId, group);
     }
-
-    const group = modelGroups.get(modelId)!;
 
     // Extract the relevant statistics
     if (value.dimensions.statistic === "Correlation") {

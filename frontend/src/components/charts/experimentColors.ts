@@ -5,11 +5,12 @@ const EXPERIMENT_COLORS: Record<string, string> = {
   "esm-hist": "#f28e2b",
 };
 
-const EXPERIMENT_ORDER = Object.keys(EXPERIMENT_COLORS);
+export const EXPERIMENT_ORDER = Object.keys(EXPERIMENT_COLORS);
 
-/** True for a colour reserved by an experiment, so palettes can keep clear of it. */
-export function isReservedColor(color: string): boolean {
-  return Object.values(EXPERIMENT_COLORS).includes(color);
+/** The palette without the reserved colours, so other values never borrow one. */
+export function unreservedPalette(palette: string[]): string[] {
+  const reserved = new Set(Object.values(EXPERIMENT_COLORS));
+  return palette.filter((color) => !reserved.has(color));
 }
 
 /** Legend entries for the experiments present, in their reserved order. */
@@ -30,24 +31,4 @@ export function getFixedDimensionColor(
 ): string | undefined {
   if (dimension !== "experiment_id" || !value) return undefined;
   return EXPERIMENT_COLORS[value];
-}
-
-/** Sort so experiments with a reserved colour come first, in their reserved order. */
-export function compareDimensionValues(
-  dimension: string | undefined,
-  a: string,
-  b: string,
-): number {
-  if (dimension === "experiment_id") {
-    const ia = EXPERIMENT_ORDER.indexOf(a);
-    const ib = EXPERIMENT_ORDER.indexOf(b);
-    if (ia !== -1 || ib !== -1) {
-      if (ia === -1) return 1;
-      if (ib === -1) return -1;
-      return ia - ib;
-    }
-  }
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
 }

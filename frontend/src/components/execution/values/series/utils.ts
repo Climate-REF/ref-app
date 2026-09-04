@@ -1,6 +1,6 @@
 import {
   getFixedDimensionColor,
-  isReservedColor,
+  unreservedPalette,
 } from "@/components/charts/experimentColors";
 import type { SeriesMetadata, SeriesValue } from "../types";
 
@@ -159,7 +159,7 @@ function getLabelColor(label: string, palette = COLORS): string {
 }
 
 // Other dimension values must not borrow an experiment's colour.
-const UNRESERVED_COLORS = COLORS.filter((c) => !isReservedColor(c));
+const UNRESERVED_COLORS = unreservedPalette(COLORS);
 
 /**
  * Colour a series by one dimension when asked, otherwise by its label.
@@ -173,13 +173,11 @@ function getSeriesColor(
   const dimensionValue = colorDimension
     ? series.dimensions[colorDimension]
     : undefined;
-  if (dimensionValue) {
-    return (
-      getFixedDimensionColor(colorDimension, dimensionValue) ??
-      getLabelColor(dimensionValue, UNRESERVED_COLORS)
-    );
-  }
-  return getLabelColor(label);
+  if (!dimensionValue) return getLabelColor(label);
+  return (
+    getFixedDimensionColor(colorDimension, dimensionValue) ??
+    getLabelColor(dimensionValue, UNRESERVED_COLORS)
+  );
 }
 
 /**

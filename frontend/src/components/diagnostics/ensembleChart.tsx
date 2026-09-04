@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import type { ScalarValue } from "@/client/types.gen";
 import {
-  compareDimensionValues,
+  EXPERIMENT_ORDER,
   getFixedDimensionColor,
 } from "@/components/charts/experimentColors";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
@@ -29,6 +29,7 @@ import { createScaledTickFormatter } from "../execution/values/series/utils";
 export const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
   // Meteorological seasons (Annual first, then chronological)
   season: ["Annual", "annual", "ANN", "DJF", "MAM", "JJA", "SON"],
+  experiment_id: EXPERIMENT_ORDER,
 };
 
 /**
@@ -289,9 +290,13 @@ export const EnsembleChart = ({
         names.add(groupName);
       });
     });
-    return Array.from(names).sort((a, b) =>
-      compareDimensionValues(hueDimension, a, b),
-    );
+    const sorted = Array.from(names)
+      .sort()
+      .map((name) => ({ name }));
+    return sortCategories(
+      sorted,
+      hueDimension ? KNOWN_CATEGORY_ORDERS[hueDimension] : undefined,
+    ).map((item) => item.name);
   }, [sortedChartData, hueDimension]);
 
   const scale = useMemo(() => {
