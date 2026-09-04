@@ -7,6 +7,22 @@ const EXPERIMENT_COLORS: Record<string, string> = {
 
 const EXPERIMENT_ORDER = Object.keys(EXPERIMENT_COLORS);
 
+/** True for a colour reserved by an experiment, so palettes can keep clear of it. */
+export function isReservedColor(color: string): boolean {
+  return Object.values(EXPERIMENT_COLORS).includes(color);
+}
+
+/** Legend entries for the experiments present, in their reserved order. */
+export function experimentLegend(
+  experimentIds: Iterable<string | undefined>,
+): { label: string; color: string }[] {
+  const present = new Set(experimentIds);
+  return EXPERIMENT_ORDER.filter((id) => present.has(id)).map((id) => ({
+    label: id,
+    color: EXPERIMENT_COLORS[id],
+  }));
+}
+
 /** Fixed colour for a dimension value, or undefined when the value has no reserved colour. */
 export function getFixedDimensionColor(
   dimension: string | undefined,
@@ -31,5 +47,7 @@ export function compareDimensionValues(
       return ia - ib;
     }
   }
-  return a.localeCompare(b);
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
 }

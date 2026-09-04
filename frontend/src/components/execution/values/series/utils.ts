@@ -1,4 +1,7 @@
-import { getFixedDimensionColor } from "@/components/charts/experimentColors";
+import {
+  getFixedDimensionColor,
+  isReservedColor,
+} from "@/components/charts/experimentColors";
 import type { SeriesMetadata, SeriesValue } from "../types";
 
 export interface ChartDataPoint {
@@ -147,13 +150,16 @@ const COLORS = [
 /**
  * Get consistent color for a label using hash-based assignment
  */
-function getLabelColor(label: string): string {
+function getLabelColor(label: string, palette = COLORS): string {
   const hash = label.split("").reduce((acc, char) => {
     const newAcc = (acc << 5) - acc + char.charCodeAt(0);
     return newAcc | 0;
   }, 0);
-  return COLORS[Math.abs(hash) % COLORS.length];
+  return palette[Math.abs(hash) % palette.length];
 }
+
+// Other dimension values must not borrow an experiment's colour.
+const UNRESERVED_COLORS = COLORS.filter((c) => !isReservedColor(c));
 
 /**
  * Colour a series by one dimension when asked, otherwise by its label.
@@ -170,7 +176,7 @@ function getSeriesColor(
   if (dimensionValue) {
     return (
       getFixedDimensionColor(colorDimension, dimensionValue) ??
-      getLabelColor(dimensionValue)
+      getLabelColor(dimensionValue, UNRESERVED_COLORS)
     );
   }
   return getLabelColor(label);

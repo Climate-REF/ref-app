@@ -81,6 +81,17 @@ const COLORS = [
   "#8dd1e1",
 ];
 
+// Reserved colours win, so an experiment looks the same on every chart.
+function groupColor(
+  dimension: string | undefined,
+  value: string,
+  index: number,
+): string {
+  return (
+    getFixedDimensionColor(dimension, value) ?? COLORS[index % COLORS.length]
+  );
+}
+
 interface EnsembleChartProps {
   data: ScalarValue[];
   metricName: string;
@@ -185,8 +196,7 @@ export const EnsembleChart = ({
             __outliers: {},
             __rawData: [],
             __categoryColor: isSelfHued
-              ? (getFixedDimensionColor(groupByDimension, groupName) ??
-                COLORS[categoryIndex % COLORS.length])
+              ? groupColor(groupByDimension, groupName, categoryIndex)
               : undefined,
           };
         }
@@ -252,8 +262,7 @@ export const EnsembleChart = ({
           __outliers: outliers,
           __rawData: allRawData,
           __categoryColor: isSelfHued
-            ? (getFixedDimensionColor(groupByDimension, groupName) ??
-              COLORS[categoryIndex % COLORS.length])
+            ? groupColor(groupByDimension, groupName, categoryIndex)
             : undefined,
         };
       },
@@ -329,14 +338,6 @@ export const EnsembleChart = ({
       .nice();
   }, [sortedChartData, symmetricalAxes, yMin, yMax]);
   const yDomain = scale.domain() as [number, number];
-
-  // Get color for a group
-  const getGroupColor = (groupName: string, index: number) => {
-    return (
-      getFixedDimensionColor(hueDimension, groupName) ??
-      COLORS[index % COLORS.length]
-    );
-  };
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
@@ -626,7 +627,7 @@ export const EnsembleChart = ({
               key={groupName}
               dataKey={(d) => d?.groups?.[groupName]?.median}
               name={groupName}
-              fill={getGroupColor(groupName, index)}
+              fill={groupColor(hueDimension, groupName, index)}
               isAnimationActive={false}
               shape={
                 <BoxWhiskerShape

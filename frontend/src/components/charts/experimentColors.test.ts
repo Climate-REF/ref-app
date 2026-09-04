@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   compareDimensionValues,
+  experimentLegend,
   getFixedDimensionColor,
+  isReservedColor,
 } from "./experimentColors";
 
 describe("getFixedDimensionColor", () => {
@@ -33,5 +35,22 @@ describe("compareDimensionValues", () => {
       compareDimensionValues("season", x, y),
     );
     expect(sorted).toEqual(["a", "b"]);
+  });
+});
+
+describe("experimentLegend", () => {
+  it("lists only the experiments present, historical first", () => {
+    const legend = experimentLegend([
+      "esm-hist",
+      undefined,
+      "historical",
+      "esm-hist",
+    ]);
+    expect(legend.map((e) => e.label)).toEqual(["historical", "esm-hist"]);
+    expect(legend.every((e) => isReservedColor(e.color))).toBe(true);
+  });
+
+  it("is empty when no experiment has a reserved colour", () => {
+    expect(experimentLegend(["ssp585"])).toEqual([]);
   });
 });

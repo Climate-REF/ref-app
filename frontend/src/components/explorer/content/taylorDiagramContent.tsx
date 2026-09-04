@@ -9,7 +9,7 @@ interface TaylorDiagramModel {
   name: string;
   stddev: number; // normalized standard deviation
   correlation: number; // Pearson correlation coefficient
-  color?: string; // point colour, defaults to orange
+  color?: string;
 }
 
 interface TaylorDiagramProps {

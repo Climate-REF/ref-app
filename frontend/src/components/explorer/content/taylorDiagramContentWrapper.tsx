@@ -2,7 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import type { MetricValueCollection } from "@/client/types.gen";
-import { getFixedDimensionColor } from "@/components/charts/experimentColors";
+import {
+  experimentLegend,
+  getFixedDimensionColor,
+} from "@/components/charts/experimentColors";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
@@ -88,15 +91,34 @@ function TaylorDiagramSection({
   referenceStddev,
 }: TaylorDiagramSectionProps) {
   const models = useMemo(() => transformToTaylorModels(values), [values]);
+  const legend = useMemo(
+    () => experimentLegend(values.map((v) => v.dimensions.experiment_id)),
+    [values],
+  );
 
   return (
-    <TaylorDiagramContent
-      models={models}
-      width={width}
-      height={height}
-      referenceStddev={referenceStddev}
-      marginTop={0}
-    />
+    <div>
+      <TaylorDiagramContent
+        models={models}
+        width={width}
+        height={height}
+        referenceStddev={referenceStddev}
+        marginTop={0}
+      />
+      {legend.length > 1 && (
+        <div className="flex justify-center gap-4 text-sm">
+          {legend.map((entry) => (
+            <span key={entry.label} className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              {entry.label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
