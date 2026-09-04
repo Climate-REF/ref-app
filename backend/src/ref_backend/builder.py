@@ -14,6 +14,7 @@ from starlette.types import Scope
 
 from climate_ref.config import Config
 from climate_ref.database import Database
+from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
 from ref_backend.core.config import Settings
 
@@ -129,6 +130,9 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         )
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
+
+    # Mounted above the static files, which only answer GET and HEAD.
+    app.include_router(analytics_router)
 
     if settings.STATIC_DIR:
         logger.info(f"Serving static files from {settings.STATIC_DIR}")
