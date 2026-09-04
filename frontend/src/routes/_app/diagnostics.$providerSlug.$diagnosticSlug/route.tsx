@@ -210,6 +210,27 @@ const DiagnosticInfoLayout = () => {
                 {data.execution_group_count}
               </p>
             </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-muted-foreground">
+                  Diagnostic version
+                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      The version of this diagnostic currently in use.
+                      <br />
+                      The version is updated when the diagnostic is updated.
+                      This may differ between diagnostics for the same provider.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="font-medium">v{data.promoted_version}</p>
+            </div>
           </div>
 
           {data.resource_usage && (

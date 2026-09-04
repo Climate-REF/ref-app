@@ -623,6 +623,10 @@ export type DiagnosticSummary = {
      */
     successful_execution_group_count: number;
     /**
+     * Promoted Version
+     */
+    promoted_version: number;
+    /**
      * Group By
      */
     group_by: Array<GroupBy>;

@@ -84,8 +84,15 @@ async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Colle
     # Batch fetch all diagnostic statistics to avoid N+1 queries
     diagnostic_ids = [d.id for d in diagnostics]
 
-    # Every statistic below counts only groups matching the era, when one is requested.
-    group_scope: list[ColumnElement[bool]] = [models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids)]
+    promoted_version = (
+        select(models.Diagnostic.promoted_version)
+        .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
+        .scalar_subquery()
+    )
+    group_scope: list[ColumnElement[bool]] = [
+        models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
+        models.ExecutionGroup.diagnostic_version == promoted_version,
+    ]
     if mip_era:
         era_groups = select(models.ExecutionGroup.id).where(execution_group_filter({"mip_era": mip_era}))
         group_scope.append(models.ExecutionGroup.id.in_(era_groups))
