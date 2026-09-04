@@ -53,8 +53,8 @@ const CATALOG_HEADER = {
         . For details on CMIP7 AFT diagnostic collection and reference dataset
         selection, please see{" "}
         <LinkExternal href="https://doi.org/10.5194/gmd-19-7415-2026">
-          Hoffman et al. 2026 Rapid Evaluation Framework for the CMIP7
-          Assessment Fast Track GMD paper
+          Rapid Evaluation Framework for the CMIP7 Assessment Fast Track
+          (Hoffman et al., 2026)
         </LinkExternal>
         . To propose a new diagnostic, visit the{" "}
         <LinkExternal href="https://github.com/orgs/Climate-REF/discussions/categories/proposed-diagnostics">
