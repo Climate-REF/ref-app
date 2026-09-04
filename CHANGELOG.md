@@ -1,3 +1,28 @@
+## v0.7.1 (2026-09-04)
+
+### Improvements
+
+- Execution and execution group counts on a diagnostic page now cover the same runs as the values below them.
+  The version itself is shown alongside the counts. (#93)
+- Coloured the concentration driven and emissions driven historical runs apart on the explorer charts.
+  Historical is always blue and esm-hist always orange,
+  and Taylor diagrams no longer merge the two runs of one model. (#94)
+
+### Bug Fixes
+
+- Diagnostic pages now list each grouping once.
+  A diagnostic that declares one data requirement per variable was repeating the same grouping dozens of times. (#93)
+- Fixed page view analytics on the container deployments.
+  The backend now proxies `/log/script.js` and `/log/api/event` through to plausible.io,
+  so the tracker no longer hits the static file mount and gets a 405.
+  The tracker also posts to a relative path, so production stops reporting into the staging site. (#95)
+
+### Documentation
+
+- Links the diagnostics catalog description to the Zenodo record, the Rapid Evaluation Framework GMD paper and the discussion board for proposing new diagnostics.
+  Updates the Hoffman et al. citations from the EGUsphere preprint to the published GMD paper. (#96)
+
+
 ## v0.7.0 (2026-09-03)
 
 ### Improvements
