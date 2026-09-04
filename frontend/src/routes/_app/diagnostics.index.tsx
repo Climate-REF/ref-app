@@ -13,6 +13,7 @@ import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
+import { LinkExternal } from "@/components/ui/link";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
@@ -37,8 +38,32 @@ const diagnosticsSearchSchema = z.object({
 
 const CATALOG_HEADER = {
   title: "Diagnostics Catalog",
-  description:
-    "A set of standardised diagnostics for evaluating climate model performance against observations and benchmarks.",
+  description: (
+    <div className="space-y-2">
+      <p>
+        A set of standardised diagnostics for evaluating climate model
+        performance against observations and benchmarks.
+      </p>
+      <p>
+        For the most up to date list and details of CMIP diagnostics please see
+        the{" "}
+        <LinkExternal href="https://doi.org/10.5281/zenodo.14284374">
+          Zenodo record
+        </LinkExternal>
+        . For details on CMIP7 AFT diagnostic collection and reference dataset
+        selection, please see{" "}
+        <LinkExternal href="https://doi.org/10.5194/gmd-19-7415-2026">
+          Rapid Evaluation Framework for the CMIP7 Assessment Fast Track
+          (Hoffman et al., 2026)
+        </LinkExternal>
+        . To propose a new diagnostic, visit the{" "}
+        <LinkExternal href="https://github.com/orgs/Climate-REF/discussions/categories/proposed-diagnostics">
+          Climate-REF GitHub Discussion board
+        </LinkExternal>
+        .
+      </p>
+    </div>
+  ),
 };
 
 const ErrorComponent = ({ message }: { message: string }) => {
