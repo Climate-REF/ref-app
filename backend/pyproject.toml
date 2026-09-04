@@ -5,6 +5,7 @@ description = "Backend for the Climate Rapid Evaluation Framework"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",
+    "httpx>=0.27",
     "pydantic>2.0",
     "psycopg[binary]<4.0.0,>=3.1.13",
     "pydantic-settings<3.0.0,>=2.13.1",

@@ -14,10 +14,11 @@ import { WelcomeModal } from "@/components/app/welcomeModal";
 import { useApiEndpoint } from "@/hooks/useApiEndpoint";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-// Initialize Plausible Analytics
+// The endpoint is relative so that events go to whichever origin is serving the app.
+// Both Netlify and the container image proxy /log through to plausible.io.
 init({
   domain: "climate-ref.org",
-  endpoint: "https://staging.climate-ref.org/log/api/event",
+  endpoint: "/log/api/event",
   outboundLinks: true,
   captureOnLocalhost: false,
   fileDownloads: true,
