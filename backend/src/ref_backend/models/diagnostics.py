@@ -85,7 +85,7 @@ class DiagnosticSummary(BaseModel):
     """
     Diagnostic version the counts and the values endpoints are scoped to
 
-    Runs from earlier versions stay in the database but are not shown.
+    Runs from earlier versions stay in the database but are not shown by default.
     """
     group_by: list[GroupBy]
     """

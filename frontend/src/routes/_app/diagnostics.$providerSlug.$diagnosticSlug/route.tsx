@@ -221,10 +221,10 @@ const DiagnosticInfoLayout = () => {
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p>
-                      The version of this diagnostic currently in use. Runs from
-                      earlier versions are kept but are not shown, so both the
-                      counts and the values on this page describe this version
-                      alone.
+                      The version of this diagnostic currently in use.
+                      <br />
+                      The version is updated when the diagnostic is updated.
+                      This may differ between diagnostics for the same provider.
                     </p>
                   </TooltipContent>
                 </Tooltip>

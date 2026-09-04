@@ -84,8 +84,6 @@ async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Colle
     # Batch fetch all diagnostic statistics to avoid N+1 queries
     diagnostic_ids = [d.id for d in diagnostics]
 
-    # Every statistic below counts only groups at the promoted version, matching the values
-    # endpoints, and only groups matching the era when one is requested.
     promoted_version = (
         select(models.Diagnostic.promoted_version)
         .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
