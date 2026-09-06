@@ -1,3 +1,11 @@
+## v0.7.2 (2026-09-06)
+
+### Bug Fixes
+
+- Corrected the reference dataset labels shown for diagnostics and collections,
+  so they match the datasets the climate-ref providers use. (#98)
+
+
 ## v0.7.1 (2026-09-04)
 
 ### Improvements
