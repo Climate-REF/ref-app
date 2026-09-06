@@ -3,7 +3,7 @@ name: "Sea ice sensitivity to warming"
 theme: "Oceans and sea ice"
 endorser: "CMIP Model Benchmarking Task Team"
 version_control: "version 1 - 24-11-04 REF launch"
-reference_dataset: "OSI SAF/CCI, HadCRUT"
+reference_dataset: ""
 provider_link: "https://docs.esmvaltool.org/en/latest/recipes/recipe_seaice_sensitivity.html"
 content:
   description: >-

@@ -3,7 +3,7 @@ name: "Sea surface temperature (SST) bias, Sea surface salinity (SSS) bias"
 theme: "Oceans and sea ice"
 endorser: "CMIP Model Benchmarking Task Team"
 version_control: "version 1 - 24-11-04 REF launch"
-reference_dataset: "WOA2023"
+reference_dataset: "WOA-23"
 provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   description: >-

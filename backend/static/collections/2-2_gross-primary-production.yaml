@@ -3,7 +3,7 @@ name: "Gross primary production (GPP)"
 theme: "Land and land ice"
 endorser: "CMIP Model Benchmarking Task Team"
 version_control: "version 1 - 24-11-04 REF launch"
-reference_dataset: "FLUXNET2015-1-0, WECANN-1-0, CRU-4-9 (source_id not confirmed)"
+reference_dataset: "FLUXNET2015-1-0, WECANN-1-0, GPCP-2-3, CRU4.02"
 provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   description: >-

@@ -4,15 +4,9 @@
 
 esmvaltool/cloud-radiative-effects:
   reference_datasets:
-    - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - TOA radiation fluxes (rlut, rlutcs, rsut, rsutcs) (planned to move to obs4MIPs)"
+    - slug: "obs4mips.CERES-EBAF-4-2-1"
+      description: "CERES Energy Balanced and Filled v4.2.1 (obs4MIPs) - TOA radiation fluxes (rlut, rlutcs, rsut, rsutcs), ingested via REF"
       type: "primary"
-    - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (planned to move to obs4MIPs)"
-      type: "secondary"
-    - slug: "esmvaltool.ISCCP-FH"
-      description: "ISCCP cloud properties (planned to move to obs4MIPs)"
-      type: "secondary"
   display_name: "Cloud Radiative Effects"
   description: >-
     Plot climatologies and zonal mean profiles of cloud radiative effects
@@ -20,13 +14,7 @@ esmvaltool/cloud-radiative-effects:
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-cli-ta:
-  reference_datasets:
-    - slug: "obs4mips.ERA-5"
-      description: "ERA5 - Air temperature (ta)"
-      type: "primary"
-    - slug: "esmvaltool.CALIPSO-ICECLOUD"
-      description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
-      type: "secondary"
+  reference_datasets: []
   display_name: "Cloud-Temperature Scatterplots (cli vs ta)"
   description: >-
     Scatterplot of ice water content of cloud (cli) vs air temperature (ta).
@@ -35,40 +23,19 @@ esmvaltool/cloud-scatterplots-cli-ta:
   tags: ["atmosphere", "clouds", "temperature"]
 
 esmvaltool/cloud-scatterplots-clivi-lwcre:
-  reference_datasets:
-    - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - Longwave radiation (rlut, rlutcs; lwcre derived), baked into recipe"
-      type: "primary"
-    - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties - Ice water path (clivi), baked into recipe"
-      type: "secondary"
+  reference_datasets: []
   display_name: "Cloud-Radiation Scatterplots (clivi vs lwcre)"
   description: "Scatterplot of ice water path (clivi) vs longwave cloud radiative effect (lwcre)."
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-clt-swcre:
-  reference_datasets:
-    - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - Shortwave radiation (rsut, rsutcs; swcre derived), baked into recipe"
-      type: "primary"
-    - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties - Total cloud fraction (clt), baked into recipe"
-      type: "secondary"
+  reference_datasets: []
   display_name: "Cloud-Radiation Scatterplots (clt vs swcre)"
   description: "Scatterplot of total cloud fraction (clt) vs shortwave cloud radiative effect (swcre)."
   tags: ["atmosphere", "clouds", "radiation"]
 
 esmvaltool/cloud-scatterplots-clwvi-pr:
-  reference_datasets:
-    - slug: "obs4MIPs.GPCPv2.3"
-      description: "GPCP v2.3 - Precipitation (pr)"
-      type: "secondary"
-    - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (clwvi, planned to move to obs4MIPs)"
-      type: "secondary"
-    - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
-      type: "primary"
+  reference_datasets: []
   display_name: "Cloud-Precipitation Scatterplots (clwvi vs pr)"
   description: "Scatterplot of condensed water path (clwvi) vs precipitation (pr)."
   tags: ["atmosphere", "clouds", "precipitation"]
@@ -79,13 +46,13 @@ esmvaltool/cloud-scatterplots-reference:
       description: "ERA5 - Air temperature (ta), ingested via REF"
       type: "primary"
     - slug: "esmvaltool.CERES-EBAF"
-      description: "CERES Energy Balanced and Filled - Radiation, baked into recipe"
+      description: "CERES Energy Balanced and Filled Ed4.2 - TOA radiation (rlut, rlutcs, rsut, rsutcs) for lwcre and swcre, baked into recipe"
       type: "primary"
     - slug: "esmvaltool.CALIPSO-ICECLOUD"
       description: "CALIPSO - Ice cloud properties (cli), baked into recipe"
       type: "secondary"
     - slug: "esmvaltool.ESACCI-CLOUD"
-      description: "ESA CCI Cloud properties (clt, clwvi, clivi), baked into recipe"
+      description: "ESA CCI Cloud AVHRR-AMPM-fv3.0 - Cloud properties (clt, clwvi, clivi), baked into recipe"
       type: "secondary"
     - slug: "esmvaltool.GPCP-V2.3"
       description: "GPCP v2.3 - Precipitation (pr), hardcoded in update_recipe"
@@ -103,7 +70,7 @@ esmvaltool/enso-basic-climatology:
       type: "secondary"
     - slug: "esmvaltool.TROPFLUX"
       description: "TROPFLUX (OBS6) - Sea surface temperature (tos) and wind stress (tauu), baked into recipe"
-      type: "secondary"
+      type: "primary"
   display_name: "ENSO Basic Climatology"
   description: >-
     Calculate the ENSO CLIVAR metrics for background climatology, assessing the
@@ -227,10 +194,10 @@ esmvaltool/regional-historical-trend:
 esmvaltool/sea-ice-area-basic:
   reference_datasets:
     - slug: "esmvaltool.OSI-450-nh"
-      description: "OSI-450 v3 - Sea ice concentration (siconc), Northern Hemisphere, hardcoded in recipe"
+      description: "OSI-450 v3 (OBS) - Sea ice concentration (sic) and areacello, Northern Hemisphere, ingested via REF"
       type: "primary"
     - slug: "esmvaltool.OSI-450-sh"
-      description: "OSI-450 v3 - Sea ice concentration (siconc), Southern Hemisphere, hardcoded in recipe"
+      description: "OSI-450 v3 (OBS) - Sea ice concentration (sic) and areacello, Southern Hemisphere, ingested via REF"
       type: "primary"
   display_name: "Arctic and Antarctic Sea Ice Area Seasonal Cycle"
   description: >-
@@ -258,3 +225,48 @@ esmvaltool/climate-drivers-for-fire:
   display_name: "Climate Drivers for Fire"
   description: "Calculate diagnostics regarding climate drivers for fire, including temperature, precipitation, and humidity conditions that influence fire risk."
   tags: ["fire", "climate-drivers", "impacts"]
+
+esmvaltool/ozone-lat-time:
+  reference_datasets:
+    - slug: "obs4mips.C3S-GTO-ECV-9-0"
+      description: "C3S GTO-ECV v9.0 (obs4MIPs) - Total column ozone (toz), ingested via REF"
+      type: "primary"
+  display_name: "Total Column Ozone (Latitude-Time)"
+  description: "Plot the latitude-time evolution of total column ozone (toz)."
+  tags: ["atmosphere", "ozone"]
+
+esmvaltool/ozone-sh-oct:
+  reference_datasets:
+    - slug: "obs4mips.C3S-GTO-ECV-9-0"
+      description: "C3S GTO-ECV v9.0 (obs4MIPs) - Total column ozone (toz), ingested via REF"
+      type: "primary"
+  display_name: "Total Column Ozone (Southern Hemisphere, October)"
+  description: "Plot the October time series of Southern Hemisphere polar total column ozone (toz)."
+  tags: ["atmosphere", "ozone", "southern-hemisphere"]
+
+esmvaltool/ozone-nh-mar:
+  reference_datasets:
+    - slug: "obs4mips.C3S-GTO-ECV-9-0"
+      description: "C3S GTO-ECV v9.0 (obs4MIPs) - Total column ozone (toz), ingested via REF"
+      type: "primary"
+  display_name: "Total Column Ozone (Northern Hemisphere, March)"
+  description: "Plot the March time series of Northern Hemisphere polar total column ozone (toz)."
+  tags: ["atmosphere", "ozone", "northern-hemisphere"]
+
+esmvaltool/ozone-annual-cycle:
+  reference_datasets:
+    - slug: "obs4mips.C3S-GTO-ECV-9-0"
+      description: "C3S GTO-ECV v9.0 (obs4MIPs) - Total column ozone (toz), ingested via REF"
+      type: "primary"
+  display_name: "Total Column Ozone Annual Cycle"
+  description: "Plot the annual cycle of total column ozone (toz)."
+  tags: ["atmosphere", "ozone", "seasonal-cycle"]
+
+esmvaltool/ozone-zonal:
+  reference_datasets:
+    - slug: "esmvaltool.ESACCI-OZONE"
+      description: "ESA CCI Ozone L3-SAGE-OMPS (OBS6) - Ozone mole fraction (o3), baked into recipe"
+      type: "primary"
+  display_name: "Zonal Mean Ozone"
+  description: "Plot zonal mean ozone (o3) profiles."
+  tags: ["atmosphere", "ozone"]
