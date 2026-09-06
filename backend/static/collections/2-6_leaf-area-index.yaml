@@ -3,7 +3,7 @@ name: "Leaf area index (LAI)"
 theme: "Land and land ice"
 endorser: "CMIP Model Benchmarking Task Team"
 version_control: "version 1 - 24-11-04 REF launch"
-reference_dataset: "NOAA-NCEI-LAI-5-0, LAI4g-1-2"
+reference_dataset: "NOAA-NCEI-LAI-AVHRR-5-0"
 provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   description: >-
@@ -16,7 +16,7 @@ content:
     for the Tropics and for the whole globe.
   short_description: >-
     Apply the ILAMB Methodology* to compare the model leaf area index (LAI) with
-    reference data from NOAA-NCEI-LAI-5-0, and LAI4g-1-2
+    reference data from NOAA-NCEI-LAI-AVHRR-5-0
   why_it_matters: >-
     LAI has fundamental implications for the closure of the biogeochemical cycle over
     land and within ecosystems. With the main focus on emission-driven simulations,

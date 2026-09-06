@@ -3,7 +3,7 @@ name: "Runoff"
 theme: "Land and land ice"
 endorser: "CMIP Model Benchmarking Task Team"
 version_control: "version 1 - 24-11-04 REF launch"
-reference_dataset: "LORA-1-1"
+reference_dataset: "LORA-1-0"
 provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   description: >-
@@ -16,7 +16,7 @@ content:
     time series and Taylor diagrams for both global and tropical domain.
   short_description: >-
     Apply the ILAMB Methodology* to compare the model surface runoff with reference
-    data from LORA-1-1
+    data from LORA-1-0
   why_it_matters: >-
     Runoff is important for the whole terrestrial hydrological cycle. In the coastal
     regions, the biases in runoff could also influence the fresh water and nutrient

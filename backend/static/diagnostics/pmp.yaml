@@ -4,39 +4,22 @@
 
 pmp/annual-cycle:
   reference_datasets:
-    - slug: "obs4MIPs-climatology.ERA-5"
+    - slug: "pmp-climatology.ERA-5"
       description: "ERA5 Reanalysis - Primary climatology for surface temperature (ts), winds (uas, vas), sea level pressure (psl), air temperature (ta), zonal/meridional wind (ua, va), and geopotential height (zg). Period: 1981-2004."
       type: "primary"
-    - slug: "obs4MIPs-climatology.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2 - Precipitation reference (pr). Period: 1983-2004."
+    - slug: "pmp-climatology.GPCP-3-3"
+      description: "Global Precipitation Climatology Project v3.3 - Precipitation reference (pr). Period: 1983-2014."
       type: "primary"
-    - slug: "obs4MIPs-climatology.CERES-EBAF-4-2"
-      description: "CERES Energy Balanced and Filled v4.2 - Radiation fields (rlds, rlus, rlut, rsds, rsdt, rsus, rsut) and clear-sky variants (rldscs, rsdscs, rlutcs, rsutcs, rsuscs, rltcre, rstcre, rt). Period: 2001-2004."
+    - slug: "pmp-climatology.CERES-EBAF-4-2"
+      description: "CERES Energy Balanced and Filled v4.2 - Radiation fields (rlds, rlus, rlut, rsds, rsdt, rsus, rsut). Period: 2001-2004."
       type: "primary"
   display_name: "Annual Cycle Analysis"
   description: >-
     Calculate the annual cycle for a dataset. Variables provided include surface temperature (ts),
     precipitation (pr), winds (uas, vas), sea level pressure (psl), air temperature (ta),
     zonal/meridional wind (ua, va), geopotential height (zg), and radiation fields
-    (rlds, rlus, rsds, rsdt, rsus, rlut, rsut) including clear-sky variants.
+    (rlds, rlus, rsds, rsdt, rsus, rlut, rsut).
   tags: ["atmosphere", "seasonal-cycle", "climatology"]
-
-pmp/enso_perf:
-  reference_datasets:
-    - slug: "obs4mips.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2 - Precipitation (pr)"
-      type: "primary"
-    - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Wind stress (tauu)"
-      type: "primary"
-    - slug: "obs4mips.HadISST-1-1"
-      description: "Hadley Centre Sea Ice and Sea Surface Temperature v1.1 - Sea surface temperature (ts)"
-      type: "primary"
-  display_name: "ENSO Performance Metrics"
-  description: >-
-    Calculate the ENSO performance metrics for a dataset. These metrics evaluate
-    how well a model simulates key aspects of El Nino-Southern Oscillation variability.
-  tags: ["ocean", "atmosphere", "enso", "variability"]
 
 pmp/enso_tel:
   reference_datasets:
@@ -44,7 +27,7 @@ pmp/enso_tel:
       description: "Global Precipitation Climatology Project v3.2 - Precipitation teleconnections (pr)"
       type: "primary"
     - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Wind stress (tauu)"
+      description: "TropFlux v1.0 - Sea surface temperature (ts)"
       type: "primary"
     - slug: "obs4mips.HadISST-1-1"
       description: "Hadley Centre Sea Ice and SST v1.1 - Sea surface temperature teleconnections (ts)"
@@ -58,17 +41,14 @@ pmp/enso_tel:
 
 pmp/enso_proc:
   reference_datasets:
-    - slug: "obs4mips.GPCP-Monthly-3-2"
-      description: "Global Precipitation Climatology Project v3.2 - Precipitation (pr)"
-      type: "primary"
     - slug: "obs4mips.TropFlux-1-0"
-      description: "TropFlux v1.0 - Wind stress (tauu)"
+      description: "TropFlux v1.0 - Wind stress (tauu), turbulent heat fluxes (hfls, hfss) and sea surface temperature (ts)"
       type: "primary"
     - slug: "obs4mips.HadISST-1-1"
       description: "Hadley Centre Sea Ice and SST v1.1 - Sea surface temperature (ts)"
       type: "primary"
     - slug: "obs4mips.CERES-EBAF-4-2"
-      description: "CERES Energy Balanced and Filled v4.2 - Surface and TOA radiation fluxes (hfls, hfss, rlds, rlus, rsds, rsus)"
+      description: "CERES Energy Balanced and Filled v4.2 - Surface radiation fluxes (rlds, rlus, rsds, rsus)"
       type: "primary"
   display_name: "ENSO Processes"
   description: >-
@@ -100,22 +80,11 @@ pmp/extratropical-modes-of-variability-npgo:
     which tracks changes in the strength of the North Pacific subtropical and subpolar gyres.
   tags: ["ocean", "variability", "pacific"]
 
-pmp/extratropical-modes-of-variability-amo:
-  reference_datasets:
-    - slug: "obs4mips.HadISST-1-1"
-      description: "Hadley Centre Sea Ice and SST v1.1 - SST for Atlantic Multidecadal Oscillation"
-      type: "primary"
-  display_name: "Atlantic Multidecadal Oscillation (AMO)"
-  description: >-
-    Calculate the extratropical modes of variability for the Atlantic Multidecadal Oscillation (AMO),
-    a coherent pattern of variability in North Atlantic SSTs with a period of 60-80 years.
-  tags: ["ocean", "variability", "atlantic", "decadal"]
-
 # Extratropical Modes of Variability (Sea Level Pressure modes)
 pmp/extratropical-modes-of-variability-nao:
   reference_datasets:
-    - slug: "obs4mips.20CR"
-      description: "20th Century Reanalysis - Sea level pressure for North Atlantic Oscillation"
+    - slug: "obs4mips.20CR-V2"
+      description: "20th Century Reanalysis V2 - Sea level pressure for North Atlantic Oscillation"
       type: "primary"
   display_name: "North Atlantic Oscillation (NAO)"
   description: >-
@@ -125,8 +94,8 @@ pmp/extratropical-modes-of-variability-nao:
 
 pmp/extratropical-modes-of-variability-nam:
   reference_datasets:
-    - slug: "obs4mips.20CR"
-      description: "20th Century Reanalysis - Sea level pressure for Northern Annular Mode"
+    - slug: "obs4mips.20CR-V2"
+      description: "20th Century Reanalysis V2 - Sea level pressure for Northern Annular Mode"
       type: "primary"
   display_name: "Northern Annular Mode (NAM)"
   description: >-
@@ -136,8 +105,8 @@ pmp/extratropical-modes-of-variability-nam:
 
 pmp/extratropical-modes-of-variability-pna:
   reference_datasets:
-    - slug: "obs4mips.20CR"
-      description: "20th Century Reanalysis - Sea level pressure for Pacific North American Pattern"
+    - slug: "obs4mips.20CR-V2"
+      description: "20th Century Reanalysis V2 - Sea level pressure for Pacific North American Pattern"
       type: "primary"
   display_name: "Pacific North American Pattern (PNA)"
   description: >-
@@ -147,8 +116,8 @@ pmp/extratropical-modes-of-variability-pna:
 
 pmp/extratropical-modes-of-variability-npo:
   reference_datasets:
-    - slug: "obs4mips.20CR"
-      description: "20th Century Reanalysis - Sea level pressure for North Pacific Oscillation"
+    - slug: "obs4mips.20CR-V2"
+      description: "20th Century Reanalysis V2 - Sea level pressure for North Pacific Oscillation"
       type: "primary"
   display_name: "North Pacific Oscillation (NPO)"
   description: >-
@@ -158,8 +127,8 @@ pmp/extratropical-modes-of-variability-npo:
 
 pmp/extratropical-modes-of-variability-sam:
   reference_datasets:
-    - slug: "obs4mips.20CR"
-      description: "20th Century Reanalysis - Sea level pressure for Southern Annular Mode"
+    - slug: "obs4mips.20CR-V2"
+      description: "20th Century Reanalysis V2 - Sea level pressure for Southern Annular Mode"
       type: "primary"
   display_name: "Southern Annular Mode (SAM)"
   description: >-
