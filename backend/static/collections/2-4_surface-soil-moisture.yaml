@@ -8,7 +8,7 @@ provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   short_description: >-
     Apply the ILAMB Methodology* to compare the model surface soil moisture with
-    reference data from OLC-ORS-V0
+    reference data from WangMao
 diagnostics:
   - provider_slug: ilamb
     diagnostic_slug: mrsos-wangmao

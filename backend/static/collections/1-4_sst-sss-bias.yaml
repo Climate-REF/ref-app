@@ -18,7 +18,7 @@ content:
     (SSS or SST) at each model grid cell.
   short_description: >-
     Apply the ILAMB Methodology* to compare the model sea surface temperature (SST)
-    and sea surface salinity (SSS) with reference data from WOA2023
+    and sea surface salinity (SSS) with reference data from WOA-23
   why_it_matters: >-
     The density of seawater and thus its stratification is set by a nonlinear relation
     between temperature, salinity, and pressure. Thus, patterns of SSS and SST are
@@ -75,7 +75,7 @@ explorer_cards:
         title: "Sea Surface Temperature (Taylor Diagram)"
         description: >-
           Taylor diagram showing the performance of global sea surface temperatures
-          against WOA2023 observations. Taylor diagrams summarize how closely models
+          against WOA-23 observations. Taylor diagrams summarize how closely models
           match observations in terms of correlation, standard deviation, and
           root-mean-square difference.
         interpretation: >-
@@ -90,7 +90,7 @@ explorer_cards:
         provider: ilamb
         diagnostic: so-woa2023-surface
         title: "Bias"
-        description: "Bias in Surface Ocean Salinity with respect to WOA2023"
+        description: "Bias in Surface Ocean Salinity with respect to WOA-23"
         span: 1
         metric_units: "psu"
         other_filters:
@@ -104,7 +104,7 @@ explorer_cards:
         title: "Taylor Diagram"
         description: >-
           Taylor diagram showing the performance of global surface ocean salinity
-          against WOA2023 observations.
+          against WOA-23 observations.
         interpretation: >-
           Points closer to the reference (black square) indicate better model
           performance. Distance from the origin represents RMSE.

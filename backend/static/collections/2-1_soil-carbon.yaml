@@ -14,7 +14,7 @@ content:
     the Earth system.
   short_description: >-
     Apply the ILAMB Methodology* to compare the model soil carbon with reference data
-    from HWSD-2-0 and NCSCD-2-2
+    from HWSD-2-0
 diagnostics:
   - provider_slug: ilamb
     diagnostic_slug: csoil-hwsd2

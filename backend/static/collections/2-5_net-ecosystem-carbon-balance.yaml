@@ -8,7 +8,7 @@ provider_link: "https://doi.org/10.1029/2018MS001354"
 content:
   short_description: >-
     Comparison of the model integrated land net ecosystem carbon balance with reference
-    data from HOFFMAN-1-0
+    data from Hoffman-1-0
 diagnostics:
   - provider_slug: ilamb
     diagnostic_slug: nbp-hoffman
