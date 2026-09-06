@@ -48,5 +48,5 @@ explorer_cards:
           hue: experiment_id
         other_filters:
           region: "None"
-          metric: timeseries
+          metric: Timeseries
           statistic: "Period Mean"
