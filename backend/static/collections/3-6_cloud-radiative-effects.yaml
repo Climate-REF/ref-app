@@ -44,7 +44,6 @@ diagnostics:
 explorer_cards:
   - title: "Cloud & Radiation"
     description: "Cloud properties and their effect on the Earth's energy balance."
-    placeholder: true
     content:
       - type: series-chart
         provider: esmvaltool
@@ -54,9 +53,11 @@ explorer_cards:
         span: 2
         metric_units: "W m^-2"
         other_filters:
-          variable_id: "lwcre"
-          reference_source_id: ""
-          statistic: zonal_mean
+          statistic: zonal mean
+        filter_controls:
+          - filter_key: variable_id
+            label: Variable
+            default_value: lwcre
         grouping_config:
           group_by: source_id
           hue: experiment_id

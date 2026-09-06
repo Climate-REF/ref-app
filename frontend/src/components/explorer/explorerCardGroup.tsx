@@ -15,7 +15,7 @@ export function ExplorerCardGroup({ card }: ExplorerCardGroupProps) {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {card.content.map((contentItem) => (
         <ErrorBoundary
-          key={`${card.title}:${contentItem.diagnostic}`}
+          key={`${card.title}:${contentItem.diagnostic}:${contentItem.title}`}
           fallback={<ErrorFallback />}
         >
           <Suspense fallback={<ExplorerCardContentSkeleton />}>
