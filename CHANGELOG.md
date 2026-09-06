@@ -1,3 +1,12 @@
+## v0.7.3 (2026-09-06)
+
+### Bug Fixes
+
+- Fixed the temperature, precipitation and burnt fraction annual cycle charts in the explorer, which showed no data.
+
+  Fixed the AMOC strength chart and enabled the cloud radiative effects chart in the explorer. (#100)
+
+
 ## v0.7.2 (2026-09-06)
 
 ### Bug Fixes
