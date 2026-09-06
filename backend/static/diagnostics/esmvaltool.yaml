@@ -193,10 +193,10 @@ esmvaltool/regional-historical-trend:
 
 esmvaltool/sea-ice-area-basic:
   reference_datasets:
-    - slug: "esmvaltool.OSI-450-nh"
+    - slug: "esmvaltool-reference.OSI-450-nh"
       description: "OSI-450 v3 (OBS) - Sea ice concentration (sic) and areacello, Northern Hemisphere, ingested via REF"
       type: "primary"
-    - slug: "esmvaltool.OSI-450-sh"
+    - slug: "esmvaltool-reference.OSI-450-sh"
       description: "OSI-450 v3 (OBS) - Sea ice concentration (sic) and areacello, Southern Hemisphere, ingested via REF"
       type: "primary"
   display_name: "Arctic and Antarctic Sea Ice Area Seasonal Cycle"
@@ -270,3 +270,9 @@ esmvaltool/ozone-zonal:
   display_name: "Zonal Mean Ozone"
   description: "Plot zonal mean ozone (o3) profiles."
   tags: ["atmosphere", "ozone"]
+
+esmvaltool/global-mean-timeseries:
+  reference_datasets: []
+  display_name: "Global Mean Timeseries"
+  description: "Plot the global mean time series of near-surface air temperature (tas). Example diagnostic with no observational datasets."
+  tags: ["example", "timeseries"]

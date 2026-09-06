@@ -123,7 +123,7 @@ export function ExplorerCardContent({ contentItem }: ExplorerCardContentProps) {
                           }
                           className="text-xs cursor-help"
                         >
-                          {ref.slug.split(".").pop()}
+                          {ref.slug.slice(ref.slug.indexOf(".") + 1)}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">

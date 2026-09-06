@@ -7,10 +7,10 @@
 
 ilamb/gpp-wecann:
   reference_datasets:
-    - slug: "obs4REF.WECANN-1-0"
+    - slug: "obs4ref.WECANN-1-0"
       description: "WECANN GPP dataset - Gross primary productivity (gpp)"
       type: "primary"
-    - slug: "obs4REF.GPCP-2-3"
+    - slug: "obs4ref.GPCP-2-3"
       description: "GPCP v2.3 - Precipitation (pr), relationship dataset"
       type: "secondary"
     - slug: "ilamb.CRU4.02"
@@ -22,7 +22,7 @@ ilamb/gpp-wecann:
 
 ilamb/gpp-fluxnet2015:
   reference_datasets:
-    - slug: "obs4REF.FLUXNET2015-1-0"
+    - slug: "obs4ref.FLUXNET2015-1-0"
       description: "FLUXNET2015 - Tower-based GPP measurements"
       type: "primary"
   display_name: "Gross Primary Productivity (FLUXNET2015)"
@@ -31,7 +31,7 @@ ilamb/gpp-fluxnet2015:
 
 ilamb/mrro-lora:
   reference_datasets:
-    - slug: "obs4REF.LORA-1-0"
+    - slug: "obs4ref.LORA-1-0"
       description: "LORA dataset - Runoff observations"
       type: "primary"
   display_name: "Runoff (LORA)"
@@ -49,7 +49,7 @@ ilamb/mrsos-wangmao:
 
 ilamb/csoil-hwsd2:
   reference_datasets:
-    - slug: "obs4REF.HWSD-2-0"
+    - slug: "obs4ref.HWSD-2-0"
       description: "Harmonized World Soil Database v2 - Soil carbon content"
       type: "primary"
   display_name: "Soil Carbon (HWSD2)"
@@ -67,7 +67,7 @@ ilamb/lai-avh15c1:
 
 ilamb/nbp-hoffman:
   reference_datasets:
-    - slug: "obs4REF.Hoffman-1-0"
+    - slug: "obs4ref.Hoffman-1-0"
       description: "Hoffman dataset - Net biome productivity"
       type: "primary"
   display_name: "Net Biome Productivity (Hoffman)"
@@ -76,7 +76,7 @@ ilamb/nbp-hoffman:
 
 ilamb/snc-esacci:
   reference_datasets:
-    - slug: "obs4REF.CCI-CryoClim-FSC-1"
+    - slug: "obs4ref.CCI-CryoClim-FSC-1"
       description: "ESA CCI Snow - Snow cover fraction"
       type: "primary"
   display_name: "Snow Cover (ESA CCI)"
@@ -85,7 +85,7 @@ ilamb/snc-esacci:
 
 ilamb/burntfractionall-gfed:
   reference_datasets:
-    - slug: "obs4REF.GFED-5-0"
+    - slug: "obs4ref.GFED-5-0"
       description: "Global Fire Emissions Database - Burnt area fraction"
       type: "primary"
   display_name: "Burnt Fraction (GFED)"
@@ -97,7 +97,7 @@ ilamb/emp-gleamgpcp2.3:
     - slug: "ilamb.GLEAMv3.3a"
       description: "GLEAM v3.3a (ILAMB registry) - Evapotranspiration (et, compared to evspsbl)"
       type: "primary"
-    - slug: "obs4REF.GPCP-2-3"
+    - slug: "obs4ref.GPCP-2-3"
       description: "GPCP v2.3 (obs4REF) - Precipitation (pr)"
       type: "primary"
   display_name: "Evaporation minus Precipitation (GLEAM/GPCP)"
@@ -108,7 +108,7 @@ ilamb/emp-gleamgpcp2.3:
 
 ilamb/thetao-woa2023-surface:
   reference_datasets:
-    - slug: "obs4REF.WOA-23"
+    - slug: "obs4ref.WOA-23"
       description: "World Ocean Atlas 2023 - Sea water potential temperature (thetao, surface, mapped to tos)"
       type: "primary"
   display_name: "Sea Water Temperature (WOA2023 Surface)"
@@ -117,7 +117,7 @@ ilamb/thetao-woa2023-surface:
 
 ilamb/so-woa2023-surface:
   reference_datasets:
-    - slug: "obs4REF.WOA-23"
+    - slug: "obs4ref.WOA-23"
       description: "World Ocean Atlas 2023 - Sea water salinity (so, surface)"
       type: "primary"
   display_name: "Sea Water Salinity (WOA2023 Surface)"
@@ -126,7 +126,7 @@ ilamb/so-woa2023-surface:
 
 ilamb/amoc-rapid:
   reference_datasets:
-    - slug: "obs4REF.RAPID-2023-1a"
+    - slug: "obs4ref.RAPID-2023-1a"
       description: "RAPID array - Atlantic Meridional Overturning Circulation (amoc, from msftmz)"
       type: "primary"
   display_name: "Atlantic Meridional Overturning Circulation (RAPID)"
