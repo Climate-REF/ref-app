@@ -71,7 +71,8 @@ explorer_cards:
         span: 2
         metric_units: "K"
         other_filters:
-          statistic: tas regional mean
+          variable_id: tas
+          statistic: mean
         filter_controls:
           - filter_key: region
             label: Region
@@ -90,7 +91,8 @@ explorer_cards:
         span: 2
         metric_units: "mm/day"
         other_filters:
-          statistic: pr regional mean
+          variable_id: pr
+          statistic: mean
         filter_controls:
           - filter_key: region
             label: Region

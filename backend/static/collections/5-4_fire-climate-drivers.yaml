@@ -90,14 +90,18 @@ explorer_cards:
       - type: series-chart
         provider: ilamb
         diagnostic: burntfractionall-gfed
-        title: "Burnt Fraction Annual Cycle (Global)"
+        title: "Burnt Fraction Annual Cycle"
         description: >-
-          Annual cycle of global burnt fraction, comparing the seasonal timing
+          Annual cycle of burnt fraction, comparing the seasonal timing
           and amplitude of fire activity across models and observations.
         span: 2
+        metric_units: "%"
         other_filters:
-          metric: cycle_global
-          region: global
+          metric: cycle
+        filter_controls:
+          - filter_key: region
+            label: Region
+            default_value: global
         grouping_config:
           group_by: source_id
           hue: experiment_id
