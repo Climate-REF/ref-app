@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { cloneElement, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { EnsembleChart } from "./ensembleChart";
@@ -83,6 +83,49 @@ describe("box plot selection", () => {
       "stroke",
       "#EF4444",
     );
+  });
+  it("updates selection after a throttled mouse move", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = chart([
+        point(10, "one", "A"),
+        point(20, "one", "A"),
+      ]);
+      hover(container, markers(container)[0]);
+      fireEvent.mouseMove(container.querySelector(".recharts-wrapper")!, {
+        clientX: 115,
+        clientY: 105,
+      });
+      act(() => vi.advanceTimersByTime(50));
+      expect(markers(container)[1].querySelector("path")).toHaveAttribute(
+        "stroke",
+        "#EF4444",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("selects a point during touch movement", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = chart([
+        point(10, "one", "A"),
+        point(20, "one", "A"),
+      ]);
+      hover(container, markers(container)[0]);
+      fireEvent.touchMove(container.querySelector(".recharts-wrapper")!, {
+        changedTouches: [
+          { clientX: 115, clientY: 105, pageX: 115, pageY: 105 },
+        ],
+      });
+      act(() => vi.advanceTimersByTime(50));
+      expect(markers(container)[1].querySelector("path")).toHaveAttribute(
+        "stroke",
+        "#EF4444",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("excludes clipped and non-finite records from selectable markers", () => {
     const { container } = chart(

@@ -1,6 +1,6 @@
 import * as d3 from "d3-array";
 import { scaleLinear } from "d3-scale";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -155,6 +155,7 @@ export const EnsembleChart = ({
   yMax,
   categoryOrder,
 }: EnsembleChartProps) => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [highlightedPoint, setHighlightedPoint] = useState<{
     categoryName: string;
     groupName: string;
@@ -359,7 +360,7 @@ export const EnsembleChart = ({
         : "20%";
 
   return (
-    <div className="w-full h-full">
+    <div ref={chartRef} className="w-full h-full">
       <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
           data={sortedChartData}
@@ -367,15 +368,16 @@ export const EnsembleChart = ({
           barCategoryGap={barCategoryGap}
           onMouseLeave={() => setHighlightedPoint(null)}
           onMouseMove={(state, event) => {
-            if (!state.isTooltipActive) {
+            if (!state.isTooltipActive || !chartRef.current) {
               setHighlightedPoint(null);
               return;
             }
             let nearest: typeof highlightedPoint = null;
             let distance = Number.POSITIVE_INFINITY;
-            for (const marker of (
-              event.currentTarget as HTMLElement
-            ).querySelectorAll<SVGGraphicsElement>("[data-box-point]")) {
+            // Recharts can deliver throttled mouse events or Touch objects.
+            for (const marker of chartRef.current.querySelectorAll<SVGGraphicsElement>(
+              "[data-box-point]",
+            )) {
               const bounds = marker.getBoundingClientRect();
               const dx = event.clientX - (bounds.left + bounds.width / 2);
               const dy = event.clientY - (bounds.top + bounds.height / 2);
