@@ -2,7 +2,7 @@ import pytest
 
 from climate_ref.results import OutlierPolicy
 from ref_backend.core.model_ensemble import _percentile, _statistics, _units
-from ref_backend.models.climate_models import EnsembleComparison
+from ref_backend.models.model_runs import EnsembleComparison
 
 
 def test_statistics_interpolates_the_quartiles():

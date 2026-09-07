@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from climate_ref import models
 from ref_backend.core.mip_eras import cmip_dataset_filter, cv_column
 from ref_backend.core.model_runs import latest_executions
-from ref_backend.models.climate_models import EnsembleComparison, EnsembleStatistics
+from ref_backend.models.model_runs import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
 #: Dropping them is what lets values from different models land in the same comparison.

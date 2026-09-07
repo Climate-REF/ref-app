@@ -79,70 +79,6 @@ export const cmip7AssessmentFastTrackAftGetAftDiagnosticOptions = (options: Opti
     queryKey: cmip7AssessmentFastTrackAftGetAftDiagnosticQueryKey(options)
 });
 
-export const modelsListQueryKey = (options?: Options<ModelsListData>) => createQueryKey('modelsList', options);
-
-/**
- * List
- *
- * List the models that have been run, with a tally of how their runs went.
- *
- * Counts cover the promoted version of each diagnostic, matching the rest of the app.
- */
-export const modelsListOptions = (options?: Options<ModelsListData>) => queryOptions<ModelsListResponse, ModelsListError, ModelsListResponse, ReturnType<typeof modelsListQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await modelsList({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: modelsListQueryKey(options)
-});
-
-export const modelsGetQueryKey = (options: Options<ModelsGetData>) => createQueryKey('modelsGet', options);
-
-/**
- * Get
- *
- * Summarise the runs a single model took part in, broken down by diagnostic.
- */
-export const modelsGetOptions = (options: Options<ModelsGetData>) => queryOptions<ModelsGetResponse, ModelsGetError, ModelsGetResponse, ReturnType<typeof modelsGetQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await modelsGet({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: modelsGetQueryKey(options)
-});
-
-export const modelsEnsembleQueryKey = (options: Options<ModelsEnsembleData>) => createQueryKey('modelsEnsemble', options);
-
-/**
- * Ensemble
- *
- * Compare this model against the ensemble, one entry per scalar metric it reported.
- *
- * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
- */
-export const modelsEnsembleOptions = (options: Options<ModelsEnsembleData>) => queryOptions<ModelsEnsembleResponse, ModelsEnsembleError, ModelsEnsembleResponse, ReturnType<typeof modelsEnsembleQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await modelsEnsemble({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: modelsEnsembleQueryKey(options)
-});
-
 export const datasetsListQueryKey = (options?: Options<DatasetsListData>) => createQueryKey('datasetsList', options);
 
 /**
@@ -827,6 +763,70 @@ export const explorerGetThemeOptions = (options: Options<ExplorerGetThemeData>) 
         return data;
     },
     queryKey: explorerGetThemeQueryKey(options)
+});
+
+export const modelsListQueryKey = (options?: Options<ModelsListData>) => createQueryKey('modelsList', options);
+
+/**
+ * List
+ *
+ * List the models that have been run, with a tally of how their runs went.
+ *
+ * Counts cover the promoted version of each diagnostic, matching the rest of the app.
+ */
+export const modelsListOptions = (options?: Options<ModelsListData>) => queryOptions<ModelsListResponse, ModelsListError, ModelsListResponse, ReturnType<typeof modelsListQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsList({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsListQueryKey(options)
+});
+
+export const modelsGetQueryKey = (options: Options<ModelsGetData>) => createQueryKey('modelsGet', options);
+
+/**
+ * Get
+ *
+ * Summarise the runs a single model took part in, broken down by diagnostic.
+ */
+export const modelsGetOptions = (options: Options<ModelsGetData>) => queryOptions<ModelsGetResponse, ModelsGetError, ModelsGetResponse, ReturnType<typeof modelsGetQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsGet({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsGetQueryKey(options)
+});
+
+export const modelsEnsembleQueryKey = (options: Options<ModelsEnsembleData>) => createQueryKey('modelsEnsemble', options);
+
+/**
+ * Ensemble
+ *
+ * Compare this model against the ensemble, one entry per scalar metric it reported.
+ *
+ * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
+ */
+export const modelsEnsembleOptions = (options: Options<ModelsEnsembleData>) => queryOptions<ModelsEnsembleResponse, ModelsEnsembleError, ModelsEnsembleResponse, ReturnType<typeof modelsEnsembleQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsEnsemble({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsEnsembleQueryKey(options)
 });
 
 export const resultsGetResultQueryKey = (options: Options<ResultsGetResultData>) => createQueryKey('resultsGetResult', options);

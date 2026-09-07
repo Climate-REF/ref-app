@@ -15,7 +15,7 @@ from ref_backend.core.model_runs import (
     tally,
 )
 from ref_backend.models import Collection
-from ref_backend.models.climate_models import (
+from ref_backend.models.model_runs import (
     DiagnosticRuns,
     EnsembleComparison,
     FailedRun,

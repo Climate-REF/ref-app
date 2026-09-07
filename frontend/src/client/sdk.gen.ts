@@ -35,31 +35,6 @@ export const cmip7AssessmentFastTrackAftGetAftDiagnostic = <ThrowOnError extends
 /**
  * List
  *
- * List the models that have been run, with a tally of how their runs went.
- *
- * Counts cover the promoted version of each diagnostic, matching the rest of the app.
- */
-export const modelsList = <ThrowOnError extends boolean = false>(options?: Options<ModelsListData, ThrowOnError>): RequestResult<ModelsListResponses, ModelsListErrors, ThrowOnError> => (options?.client ?? client).get<ModelsListResponses, ModelsListErrors, ThrowOnError>({ url: '/api/v1/models/', ...options });
-
-/**
- * Get
- *
- * Summarise the runs a single model took part in, broken down by diagnostic.
- */
-export const modelsGet = <ThrowOnError extends boolean = false>(options: Options<ModelsGetData, ThrowOnError>): RequestResult<ModelsGetResponses, ModelsGetErrors, ThrowOnError> => (options.client ?? client).get<ModelsGetResponses, ModelsGetErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}', ...options });
-
-/**
- * Ensemble
- *
- * Compare this model against the ensemble, one entry per scalar metric it reported.
- *
- * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
- */
-export const modelsEnsemble = <ThrowOnError extends boolean = false>(options: Options<ModelsEnsembleData, ThrowOnError>): RequestResult<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError> => (options.client ?? client).get<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}/ensemble', ...options });
-
-/**
- * List
- *
  * Paginated list of currently ingested datasets
  *
  * Only the latest version of each dataset is returned.
@@ -242,6 +217,31 @@ export const explorerListThemes = <ThrowOnError extends boolean = false>(options
  * Get Theme
  */
 export const explorerGetTheme = <ThrowOnError extends boolean = false>(options: Options<ExplorerGetThemeData, ThrowOnError>): RequestResult<ExplorerGetThemeResponses, ExplorerGetThemeErrors, ThrowOnError> => (options.client ?? client).get<ExplorerGetThemeResponses, ExplorerGetThemeErrors, ThrowOnError>({ url: '/api/v1/explorer/themes/{theme_slug}', ...options });
+
+/**
+ * List
+ *
+ * List the models that have been run, with a tally of how their runs went.
+ *
+ * Counts cover the promoted version of each diagnostic, matching the rest of the app.
+ */
+export const modelsList = <ThrowOnError extends boolean = false>(options?: Options<ModelsListData, ThrowOnError>): RequestResult<ModelsListResponses, ModelsListErrors, ThrowOnError> => (options?.client ?? client).get<ModelsListResponses, ModelsListErrors, ThrowOnError>({ url: '/api/v1/models/', ...options });
+
+/**
+ * Get
+ *
+ * Summarise the runs a single model took part in, broken down by diagnostic.
+ */
+export const modelsGet = <ThrowOnError extends boolean = false>(options: Options<ModelsGetData, ThrowOnError>): RequestResult<ModelsGetResponses, ModelsGetErrors, ThrowOnError> => (options.client ?? client).get<ModelsGetResponses, ModelsGetErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}', ...options });
+
+/**
+ * Ensemble
+ *
+ * Compare this model against the ensemble, one entry per scalar metric it reported.
+ *
+ * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
+ */
+export const modelsEnsemble = <ThrowOnError extends boolean = false>(options: Options<ModelsEnsembleData, ThrowOnError>): RequestResult<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError> => (options.client ?? client).get<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}/ensemble', ...options });
 
 /**
  * Get Result

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
 from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
-from ref_backend.models.climate_models import RunCounts
+from ref_backend.models.model_runs import RunCounts
 
 
 class ModelRunRow(NamedTuple):

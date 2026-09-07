@@ -1944,118 +1944,6 @@ export type Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses = {
 
 export type Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse = Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses[keyof Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses];
 
-export type ModelsListData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Mip Era
-         *
-         * Restrict to one MIP era, CMIP6 or CMIP7
-         */
-        mip_era?: string | null;
-    };
-    url: '/api/v1/models/';
-};
-
-export type ModelsListErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ModelsListError = ModelsListErrors[keyof ModelsListErrors];
-
-export type ModelsListResponses = {
-    /**
-     * Successful Response
-     */
-    200: CollectionModelSummary;
-};
-
-export type ModelsListResponse = ModelsListResponses[keyof ModelsListResponses];
-
-export type ModelsGetData = {
-    body?: never;
-    path: {
-        /**
-         * Source Id
-         */
-        source_id: string;
-    };
-    query?: {
-        /**
-         * Mip Era
-         *
-         * Restrict to one MIP era, CMIP6 or CMIP7
-         */
-        mip_era?: string | null;
-    };
-    url: '/api/v1/models/{source_id}';
-};
-
-export type ModelsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ModelsGetError = ModelsGetErrors[keyof ModelsGetErrors];
-
-export type ModelsGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: ModelDetail;
-};
-
-export type ModelsGetResponse = ModelsGetResponses[keyof ModelsGetResponses];
-
-export type ModelsEnsembleData = {
-    body?: never;
-    path: {
-        /**
-         * Source Id
-         */
-        source_id: string;
-    };
-    query?: {
-        /**
-         * Mip Era
-         *
-         * Restrict to one MIP era, CMIP6 or CMIP7
-         */
-        mip_era?: string | null;
-        /**
-         * Diagnostic Slug
-         *
-         * Restrict to a single diagnostic
-         */
-        diagnostic_slug?: string | null;
-    };
-    url: '/api/v1/models/{source_id}/ensemble';
-};
-
-export type ModelsEnsembleErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ModelsEnsembleError = ModelsEnsembleErrors[keyof ModelsEnsembleErrors];
-
-export type ModelsEnsembleResponses = {
-    /**
-     * Successful Response
-     */
-    200: CollectionEnsembleComparison;
-};
-
-export type ModelsEnsembleResponse = ModelsEnsembleResponses[keyof ModelsEnsembleResponses];
-
 export type DatasetsListData = {
     body?: never;
     path?: never;
@@ -2864,6 +2752,118 @@ export type ExplorerGetThemeResponses = {
 };
 
 export type ExplorerGetThemeResponse = ExplorerGetThemeResponses[keyof ExplorerGetThemeResponses];
+
+export type ModelsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/models/';
+};
+
+export type ModelsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsListError = ModelsListErrors[keyof ModelsListErrors];
+
+export type ModelsListResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionModelSummary;
+};
+
+export type ModelsListResponse = ModelsListResponses[keyof ModelsListResponses];
+
+export type ModelsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Source Id
+         */
+        source_id: string;
+    };
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/models/{source_id}';
+};
+
+export type ModelsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsGetError = ModelsGetErrors[keyof ModelsGetErrors];
+
+export type ModelsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ModelDetail;
+};
+
+export type ModelsGetResponse = ModelsGetResponses[keyof ModelsGetResponses];
+
+export type ModelsEnsembleData = {
+    body?: never;
+    path: {
+        /**
+         * Source Id
+         */
+        source_id: string;
+    };
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+        /**
+         * Diagnostic Slug
+         *
+         * Restrict to a single diagnostic
+         */
+        diagnostic_slug?: string | null;
+    };
+    url: '/api/v1/models/{source_id}/ensemble';
+};
+
+export type ModelsEnsembleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsEnsembleError = ModelsEnsembleErrors[keyof ModelsEnsembleErrors];
+
+export type ModelsEnsembleResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionEnsembleComparison;
+};
+
+export type ModelsEnsembleResponse = ModelsEnsembleResponses[keyof ModelsEnsembleResponses];
 
 export type ResultsGetResultData = {
     body?: never;
