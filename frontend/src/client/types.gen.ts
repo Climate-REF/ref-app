@@ -1337,7 +1337,7 @@ export type ResultOutputType = 'plot' | 'data' | 'html';
  *
  * Execution groups classified by the outcome of their latest execution.
  *
- * A group with no execution at all counts as `not_started`.
+ * A group that has never run names no model, so it is absent rather than counted.
  */
 export type RunCounts = {
     /**
@@ -1356,10 +1356,6 @@ export type RunCounts = {
      * Running
      */
     running: number;
-    /**
-     * Not Started
-     */
-    not_started: number;
     /**
      * Success Rate Percentage
      *
@@ -1877,7 +1873,7 @@ export type ModelSummaryWritable = {
  *
  * Execution groups classified by the outcome of their latest execution.
  *
- * A group with no execution at all counts as `not_started`.
+ * A group that has never run names no model, so it is absent rather than counted.
  */
 export type RunCountsWritable = {
     /**
@@ -1896,10 +1892,6 @@ export type RunCountsWritable = {
      * Running
      */
     running: number;
-    /**
-     * Not Started
-     */
-    not_started: number;
 };
 
 export type Cmip7AssessmentFastTrackAftListAftDiagnosticsData = {

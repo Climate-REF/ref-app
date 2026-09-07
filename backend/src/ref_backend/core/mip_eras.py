@@ -41,6 +41,11 @@ def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any
     return dataset_model_for(source_type).__mapper__.columns
 
 
+def cv_column(mapped: Any, name: str) -> Any:
+    """Read a column the CV registers at runtime, which the mapped class does not declare."""
+    return getattr(mapped, name)
+
+
 def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     """
     Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.

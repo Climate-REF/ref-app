@@ -3,13 +3,14 @@
 import math
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, NamedTuple
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from ref_backend.core.mip_eras import executions_in_mip_era
+from ref_backend.core.mip_eras import cv_column, executions_in_mip_era
+from ref_backend.core.model_runs import latest_executions
 from ref_backend.models.climate_models import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
@@ -18,11 +19,6 @@ RUN_DIMENSIONS = frozenset({"kind", "source_id", "member_id", "variant_label", "
 
 #: A comparison needs at least this many models before the ensemble spread means anything.
 MIN_ENSEMBLE_SIZE = 3
-
-
-def _column(mapped: Any, name: str) -> Any:
-    """Read a column the CV registers at runtime, which the mapped class does not declare."""
-    return getattr(mapped, name)
 
 
 def grouping_dimensions() -> list[str]:
@@ -94,20 +90,32 @@ def _percentile(ordered: Sequence[float], value: float) -> float:
     return round(((below + equal / 2) / len(ordered)) * 100, 1)
 
 
+class ScalarRow(NamedTuple):
+    """One scalar value, with the dimensions that place it in a comparison."""
+
+    diagnostic_id: int
+    source_id: str
+    value: float
+    attributes: Any
+    dimensions: tuple[str | None, ...]
+
+
 def _scalar_rows(
     session: Session,
     *,
     diagnostic_ids: Sequence[int],
     dimensions: Sequence[str],
     execution_ids: Sequence[int] | None,
-) -> list[Any]:
+) -> list[ScalarRow]:
     value = models.ScalarMetricValue
-    columns = [getattr(value, name) for name in dimensions]
+    columns = [cv_column(value, name) for name in dimensions]
+    # A retried group holds a value per attempt, so only the execution that decided it counts.
+    latest = latest_executions()
 
     statement = (
         select(
             models.ExecutionGroup.diagnostic_id,
-            _column(value, "source_id"),
+            cv_column(value, "source_id"),
             value.value,
             value.attributes,
             *columns,
@@ -115,23 +123,24 @@ def _scalar_rows(
         .join(models.Execution, value.execution_id == models.Execution.id)
         .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
         .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
+        .join(latest, latest.c.execution_id == models.Execution.id)
         .where(
             models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
             models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
-            _column(value, "kind") == "model",
-            _column(value, "source_id").isnot(None),
+            cv_column(value, "kind") == "model",
+            cv_column(value, "source_id").isnot(None),
             value.value.isnot(None),
         )
     )
     if execution_ids is not None:
         statement = statement.where(value.execution_id.in_(execution_ids))
 
-    return list(session.execute(statement).all())
+    return [
+        ScalarRow(row[0], row[1], row[2], row[3], tuple(row[4:])) for row in session.execute(statement).all()
+    ]
 
 
-def _diagnostics_for_model(
-    session: Session, *, source_id: str, execution_ids: Sequence[int] | None
-) -> list[int]:
+def _diagnostics_for_model(session: Session, *, source_id: str) -> list[int]:
     """Find the diagnostics that recorded a scalar value for this model."""
     statement = (
         select(models.ExecutionGroup.diagnostic_id)
@@ -140,14 +149,11 @@ def _diagnostics_for_model(
         .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
         .where(
             models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-            _column(models.ScalarMetricValue, "source_id") == source_id,
-            _column(models.ScalarMetricValue, "kind") == "model",
+            cv_column(models.ScalarMetricValue, "source_id") == source_id,
+            cv_column(models.ScalarMetricValue, "kind") == "model",
         )
         .distinct()
     )
-    if execution_ids is not None:
-        statement = statement.where(models.ScalarMetricValue.execution_id.in_(execution_ids))
-
     return list(session.scalars(statement))
 
 
@@ -167,7 +173,7 @@ def ensemble_comparisons(
     """
     dimensions = grouping_dimensions()
 
-    model_diagnostics = _diagnostics_for_model(session, source_id=source_id, execution_ids=None)
+    model_diagnostics = _diagnostics_for_model(session, source_id=source_id)
     diagnostics = {
         diagnostic.id: diagnostic
         for diagnostic in session.scalars(
@@ -183,8 +189,7 @@ def ensemble_comparisons(
 
     execution_ids: Sequence[int] | None = None
     if mip_era:
-        # The reader reads an empty id list as unconstrained, so an era matching no execution
-        # needs an id no value can carry rather than no filter at all.
+        # An era matching no execution must still exclude everything, hence the unusable id.
         execution_ids = [
             execution_id
             for diagnostic_id in diagnostics
@@ -204,9 +209,9 @@ def ensemble_comparisons(
     )
     units: dict[tuple[int, tuple[str | None, ...]], str | None] = {}
     for row in rows:
-        group_key: tuple[int, tuple[str | None, ...]] = (row[0], tuple(row[4:]))
-        grouped[group_key][row[1]].append(float(row[2]))
-        units.setdefault(group_key, _units(row[3]))
+        group_key = (row.diagnostic_id, row.dimensions)
+        grouped[group_key][row.source_id].append(float(row.value))
+        units.setdefault(group_key, _units(row.attributes))
 
     comparisons = []
     for (diagnostic_id, dimension_key), by_model in grouped.items():

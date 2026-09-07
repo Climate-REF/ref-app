@@ -7,9 +7,10 @@ from climate_ref import models
 from ref_backend.api.deps import SessionDep
 from ref_backend.core.model_ensemble import ensemble_comparisons
 from ref_backend.core.model_runs import (
+    ModelFacets,
     ModelRunRow,
-    dataset_counts,
     failed_runs,
+    model_facets,
     model_run_rows,
     tally,
 )
@@ -32,13 +33,17 @@ def _group_by_source_id(rows: list[ModelRunRow]) -> dict[str, list[ModelRunRow]]
     return grouped
 
 
-def _summary_fields(source_id: str, rows: list[ModelRunRow], dataset_count: int) -> dict[str, Any]:
+#: What a model shows when it has run but nothing about it has been ingested under that name.
+_NO_FACETS = ModelFacets(mip_eras=[], institution_ids=[], dataset_count=0)
+
+
+def _summary_fields(source_id: str, rows: list[ModelRunRow], facets: ModelFacets) -> dict[str, Any]:
     """Build the fields both the index row and the detail page share."""
     return dict(
         source_id=source_id,
-        mip_eras=sorted({row.mip_era for row in rows}),
-        institution_ids=sorted({row.institution_id for row in rows if row.institution_id}),
-        dataset_count=dataset_count,
+        mip_eras=facets.mip_eras,
+        institution_ids=facets.institution_ids,
+        dataset_count=facets.dataset_count,
         diagnostic_count=len({row.diagnostic_id for row in rows}),
         execution_groups=tally(rows),
     )
@@ -56,10 +61,10 @@ async def _list(
     Counts cover the promoted version of each diagnostic, matching the rest of the app.
     """
     rows = model_run_rows(session, mip_era=mip_era)
-    counts = dataset_counts(session, mip_era=mip_era)
+    facets = model_facets(session, mip_era=mip_era)
 
     summaries = [
-        ModelSummary(**_summary_fields(source_id, source_rows, counts.get(source_id, 0)))
+        ModelSummary(**_summary_fields(source_id, source_rows, facets.get(source_id, _NO_FACETS)))
         for source_id, source_rows in _group_by_source_id(rows).items()
     ]
     if source_id_contains:
@@ -120,9 +125,9 @@ async def get(
         for group, execution_id, outcome in failed_runs(session, source_id=source_id, mip_era=mip_era)
     ]
 
-    counts = dataset_counts(session, mip_era=mip_era, source_id=source_id)
+    facets = model_facets(session, mip_era=mip_era, source_id=source_id)
     return ModelDetail(
-        **_summary_fields(source_id, rows, counts.get(source_id, 0)),
+        **_summary_fields(source_id, rows, facets.get(source_id, _NO_FACETS)),
         diagnostics=diagnostic_runs,
         failures=failures,
     )

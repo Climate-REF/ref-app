@@ -9,14 +9,13 @@ class RunCounts(BaseModel):
     """
     Execution groups classified by the outcome of their latest execution.
 
-    A group with no execution at all counts as `not_started`.
+    A group that has never run names no model, so it is absent rather than counted.
     """
 
     total: int
     successful: int
     failed: int
     running: int
-    not_started: int
 
     @computed_field  # type: ignore
     @property
@@ -71,7 +70,7 @@ class FailedRun(BaseModel):
     execution_id: int | None
     outcome: str
     """
-    One of `failed`, `running` or `not_started`.
+    Either `failed` or `running`.
     """
     updated_at: datetime
 

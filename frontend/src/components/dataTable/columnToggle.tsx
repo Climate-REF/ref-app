@@ -24,12 +24,7 @@ interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;
 }
 
-/**
- * Name a column for the toggle menu.
- *
- * A header is often markup carrying a tooltip, so `meta.label` names those columns and the
- * raw id is only a last resort.
- */
+/** Name a column for the toggle menu, since a header is often markup carrying a tooltip. */
 function columnLabel<TData>(column: Column<TData>): string {
   const { meta, header } = column.columnDef;
   if (meta?.label) return meta.label;

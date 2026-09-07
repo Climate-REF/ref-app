@@ -4,16 +4,8 @@ import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { FailedRun } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable";
+import { outcomeFor } from "@/components/models/outcomes";
 import { Badge } from "@/components/ui/badge";
-
-const OUTCOME_LABELS: Record<
-  string,
-  { label: string; variant: "destructive" | "secondary" }
-> = {
-  failed: { label: "Failed", variant: "destructive" },
-  running: { label: "Running", variant: "secondary" },
-  not_started: { label: "Not started", variant: "secondary" },
-};
 
 export const columns: ColumnDef<FailedRun>[] = [
   {
@@ -46,12 +38,8 @@ export const columns: ColumnDef<FailedRun>[] = [
     accessorKey: "outcome",
     header: "Outcome",
     cell: ({ getValue }) => {
-      const outcome = String(getValue() ?? "");
-      const display = OUTCOME_LABELS[outcome] ?? {
-        label: outcome,
-        variant: "secondary" as const,
-      };
-      return <Badge variant={display.variant}>{display.label}</Badge>;
+      const { label, badge } = outcomeFor(String(getValue() ?? ""));
+      return <Badge variant={badge}>{label}</Badge>;
     },
   },
   {

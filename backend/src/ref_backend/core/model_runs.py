@@ -4,31 +4,34 @@ from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any, NamedTuple
 
-from sqlalchemy import Select, case, distinct, func, literal, select, union_all
+from sqlalchemy import Select, case, distinct, func, select, union_all
 from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
-from ref_backend.core.mip_eras import CMIP_ERAS, dataset_model_for, mip_era_for
+from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
 from ref_backend.models.climate_models import RunCounts
 
 #: The outcomes an execution group is classified into, ordered worst to best.
-OUTCOMES = ("failed", "running", "not_started", "successful")
+#: A group with no execution names no model, because the datasets that name it hang off the
+#: execution, so a group that has not started is invisible here rather than counted.
+OUTCOMES = ("failed", "running", "successful")
 
 
 class ModelRunRow(NamedTuple):
-    """One (model, era, diagnostic, outcome) tally."""
+    """One (model, diagnostic, outcome) tally."""
 
     source_id: str
-    institution_id: str | None
-    mip_era: str
     diagnostic_id: int
     outcome: str
     group_count: int
 
 
-def _column(mapped: Any, name: str) -> Any:
-    """Read a column the CV registers at runtime, which the mapped class does not declare."""
-    return getattr(mapped, name)
+class ModelFacets(NamedTuple):
+    """What the ingested datasets say about a model, whatever it went on to run."""
+
+    mip_eras: list[str]
+    institution_ids: list[str]
+    dataset_count: int
 
 
 def _eras_in_scope(mip_era: str | None) -> tuple[Any, ...]:
@@ -43,39 +46,40 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> Select[Any] | N
 
     A group that ran several models appears once per model, so the counts answer
     "what did this model take part in" rather than partitioning the groups.
+    Only `source_id` is carried, so a group naming one model across two eras or two
+    institutions still yields one row and is counted once.
     """
     statements = []
     for era in _eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
+        model_source_id = cv_column(dataset_model, "source_id")
         statement = (
             select(
                 models.ExecutionGroup.id.label("group_id"),
                 models.ExecutionGroup.diagnostic_id.label("diagnostic_id"),
-                _column(dataset_model, "source_id").label("source_id"),
-                _column(dataset_model, "institution_id").label("institution_id"),
-                literal(mip_era_for(era)).label("mip_era"),
+                model_source_id.label("source_id"),
             )
             .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
             .join(models.ExecutionGroup.executions)
             .join(models.Execution.datasets.of_type(dataset_model))
             .where(
                 models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-                _column(dataset_model, "source_id").isnot(None),
+                model_source_id.isnot(None),
             )
             .distinct()
         )
         if source_id:
-            statement = statement.where(_column(dataset_model, "source_id") == source_id)
+            statement = statement.where(model_source_id == source_id)
         statements.append(statement)
 
     if not statements:
         return None
     if len(statements) == 1:
         return statements[0]
-    return select(union_all(*statements).subquery())
+    return select(union_all(*statements).subquery()).distinct()
 
 
-def _latest_executions() -> Any:
+def latest_executions() -> Any:
     """Select the most recent execution of each group, which is the one that decides its outcome."""
     return (
         select(
@@ -89,7 +93,6 @@ def _latest_executions() -> Any:
 
 def _outcome(execution: Any) -> Any:
     return case(
-        (execution.id.is_(None), "not_started"),
         (execution.successful.is_(True), "successful"),
         (execution.successful.is_(False), "failed"),
         else_="running",
@@ -99,56 +102,67 @@ def _outcome(execution: Any) -> Any:
 def model_run_rows(
     session: Session, *, mip_era: str | None = None, source_id: str | None = None
 ) -> list[ModelRunRow]:
-    """Tally execution groups per model, era, diagnostic and outcome."""
+    """Tally execution groups per model, diagnostic and outcome."""
     groups = _model_groups(mip_era, source_id)
     if groups is None:
         return []
 
     subquery = groups.subquery("model_groups")
-    latest = _latest_executions()
+    latest = latest_executions()
     execution = aliased(models.Execution)
     outcome = _outcome(execution)
 
     rows = session.execute(
         select(
             subquery.c.source_id,
-            subquery.c.institution_id,
-            subquery.c.mip_era,
             subquery.c.diagnostic_id,
             outcome.label("outcome"),
             func.count(distinct(subquery.c.group_id)).label("group_count"),
         )
-        .outerjoin(latest, latest.c.group_id == subquery.c.group_id)
-        .outerjoin(execution, execution.id == latest.c.execution_id)
-        .group_by(
-            subquery.c.source_id,
-            subquery.c.institution_id,
-            subquery.c.mip_era,
-            subquery.c.diagnostic_id,
-            outcome,
-        )
+        .join(latest, latest.c.group_id == subquery.c.group_id)
+        .join(execution, execution.id == latest.c.execution_id)
+        .group_by(subquery.c.source_id, subquery.c.diagnostic_id, outcome)
     ).all()
 
     return [ModelRunRow(*row) for row in rows]
 
 
-def dataset_counts(
+def model_facets(
     session: Session, *, mip_era: str | None = None, source_id: str | None = None
-) -> dict[str, int]:
-    """Count the ingested datasets carrying each source_id, across every version."""
+) -> dict[str, ModelFacets]:
+    """Describe each model from its ingested datasets, counting every version."""
+    eras: dict[str, set[str]] = defaultdict(set)
+    institutions: dict[str, set[str]] = defaultdict(set)
     counts: dict[str, int] = defaultdict(int)
+
     for era in _eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
+        model_source_id = cv_column(dataset_model, "source_id")
+        institution_id = cv_column(dataset_model, "institution_id")
         statement = (
-            select(_column(dataset_model, "source_id"), func.count(dataset_model.id))
-            .where(_column(dataset_model, "source_id").isnot(None))
-            .group_by(_column(dataset_model, "source_id"))
+            select(model_source_id, institution_id, func.count(dataset_model.id))
+            .where(model_source_id.isnot(None))
+            .group_by(model_source_id, institution_id)
         )
         if source_id:
-            statement = statement.where(_column(dataset_model, "source_id") == source_id)
-        for row_source_id, count in session.execute(statement).all():
+            statement = statement.where(model_source_id == source_id)
+
+        era_label = mip_era_for(era)
+        for row_source_id, row_institution_id, count in session.execute(statement).all():
+            if era_label:
+                eras[row_source_id].add(era_label)
+            if row_institution_id:
+                institutions[row_source_id].add(row_institution_id)
             counts[row_source_id] += count
-    return dict(counts)
+
+    return {
+        model: ModelFacets(
+            mip_eras=sorted(eras[model]),
+            institution_ids=sorted(institutions[model]),
+            dataset_count=counts[model],
+        )
+        for model in counts
+    }
 
 
 def tally(rows: Sequence[ModelRunRow]) -> RunCounts:
@@ -161,13 +175,12 @@ def tally(rows: Sequence[ModelRunRow]) -> RunCounts:
         successful=totals["successful"],
         failed=totals["failed"],
         running=totals["running"],
-        not_started=totals["not_started"],
     )
 
 
 def failed_runs(
     session: Session, *, source_id: str, mip_era: str | None = None
-) -> list[tuple[Any, int | None, str]]:
+) -> list[tuple[models.ExecutionGroup, int, str]]:
     """
     Find the groups this model ran in whose latest execution did not succeed.
 
@@ -178,7 +191,7 @@ def failed_runs(
         return []
 
     subquery = groups.subquery("model_groups")
-    latest = _latest_executions()
+    latest = latest_executions()
     execution = aliased(models.Execution)
     outcome = _outcome(execution)
 
@@ -186,8 +199,8 @@ def failed_runs(
         select(models.ExecutionGroup, execution.id, outcome.label("outcome"))
         .select_from(subquery)
         .join(models.ExecutionGroup, models.ExecutionGroup.id == subquery.c.group_id)
-        .outerjoin(latest, latest.c.group_id == subquery.c.group_id)
-        .outerjoin(execution, execution.id == latest.c.execution_id)
+        .join(latest, latest.c.group_id == subquery.c.group_id)
+        .join(execution, execution.id == latest.c.execution_id)
         .where(outcome != "successful")
         .distinct()
         .order_by(models.ExecutionGroup.updated_at.desc())

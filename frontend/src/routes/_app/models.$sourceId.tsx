@@ -136,10 +136,8 @@ function ModelDetailPage() {
               />
               <StatCard
                 title="Not successful"
-                value={formatCount(
-                  counts.failed + counts.running + counts.not_started,
-                )}
-                hint={`${formatCount(counts.failed)} failed, ${formatCount(counts.running)} running, ${formatCount(counts.not_started)} not started`}
+                value={formatCount(counts.failed + counts.running)}
+                hint={`${formatCount(counts.failed)} failed, ${formatCount(counts.running)} still running`}
               />
               <StatCard
                 title="Ensemble outliers"
@@ -188,8 +186,9 @@ function ModelDetailPage() {
                   <CardHeader>
                     <CardTitle>Runs that did not succeed</CardTitle>
                     <CardDescription>
-                      Execution groups whose latest execution failed, is still
-                      running, or has not started.
+                      Execution groups whose latest execution failed or is still
+                      running. A group that has never run names no model, so it
+                      does not appear here.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

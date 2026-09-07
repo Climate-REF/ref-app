@@ -22,9 +22,7 @@ def test_model_list_counts_add_up(client: TestClient, settings):
 
     for model in r.json()["data"]:
         counts = model["execution_groups"]
-        assert counts["total"] == (
-            counts["successful"] + counts["failed"] + counts["running"] + counts["not_started"]
-        )
+        assert counts["total"] == counts["successful"] + counts["failed"] + counts["running"]
         assert 0 <= counts["success_rate_percentage"] <= 100
 
 
@@ -66,7 +64,7 @@ def test_model_detail_lists_only_unsuccessful_runs(client: TestClient, settings)
 
     data = r.json()
     counts = data["execution_groups"]
-    assert len(data["failures"]) == counts["failed"] + counts["running"] + counts["not_started"]
+    assert len(data["failures"]) == counts["failed"] + counts["running"]
     assert all(failure["outcome"] != "successful" for failure in data["failures"])
 
 

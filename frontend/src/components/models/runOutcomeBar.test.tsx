@@ -8,7 +8,6 @@ const counts = (overrides: Partial<RunCounts> = {}): RunCounts => ({
   successful: 7,
   failed: 2,
   running: 1,
-  not_started: 0,
   success_rate_percentage: 70,
   ...overrides,
 });
@@ -23,7 +22,16 @@ describe("RunOutcomeBar", () => {
     const { container } = render(<RunOutcomeBar counts={counts()} />);
     expect(container.querySelectorAll("[title]")).toHaveLength(3);
     expect(container.querySelector('[title="Failed: 2"]')).not.toBeNull();
-    expect(container.querySelector('[title="Not started: 0"]')).toBeNull();
+  });
+
+  it("leaves out an outcome that did not occur", () => {
+    const { container } = render(
+      <RunOutcomeBar
+        counts={counts({ successful: 8, failed: 2, running: 0 })}
+      />,
+    );
+    expect(container.querySelectorAll("[title]")).toHaveLength(2);
+    expect(container.querySelector('[title="Running: 0"]')).toBeNull();
   });
 
   it("says so when the model has no runs", () => {
