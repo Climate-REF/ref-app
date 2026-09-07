@@ -33,9 +33,8 @@ function buildInitialFilterValues(
 }
 
 /**
- * Manage the user-facing filter dropdowns for a card.
- * Facets are fetched without the controlled keys so every dropdown lists all its options,
- * and any control without a value is set to the first option it can use.
+ * Facets are fetched without the controlled keys so every dropdown lists all its options.
+ * A control with no value is set to the first option it can use.
  */
 export function useFilterControls(
   { provider, diagnostic, otherFilters, filterControls }: FilterableCard,
