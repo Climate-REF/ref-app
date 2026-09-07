@@ -181,6 +181,31 @@ function getSeriesColor(
 }
 
 /**
+ * Drop repeated reference series, keeping one per distinct observational curve.
+ *
+ * Prefers the `reference_id` content hash, falling back to the rendered label
+ * only when a series carries no hash.
+ */
+export function dedupeReferenceSeries(
+  referenceSeriesValues: SeriesValue[],
+  labelTemplate?: string,
+): SeriesValue[] {
+  const seenRefIds = new Set<string>();
+  const seenRefLabels = new Set<string>();
+  return referenceSeriesValues.filter((series) => {
+    if (series.reference_id) {
+      if (seenRefIds.has(series.reference_id)) return false;
+      seenRefIds.add(series.reference_id);
+      return true;
+    }
+    const label = applyLabelTemplate(series, labelTemplate);
+    if (seenRefLabels.has(label)) return false;
+    seenRefLabels.add(label);
+    return true;
+  });
+}
+
+/**
  * Create chart data structure with all series
  */
 export function createChartData(
@@ -197,22 +222,10 @@ export function createChartData(
   indexUnits?: string;
   calendar?: string;
 } {
-  // Deduplicate reference series (same observational data repeated across executions).
-  // Prefer the reference_id content hash; fall back to label-based dedup only when
-  // reference_id is absent.
-  const seenRefIds = new Set<string>();
-  const seenRefLabels = new Set<string>();
-  const dedupedReferenceSeries = referenceSeriesValues.filter((series) => {
-    if (series.reference_id) {
-      if (seenRefIds.has(series.reference_id)) return false;
-      seenRefIds.add(series.reference_id);
-      return true;
-    }
-    const label = applyLabelTemplate(series, labelTemplate);
-    if (seenRefLabels.has(label)) return false;
-    seenRefLabels.add(label);
-    return true;
-  });
+  const dedupedReferenceSeries = dedupeReferenceSeries(
+    referenceSeriesValues,
+    labelTemplate,
+  );
 
   // Combine regular and deduplicated reference series
   const allSeries = [...seriesValues, ...dedupedReferenceSeries];
