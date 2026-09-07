@@ -1,5 +1,6 @@
 import pytest
 from sqlalchemy import distinct, func, select
+from sqlalchemy.orm import aliased
 
 from climate_ref import models
 from climate_ref.database import Database
@@ -20,6 +21,7 @@ def group_ids(session, source_id: str) -> set[int]:
 
     Written a second way on purpose, so a grouping key leaking into the tally shows up here.
     """
+    newer = aliased(models.Execution)
     found: set[int] = set()
     for era in CMIP_ERAS:
         dataset_model = dataset_model_for(era)
@@ -32,6 +34,13 @@ def group_ids(session, source_id: str) -> set[int]:
                 .where(
                     models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
                     cv_column(dataset_model, "source_id") == source_id,
+                    # The deciding execution is the one no later execution supersedes.
+                    ~select(newer.id)
+                    .where(
+                        newer.execution_group_id == models.Execution.execution_group_id,
+                        newer.id > models.Execution.id,
+                    )
+                    .exists(),
                 )
             )
         )
@@ -89,12 +98,61 @@ def test_only_executed_groups_are_counted(session):
 
 def test_model_groups_carries_only_the_keys_it_counts_on():
     """
-    The pairing query must carry nothing beyond the group, its diagnostic and the model.
+    The pairing query must carry nothing that describes a model more than one way.
 
-    Any extra column lands in the tally's GROUP BY, so a model described two ways, such as one
-    holding two institutions or spanning both eras, would have its groups counted twice. The
-    fixture has neither case, so the guarantee is pinned here rather than through the data.
+    Any such column lands in the tally's GROUP BY, so a model holding two institutions or
+    spanning both eras would have its groups counted twice. The fixture has neither case, so
+    the guarantee is pinned here rather than through the data.
     """
     statement = _model_groups(None, None)
     assert statement is not None
-    assert list(statement.subquery().c.keys()) == ["group_id", "diagnostic_id", "source_id"]
+    assert list(statement.subquery().c.keys()) == [
+        "group_id",
+        "diagnostic_id",
+        "source_id",
+        "execution_id",
+    ]
+
+
+def models_of(session, group_id: int) -> set[str]:
+    """Read the pairing the tallies are built on, so the test does not beg the question."""
+    statement = _model_groups(None, None)
+    assert statement is not None
+    return {row.source_id for row in session.execute(statement).all() if row.group_id == group_id}
+
+
+def test_a_retry_against_other_datasets_moves_participation(writable_session):
+    """
+    A model counts only where the deciding execution used it.
+
+    A retry may run against different datasets. Reading participation from every execution while
+    reading the outcome from the latest would report that outcome for a model that took no part.
+    """
+    group = writable_session.scalars(
+        select(models.ExecutionGroup)
+        .join(models.ExecutionGroup.executions)
+        .join(models.Execution.datasets)
+        .limit(1)
+    ).first()
+    superseded = group.executions[-1]
+    before = models_of(writable_session, group.id)
+    assert before, "the chosen group should name at least one model"
+
+    # Retry the group against a model it did not use, which is the case that separates the two
+    # readings of participation.
+    cmip6 = dataset_model_for(CMIP_ERAS[0])
+    replacement = writable_session.scalars(
+        select(cmip6).where(cv_column(cmip6, "source_id").notin_(before))
+    ).first()
+    assert replacement is not None, "the fixture should hold a dataset from another model"
+    retry = models.Execution(
+        execution_group_id=group.id,
+        dataset_hash="retry",
+        output_fragment=superseded.output_fragment,
+        successful=True,
+    )
+    retry.datasets.append(replacement)
+    writable_session.add(retry)
+    writable_session.commit()
+
+    assert models_of(writable_session, group.id) == {replacement.source_id}

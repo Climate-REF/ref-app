@@ -48,4 +48,12 @@ describe("RunOutcomeBar", () => {
     );
     expect(screen.getByText("No runs")).toBeInTheDocument();
   });
+  it("names every count for assistive technology", () => {
+    render(<RunOutcomeBar counts={counts()} />);
+    expect(
+      screen.getByRole("img", {
+        name: "10 execution groups: 7 successful, 2 failed, 1 running",
+      }),
+    ).toBeInTheDocument();
+  });
 });

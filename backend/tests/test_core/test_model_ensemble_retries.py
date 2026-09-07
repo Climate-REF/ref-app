@@ -1,8 +1,5 @@
 """What a retried execution does to a model's place in the ensemble."""
 
-import copy
-import shutil
-
 import pytest
 from sqlalchemy import func, select
 
@@ -13,19 +10,6 @@ from ref_backend.core.model_ensemble import ensemble_comparisons
 from ref_backend.testing import test_ref_config as fixture_ref_config
 
 MODEL = "ACCESS-ESM1-5"
-
-
-@pytest.fixture
-def writable_session(tmp_path):
-    """A throwaway copy of the fixture database, so a test may insert into it."""
-    config = copy.deepcopy(fixture_ref_config())
-    source = str(config.db.database_url).removeprefix("sqlite:///")
-    destination = tmp_path / "climate_ref.db"
-    shutil.copy(source, destination)
-    config.db.database_url = f"sqlite:///{destination}"
-
-    with Database.from_config(config).session_scope() as session:
-        yield session
 
 
 def _comparisons_for(session, diagnostic_id: int):

@@ -214,7 +214,12 @@ function ModelDetailPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {!ensemble.isLoading && comparisons.length === 0 ? (
+                    {ensemble.error ? (
+                      <p className="py-6 text-center text-sm text-destructive">
+                        Could not load the ensemble comparison:{" "}
+                        {String(ensemble.error)}
+                      </p>
+                    ) : !ensemble.isLoading && comparisons.length === 0 ? (
                       <p className="py-6 text-center text-sm text-muted-foreground">
                         No {mipEra} metric of this model is reported by enough
                         other models to compare against.

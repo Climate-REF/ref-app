@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatBytes, formatCoreHours, formatDuration } from "./format";
+import {
+  formatBytes,
+  formatCoreHours,
+  formatDuration,
+  formatValue,
+} from "./format";
 
 describe("formatDuration", () => {
   it("returns a dash for missing values", () => {
@@ -65,5 +70,24 @@ describe("formatCoreHours", () => {
 
   it("rounds to whole core hours above ten", () => {
     expect(formatCoreHours(360000)).toBe("100");
+  });
+});
+
+describe("formatValue", () => {
+  it("keeps four significant digits without slipping into exponent notation", () => {
+    // toPrecision(4) renders 10000 as "1.000e+4", which is inside the decimal range.
+    expect(formatValue(10000)).toBe("10,000");
+    expect(formatValue(4.2)).toBe("4.200");
+    expect(formatValue(0.0012345)).toBe("0.001235");
+  });
+
+  it("uses exponent notation outside the readable decimal range", () => {
+    expect(formatValue(1e-6)).toBe("1.00e-6");
+    expect(formatValue(2.5e9)).toBe("2.50e+9");
+  });
+
+  it("appends units when the provider recorded them", () => {
+    expect(formatValue(4.2, "K")).toBe("4.200 K");
+    expect(formatValue(4.2, null)).toBe("4.200");
   });
 });

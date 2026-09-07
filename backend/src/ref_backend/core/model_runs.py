@@ -41,9 +41,14 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
 
     A group that ran several models appears once per model, so the counts answer
     "what did this model take part in" rather than partitioning the groups.
-    Only `source_id` is carried, so a group naming one model across two eras or two
+
+    Participation is read from the execution that decides the group, the same one the outcome
+    comes from. A retry run against different datasets would otherwise report the latest outcome
+    for a model that took no part in it.
+    Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
+    latest = latest_executions()
     statements = []
     for era in _eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
@@ -53,9 +58,11 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
                 models.ExecutionGroup.id.label("group_id"),
                 models.ExecutionGroup.diagnostic_id.label("diagnostic_id"),
                 model_source_id.label("source_id"),
+                models.Execution.id.label("execution_id"),
             )
             .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-            .join(models.ExecutionGroup.executions)
+            .join(latest, latest.c.group_id == models.ExecutionGroup.id)
+            .join(models.Execution, models.Execution.id == latest.c.execution_id)
             .join(models.Execution.datasets.of_type(dataset_model))
             .where(
                 models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
@@ -99,7 +106,6 @@ def model_run_rows(
         return []
 
     subquery = groups.subquery("model_groups")
-    latest = latest_executions()
     execution = aliased(models.Execution)
     outcome = _outcome(execution)
 
@@ -110,8 +116,7 @@ def model_run_rows(
             outcome.label("outcome"),
             func.count(distinct(subquery.c.group_id)).label("group_count"),
         )
-        .join(latest, latest.c.group_id == subquery.c.group_id)
-        .join(execution, execution.id == latest.c.execution_id)
+        .join(execution, execution.id == subquery.c.execution_id)
         .group_by(subquery.c.source_id, subquery.c.diagnostic_id, outcome)
     ).all()
 
@@ -182,7 +187,6 @@ def failed_runs(
         return []
 
     subquery = groups.subquery("model_groups")
-    latest = latest_executions()
     execution = aliased(models.Execution)
     outcome = _outcome(execution)
 
@@ -190,8 +194,7 @@ def failed_runs(
         select(models.ExecutionGroup, execution.id, outcome.label("outcome"))
         .select_from(subquery)
         .join(models.ExecutionGroup, models.ExecutionGroup.id == subquery.c.group_id)
-        .join(latest, latest.c.group_id == subquery.c.group_id)
-        .join(execution, execution.id == latest.c.execution_id)
+        .join(execution, execution.id == subquery.c.execution_id)
         .where(outcome != "successful")
         .distinct()
         .order_by(models.ExecutionGroup.updated_at.desc())

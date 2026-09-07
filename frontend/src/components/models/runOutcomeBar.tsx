@@ -18,9 +18,17 @@ export function RunOutcomeBar({
     return <span className="text-sm text-muted-foreground">No runs</span>;
   }
 
+  const summary = OUTCOMES.map(
+    ({ key, label }) => `${counts[key]} ${label.toLowerCase()}`,
+  ).join(", ");
+
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <div className="flex h-2 w-32 overflow-hidden rounded-full bg-muted">
+      <div
+        className="flex h-2 w-32 overflow-hidden rounded-full bg-muted"
+        role="img"
+        aria-label={`${counts.total} execution groups: ${summary}`}
+      >
         {OUTCOMES.map(({ key, label, colour }) => {
           const count = counts[key];
           if (count === 0) return null;
