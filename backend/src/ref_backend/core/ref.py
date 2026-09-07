@@ -25,8 +25,8 @@ def get_database(ref_config: Config, read_only: bool = False) -> Database:
     Get a database connection using the default config.
 
     When ``read_only`` is true,
-    the SQLite database is opened via``Database.from_config(..., read_only=True)``,
-    which rewrites the URL to read-only URI form so no journal/WAL sidecar is created.
+    the SQLite database is opened via ``Database.from_config(..., read_only=True)``,
+    which rewrites the URL to read-only URI form.
     """
     database = Database.from_config(ref_config, run_migrations=False, read_only=read_only)
 

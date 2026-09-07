@@ -68,11 +68,8 @@ class Settings(BaseSettings):
     """
     Open the SQLite database in read-only mode.
 
-    When true, the API opens the configured SQLite database via a URI-form
-    connection string with ``mode=ro&immutable=1`` so that SQLite does not
-    attempt to create a journal/WAL sidecar. This lets the REF state volume
-    (e.g. ``/ref``) be mounted read-only in deployments where the API is a
-    pure consumer of worker-produced state.
+    When true, the API opens the configured SQLite database via a URI-form connection string with ``mode=ro``.
+    The database is still read on every query, so a worker updating the file is picked up by the API.
 
     Ignored for non-SQLite databases.
     """
