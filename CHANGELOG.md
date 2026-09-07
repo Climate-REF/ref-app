@@ -1,3 +1,12 @@
+## v0.7.6 (2026-09-07)
+
+### Bug Fixes
+
+- Fixed nearest-value selection and record highlighting in box-and-whisker charts, excluded clipped values from selection, and corrected whisker endpoints.
+
+  Corrected the sea surface salinity Taylor diagram title and removed empty grid slots between explorer card groups. (#109)
+
+
 ## v0.7.5 (2026-09-07)
 
 ### Features
