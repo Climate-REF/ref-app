@@ -68,10 +68,8 @@ class Settings(BaseSettings):
     """
     Open the SQLite database in read-only mode.
 
-    When true, the API opens the configured SQLite database via a URI-form
-    connection string with ``mode=ro``. The database is still read on every
-    query, so a worker updating the file is picked up by the API. This lets
-    the API be a pure consumer of worker-produced state.
+    When true, the API opens the configured SQLite database via a URI-form connection string with ``mode=ro``.
+    The database is still read on every query, so a worker updating the file is picked up by the API.
 
     Ignored for non-SQLite databases.
     """
