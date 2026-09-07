@@ -59,7 +59,7 @@ const Dashboard = () => {
             </div>
           </div>
         </section>
-        <div className="container mx-auto px-4 md:px-6">
+        <div className="container mx-auto max-w-prose px-4 md:px-6">
           <Cmip7AvailabilityCta />
         </div>
         <MDXProvider>

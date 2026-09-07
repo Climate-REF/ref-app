@@ -19,12 +19,8 @@ const renderCta = async (variant: "card" | "inline") => {
     path: "/",
     component: () => <Cmip7AvailabilityCta variant={variant} />,
   });
-  const diagnosticsRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: "/diagnostics",
-  });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([indexRoute, diagnosticsRoute]),
+    routeTree: rootRoute.addChildren([indexRoute]),
     history: createMemoryHistory({ initialEntries: ["/"] }),
   });
   render(<RouterProvider router={router} />);

@@ -9,7 +9,10 @@ export const CMIP7_AVAILABILITY_URL =
 type Variant = "card" | "inline";
 
 interface Cmip7AvailabilityCtaProps {
-  /** `card` is a standalone panel. `inline` is a single row for tucking under a page header. */
+  /**
+   * `card` is a standalone panel.
+   * `inline` is a single row for tucking under a page header.
+   */
   variant?: Variant;
   className?: string;
 }
@@ -28,7 +31,7 @@ export function Cmip7AvailabilityCta({
       <Button asChild size={size}>
         <Link to="/diagnostics" search={{ mip_era: "CMIP7" }}>
           View CMIP7 diagnostics
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight />
         </Link>
       </Button>
       <Button asChild size={size} variant="outline">
@@ -38,7 +41,7 @@ export function Cmip7AvailabilityCta({
           rel="noopener noreferrer"
         >
           Which models are available
-          <ArrowUpRight className="h-4 w-4" />
+          <ArrowUpRight />
         </a>
       </Button>
     </div>
@@ -53,13 +56,11 @@ export function Cmip7AvailabilityCta({
         )}
       >
         <p className="text-sm">
-          <span>
-            <span className="font-medium">
-              The first CMIP7 AFT models are being published.
-            </span>{" "}
-            <span className="text-muted-foreground">
-              Browse their diagnostics, or check which models have landed.
-            </span>
+          <span className="font-medium">
+            The first CMIP7 AFT models are being published.
+          </span>{" "}
+          <span className="text-muted-foreground">
+            Browse their diagnostics, or check which models have landed.
           </span>
         </p>
         {buttons}
@@ -70,7 +71,7 @@ export function Cmip7AvailabilityCta({
   return (
     <div
       className={cn(
-        "mx-auto max-w-prose space-y-4 rounded-xl border border-oceanBlue/30 bg-gradient-to-r from-oceanBlue/10 to-icyBlue/10 p-6 dark:border-icyBlue/30 dark:from-oceanBlue/20 dark:to-icyBlue/10",
+        "space-y-4 rounded-xl border border-oceanBlue/30 bg-gradient-to-r from-oceanBlue/10 to-icyBlue/10 p-6 dark:border-icyBlue/30 dark:from-oceanBlue/20 dark:to-icyBlue/10",
         className,
       )}
     >
