@@ -28,6 +28,7 @@ export type BoxPlot = {
   upperQuartile: number;
   max: number;
   values: number[];
+  points: ScalarValue[];
 };
 
 export type GroupedRawDataEntry = {

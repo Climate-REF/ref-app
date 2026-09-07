@@ -119,6 +119,7 @@ interface GroupStatistics {
   upperQuartile: number;
   max: number;
   values: number[];
+  points: ScalarValue[];
 }
 
 export const EmptyEnsembleChart = () => {
@@ -155,6 +156,7 @@ export const EnsembleChart = ({
   categoryOrder,
 }: EnsembleChartProps) => {
   const [highlightedPoint, setHighlightedPoint] = useState<{
+    categoryName: string;
     groupName: string;
     point: ScalarValue;
   } | null>(null);
@@ -195,7 +197,6 @@ export const EnsembleChart = ({
             name: groupName,
             groups: {},
             __outliers: {},
-            __rawData: [],
             __categoryColor: isSelfHued
               ? groupColor(groupByDimension, groupName, categoryIndex)
               : undefined,
@@ -217,7 +218,6 @@ export const EnsembleChart = ({
 
         const groups: { [key: string]: GroupStatistics | null } = {};
         const outliers: { [key: string]: number } = {};
-        const allRawData: ScalarValue[] = [];
 
         Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
           const allValues: number[] =
@@ -225,15 +225,15 @@ export const EnsembleChart = ({
               ?.map((d: ScalarValue) => Number(d.value))
               ?.filter((v: number) => Number.isFinite(v)) ?? [];
 
-          const filteredValues: number[] = allValues
+          const points = subGroupValues
+            .filter((d) => Number.isFinite(Number(d.value)))
             .filter(
-              (v: number) =>
-                (clipMin === undefined || v >= clipMin) &&
-                (clipMax === undefined || v <= clipMax),
+              (d) =>
+                (clipMin === undefined || Number(d.value) >= clipMin) &&
+                (clipMax === undefined || Number(d.value) <= clipMax),
             )
-            .sort((a: number, b: number) => a - b);
-
-          allRawData.push(...(subGroupValues || []));
+            .sort((a, b) => Number(a.value) - Number(b.value));
+          const filteredValues = points.map((point) => Number(point.value));
 
           if (filteredValues.length === 0) {
             groups[subGroupName] = null;
@@ -252,6 +252,7 @@ export const EnsembleChart = ({
               upperQuartile: q3,
               max,
               values: filteredValues,
+              points,
             };
             outliers[subGroupName] = allValues.length - filteredValues.length;
           }
@@ -261,7 +262,6 @@ export const EnsembleChart = ({
           name: groupName,
           groups,
           __outliers: outliers,
-          __rawData: allRawData,
           __categoryColor: isSelfHued
             ? groupColor(groupByDimension, groupName, categoryIndex)
             : undefined,
@@ -365,6 +365,43 @@ export const EnsembleChart = ({
           data={sortedChartData}
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
           barCategoryGap={barCategoryGap}
+          onMouseLeave={() => setHighlightedPoint(null)}
+          onMouseMove={(state, event) => {
+            if (!state.isTooltipActive) {
+              setHighlightedPoint(null);
+              return;
+            }
+            let nearest: typeof highlightedPoint = null;
+            let distance = Number.POSITIVE_INFINITY;
+            for (const marker of (
+              event.currentTarget as HTMLElement
+            ).querySelectorAll<SVGGraphicsElement>("[data-box-point]")) {
+              const bounds = marker.getBoundingClientRect();
+              const dx = event.clientX - (bounds.left + bounds.width / 2);
+              const dy = event.clientY - (bounds.top + bounds.height / 2);
+              const nextDistance = dx * dx + dy * dy;
+              if (nextDistance >= distance) continue;
+              const categoryName = marker.dataset.category!;
+              const groupName = marker.dataset.group!;
+              const datum = sortedChartData.find(
+                (d) => d.name === categoryName,
+              );
+              const point =
+                datum?.groups[groupName]?.points[
+                  Number(marker.dataset.boxPoint)
+                ];
+              if (!point) continue;
+              distance = nextDistance;
+              nearest = { categoryName, groupName, point };
+            }
+            setHighlightedPoint((previous) =>
+              previous?.point === nearest?.point &&
+              previous?.categoryName === nearest?.categoryName &&
+              previous?.groupName === nearest?.groupName
+                ? previous
+                : nearest,
+            );
+          }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
@@ -405,102 +442,18 @@ export const EnsembleChart = ({
             wrapperStyle={{ zIndex: 1000 }}
             animationDuration={500}
             offset={20}
-            content={({ active, payload, label, coordinate, viewBox }) => {
-              if (!active || !payload || payload.length === 0) {
-                // Clear highlight when tooltip is not active
-                if (highlightedPoint) {
-                  setHighlightedPoint(null);
-                }
+            content={({ active, coordinate, viewBox }) => {
+              if (!active || !highlightedPoint) return null;
+              const datum = sortedChartData.find(
+                (d) => d.name === highlightedPoint.categoryName,
+              );
+              const statsKey = highlightedPoint.groupName;
+              const groupStats = datum?.groups[statsKey];
+              if (!groupStats?.points.includes(highlightedPoint.point))
                 return null;
-              }
-              const datum = payload[0].payload ?? {};
-
-              // Determine which subgroup we're hovering over
-              let statsKey: string;
-
-              if (
-                allGroupNames.length > 1 &&
-                coordinate &&
-                payload.length > 0
-              ) {
-                // find closest by Y position
-                let closestBar: string | null = null;
-                let minDistance = Number.POSITIVE_INFINITY;
-
-                for (const groupName of allGroupNames) {
-                  const groupData = datum?.groups?.[groupName];
-                  if (groupData) {
-                    const medianY = scale(groupData.median);
-                    const distance = Math.abs((coordinate.y ?? 0) - medianY);
-                    if (distance < minDistance) {
-                      minDistance = distance;
-                      closestBar = groupName;
-                    }
-                  }
-                }
-                statsKey = closestBar || "ensemble";
-              } else {
-                // Single bar - use ensemble or first available group
-                statsKey = "ensemble";
-                const groupKeys = Object.keys(datum?.groups || {});
-                if (groupKeys.length > 0 && !datum?.groups?.[statsKey]) {
-                  statsKey = groupKeys[0];
-                }
-              }
-
-              const groupStats = datum?.groups?.[
-                statsKey
-              ] as GroupStatistics | null;
               const outliers = datum?.__outliers;
-              const allRawData: ScalarValue[] = datum?.__rawData ?? [];
-
-              // Filter raw data to only include points from the hovered subgroup
-              const rawData = allRawData.filter((d) => {
-                // For multi-hue charts, filter by the hovered subgroup
-                if (
-                  !isSelfHued &&
-                  hueDimension &&
-                  hueDimension !== "none" &&
-                  statsKey !== "ensemble"
-                ) {
-                  return d.dimensions[hueDimension] === statsKey;
-                }
-                // For self-hued or no-hue charts, include all data
-                return true;
-              });
-
-              // Find closest data point to mouse position (within the filtered data)
-              let closestDataPoint: ScalarValue | null = null;
-              if (coordinate && rawData.length > 0) {
-                const mouseY = coordinate.y ?? 0;
-                let minDistance = Number.POSITIVE_INFINITY;
-
-                // Chart dimensions accounting for margins
-                for (const dataPoint of rawData) {
-                  const value = Number(dataPoint.value);
-                  if (Number.isFinite(value)) {
-                    // Convert value to pixel position using the same scale as Recharts
-                    const valueY = scale(value);
-
-                    const distance = Math.abs(mouseY - valueY);
-                    if (distance < minDistance) {
-                      minDistance = distance;
-                      closestDataPoint = dataPoint;
-                    }
-                  }
-                }
-              }
-
-              // Update highlighted point
-              if (
-                closestDataPoint !== highlightedPoint?.point &&
-                closestDataPoint !== null
-              ) {
-                setHighlightedPoint({
-                  groupName: statsKey,
-                  point: closestDataPoint,
-                });
-              }
+              const closestDataPoint = highlightedPoint.point;
+              const label = highlightedPoint.categoryName;
               if (coordinate === undefined) {
                 return null;
               }
@@ -638,11 +591,7 @@ export const EnsembleChart = ({
                 <BoxWhiskerShape
                   prefix={groupName}
                   scale={scale}
-                  highlightedPoint={
-                    highlightedPoint?.groupName === groupName
-                      ? highlightedPoint?.point
-                      : null
-                  }
+                  highlightedPoint={highlightedPoint}
                 />
               }
             />

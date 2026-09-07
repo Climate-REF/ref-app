@@ -101,9 +101,9 @@ explorer_cards:
       - type: taylor-diagram
         provider: ilamb
         diagnostic: so-woa2023-surface
-        title: "Taylor Diagram"
+        title: "Sea Surface Salinity (Taylor Diagram)"
         description: >-
-          Taylor diagram showing the performance of global surface ocean salinity
+          Taylor diagram showing the performance of global sea surface salinity
           against WOA-23 observations.
         interpretation: >-
           Points closer to the reference (black square) indicate better model

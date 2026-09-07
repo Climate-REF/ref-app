@@ -46,11 +46,9 @@ export const ExplorerThemeLayout = ({
                 plainLanguage={plainLanguage}
               />
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {group.cards.map((card) => (
-                <div key={card.title} className="flex-1">
-                  <ExplorerCardGroup card={card} />
-                </div>
+                <ExplorerCardGroup key={card.title} card={card} />
               ))}
             </div>
           </section>

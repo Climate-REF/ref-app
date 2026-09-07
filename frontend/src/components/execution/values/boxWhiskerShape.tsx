@@ -6,7 +6,11 @@ import type { ProcessedGroupedDataEntry } from "./types";
 interface BoxWhiskerShapeProps {
   prefix: string;
   scale: ScaleLinear<number, number>;
-  highlightedPoint?: ScalarValue | null;
+  highlightedPoint?: {
+    categoryName: string;
+    groupName: string;
+    point: ScalarValue;
+  } | null;
 
   // Standard Recharts props provided to shapes
   x?: number;
@@ -74,17 +78,20 @@ export function BoxWhiskerShape({
   const effectiveFill = (payload as any).__categoryColor || fill;
   const effectiveStroke = stroke ? stroke : darkenHex(effectiveFill, 50);
 
-  const { lowerQuartile, median, upperQuartile, values } =
+  const categoryName = payload.name;
+  const { lowerQuartile, median, upperQuartile, values, points } =
     payload.groups[prefix];
 
   // Calculate pixel coordinates for each value
   const yQ1 = scale(lowerQuartile) as number;
   const yMedian = scale(median) as number;
   const yQ3 = scale(upperQuartile) as number;
-  const iqr = yQ3 - yQ1;
-
-  const yUpperBar = yQ3 - iqr * 1.5;
-  const yLowerBar = yQ1 + iqr * 1.5;
+  const iqr = upperQuartile - lowerQuartile;
+  const lowerFence = lowerQuartile - 1.5 * iqr;
+  const upperFence = upperQuartile + 1.5 * iqr;
+  const inliers = values.filter((v) => v >= lowerFence && v <= upperFence);
+  const yUpperBar = scale(Math.max(...inliers));
+  const yLowerBar = scale(Math.min(...inliers));
 
   const whiskerX = x + width / 2; // Center X for vertical lines
   const crossWidth = 10; // Center X for cross lines
@@ -96,14 +103,11 @@ export function BoxWhiskerShape({
         ? darkenHex(color, 30)
         : color;
 
-    // Get the highlighted value if it exists and matches this group
-    const highlightedValue = highlightedPoint
-      ? Number(highlightedPoint.value)
-      : null;
-
     return values.map((v: number, idx: number) => {
       const isHighlighted =
-        highlightedValue !== null && Math.abs(v - highlightedValue) < 0.0001;
+        highlightedPoint?.categoryName === categoryName &&
+        highlightedPoint?.groupName === prefix &&
+        highlightedPoint?.point === points[idx];
       const crossSize = isHighlighted ? crossWidth * 1.5 : crossWidth;
       const crossStroke = isHighlighted ? "#EF4444" : crossColor;
       const crossStrokeWidth = isHighlighted ? strokeWidth * 2 : strokeWidth;
@@ -112,23 +116,28 @@ export function BoxWhiskerShape({
       if (scaleV === undefined || !Number.isFinite(scaleV)) return null; // Skip non-finite values
 
       return (
-        <Cross
-          key={`${prefix}-value-${idx}-${v}`}
-          strokeWidth={crossStrokeWidth}
-          stroke={crossStroke}
-          x={whiskerX}
-          y={scaleV}
-          left={whiskerX - crossSize / 2}
-          top={scaleV - crossSize / 2}
-          height={crossSize} // Cross height
-          width={crossSize} // Cross width
-          style={{
-            transform: "rotate(45deg)",
-            transformOrigin: "center",
-            transformBox: "fill-box",
-            zIndex: isHighlighted ? 1000 : 1,
-          }}
-        />
+        <g
+          key={points[idx].id}
+          data-box-point={idx}
+          data-category={categoryName}
+          data-group={prefix}
+        >
+          <Cross
+            strokeWidth={crossStrokeWidth}
+            stroke={crossStroke}
+            x={whiskerX}
+            y={scaleV}
+            left={whiskerX - crossSize / 2}
+            top={scaleV - crossSize / 2}
+            height={crossSize} // Cross height
+            width={crossSize} // Cross width
+            style={{
+              transform: "rotate(45deg)",
+              transformOrigin: "center",
+              transformBox: "fill-box",
+            }}
+          />
+        </g>
       );
     });
   }
