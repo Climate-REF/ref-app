@@ -42,6 +42,7 @@ export function Navbar() {
         <NavigationMenuList className="flex">
           <NavItem title="Diagnostics" to={"/diagnostics"} />
           <NavItem title="Data Explorer" to={"/explorer"} />
+          {/* /models is deliberately unlisted while its UX is still being worked out. */}
           <NavItem title="Executions" to={"/executions"} />
           <NavItem title="Datasets" to={"/datasets"} />
         </NavigationMenuList>

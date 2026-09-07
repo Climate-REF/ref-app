@@ -12,6 +12,15 @@ from ref_backend.models.aft import (
     AFTDiagnosticSummary,
     RefDiagnosticLink,
 )
+from ref_backend.models.climate_models import (
+    DiagnosticRuns,
+    EnsembleComparison,
+    EnsembleStatistics,
+    FailedRun,
+    ModelDetail,
+    ModelSummary,
+    RunCounts,
+)
 from ref_backend.models.common import Collection, GroupBy, ProviderSummary, T
 from ref_backend.models.datasets import CMIPDatasetMetadata, Dataset
 from ref_backend.models.diagnostics import DiagnosticSummary
@@ -39,17 +48,24 @@ __all__ = [
     "CMIPDatasetMetadata",
     "Collection",
     "Dataset",
+    "DiagnosticRuns",
     "DiagnosticSummary",
+    "EnsembleComparison",
+    "EnsembleStatistics",
     "Execution",
     "ExecutionGroup",
     "ExecutionOutput",
     "ExecutionStats",
     "Facet",
+    "FailedRun",
     "GroupBy",
     "MetricValueCollection",
     "MetricValueFacetSummary",
+    "ModelDetail",
+    "ModelSummary",
     "ProviderSummary",
     "RefDiagnosticLink",
+    "RunCounts",
     "ScalarValue",
     "SeriesValue",
     "T",

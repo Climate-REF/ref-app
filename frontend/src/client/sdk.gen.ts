@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsFacetsData, DiagnosticsFacetsResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionsData, DiagnosticsListExecutionsErrors, DiagnosticsListExecutionsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsFacetsData, DiagnosticsFacetsResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionsData, DiagnosticsListExecutionsErrors, DiagnosticsListExecutionsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ModelsEnsembleData, ModelsEnsembleErrors, ModelsEnsembleResponses, ModelsGetData, ModelsGetErrors, ModelsGetResponses, ModelsListData, ModelsListErrors, ModelsListResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -31,6 +31,31 @@ export const cmip7AssessmentFastTrackAftListAftDiagnostics = <ThrowOnError exten
  * Get detailed AFT diagnostic by ID.
  */
 export const cmip7AssessmentFastTrackAftGetAftDiagnostic = <ThrowOnError extends boolean = false>(options: Options<Cmip7AssessmentFastTrackAftGetAftDiagnosticData, ThrowOnError>): RequestResult<Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, ThrowOnError> => (options.client ?? client).get<Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, ThrowOnError>({ url: '/api/v1/cmip7-aft-diagnostics/{aft_id}', ...options });
+
+/**
+ * List
+ *
+ * List the models that have been run, with a tally of how their runs went.
+ *
+ * Counts cover the promoted version of each diagnostic, matching the rest of the app.
+ */
+export const modelsList = <ThrowOnError extends boolean = false>(options?: Options<ModelsListData, ThrowOnError>): RequestResult<ModelsListResponses, ModelsListErrors, ThrowOnError> => (options?.client ?? client).get<ModelsListResponses, ModelsListErrors, ThrowOnError>({ url: '/api/v1/models/', ...options });
+
+/**
+ * Get
+ *
+ * Summarise the runs a single model took part in, broken down by diagnostic.
+ */
+export const modelsGet = <ThrowOnError extends boolean = false>(options: Options<ModelsGetData, ThrowOnError>): RequestResult<ModelsGetResponses, ModelsGetErrors, ThrowOnError> => (options.client ?? client).get<ModelsGetResponses, ModelsGetErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}', ...options });
+
+/**
+ * Ensemble
+ *
+ * Compare this model against the ensemble, one entry per scalar metric it reported.
+ *
+ * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
+ */
+export const modelsEnsemble = <ThrowOnError extends boolean = false>(options: Options<ModelsEnsembleData, ThrowOnError>): RequestResult<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError> => (options.client ?? client).get<ModelsEnsembleResponses, ModelsEnsembleErrors, ThrowOnError>({ url: '/api/v1/models/{source_id}/ensemble', ...options });
 
 /**
  * List

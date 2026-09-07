@@ -25,6 +25,8 @@ import { Route as AppExecutionsGroupIdRouteRouteImport } from './routes/_app/exe
 import { Route as AppExecutionsResourcesRouteImport } from './routes/_app/executions.resources'
 import { Route as AppExplorerIndexRouteImport } from './routes/_app/explorer/index'
 import { Route as AppExplorerThemesRouteImport } from './routes/_app/explorer/themes'
+import { Route as AppModelsIndexRouteImport } from './routes/_app/models.index'
+import { Route as AppModelsSourceIdRouteImport } from './routes/_app/models.$sourceId'
 import { Route as AppSettingsApiEndpointRouteImport } from './routes/_app/settings.api-endpoint'
 import { Route as AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteImport } from './routes/_app/diagnostics.$providerSlug.$diagnosticSlug/route'
 import { Route as AppExecutionsGroupIdIndexRouteImport } from './routes/_app/executions.$groupId/index'
@@ -120,6 +122,16 @@ const AppExplorerThemesRoute = AppExplorerThemesRouteImport.update({
   id: '/themes',
   path: '/themes',
   getParentRoute: () => AppExplorerRouteRoute,
+} as any)
+const AppModelsIndexRoute = AppModelsIndexRouteImport.update({
+  id: '/models/',
+  path: '/models/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppModelsSourceIdRoute = AppModelsSourceIdRouteImport.update({
+  id: '/models/$sourceId',
+  path: '/models/$sourceId',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppSettingsApiEndpointRoute = AppSettingsApiEndpointRouteImport.update({
   id: '/settings/api-endpoint',
@@ -223,11 +235,13 @@ export interface FileRoutesByFullPath {
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/resources': typeof AppExecutionsResourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
+  '/models/$sourceId': typeof AppModelsSourceIdRoute
   '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/datasets/': typeof AppDatasetsIndexRoute
   '/diagnostics/': typeof AppDiagnosticsIndexRoute
   '/executions/': typeof AppExecutionsIndexRoute
   '/explorer/': typeof AppExplorerIndexRoute
+  '/models/': typeof AppModelsIndexRoute
   '/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
   '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
   '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
@@ -253,11 +267,13 @@ export interface FileRoutesByTo {
   '/datasets/$slug': typeof AppDatasetsSlugRoute
   '/executions/resources': typeof AppExecutionsResourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
+  '/models/$sourceId': typeof AppModelsSourceIdRoute
   '/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/datasets': typeof AppDatasetsIndexRoute
   '/diagnostics': typeof AppDiagnosticsIndexRoute
   '/executions': typeof AppExecutionsIndexRoute
   '/explorer': typeof AppExplorerIndexRoute
+  '/models': typeof AppModelsIndexRoute
   '/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
   '/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
   '/executions/$groupId/files': typeof AppExecutionsGroupIdFilesRoute
@@ -286,11 +302,13 @@ export interface FileRoutesById {
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
   '/_app/executions/resources': typeof AppExecutionsResourcesRoute
   '/_app/explorer/themes': typeof AppExplorerThemesRoute
+  '/_app/models/$sourceId': typeof AppModelsSourceIdRoute
   '/_app/settings/api-endpoint': typeof AppSettingsApiEndpointRoute
   '/_app/datasets/': typeof AppDatasetsIndexRoute
   '/_app/diagnostics/': typeof AppDiagnosticsIndexRoute
   '/_app/executions/': typeof AppExecutionsIndexRoute
   '/_app/explorer/': typeof AppExplorerIndexRoute
+  '/_app/models/': typeof AppModelsIndexRoute
   '/_app/diagnostics/$providerSlug/$diagnosticSlug': typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
   '/_app/executions/$groupId/datasets': typeof AppExecutionsGroupIdDatasetsRoute
   '/_app/executions/$groupId/executions': typeof AppExecutionsGroupIdExecutionsRoute
@@ -320,11 +338,13 @@ export interface FileRouteTypes {
     | '/datasets/$slug'
     | '/executions/resources'
     | '/explorer/themes'
+    | '/models/$sourceId'
     | '/settings/api-endpoint'
     | '/datasets/'
     | '/diagnostics/'
     | '/executions/'
     | '/explorer/'
+    | '/models/'
     | '/diagnostics/$providerSlug/$diagnosticSlug'
     | '/executions/$groupId/datasets'
     | '/executions/$groupId/executions'
@@ -350,11 +370,13 @@ export interface FileRouteTypes {
     | '/datasets/$slug'
     | '/executions/resources'
     | '/explorer/themes'
+    | '/models/$sourceId'
     | '/settings/api-endpoint'
     | '/datasets'
     | '/diagnostics'
     | '/executions'
     | '/explorer'
+    | '/models'
     | '/executions/$groupId/datasets'
     | '/executions/$groupId/executions'
     | '/executions/$groupId/files'
@@ -382,11 +404,13 @@ export interface FileRouteTypes {
     | '/_app/datasets/$slug'
     | '/_app/executions/resources'
     | '/_app/explorer/themes'
+    | '/_app/models/$sourceId'
     | '/_app/settings/api-endpoint'
     | '/_app/datasets/'
     | '/_app/diagnostics/'
     | '/_app/executions/'
     | '/_app/explorer/'
+    | '/_app/models/'
     | '/_app/diagnostics/$providerSlug/$diagnosticSlug'
     | '/_app/executions/$groupId/datasets'
     | '/_app/executions/$groupId/executions'
@@ -522,6 +546,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/explorer/themes'
       preLoaderRoute: typeof AppExplorerThemesRouteImport
       parentRoute: typeof AppExplorerRouteRoute
+    }
+    '/_app/models/': {
+      id: '/_app/models/'
+      path: '/models'
+      fullPath: '/models/'
+      preLoaderRoute: typeof AppModelsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/models/$sourceId': {
+      id: '/_app/models/$sourceId'
+      path: '/models/$sourceId'
+      fullPath: '/models/$sourceId'
+      preLoaderRoute: typeof AppModelsSourceIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/settings/api-endpoint': {
       id: '/_app/settings/api-endpoint'
@@ -705,10 +743,12 @@ interface AppRouteRouteChildren {
   AppExecutionsGroupIdRouteRoute: typeof AppExecutionsGroupIdRouteRouteWithChildren
   AppDatasetsSlugRoute: typeof AppDatasetsSlugRoute
   AppExecutionsResourcesRoute: typeof AppExecutionsResourcesRoute
+  AppModelsSourceIdRoute: typeof AppModelsSourceIdRoute
   AppSettingsApiEndpointRoute: typeof AppSettingsApiEndpointRoute
   AppDatasetsIndexRoute: typeof AppDatasetsIndexRoute
   AppDiagnosticsIndexRoute: typeof AppDiagnosticsIndexRoute
   AppExecutionsIndexRoute: typeof AppExecutionsIndexRoute
+  AppModelsIndexRoute: typeof AppModelsIndexRoute
   AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute: typeof AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren
 }
 
@@ -717,10 +757,12 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppExecutionsGroupIdRouteRoute: AppExecutionsGroupIdRouteRouteWithChildren,
   AppDatasetsSlugRoute: AppDatasetsSlugRoute,
   AppExecutionsResourcesRoute: AppExecutionsResourcesRoute,
+  AppModelsSourceIdRoute: AppModelsSourceIdRoute,
   AppSettingsApiEndpointRoute: AppSettingsApiEndpointRoute,
   AppDatasetsIndexRoute: AppDatasetsIndexRoute,
   AppDiagnosticsIndexRoute: AppDiagnosticsIndexRoute,
   AppExecutionsIndexRoute: AppExecutionsIndexRoute,
+  AppModelsIndexRoute: AppModelsIndexRoute,
   AppDiagnosticsProviderSlugDiagnosticSlugRouteRoute:
     AppDiagnosticsProviderSlugDiagnosticSlugRouteRouteWithChildren,
 }
