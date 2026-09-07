@@ -1,3 +1,20 @@
+## v0.7.4 (2026-09-07)
+
+### Features
+
+- Added a call to action linking to the CMIP7 diagnostics and the CMIP7 availability dashboard. (#104)
+
+### Improvements
+
+- Updated to use climate-ref v0.18.0.
+  The read-only database mode no longer opens SQLite as immutable, so the API picks up changes made by a worker while it is running. (#103)
+- Added a region dropdown to the regional temperature and precipitation trend cards, with regions listed by their full IPCC AR6 names. (#105)
+
+### Trivial Changes
+
+- Releases are now published automatically when a tag is pushed, rather than left as drafts. (#106)
+
+
 ## v0.7.3 (2026-09-06)
 
 ### Bug Fixes
