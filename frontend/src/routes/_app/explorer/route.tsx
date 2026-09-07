@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import { Cmip7AvailabilityCta } from "@/components/app/cmip7AvailabilityCta";
 import { PageHeader } from "@/components/app/pageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import DataHealthWarning from "@/content/data-health-warning.mdx";
@@ -51,6 +52,8 @@ const ExplorerLayout = () => {
             </>
           }
         />
+
+        <Cmip7AvailabilityCta variant="inline" />
 
         <div className="grid gap-8 md:grid-cols-[340px_minmax(0,1fr)]">
           <Card className="bg-muted/40 h-fit max-w-md">
