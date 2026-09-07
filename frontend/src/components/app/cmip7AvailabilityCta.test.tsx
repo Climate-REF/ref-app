@@ -12,7 +12,9 @@ import {
   Cmip7AvailabilityCta,
 } from "./cmip7AvailabilityCta";
 
-const renderCta = async (variant: "card" | "inline") => {
+const VARIANTS = ["card", "inline"] as const;
+
+const renderCta = async (variant: (typeof VARIANTS)[number]) => {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -28,20 +30,16 @@ const renderCta = async (variant: "card" | "inline") => {
 };
 
 describe("Cmip7AvailabilityCta", () => {
-  it.each(["card", "inline"] as const)(
-    "leads the %s variant with the CMIP7 diagnostics",
-    async (variant) => {
+  for (const variant of VARIANTS) {
+    it(`leads the ${variant} variant with the CMIP7 diagnostics`, async () => {
       await renderCta(variant);
       const link = screen.getByRole("link", {
         name: /view CMIP7 diagnostics/i,
       });
       expect(link).toHaveAttribute("href", "/diagnostics?mip_era=CMIP7");
-    },
-  );
+    });
 
-  it.each(["card", "inline"] as const)(
-    "opens the availability dashboard from the %s variant in a new tab",
-    async (variant) => {
+    it(`opens the availability dashboard from the ${variant} variant in a new tab`, async () => {
       await renderCta(variant);
       const link = screen.getByRole("link", {
         name: /which models are available/i,
@@ -49,6 +47,6 @@ describe("Cmip7AvailabilityCta", () => {
       expect(link).toHaveAttribute("href", CMIP7_AVAILABILITY_URL);
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    },
-  );
+    });
+  }
 });
