@@ -99,6 +99,9 @@ export function toExplorerCardContent(
         groupingConfig: apiContent.grouping_config
           ? toChartGroupingConfig(apiContent.grouping_config)
           : undefined,
+        filterControls: apiContent.filter_controls
+          ? apiContent.filter_controls.map(toFilterControl)
+          : undefined,
       };
     case "series-chart":
       return {

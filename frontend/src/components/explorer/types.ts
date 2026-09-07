@@ -32,6 +32,7 @@ export type BoxWhiskerChartContent = BaseCardContent & {
   showZeroLine?: boolean;
   symmetricalAxes?: boolean;
   groupingConfig?: ChartGroupingConfig;
+  filterControls?: FilterControl[];
   yMin?: number;
   /* Override the y-axis minimum value */
   yMax?: number;

@@ -12,6 +12,7 @@ import type { ScalarValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button";
 
 import type { ExplorerCardContent } from "../types";
+import { FilterControlBar, useFilterControls } from "./filterControls";
 
 interface EnsembleChartContentProps {
   contentItem: Extract<ExplorerCardContent, { type: "box-whisker-chart" }>;
@@ -24,6 +25,19 @@ export function EnsembleChartContent({
   // Outlier detection runs over whatever the query returns, so the era has to be filtered
   // here rather than when the sections are split.
   const selectedMipEra = useSelectedMipEra();
+  const {
+    hasFilterControls,
+    filterValues,
+    setFilterValue,
+    facetMap,
+    queryFilters,
+  } = useFilterControls({
+    provider: contentItem.provider,
+    diagnostic: contentItem.diagnostic,
+    otherFilters: contentItem.otherFilters,
+    filterControls: contentItem.filterControls,
+    valueType: "scalar",
+  });
 
   // Extract potential ID filters (isolate/exclude) from otherFilters and pass
   // them through to the backend. Backend expects 'isolate_ids' and 'exclude_ids'
@@ -38,7 +52,7 @@ export function EnsembleChartContent({
         diagnostic_slug: contentItem.diagnostic,
       },
       query: {
-        ...contentItem.otherFilters,
+        ...queryFilters,
         // Ensure explicit flags for type and outlier handling
         value_type: "scalar",
         limit: 500,
@@ -55,8 +69,22 @@ export function EnsembleChartContent({
   const collection = data as MetricValueCollection;
   const values = (collection?.data as ScalarValue[]) ?? [];
 
+  const filterBar = hasFilterControls && (
+    <FilterControlBar
+      controls={contentItem.filterControls ?? []}
+      filterValues={filterValues}
+      facetMap={facetMap}
+      onFilterChange={setFilterValue}
+    />
+  );
+
   if (values.length === 0) {
-    return <EmptyEnsembleChart />;
+    return (
+      <div className="space-y-4">
+        {filterBar}
+        <EmptyEnsembleChart />
+      </div>
+    );
   }
 
   const hasOutliers = collection?.had_outliers ?? false;
@@ -64,6 +92,7 @@ export function EnsembleChartContent({
 
   return (
     <div className="space-y-4">
+      {filterBar}
       {/* Outlier indicator and controls */}
       {(hasOutliers || includeUnverified) && (
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
