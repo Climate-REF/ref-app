@@ -10,7 +10,7 @@ import type {
 } from "@/components/execution/values/types";
 import { isSeriesValue } from "@/components/execution/values/types";
 import type { SeriesChartContent as SeriesChartContentType } from "../types";
-import { FilterControlBar, useFilterControls } from "./filterControls";
+import { useFilterControls } from "./filterControls";
 
 interface SeriesChartContentProps {
   contentItem: SeriesChartContentType;
@@ -18,19 +18,7 @@ interface SeriesChartContentProps {
 
 export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
   const selectedMipEra = useSelectedMipEra();
-  const {
-    hasFilterControls,
-    filterValues,
-    setFilterValue,
-    facetMap,
-    queryFilters,
-  } = useFilterControls({
-    provider: contentItem.provider,
-    diagnostic: contentItem.diagnostic,
-    otherFilters: contentItem.otherFilters,
-    filterControls: contentItem.filterControls,
-    valueType: "series",
-  });
+  const { filterBar, queryFilters } = useFilterControls(contentItem, "series");
 
   // Forward isolate/exclude id filters (if present) from card config to backend.
   const isolateIdsParam = contentItem.otherFilters?.isolate_ids;
@@ -69,14 +57,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
   if (allSeriesValues.length === 0) {
     return (
       <div className="space-y-3">
-        {hasFilterControls && (
-          <FilterControlBar
-            controls={contentItem.filterControls!}
-            filterValues={filterValues}
-            facetMap={facetMap}
-            onFilterChange={setFilterValue}
-          />
-        )}
+        {filterBar}
         <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
           <div className="text-center text-sm text-gray-500">
             <p>No series data available</p>
@@ -92,14 +73,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   return (
     <div className="space-y-3">
-      {hasFilterControls && (
-        <FilterControlBar
-          controls={contentItem.filterControls!}
-          filterValues={filterValues}
-          facetMap={facetMap}
-          onFilterChange={setFilterValue}
-        />
-      )}
+      {filterBar}
       {regularSeries.length === 0 ? (
         // Nothing to split on, so show the references rather than an empty panel.
         <SeriesVisualization

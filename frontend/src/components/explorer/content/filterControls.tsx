@@ -13,12 +13,11 @@ import {
 import { ipccRegionName } from "@/lib/ipccRegions";
 import type { FilterControl } from "../types";
 
-interface UseFilterControlsArgs {
+interface FilterableCard {
   provider: string;
   diagnostic: string;
-  otherFilters: Record<string, string> | undefined;
-  filterControls: FilterControl[] | undefined;
-  valueType: "scalar" | "series";
+  otherFilters?: Record<string, string>;
+  filterControls?: FilterControl[];
 }
 
 function buildInitialFilterValues(
@@ -38,13 +37,10 @@ function buildInitialFilterValues(
  * Facets are fetched without the controlled keys so every dropdown lists all its options,
  * and any control without a value is set to the first option it can use.
  */
-export function useFilterControls({
-  provider,
-  diagnostic,
-  otherFilters,
-  filterControls,
-  valueType,
-}: UseFilterControlsArgs) {
+export function useFilterControls(
+  { provider, diagnostic, otherFilters, filterControls }: FilterableCard,
+  valueType: "scalar" | "series",
+) {
   const [filterValues, setFilterValues] = useState<Record<string, string>>(() =>
     buildInitialFilterValues(filterControls),
   );
@@ -101,14 +97,19 @@ export function useFilterControls({
     }
   }, [facetData, facetMap, filterControls, filterValues]);
 
-  const setFilterValue = (key: string, value: string) =>
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  const filterBar = hasFilterControls ? (
+    <FilterControlBar
+      controls={controls}
+      filterValues={filterValues}
+      facetMap={facetMap}
+      onFilterChange={(key, value) =>
+        setFilterValues((prev) => ({ ...prev, [key]: value }))
+      }
+    />
+  ) : null;
 
   return {
-    hasFilterControls,
-    filterValues,
-    setFilterValue,
-    facetMap,
+    filterBar,
     queryFilters: { ...(otherFilters ?? {}), ...filterValues },
   };
 }
@@ -124,7 +125,7 @@ interface FilterControlBarProps {
   onFilterChange: (key: string, value: string) => void;
 }
 
-export function FilterControlBar({
+function FilterControlBar({
   controls,
   filterValues,
   facetMap,

@@ -12,7 +12,7 @@ import type { ScalarValue } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button";
 
 import type { ExplorerCardContent } from "../types";
-import { FilterControlBar, useFilterControls } from "./filterControls";
+import { useFilterControls } from "./filterControls";
 
 interface EnsembleChartContentProps {
   contentItem: Extract<ExplorerCardContent, { type: "box-whisker-chart" }>;
@@ -25,19 +25,7 @@ export function EnsembleChartContent({
   // Outlier detection runs over whatever the query returns, so the era has to be filtered
   // here rather than when the sections are split.
   const selectedMipEra = useSelectedMipEra();
-  const {
-    hasFilterControls,
-    filterValues,
-    setFilterValue,
-    facetMap,
-    queryFilters,
-  } = useFilterControls({
-    provider: contentItem.provider,
-    diagnostic: contentItem.diagnostic,
-    otherFilters: contentItem.otherFilters,
-    filterControls: contentItem.filterControls,
-    valueType: "scalar",
-  });
+  const { filterBar, queryFilters } = useFilterControls(contentItem, "scalar");
 
   // Extract potential ID filters (isolate/exclude) from otherFilters and pass
   // them through to the backend. Backend expects 'isolate_ids' and 'exclude_ids'
@@ -68,15 +56,6 @@ export function EnsembleChartContent({
 
   const collection = data as MetricValueCollection;
   const values = (collection?.data as ScalarValue[]) ?? [];
-
-  const filterBar = hasFilterControls && (
-    <FilterControlBar
-      controls={contentItem.filterControls ?? []}
-      filterValues={filterValues}
-      facetMap={facetMap}
-      onFilterChange={setFilterValue}
-    />
-  );
 
   if (values.length === 0) {
     return (

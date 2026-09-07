@@ -46,8 +46,6 @@ explorer_cards:
         filter_controls:
           - filter_key: region
             label: Region
-            exclude_values:
-              - Global
         grouping_config:
           group_by: source_id
           hue: experiment_id
@@ -66,8 +64,6 @@ explorer_cards:
         filter_controls:
           - filter_key: region
             label: Region
-            exclude_values:
-              - Global
         grouping_config:
           group_by: source_id
           hue: experiment_id
