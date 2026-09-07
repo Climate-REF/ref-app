@@ -3,7 +3,7 @@ directory = "changelog"
 filename = "CHANGELOG.md"
 title_format = "## v{version} ({project_date})"
 underlines = ["", "", ""]
-version = "0.7.4"
+version = "0.7.5"
 
 [[tool.towncrier.type]]
 directory = "feature"

@@ -1,3 +1,24 @@
+## v0.7.5 (2026-09-07)
+
+### Features
+
+- Added a model view at `/models`, with a page per model that shows:
+
+  - how many execution groups it took part in, and how many of them succeeded,
+  - which diagnostics it failed,
+  - where each of its scalar metrics sits against the spread of every other model that reported the same metric.
+
+  The pages are reachable by URL but are not yet linked from the navigation.
+
+  (#107)
+
+### Improvements
+
+- Added a warning to series charts that draw more than one reference curve.
+  The reference dataset is regridded onto each model grid, so a single set of observations can appear as
+  several different curves. (#108)
+
+
 ## v0.7.4 (2026-09-07)
 
 ### Features
