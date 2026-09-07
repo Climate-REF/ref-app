@@ -1,5 +1,5 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
@@ -9,61 +9,16 @@ import type {
   SeriesValue,
 } from "@/components/execution/values/types";
 import { isSeriesValue } from "@/components/execution/values/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type {
-  FilterControl,
-  SeriesChartContent as SeriesChartContentType,
-} from "../types";
+import type { SeriesChartContent as SeriesChartContentType } from "../types";
+import { useFilterControls } from "./filterControls";
 
 interface SeriesChartContentProps {
   contentItem: SeriesChartContentType;
 }
 
-/**
- * Build initial filter values from filter controls, keyed by filterKey.
- */
-function buildInitialFilterValues(
-  filterControls: FilterControl[] | undefined,
-): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const control of filterControls ?? []) {
-    if (control.defaultValue) {
-      values[control.filterKey] = control.defaultValue;
-    }
-  }
-  return values;
-}
-
-/**
- * Build the query filters by merging otherFilters with the active filter control values.
- */
-function buildQueryFilters(
-  otherFilters: Record<string, string> | undefined,
-  filterValues: Record<string, string>,
-): Record<string, string> {
-  return {
-    ...(otherFilters ?? {}),
-    ...filterValues,
-  };
-}
-
 export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
-  const [filterValues, setFilterValues] = useState<Record<string, string>>(() =>
-    buildInitialFilterValues(contentItem.filterControls),
-  );
-
   const selectedMipEra = useSelectedMipEra();
-
-  const queryFilters = buildQueryFilters(
-    contentItem.otherFilters,
-    filterValues,
-  );
+  const { filterBar, queryFilters } = useFilterControls(contentItem, "series");
 
   // Forward isolate/exclude id filters (if present) from card config to backend.
   const isolateIdsParam = contentItem.otherFilters?.isolate_ids;
@@ -86,37 +41,6 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
     }),
   );
 
-  // Fetch facets for filter controls by querying without the controlled filter keys.
-  // This gives us the full list of available values for each filter dropdown.
-  const controlledKeys = new Set(
-    (contentItem.filterControls ?? []).map((c) => c.filterKey),
-  );
-  const facetQueryFilters: Record<string, string> = {};
-  for (const [key, value] of Object.entries(contentItem.otherFilters ?? {})) {
-    if (!controlledKeys.has(key)) {
-      facetQueryFilters[key] = value;
-    }
-  }
-
-  const hasFilterControls =
-    contentItem.filterControls && contentItem.filterControls.length > 0;
-
-  const { data: facetData } = useQuery({
-    ...diagnosticsListMetricValuesOptions({
-      path: {
-        provider_slug: contentItem.provider,
-        diagnostic_slug: contentItem.diagnostic,
-      },
-      query: {
-        ...facetQueryFilters,
-        value_type: "series",
-        limit: 1,
-        mip_era: selectedMipEra ?? undefined,
-      },
-    }),
-    enabled: !!hasFilterControls,
-  });
-
   // Extract series values from the data
   const collection = data as MetricValueCollection;
   // Missing or "model" kind is a model series, only "reference" is a reference series.
@@ -130,49 +54,10 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
     };
   }, [collection?.data]);
 
-  // Auto-select the first available facet value for filter controls that
-  // have no current value (no defaultValue configured, or configured default
-  // doesn't match available data).
-  useEffect(() => {
-    if (!facetData || !contentItem.filterControls) return;
-    const facets = facetData as MetricValueCollection;
-    const updates: Record<string, string> = {};
-    for (const control of contentItem.filterControls) {
-      if (filterValues[control.filterKey]) continue;
-      const allOptions =
-        (facets.facets ?? []).find((f) => f.key === control.filterKey)
-          ?.values ?? [];
-      const excludeSet = new Set(control.excludeValues ?? []);
-      const firstValid = allOptions.find((v) => !excludeSet.has(v));
-      if (firstValid) {
-        updates[control.filterKey] = firstValid;
-      }
-    }
-    if (Object.keys(updates).length > 0) {
-      setFilterValues((prev) => ({ ...prev, ...updates }));
-    }
-  }, [facetData, contentItem.filterControls, filterValues]);
-
-  // Build facet options for filter controls
-  const facetCollection = facetData as MetricValueCollection | undefined;
-  const facetMap = new Map<string, string[]>();
-  for (const facet of facetCollection?.facets ?? []) {
-    facetMap.set(facet.key, facet.values);
-  }
-
   if (allSeriesValues.length === 0) {
     return (
       <div className="space-y-3">
-        {hasFilterControls && (
-          <FilterControlBar
-            controls={contentItem.filterControls!}
-            filterValues={filterValues}
-            facetMap={facetMap}
-            onFilterChange={(key, value) =>
-              setFilterValues((prev) => ({ ...prev, [key]: value }))
-            }
-          />
-        )}
+        {filterBar}
         <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
           <div className="text-center text-sm text-gray-500">
             <p>No series data available</p>
@@ -188,16 +73,7 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
 
   return (
     <div className="space-y-3">
-      {hasFilterControls && (
-        <FilterControlBar
-          controls={contentItem.filterControls!}
-          filterValues={filterValues}
-          facetMap={facetMap}
-          onFilterChange={(key, value) =>
-            setFilterValues((prev) => ({ ...prev, [key]: value }))
-          }
-        />
-      )}
+      {filterBar}
       {regularSeries.length === 0 ? (
         // Nothing to split on, so show the references rather than an empty panel.
         <SeriesVisualization
@@ -226,57 +102,6 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
           )}
         </MipEraSections>
       )}
-    </div>
-  );
-}
-
-interface FilterControlBarProps {
-  controls: FilterControl[];
-  filterValues: Record<string, string>;
-  facetMap: Map<string, string[]>;
-  onFilterChange: (key: string, value: string) => void;
-}
-
-function FilterControlBar({
-  controls,
-  filterValues,
-  facetMap,
-  onFilterChange,
-}: FilterControlBarProps) {
-  return (
-    <div className="flex items-center gap-3">
-      {controls.map((control) => {
-        const allOptions = facetMap.get(control.filterKey) ?? [];
-        const excludeSet = new Set(control.excludeValues ?? []);
-        const options = allOptions.filter((v) => !excludeSet.has(v));
-
-        return (
-          <div key={control.filterKey} className="flex items-center gap-2">
-            {control.label && (
-              <span className="text-sm text-muted-foreground">
-                {control.label}:
-              </span>
-            )}
-            <Select
-              value={filterValues[control.filterKey] ?? ""}
-              onValueChange={(value) =>
-                onFilterChange(control.filterKey, value)
-              }
-            >
-              <SelectTrigger size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      })}
     </div>
   );
 }
