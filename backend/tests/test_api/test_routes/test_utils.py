@@ -6,18 +6,6 @@ from ref_backend.api import deps
 from ref_backend.testing import test_ref_config, test_settings
 
 
-def test_health_check(client: TestClient, settings) -> None:
-    r = client.get(
-        f"{settings.API_V1_STR}/utils/health-check",
-    )
-
-    assert r.status_code == 200
-
-    data = r.json()
-
-    assert data is True
-
-
 def test_about(client: TestClient, settings) -> None:
     r = client.get(
         f"{settings.API_V1_STR}/utils/about",

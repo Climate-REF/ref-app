@@ -2893,24 +2893,6 @@ export type ResultsGetResultResponses = {
     200: unknown;
 };
 
-export type UtilsHealthCheckData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/utils/health-check/';
-};
-
-export type UtilsHealthCheckResponses = {
-    /**
-     * Response Utils-Health Check
-     *
-     * Successful Response
-     */
-    200: boolean;
-};
-
-export type UtilsHealthCheckResponse = UtilsHealthCheckResponses[keyof UtilsHealthCheckResponses];
-
 export type UtilsAboutData = {
     body?: never;
     path?: never;

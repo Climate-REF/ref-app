@@ -13,7 +13,9 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from ref_backend.builder import SPAStaticFiles
+from ref_backend import testing
+from ref_backend.api import deps
+from ref_backend.builder import SPAStaticFiles, build_app
 
 
 @pytest.fixture()
@@ -90,3 +92,29 @@ class TestSPAStaticFiles:
         r = spa_client.get("/api/v1/health")
         assert r.status_code == 200
         assert r.json() == {"ok": True}
+
+
+class TestOperationalRoutesSurviveTheMount:
+    """
+    The mount answers every path, so the operational routes have to be registered ahead of it.
+    """
+
+    @pytest.fixture()
+    def mounted_client(self, static_dir):
+        settings = testing.test_settings().model_copy(update={"STATIC_DIR": str(static_dir)})
+        app = build_app(
+            settings=settings,
+            ref_config=testing.test_ref_config(),
+            database=deps._get_database_dependency(testing.test_settings(), testing.test_ref_config()),
+        )
+        with TestClient(app) as c:
+            yield c
+
+    @pytest.mark.parametrize("path", ["/livez", "/readyz", "/deploy/info", "/metrics"])
+    def test_route_is_not_shadowed(self, mounted_client: TestClient, path: str):
+        assert mounted_client.get(path).status_code == 200
+
+    def test_the_mount_still_serves_the_spa(self, mounted_client: TestClient):
+        r = mounted_client.get("/diagnostics")
+        assert r.status_code == 200
+        assert "SPA Root" in r.text

@@ -7,9 +7,12 @@ Netlify deploys handle the same paths through redirects in `frontend/netlify.tom
 so both deploy targets need to stay in step.
 """
 
+import logging
+
 import httpx
 from fastapi import APIRouter, Request, Response
-from loguru import logger
+
+logger = logging.getLogger(__name__)
 
 PLAUSIBLE_SCRIPT_URL = "https://plausible.io/js/script.file-downloads.outbound-links.js"
 PLAUSIBLE_EVENT_URL = "https://plausible.io/api/event"

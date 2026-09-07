@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import os
 import tarfile
@@ -7,7 +8,6 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
@@ -38,6 +38,8 @@ from ref_backend.models import (
     MetricValueCollection,
 )
 from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 

@@ -2,25 +2,33 @@
 Main entry point for the FastAPI application
 """
 
+import logging
+
 import dotenv
 from fastapi import HTTPException, Request, Response
 from fastapi.exception_handlers import (
     http_exception_handler as fasthttp_exception_handler,
 )
-from loguru import logger
 
 from climate_ref.config import Config as RefConfig
 from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
 from ref_backend.core.config import get_settings
-from ref_backend.log import setup_logging
+from ref_backend.logging_config import configure_logging
 from ref_backend.testing import test_ref_config, test_settings
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables from a .env file, if it exists
 dotenv.load_dotenv(override=True)
 
 # Load the settings early, to avoid climate-ref setting the `REF_CONFIGURATION` environment variable
 settings = get_settings()
+
+# Configure logging before anything else imports climate-ref, so startup logs are structured too.
+# uvicorn applies its own dictConfig after importing this module, which re-enables its access log,
+# so configure_logging runs again below to undo that.
+configure_logging(settings.LOG_LEVEL, settings.LOG_FORMAT)
 
 from ref_backend.builder import build_app  # noqa: E402
 from ref_backend.core.ref import get_provider_registry, get_ref_config  # noqa: E402
@@ -30,7 +38,7 @@ ref_config = get_ref_config(settings)
 database = deps._get_database_dependency(settings, ref_config)
 provider_registry = get_provider_registry(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
 
-setup_logging(settings.LOG_LEVEL)
+configure_logging(settings.LOG_LEVEL, settings.LOG_FORMAT)
 app = build_app(settings, ref_config, database)
 
 

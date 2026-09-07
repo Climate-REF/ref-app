@@ -8,14 +8,16 @@ that may not be directly available from the diagnostic provider code.
 """
 
 import functools
+import logging
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 from typing import Literal
 
 import yaml
-from loguru import logger
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class ReferenceDatasetLink(BaseModel):

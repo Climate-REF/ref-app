@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 
 from ref_backend.core.aft import get_aft_diagnostic_by_id, get_aft_diagnostics_index
 from ref_backend.models import AFTDiagnosticDetail, AFTDiagnosticSummary
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/cmip7-aft-diagnostics", tags=["CMIP7 Assessment Fast Track (AFT)"])
 

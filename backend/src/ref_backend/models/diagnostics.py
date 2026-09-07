@@ -1,9 +1,9 @@
 """Diagnostic summaries, including the YAML metadata overrides."""
 
+import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import func
 
@@ -16,6 +16,8 @@ from ref_backend.core.diagnostic_metadata import (
 from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext

@@ -1,11 +1,13 @@
+import logging
+from collections.abc import Callable
 from dataclasses import asdict
 
 import sentry_sdk
+import sqlalchemy
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
-from loguru import logger
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
@@ -17,6 +19,12 @@ from climate_ref.database import Database
 from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
 from ref_backend.core.config import Settings
+from ref_backend.deploy import router as deploy_router
+from ref_backend.health import router as health_router
+from ref_backend.metrics import instrument_app
+from ref_backend.middleware import WideEventMiddleware
+
+logger = logging.getLogger(__name__)
 
 description = """
 API for querying the results from the Climate Rapid Evaluation Framework (Climate REF).
@@ -33,6 +41,9 @@ if you have any questions or feedback.
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
+    # Untagged routes such as /metrics are not part of the client, so the bare name is enough.
+    if not route.tags:
+        return route.name
     return f"{route.tags[0]}-{route.name}"
 
 
@@ -61,6 +72,19 @@ class LogStatistics(Action):
     def handle(self, statistics: AlchemyStatistics) -> None:
         if statistics.total_invocations > 0:
             logger.info(asdict(statistics))
+
+
+def _database_readiness_check(database: Database) -> Callable[[], bool]:
+    """
+    Build a readiness check that proves the configured database still answers
+    """
+
+    def database_reachable() -> bool:
+        with database._engine.connect() as connection:
+            connection.execute(sqlalchemy.text("SELECT 1"))
+        return True
+
+    return database_reachable
 
 
 class SPAStaticFiles(StaticFiles):
@@ -127,12 +151,22 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             allow_credentials=False,
             allow_methods=["GET"],
             allow_headers=["*"],
+            expose_headers=["x-request-id", "x-process-time"],
         )
+
+    app.add_middleware(WideEventMiddleware)
+
+    app.state.readiness_checks = [_database_readiness_check(database)]
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
     # Mounted above the static files, which only answer GET and HEAD.
     app.include_router(analytics_router)
+    app.include_router(health_router)
+    app.include_router(deploy_router)
+
+    # Registers /metrics, which has to be in place before the catch-all SPA mount below.
+    instrument_app(app)
 
     if settings.STATIC_DIR:
         logger.info(f"Serving static files from {settings.STATIC_DIR}")

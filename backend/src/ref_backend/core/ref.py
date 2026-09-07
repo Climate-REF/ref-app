@@ -1,11 +1,12 @@
+import logging
 from pathlib import Path
-
-from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database, MigrationState
 from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.core.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 def get_ref_config(settings: Settings) -> Config:

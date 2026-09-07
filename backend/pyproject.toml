@@ -11,7 +11,7 @@ dependencies = [
     "pydantic-settings<3.0.0,>=2.13.1",
     "sentry-sdk[fastapi]>=2.0.0",
     "climate-ref[aft-providers,postgres]>=0.18.0,<0.19",
-    "loguru",
+    "prometheus-fastapi-instrumentator>=7.0.0",
     "pyyaml>=6.0",
     "fastapi-sqlalchemy-monitor>=1.1.3",
 ]
