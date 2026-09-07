@@ -283,6 +283,11 @@ export const EnsembleChart = ({
     categoryOrder,
   ]);
 
+  const categoriesByName = useMemo(
+    () => new Map(sortedChartData.map((datum) => [datum.name, datum])),
+    [sortedChartData],
+  );
+
   // Get all unique group names for rendering multiple bars
   const allGroupNames = useMemo(() => {
     const names = new Set<string>();
@@ -385,9 +390,7 @@ export const EnsembleChart = ({
               if (nextDistance >= distance) continue;
               const categoryName = marker.dataset.category!;
               const groupName = marker.dataset.group!;
-              const datum = sortedChartData.find(
-                (d) => d.name === categoryName,
-              );
+              const datum = categoriesByName.get(categoryName);
               const point =
                 datum?.groups[groupName]?.points[
                   Number(marker.dataset.boxPoint)
@@ -446,9 +449,7 @@ export const EnsembleChart = ({
             offset={20}
             content={({ active, coordinate, viewBox }) => {
               if (!active || !highlightedPoint) return null;
-              const datum = sortedChartData.find(
-                (d) => d.name === highlightedPoint.categoryName,
-              );
+              const datum = categoriesByName.get(highlightedPoint.categoryName);
               const statsKey = highlightedPoint.groupName;
               const groupStats = datum?.groups[statsKey];
               if (!groupStats?.points.includes(highlightedPoint.point))
@@ -495,34 +496,15 @@ export const EnsembleChart = ({
                   <div className="mb-3">
                     <div className="mb-1 font-semibold">Statistics</div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                      {renderKV(
-                        "Min",
-                        groupStats ? fmt(Number(groupStats.min)) : "—",
-                      )}
-                      {renderKV(
-                        "Q1",
-                        groupStats
-                          ? fmt(Number(groupStats.lowerQuartile))
-                          : "—",
-                      )}
-                      {renderKV(
-                        "Median",
-                        groupStats ? fmt(Number(groupStats.median)) : "—",
-                      )}
-                      {renderKV(
-                        "Q3",
-                        groupStats
-                          ? fmt(Number(groupStats.upperQuartile))
-                          : "—",
-                      )}
-                      {renderKV(
-                        "Max",
-                        groupStats ? fmt(Number(groupStats.max)) : "—",
-                      )}
+                      {renderKV("Min", fmt(Number(groupStats.min)))}
+                      {renderKV("Q1", fmt(Number(groupStats.lowerQuartile)))}
+                      {renderKV("Median", fmt(Number(groupStats.median)))}
+                      {renderKV("Q3", fmt(Number(groupStats.upperQuartile)))}
+                      {renderKV("Max", fmt(Number(groupStats.max)))}
                       {renderKV(
                         "Count",
                         String(
-                          (groupStats?.values?.length ?? 0) +
+                          groupStats.values.length +
                             (outliers?.[statsKey] ?? 0),
                         ),
                       )}
@@ -535,45 +517,38 @@ export const EnsembleChart = ({
                   </div>
 
                   {/* Closest Data Point */}
-                  {closestDataPoint && (
-                    <div>
-                      <div className="mb-1 font-semibold">
-                        Closest Data Point
+                  <div>
+                    <div className="mb-1 font-semibold">Closest Data Point</div>
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-x-4">
+                        {renderKV("Value", fmt(Number(closestDataPoint.value)))}
+                        {renderKV("Units", metricUnits)}
                       </div>
-                      <div className="space-y-1">
-                        <div className="grid grid-cols-2 gap-x-4">
-                          {renderKV(
-                            "Value",
-                            fmt(Number(closestDataPoint.value)),
-                          )}
-                          {renderKV("Units", metricUnits)}
-                        </div>
-                        <div className="mt-2">
-                          <div className="font-semibold mb-1">Dimensions:</div>
-                          <div className="grid grid-cols-1 gap-y-1 text-xs">
-                            {Object.entries(closestDataPoint.dimensions).map(
-                              ([key, value]) => (
-                                <div
-                                  key={key}
-                                  className="grid grid-cols-2 gap-x-2"
+                      <div className="mt-2">
+                        <div className="font-semibold mb-1">Dimensions:</div>
+                        <div className="grid grid-cols-1 gap-y-1 text-xs">
+                          {Object.entries(closestDataPoint.dimensions).map(
+                            ([key, value]) => (
+                              <div
+                                key={key}
+                                className="grid grid-cols-2 gap-x-2"
+                              >
+                                <span className="text-muted-foreground truncate">
+                                  {key}:
+                                </span>
+                                <span
+                                  className="truncate max-w-[150px]"
+                                  title={value}
                                 >
-                                  <span className="text-muted-foreground truncate">
-                                    {key}:
-                                  </span>
-                                  <span
-                                    className="truncate max-w-[150px]"
-                                    title={value}
-                                  >
-                                    {value}
-                                  </span>
-                                </div>
-                              ),
-                            )}
-                          </div>
+                                  {value}
+                                </span>
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             }}
