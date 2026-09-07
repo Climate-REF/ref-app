@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsFacets, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsFacetsData, DiagnosticsFacetsResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionsData, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
+import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsFacets, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, modelsEnsemble, modelsGet, modelsList, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsFacetsData, DiagnosticsFacetsResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionsData, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ModelsEnsembleData, ModelsEnsembleError, ModelsEnsembleResponse, ModelsGetData, ModelsGetError, ModelsGetResponse, ModelsListData, ModelsListError, ModelsListResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -763,6 +763,70 @@ export const explorerGetThemeOptions = (options: Options<ExplorerGetThemeData>) 
         return data;
     },
     queryKey: explorerGetThemeQueryKey(options)
+});
+
+export const modelsListQueryKey = (options?: Options<ModelsListData>) => createQueryKey('modelsList', options);
+
+/**
+ * List
+ *
+ * List the models that have been run, with a tally of how their runs went.
+ *
+ * Counts cover the promoted version of each diagnostic, matching the rest of the app.
+ */
+export const modelsListOptions = (options?: Options<ModelsListData>) => queryOptions<ModelsListResponse, ModelsListError, ModelsListResponse, ReturnType<typeof modelsListQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsList({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsListQueryKey(options)
+});
+
+export const modelsGetQueryKey = (options: Options<ModelsGetData>) => createQueryKey('modelsGet', options);
+
+/**
+ * Get
+ *
+ * Summarise the runs a single model took part in, broken down by diagnostic.
+ */
+export const modelsGetOptions = (options: Options<ModelsGetData>) => queryOptions<ModelsGetResponse, ModelsGetError, ModelsGetResponse, ReturnType<typeof modelsGetQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsGet({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsGetQueryKey(options)
+});
+
+export const modelsEnsembleQueryKey = (options: Options<ModelsEnsembleData>) => createQueryKey('modelsEnsemble', options);
+
+/**
+ * Ensemble
+ *
+ * Compare this model against the ensemble, one entry per scalar metric it reported.
+ *
+ * Entries are ordered by how far the model sits from the ensemble mean, furthest first.
+ */
+export const modelsEnsembleOptions = (options: Options<ModelsEnsembleData>) => queryOptions<ModelsEnsembleResponse, ModelsEnsembleError, ModelsEnsembleResponse, ReturnType<typeof modelsEnsembleQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await modelsEnsemble({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: modelsEnsembleQueryKey(options)
 });
 
 export const resultsGetResultQueryKey = (options: Options<ResultsGetResultData>) => createQueryKey('resultsGetResult', options);

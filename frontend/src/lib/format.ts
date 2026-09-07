@@ -72,3 +72,22 @@ export function formatCoreHours(seconds: number | null | undefined): string {
     maximumFractionDigits: digits,
   });
 }
+
+const SIGNIFICANT_DIGITS = new Intl.NumberFormat(undefined, {
+  minimumSignificantDigits: 4,
+  maximumSignificantDigits: 4,
+});
+
+/**
+ * Formats a metric value to four significant digits, so a column of them lines up.
+ *
+ * Values outside the readable decimal range use exponent notation instead.
+ */
+export function formatValue(value: number, units?: string | null): string {
+  const magnitude = Math.abs(value);
+  const rendered =
+    magnitude >= 1e-3 && magnitude < 1e6
+      ? SIGNIFICANT_DIGITS.format(value)
+      : value.toExponential(2);
+  return units ? `${rendered} ${units}` : rendered;
+}

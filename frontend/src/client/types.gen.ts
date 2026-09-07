@@ -498,6 +498,26 @@ export type CollectionDiagnosticSummary = {
 };
 
 /**
+ * Collection[EnsembleComparison]
+ */
+export type CollectionEnsembleComparison = {
+    /**
+     * Data
+     */
+    data: Array<EnsembleComparison>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+    /**
+     * Count
+     *
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+/**
  * Collection[ExecutionGroup]
  */
 export type CollectionExecutionGroup = {
@@ -538,6 +558,26 @@ export type CollectionExecution = {
 };
 
 /**
+ * Collection[ModelSummary]
+ */
+export type CollectionModelSummary = {
+    /**
+     * Data
+     */
+    data: Array<ModelSummary>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+    /**
+     * Count
+     *
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+/**
  * Dataset
  */
 export type Dataset = {
@@ -562,6 +602,35 @@ export type Dataset = {
      * More Info Url
      */
     readonly more_info_url: string | null;
+};
+
+/**
+ * DiagnosticRuns
+ *
+ * How one diagnostic went for one model.
+ */
+export type DiagnosticRuns = {
+    /**
+     * Diagnostic Id
+     */
+    diagnostic_id: number;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
+    /**
+     * Diagnostic Name
+     */
+    diagnostic_name: string;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Provider Name
+     */
+    provider_name: string;
+    execution_groups: RunCounts;
 };
 
 /**
@@ -640,6 +709,105 @@ export type DiagnosticSummary = {
      */
     tags?: Array<string> | null;
     resource_usage?: ExecutionResourceSummary | null;
+};
+
+/**
+ * EnsembleComparison
+ *
+ * One metric, comparing a single model against the rest of the ensemble.
+ */
+export type EnsembleComparison = {
+    /**
+     * Diagnostic Id
+     */
+    diagnostic_id: number;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
+    /**
+     * Diagnostic Name
+     */
+    diagnostic_name: string;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Dimensions
+     */
+    dimensions: {
+        [key: string]: string;
+    };
+    /**
+     * Units
+     */
+    units: string | null;
+    /**
+     * Model Value
+     */
+    model_value: number;
+    /**
+     * Model Member Count
+     */
+    model_member_count: number;
+    ensemble: EnsembleStatistics;
+    /**
+     * Percentile
+     */
+    percentile: number;
+    /**
+     * Z Score
+     */
+    z_score: number | null;
+    /**
+     * Is Outlier
+     *
+     * Whether the model falls outside the ensemble's inter-quartile fences.
+     *
+     * Uses `OutlierPolicy` which is the defaults for the values list.
+     */
+    readonly is_outlier: boolean;
+};
+
+/**
+ * EnsembleStatistics
+ *
+ * The spread of one metric across every model that reported it.
+ */
+export type EnsembleStatistics = {
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Min
+     */
+    min: number;
+    /**
+     * Lower Quartile
+     */
+    lower_quartile: number;
+    /**
+     * Median
+     */
+    median: number;
+    /**
+     * Upper Quartile
+     */
+    upper_quartile: number;
+    /**
+     * Max
+     */
+    max: number;
+    /**
+     * Mean
+     */
+    mean: number;
+    /**
+     * Std Dev
+     */
+    std_dev: number | null;
 };
 
 /**
@@ -891,6 +1059,46 @@ export type Facet = {
 };
 
 /**
+ * FailedRun
+ *
+ * An execution group whose latest execution did not succeed.
+ */
+export type FailedRun = {
+    /**
+     * Execution Group Id
+     */
+    execution_group_id: number;
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
+    /**
+     * Diagnostic Name
+     */
+    diagnostic_name: string;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Execution Id
+     */
+    execution_id: number | null;
+    /**
+     * Outcome
+     */
+    outcome: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * GroupBy
  */
 export type GroupBy = {
@@ -986,6 +1194,72 @@ export type MetricValueFacetSummary = {
 export type MetricValueType = 'scalar' | 'series';
 
 /**
+ * ModelDetail
+ *
+ * Everything the model page needs about a single source_id.
+ */
+export type ModelDetail = {
+    /**
+     * Source Id
+     */
+    source_id: string;
+    /**
+     * Mip Eras
+     */
+    mip_eras: Array<string>;
+    /**
+     * Institution Ids
+     */
+    institution_ids: Array<string>;
+    /**
+     * Dataset Count
+     */
+    dataset_count: number;
+    /**
+     * Diagnostic Count
+     */
+    diagnostic_count: number;
+    execution_groups: RunCounts;
+    /**
+     * Diagnostics
+     */
+    diagnostics: Array<DiagnosticRuns>;
+    /**
+     * Failures
+     */
+    failures: Array<FailedRun>;
+};
+
+/**
+ * ModelSummary
+ *
+ * One row of the model index: a source_id and how its runs went.
+ */
+export type ModelSummary = {
+    /**
+     * Source Id
+     */
+    source_id: string;
+    /**
+     * Mip Eras
+     */
+    mip_eras: Array<string>;
+    /**
+     * Institution Ids
+     */
+    institution_ids: Array<string>;
+    /**
+     * Dataset Count
+     */
+    dataset_count: number;
+    /**
+     * Diagnostic Count
+     */
+    diagnostic_count: number;
+    execution_groups: RunCounts;
+};
+
+/**
  * ProviderSummary
  *
  * Summary information about a Metric Provider.
@@ -1059,6 +1333,38 @@ export type ReferenceDatasetLink = {
  * These map to the categories of output in the CMEC output bundle
  */
 export type ResultOutputType = 'plot' | 'data' | 'html';
+
+/**
+ * RunCounts
+ *
+ * Execution groups classified by the outcome of their latest execution.
+ *
+ * A group that has never run names no model, so it is absent rather than counted.
+ */
+export type RunCounts = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Successful
+     */
+    successful: number;
+    /**
+     * Failed
+     */
+    failed: number;
+    /**
+     * Running
+     */
+    running: number;
+    /**
+     * Success Rate Percentage
+     *
+     * Successful groups as a percentage of the total, rounded to one decimal place.
+     */
+    readonly success_rate_percentage: number;
+};
 
 /**
  * ScalarValue
@@ -1289,6 +1595,20 @@ export type CollectionDiagnosticSummaryWritable = {
 };
 
 /**
+ * Collection[EnsembleComparison]
+ */
+export type CollectionEnsembleComparisonWritable = {
+    /**
+     * Data
+     */
+    data: Array<EnsembleComparisonWritable>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+};
+
+/**
  * Collection[ExecutionGroup]
  */
 export type CollectionExecutionGroupWritable = {
@@ -1317,6 +1637,20 @@ export type CollectionExecutionWritable = {
 };
 
 /**
+ * Collection[ModelSummary]
+ */
+export type CollectionModelSummaryWritable = {
+    /**
+     * Data
+     */
+    data: Array<ModelSummaryWritable>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+};
+
+/**
  * Dataset
  */
 export type DatasetWritable = {
@@ -1337,6 +1671,86 @@ export type DatasetWritable = {
      * Mip Era
      */
     mip_era?: string | null;
+};
+
+/**
+ * DiagnosticRuns
+ *
+ * How one diagnostic went for one model.
+ */
+export type DiagnosticRunsWritable = {
+    /**
+     * Diagnostic Id
+     */
+    diagnostic_id: number;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
+    /**
+     * Diagnostic Name
+     */
+    diagnostic_name: string;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Provider Name
+     */
+    provider_name: string;
+    execution_groups: RunCountsWritable;
+};
+
+/**
+ * EnsembleComparison
+ *
+ * One metric, comparing a single model against the rest of the ensemble.
+ */
+export type EnsembleComparisonWritable = {
+    /**
+     * Diagnostic Id
+     */
+    diagnostic_id: number;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
+    /**
+     * Diagnostic Name
+     */
+    diagnostic_name: string;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Dimensions
+     */
+    dimensions: {
+        [key: string]: string;
+    };
+    /**
+     * Units
+     */
+    units: string | null;
+    /**
+     * Model Value
+     */
+    model_value: number;
+    /**
+     * Model Member Count
+     */
+    model_member_count: number;
+    ensemble: EnsembleStatistics;
+    /**
+     * Percentile
+     */
+    percentile: number;
+    /**
+     * Z Score
+     */
+    z_score: number | null;
 };
 
 /**
@@ -1388,6 +1802,98 @@ export type ExecutionStatsWritable = {
      */
     total_files: number;
     resource_usage: ExecutionResourceSummary | null;
+};
+
+/**
+ * ModelDetail
+ *
+ * Everything the model page needs about a single source_id.
+ */
+export type ModelDetailWritable = {
+    /**
+     * Source Id
+     */
+    source_id: string;
+    /**
+     * Mip Eras
+     */
+    mip_eras: Array<string>;
+    /**
+     * Institution Ids
+     */
+    institution_ids: Array<string>;
+    /**
+     * Dataset Count
+     */
+    dataset_count: number;
+    /**
+     * Diagnostic Count
+     */
+    diagnostic_count: number;
+    execution_groups: RunCountsWritable;
+    /**
+     * Diagnostics
+     */
+    diagnostics: Array<DiagnosticRunsWritable>;
+    /**
+     * Failures
+     */
+    failures: Array<FailedRun>;
+};
+
+/**
+ * ModelSummary
+ *
+ * One row of the model index: a source_id and how its runs went.
+ */
+export type ModelSummaryWritable = {
+    /**
+     * Source Id
+     */
+    source_id: string;
+    /**
+     * Mip Eras
+     */
+    mip_eras: Array<string>;
+    /**
+     * Institution Ids
+     */
+    institution_ids: Array<string>;
+    /**
+     * Dataset Count
+     */
+    dataset_count: number;
+    /**
+     * Diagnostic Count
+     */
+    diagnostic_count: number;
+    execution_groups: RunCountsWritable;
+};
+
+/**
+ * RunCounts
+ *
+ * Execution groups classified by the outcome of their latest execution.
+ *
+ * A group that has never run names no model, so it is absent rather than counted.
+ */
+export type RunCountsWritable = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Successful
+     */
+    successful: number;
+    /**
+     * Failed
+     */
+    failed: number;
+    /**
+     * Running
+     */
+    running: number;
 };
 
 export type Cmip7AssessmentFastTrackAftListAftDiagnosticsData = {
@@ -2246,6 +2752,118 @@ export type ExplorerGetThemeResponses = {
 };
 
 export type ExplorerGetThemeResponse = ExplorerGetThemeResponses[keyof ExplorerGetThemeResponses];
+
+export type ModelsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/models/';
+};
+
+export type ModelsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsListError = ModelsListErrors[keyof ModelsListErrors];
+
+export type ModelsListResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionModelSummary;
+};
+
+export type ModelsListResponse = ModelsListResponses[keyof ModelsListResponses];
+
+export type ModelsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Source Id
+         */
+        source_id: string;
+    };
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/models/{source_id}';
+};
+
+export type ModelsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsGetError = ModelsGetErrors[keyof ModelsGetErrors];
+
+export type ModelsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ModelDetail;
+};
+
+export type ModelsGetResponse = ModelsGetResponses[keyof ModelsGetResponses];
+
+export type ModelsEnsembleData = {
+    body?: never;
+    path: {
+        /**
+         * Source Id
+         */
+        source_id: string;
+    };
+    query?: {
+        /**
+         * Mip Era
+         *
+         * Restrict to one MIP era, CMIP6 or CMIP7
+         */
+        mip_era?: string | null;
+        /**
+         * Diagnostic Slug
+         *
+         * Restrict to a single diagnostic
+         */
+        diagnostic_slug?: string | null;
+    };
+    url: '/api/v1/models/{source_id}/ensemble';
+};
+
+export type ModelsEnsembleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ModelsEnsembleError = ModelsEnsembleErrors[keyof ModelsEnsembleErrors];
+
+export type ModelsEnsembleResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionEnsembleComparison;
+};
+
+export type ModelsEnsembleResponse = ModelsEnsembleResponses[keyof ModelsEnsembleResponses];
 
 export type ResultsGetResultData = {
     body?: never;
