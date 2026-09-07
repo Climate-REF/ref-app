@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from sqlalchemy import distinct, func, select
 from sqlalchemy.orm import aliased
@@ -5,7 +7,13 @@ from sqlalchemy.orm import aliased
 from climate_ref import models
 from climate_ref.database import Database
 from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for
-from ref_backend.core.model_runs import _model_groups, failed_runs, model_run_rows, tally
+from ref_backend.core.model_runs import (
+    _model_groups,
+    failed_runs,
+    latest_executions,
+    model_run_rows,
+    tally,
+)
 from ref_backend.testing import test_ref_config as fixture_ref_config
 
 
@@ -156,3 +164,33 @@ def test_a_retry_against_other_datasets_moves_participation(writable_session):
     writable_session.commit()
 
     assert models_of(writable_session, group.id) == {replacement.source_id}
+
+
+def test_a_backfilled_execution_does_not_become_the_latest(writable_session):
+    """
+    The deciding execution is the newest by `created_at`, not the highest id.
+
+    A row can be inserted after one it predates, such as a backfill. Ranking on id alone would
+    hand the group that older run's outcome, and disagree with the statistics endpoint.
+    """
+    group = writable_session.scalars(
+        select(models.ExecutionGroup).join(models.ExecutionGroup.executions).limit(1)
+    ).first()
+    deciding = group.executions[-1]
+
+    writable_session.add(
+        models.Execution(
+            execution_group_id=group.id,
+            dataset_hash="backfill",
+            output_fragment=deciding.output_fragment,
+            successful=not deciding.successful,
+            created_at=deciding.created_at - timedelta(days=1),
+        )
+    )
+    writable_session.commit()
+
+    latest = latest_executions()
+    picked = writable_session.execute(
+        select(latest.c.execution_id).where(latest.c.group_id == group.id)
+    ).scalar_one()
+    assert picked == deciding.id

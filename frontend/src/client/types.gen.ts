@@ -764,6 +764,8 @@ export type EnsembleComparison = {
      * Is Outlier
      *
      * Whether the model falls outside the ensemble's inter-quartile fences.
+     *
+     * Uses `OutlierPolicy` which is the defaults for the values list.
      */
     readonly is_outlier: boolean;
 };

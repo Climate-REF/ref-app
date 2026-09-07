@@ -78,11 +78,30 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
 
 
 def latest_executions() -> Any:
-    """Select the most recent execution of each group, which is the one that decides its outcome."""
+    """
+    Select the execution that decides each group, the way `climate_ref` picks the latest.
+
+    That is newest `created_at`, with the highest id breaking a tie. Ranking on id alone parts
+    company with `created_at` whenever rows land out of order, and these counts would then
+    disagree with the statistics endpoint and the CLI for the same group.
+    """
+    newest = (
+        select(
+            models.Execution.execution_group_id.label("group_id"),
+            func.max(models.Execution.created_at).label("created_at"),
+        )
+        .group_by(models.Execution.execution_group_id)
+        .subquery()
+    )
     return (
         select(
             models.Execution.execution_group_id.label("group_id"),
             func.max(models.Execution.id).label("execution_id"),
+        )
+        .join(
+            newest,
+            (models.Execution.execution_group_id == newest.c.group_id)
+            & (models.Execution.created_at == newest.c.created_at),
         )
         .group_by(models.Execution.execution_group_id)
         .subquery()

@@ -4,6 +4,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, computed_field
 
+from climate_ref.results import OutlierPolicy
+
+_OUTLIERS = OutlierPolicy()
+
 
 class RunCounts(BaseModel):
     """
@@ -136,11 +140,13 @@ class EnsembleComparison(BaseModel):
     def is_outlier(self) -> bool:
         """
         Whether the model falls outside the ensemble's inter-quartile fences.
+
+        Uses `OutlierPolicy` which is the defaults for the values list.
         """
         spread = self.ensemble.upper_quartile - self.ensemble.lower_quartile
-        if spread == 0:
+        if spread == 0 or self.ensemble.count < _OUTLIERS.min_n:
             return False
         return (
-            self.model_value < self.ensemble.lower_quartile - 1.5 * spread
-            or self.model_value > self.ensemble.upper_quartile + 1.5 * spread
+            self.model_value < self.ensemble.lower_quartile - _OUTLIERS.factor * spread
+            or self.model_value > self.ensemble.upper_quartile + _OUTLIERS.factor * spread
         )
