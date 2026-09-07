@@ -33,7 +33,8 @@ def grouping_dimensions() -> list[str]:
 def _statistics(values: Sequence[float]) -> EnsembleStatistics:
     """Describe the spread of one metric, using the interpolated quartiles the charts draw."""
     ordered = sorted(values)
-    lower, median, upper = quantiles(ordered, n=4, method="inclusive")
+    # `quantiles` needs two points before Python 3.14, and one model has no spread anyway.
+    lower, median, upper = quantiles(ordered, n=4, method="inclusive") if len(ordered) > 1 else ordered * 3
 
     return EnsembleStatistics(
         count=len(ordered),
