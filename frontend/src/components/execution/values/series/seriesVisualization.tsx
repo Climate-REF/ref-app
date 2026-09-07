@@ -1,4 +1,6 @@
+import { AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/hooks/useTheme";
@@ -10,6 +12,9 @@ import { useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
 import { useSpatialIndex } from "./useSpatialIndex";
 import { createChartData, getDimensionKeys } from "./utils";
+
+const REFERENCE_MISMATCH_ISSUE =
+  "https://github.com/Climate-REF/climate-ref/issues/927";
 
 interface SimpleSeriesVisualizationProps {
   seriesValues: SeriesValue[];
@@ -86,6 +91,11 @@ export function SeriesVisualization({
         colorDimension,
       ),
     [seriesValues, referenceSeriesValues, labelTemplate, colorDimension],
+  );
+
+  const referenceCount = useMemo(
+    () => seriesMetadata.filter((meta) => meta.isReference).length,
+    [seriesMetadata],
   );
 
   // Prefer per-series value_units for the Y-axis/tooltip unit label; fall
@@ -360,75 +370,98 @@ export function SeriesVisualization({
   }
 
   return (
-    <div className="flex gap-4">
-      {/* Chart */}
-      <div className="flex-1 min-w-0" ref={containerRef}>
-        <div className="flex justify-end mb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLegendVisible(!legendVisible)}
-            className="h-7 text-xs text-muted-foreground"
-          >
-            {legendVisible ? "Hide Legend" : "Show Legend"}
-          </Button>
+    <div className="space-y-3">
+      {referenceCount > 1 ? (
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertTitle>Multiple reference curves</AlertTitle>
+          <AlertDescription>
+            This chart draws {referenceCount} reference curves. The reference is
+            regridded onto each model grid before the statistic is computed, so
+            one observational dataset can produce several different curves. This
+            is tracked in{" "}
+            <a
+              className="underline underline-offset-2"
+              href={REFERENCE_MISMATCH_ISSUE}
+              target="_blank"
+              rel="noreferrer"
+            >
+              climate-ref#927
+            </a>
+            .
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <div className="flex gap-4">
+        {/* Chart */}
+        <div className="flex-1 min-w-0" ref={containerRef}>
+          <div className="flex justify-end mb-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLegendVisible(!legendVisible)}
+              className="h-7 text-xs text-muted-foreground"
+            >
+              {legendVisible ? "Hide Legend" : "Show Legend"}
+            </Button>
+          </div>
+          <div className="relative">
+            <SeriesCanvas
+              chartData={chartData}
+              seriesMetadata={seriesMetadata}
+              indexName={indexName}
+              hiddenLabels={effectiveHiddenLabels}
+              hoveredLabelRef={hoveredLabelRef}
+              crosshairRef={crosshairRef}
+              xScale={xScale}
+              yScale={yScale}
+              margins={margins}
+              width={containerWidth}
+              height={CHART_HEIGHT}
+              innerWidth={innerWidth}
+              innerHeight={innerHeight}
+              isDark={isDark}
+              isTimeAxis={isTimeAxis}
+              metricName={metricName}
+              units={effectiveUnits}
+              indexUnits={indexUnits}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseLeave={handleCanvasMouseLeave}
+              onClick={handleCanvasClick}
+            />
+            <CanvasTooltip
+              visible={tooltipState.visible}
+              x={tooltipState.x}
+              y={tooltipState.y}
+              nearest={tooltipState.nearest}
+              allAtX={tooltipState.allAtX}
+              containerWidth={containerWidth}
+              indexName={indexName}
+              isTimeAxis={isTimeAxis}
+              units={effectiveUnits}
+            />
+          </div>
         </div>
-        <div className="relative">
-          <SeriesCanvas
-            chartData={chartData}
-            seriesMetadata={seriesMetadata}
-            indexName={indexName}
-            hiddenLabels={effectiveHiddenLabels}
-            hoveredLabelRef={hoveredLabelRef}
-            crosshairRef={crosshairRef}
-            xScale={xScale}
-            yScale={yScale}
-            margins={margins}
-            width={containerWidth}
-            height={CHART_HEIGHT}
-            innerWidth={innerWidth}
-            innerHeight={innerHeight}
-            isDark={isDark}
-            isTimeAxis={isTimeAxis}
-            metricName={metricName}
-            units={effectiveUnits}
-            indexUnits={indexUnits}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseLeave={handleCanvasMouseLeave}
-            onClick={handleCanvasClick}
-          />
-          <CanvasTooltip
-            visible={tooltipState.visible}
-            x={tooltipState.x}
-            y={tooltipState.y}
-            nearest={tooltipState.nearest}
-            allAtX={tooltipState.allAtX}
-            containerWidth={containerWidth}
-            indexName={indexName}
-            isTimeAxis={isTimeAxis}
-            units={effectiveUnits}
-          />
-        </div>
-      </div>
 
-      {/* Legend Sidebar */}
-      {legendVisible && (
-        <SeriesLegend
-          uniqueLabels={uniqueLabels}
-          hiddenLabels={effectiveHiddenLabels}
-          hoveredLabel={hoveredLabel}
-          soloedLabel={soloedLabel}
-          onToggleLabel={toggleLabel}
-          onHoverLabel={handleLabelHover}
-          onSoloLabel={handleSolo}
-          onShowAll={showAll}
-          onHideAll={hideAll}
-          groupByDimension={groupByDimension}
-          onGroupByDimensionChange={setGroupByDimension}
-          availableDimensions={availableDimensions}
-          labelDimensionMap={labelDimensionMap}
-        />
-      )}
+        {/* Legend Sidebar */}
+        {legendVisible && (
+          <SeriesLegend
+            uniqueLabels={uniqueLabels}
+            hiddenLabels={effectiveHiddenLabels}
+            hoveredLabel={hoveredLabel}
+            soloedLabel={soloedLabel}
+            onToggleLabel={toggleLabel}
+            onHoverLabel={handleLabelHover}
+            onSoloLabel={handleSolo}
+            onShowAll={showAll}
+            onHideAll={hideAll}
+            groupByDimension={groupByDimension}
+            onGroupByDimensionChange={setGroupByDimension}
+            availableDimensions={availableDimensions}
+            labelDimensionMap={labelDimensionMap}
+          />
+        )}
+      </div>
     </div>
   );
 }
