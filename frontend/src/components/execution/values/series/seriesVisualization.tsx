@@ -11,11 +11,7 @@ import { SeriesLegend } from "./seriesLegend";
 import { useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
 import { useSpatialIndex } from "./useSpatialIndex";
-import {
-  createChartData,
-  dedupeReferenceSeries,
-  getDimensionKeys,
-} from "./utils";
+import { createChartData, getDimensionKeys } from "./utils";
 
 const REFERENCE_MISMATCH_ISSUE =
   "https://github.com/Climate-REF/climate-ref/issues/927";
@@ -97,11 +93,9 @@ export function SeriesVisualization({
     [seriesValues, referenceSeriesValues, labelTemplate, colorDimension],
   );
 
-  // The reference is regridded onto each model grid, so one observational
-  // dataset can arrive as several distinct curves. Warn rather than hide them.
-  const distinctReferenceCount = useMemo(
-    () => dedupeReferenceSeries(referenceSeriesValues, labelTemplate).length,
-    [referenceSeriesValues, labelTemplate],
+  const referenceCount = useMemo(
+    () => seriesMetadata.filter((meta) => meta.isReference).length,
+    [seriesMetadata],
   );
 
   // Prefer per-series value_units for the Y-axis/tooltip unit label; fall
@@ -377,15 +371,15 @@ export function SeriesVisualization({
 
   return (
     <div className="space-y-3">
-      {distinctReferenceCount > 1 ? (
+      {referenceCount > 1 ? (
         <Alert variant="destructive">
           <AlertTriangle />
-          <AlertTitle>Reference datasets disagree</AlertTitle>
+          <AlertTitle>Multiple reference curves</AlertTitle>
           <AlertDescription>
-            {distinctReferenceCount} different reference curves are plotted in
-            black. The reference is regridded onto each model grid, so the same
-            observational dataset can produce different values. This is tracked
-            in{" "}
+            This chart draws {referenceCount} reference curves. The reference is
+            regridded onto each model grid before the statistic is computed, so
+            one observational dataset can produce several different curves. This
+            is tracked in{" "}
             <a
               className="underline underline-offset-2"
               href={REFERENCE_MISMATCH_ISSUE}
