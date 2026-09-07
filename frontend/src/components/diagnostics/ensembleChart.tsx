@@ -1,6 +1,6 @@
 import * as d3 from "d3-array";
 import { scaleLinear } from "d3-scale";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -119,6 +119,7 @@ interface GroupStatistics {
   upperQuartile: number;
   max: number;
   values: number[];
+  points: ScalarValue[];
 }
 
 export const EmptyEnsembleChart = () => {
@@ -154,7 +155,9 @@ export const EnsembleChart = ({
   yMax,
   categoryOrder,
 }: EnsembleChartProps) => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [highlightedPoint, setHighlightedPoint] = useState<{
+    categoryName: string;
     groupName: string;
     point: ScalarValue;
   } | null>(null);
@@ -195,7 +198,6 @@ export const EnsembleChart = ({
             name: groupName,
             groups: {},
             __outliers: {},
-            __rawData: [],
             __categoryColor: isSelfHued
               ? groupColor(groupByDimension, groupName, categoryIndex)
               : undefined,
@@ -217,7 +219,6 @@ export const EnsembleChart = ({
 
         const groups: { [key: string]: GroupStatistics | null } = {};
         const outliers: { [key: string]: number } = {};
-        const allRawData: ScalarValue[] = [];
 
         Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
           const allValues: number[] =
@@ -225,15 +226,15 @@ export const EnsembleChart = ({
               ?.map((d: ScalarValue) => Number(d.value))
               ?.filter((v: number) => Number.isFinite(v)) ?? [];
 
-          const filteredValues: number[] = allValues
+          const points = subGroupValues
+            .filter((d) => Number.isFinite(Number(d.value)))
             .filter(
-              (v: number) =>
-                (clipMin === undefined || v >= clipMin) &&
-                (clipMax === undefined || v <= clipMax),
+              (d) =>
+                (clipMin === undefined || Number(d.value) >= clipMin) &&
+                (clipMax === undefined || Number(d.value) <= clipMax),
             )
-            .sort((a: number, b: number) => a - b);
-
-          allRawData.push(...(subGroupValues || []));
+            .sort((a, b) => Number(a.value) - Number(b.value));
+          const filteredValues = points.map((point) => Number(point.value));
 
           if (filteredValues.length === 0) {
             groups[subGroupName] = null;
@@ -252,6 +253,7 @@ export const EnsembleChart = ({
               upperQuartile: q3,
               max,
               values: filteredValues,
+              points,
             };
             outliers[subGroupName] = allValues.length - filteredValues.length;
           }
@@ -261,7 +263,6 @@ export const EnsembleChart = ({
           name: groupName,
           groups,
           __outliers: outliers,
-          __rawData: allRawData,
           __categoryColor: isSelfHued
             ? groupColor(groupByDimension, groupName, categoryIndex)
             : undefined,
@@ -281,6 +282,11 @@ export const EnsembleChart = ({
     clipMax,
     categoryOrder,
   ]);
+
+  const categoriesByName = useMemo(
+    () => new Map(sortedChartData.map((datum) => [datum.name, datum])),
+    [sortedChartData],
+  );
 
   // Get all unique group names for rendering multiple bars
   const allGroupNames = useMemo(() => {
@@ -359,12 +365,48 @@ export const EnsembleChart = ({
         : "20%";
 
   return (
-    <div className="w-full h-full">
+    <div ref={chartRef} className="w-full h-full">
       <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
           data={sortedChartData}
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
           barCategoryGap={barCategoryGap}
+          onMouseLeave={() => setHighlightedPoint(null)}
+          onMouseMove={(state, event) => {
+            if (!state.isTooltipActive || !chartRef.current) {
+              setHighlightedPoint(null);
+              return;
+            }
+            let nearest: typeof highlightedPoint = null;
+            let distance = Number.POSITIVE_INFINITY;
+            // Recharts can deliver throttled mouse events or Touch objects.
+            for (const marker of chartRef.current.querySelectorAll<SVGGraphicsElement>(
+              "[data-box-point]",
+            )) {
+              const bounds = marker.getBoundingClientRect();
+              const dx = event.clientX - (bounds.left + bounds.width / 2);
+              const dy = event.clientY - (bounds.top + bounds.height / 2);
+              const nextDistance = dx * dx + dy * dy;
+              if (nextDistance >= distance) continue;
+              const categoryName = marker.dataset.category!;
+              const groupName = marker.dataset.group!;
+              const datum = categoriesByName.get(categoryName);
+              const point =
+                datum?.groups[groupName]?.points[
+                  Number(marker.dataset.boxPoint)
+                ];
+              if (!point) continue;
+              distance = nextDistance;
+              nearest = { categoryName, groupName, point };
+            }
+            setHighlightedPoint((previous) =>
+              previous?.point === nearest?.point &&
+              previous?.categoryName === nearest?.categoryName &&
+              previous?.groupName === nearest?.groupName
+                ? previous
+                : nearest,
+            );
+          }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
@@ -405,102 +447,16 @@ export const EnsembleChart = ({
             wrapperStyle={{ zIndex: 1000 }}
             animationDuration={500}
             offset={20}
-            content={({ active, payload, label, coordinate, viewBox }) => {
-              if (!active || !payload || payload.length === 0) {
-                // Clear highlight when tooltip is not active
-                if (highlightedPoint) {
-                  setHighlightedPoint(null);
-                }
+            content={({ active, coordinate, viewBox }) => {
+              if (!active || !highlightedPoint) return null;
+              const datum = categoriesByName.get(highlightedPoint.categoryName);
+              const statsKey = highlightedPoint.groupName;
+              const groupStats = datum?.groups[statsKey];
+              if (!groupStats?.points.includes(highlightedPoint.point))
                 return null;
-              }
-              const datum = payload[0].payload ?? {};
-
-              // Determine which subgroup we're hovering over
-              let statsKey: string;
-
-              if (
-                allGroupNames.length > 1 &&
-                coordinate &&
-                payload.length > 0
-              ) {
-                // find closest by Y position
-                let closestBar: string | null = null;
-                let minDistance = Number.POSITIVE_INFINITY;
-
-                for (const groupName of allGroupNames) {
-                  const groupData = datum?.groups?.[groupName];
-                  if (groupData) {
-                    const medianY = scale(groupData.median);
-                    const distance = Math.abs((coordinate.y ?? 0) - medianY);
-                    if (distance < minDistance) {
-                      minDistance = distance;
-                      closestBar = groupName;
-                    }
-                  }
-                }
-                statsKey = closestBar || "ensemble";
-              } else {
-                // Single bar - use ensemble or first available group
-                statsKey = "ensemble";
-                const groupKeys = Object.keys(datum?.groups || {});
-                if (groupKeys.length > 0 && !datum?.groups?.[statsKey]) {
-                  statsKey = groupKeys[0];
-                }
-              }
-
-              const groupStats = datum?.groups?.[
-                statsKey
-              ] as GroupStatistics | null;
               const outliers = datum?.__outliers;
-              const allRawData: ScalarValue[] = datum?.__rawData ?? [];
-
-              // Filter raw data to only include points from the hovered subgroup
-              const rawData = allRawData.filter((d) => {
-                // For multi-hue charts, filter by the hovered subgroup
-                if (
-                  !isSelfHued &&
-                  hueDimension &&
-                  hueDimension !== "none" &&
-                  statsKey !== "ensemble"
-                ) {
-                  return d.dimensions[hueDimension] === statsKey;
-                }
-                // For self-hued or no-hue charts, include all data
-                return true;
-              });
-
-              // Find closest data point to mouse position (within the filtered data)
-              let closestDataPoint: ScalarValue | null = null;
-              if (coordinate && rawData.length > 0) {
-                const mouseY = coordinate.y ?? 0;
-                let minDistance = Number.POSITIVE_INFINITY;
-
-                // Chart dimensions accounting for margins
-                for (const dataPoint of rawData) {
-                  const value = Number(dataPoint.value);
-                  if (Number.isFinite(value)) {
-                    // Convert value to pixel position using the same scale as Recharts
-                    const valueY = scale(value);
-
-                    const distance = Math.abs(mouseY - valueY);
-                    if (distance < minDistance) {
-                      minDistance = distance;
-                      closestDataPoint = dataPoint;
-                    }
-                  }
-                }
-              }
-
-              // Update highlighted point
-              if (
-                closestDataPoint !== highlightedPoint?.point &&
-                closestDataPoint !== null
-              ) {
-                setHighlightedPoint({
-                  groupName: statsKey,
-                  point: closestDataPoint,
-                });
-              }
+              const closestDataPoint = highlightedPoint.point;
+              const label = highlightedPoint.categoryName;
               if (coordinate === undefined) {
                 return null;
               }
@@ -540,34 +496,15 @@ export const EnsembleChart = ({
                   <div className="mb-3">
                     <div className="mb-1 font-semibold">Statistics</div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                      {renderKV(
-                        "Min",
-                        groupStats ? fmt(Number(groupStats.min)) : "—",
-                      )}
-                      {renderKV(
-                        "Q1",
-                        groupStats
-                          ? fmt(Number(groupStats.lowerQuartile))
-                          : "—",
-                      )}
-                      {renderKV(
-                        "Median",
-                        groupStats ? fmt(Number(groupStats.median)) : "—",
-                      )}
-                      {renderKV(
-                        "Q3",
-                        groupStats
-                          ? fmt(Number(groupStats.upperQuartile))
-                          : "—",
-                      )}
-                      {renderKV(
-                        "Max",
-                        groupStats ? fmt(Number(groupStats.max)) : "—",
-                      )}
+                      {renderKV("Min", fmt(Number(groupStats.min)))}
+                      {renderKV("Q1", fmt(Number(groupStats.lowerQuartile)))}
+                      {renderKV("Median", fmt(Number(groupStats.median)))}
+                      {renderKV("Q3", fmt(Number(groupStats.upperQuartile)))}
+                      {renderKV("Max", fmt(Number(groupStats.max)))}
                       {renderKV(
                         "Count",
                         String(
-                          (groupStats?.values?.length ?? 0) +
+                          groupStats.values.length +
                             (outliers?.[statsKey] ?? 0),
                         ),
                       )}
@@ -580,45 +517,38 @@ export const EnsembleChart = ({
                   </div>
 
                   {/* Closest Data Point */}
-                  {closestDataPoint && (
-                    <div>
-                      <div className="mb-1 font-semibold">
-                        Closest Data Point
+                  <div>
+                    <div className="mb-1 font-semibold">Closest Data Point</div>
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-x-4">
+                        {renderKV("Value", fmt(Number(closestDataPoint.value)))}
+                        {renderKV("Units", metricUnits)}
                       </div>
-                      <div className="space-y-1">
-                        <div className="grid grid-cols-2 gap-x-4">
-                          {renderKV(
-                            "Value",
-                            fmt(Number(closestDataPoint.value)),
-                          )}
-                          {renderKV("Units", metricUnits)}
-                        </div>
-                        <div className="mt-2">
-                          <div className="font-semibold mb-1">Dimensions:</div>
-                          <div className="grid grid-cols-1 gap-y-1 text-xs">
-                            {Object.entries(closestDataPoint.dimensions).map(
-                              ([key, value]) => (
-                                <div
-                                  key={key}
-                                  className="grid grid-cols-2 gap-x-2"
+                      <div className="mt-2">
+                        <div className="font-semibold mb-1">Dimensions:</div>
+                        <div className="grid grid-cols-1 gap-y-1 text-xs">
+                          {Object.entries(closestDataPoint.dimensions).map(
+                            ([key, value]) => (
+                              <div
+                                key={key}
+                                className="grid grid-cols-2 gap-x-2"
+                              >
+                                <span className="text-muted-foreground truncate">
+                                  {key}:
+                                </span>
+                                <span
+                                  className="truncate max-w-[150px]"
+                                  title={value}
                                 >
-                                  <span className="text-muted-foreground truncate">
-                                    {key}:
-                                  </span>
-                                  <span
-                                    className="truncate max-w-[150px]"
-                                    title={value}
-                                  >
-                                    {value}
-                                  </span>
-                                </div>
-                              ),
-                            )}
-                          </div>
+                                  {value}
+                                </span>
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             }}
@@ -638,11 +568,7 @@ export const EnsembleChart = ({
                 <BoxWhiskerShape
                   prefix={groupName}
                   scale={scale}
-                  highlightedPoint={
-                    highlightedPoint?.groupName === groupName
-                      ? highlightedPoint?.point
-                      : null
-                  }
+                  highlightedPoint={highlightedPoint}
                 />
               }
             />

@@ -12,7 +12,7 @@ interface ExplorerCardGroupProps {
 
 export function ExplorerCardGroup({ card }: ExplorerCardGroupProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <>
       {card.content.map((contentItem) => (
         <ErrorBoundary
           key={`${card.title}:${contentItem.diagnostic}:${contentItem.title}`}
@@ -23,6 +23,6 @@ export function ExplorerCardGroup({ card }: ExplorerCardGroupProps) {
           </Suspense>
         </ErrorBoundary>
       ))}
-    </div>
+    </>
   );
 }
