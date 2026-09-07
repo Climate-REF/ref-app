@@ -1,20 +1,15 @@
 """Rolling execution groups up per climate model, keyed by `source_id`."""
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 from typing import Any, NamedTuple
 
-from sqlalchemy import Select, case, distinct, func, select, union_all
+from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, union
 from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
 from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
 from ref_backend.models.climate_models import RunCounts
-
-#: The outcomes an execution group is classified into, ordered worst to best.
-#: A group with no execution names no model, because the datasets that name it hang off the
-#: execution, so a group that has not started is invisible here rather than counted.
-OUTCOMES = ("failed", "running", "successful")
 
 
 class ModelRunRow(NamedTuple):
@@ -40,7 +35,7 @@ def _eras_in_scope(mip_era: str | None) -> tuple[Any, ...]:
     return tuple(era for era in CMIP_ERAS if mip_era_for(era) == mip_era.upper())
 
 
-def _model_groups(mip_era: str | None, source_id: str | None) -> Select[Any] | None:
+def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
     """
     Select every (execution group, model) pairing at the promoted version of each diagnostic.
 
@@ -72,11 +67,7 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> Select[Any] | N
             statement = statement.where(model_source_id == source_id)
         statements.append(statement)
 
-    if not statements:
-        return None
-    if len(statements) == 1:
-        return statements[0]
-    return select(union_all(*statements).subquery()).distinct()
+    return union(*statements) if statements else None
 
 
 def latest_executions() -> Any:
@@ -167,7 +158,7 @@ def model_facets(
 
 def tally(rows: Sequence[ModelRunRow]) -> RunCounts:
     """Fold a set of tallied rows into the counts the API returns."""
-    totals = dict.fromkeys(OUTCOMES, 0)
+    totals: Counter[str] = Counter()
     for row in rows:
         totals[row.outcome] += row.group_count
     return RunCounts(

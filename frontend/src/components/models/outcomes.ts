@@ -29,13 +29,18 @@ export const OUTCOMES = [
 
 export type Outcome = (typeof OUTCOMES)[number];
 
-const BY_KEY = new Map<string, Outcome>(
-  OUTCOMES.map((outcome) => [outcome.key, outcome]),
-);
+/** How one outcome reads on a badge. */
+export interface OutcomeDisplay {
+  label: string;
+  badge: Outcome["badge"];
+}
 
-/** Describe an outcome the API sent, falling back to the raw value for one we do not know. */
-export function outcomeFor(
-  key: string,
-): Outcome | { label: string; badge: "secondary" } {
-  return BY_KEY.get(key) ?? { label: key, badge: "secondary" };
+/** Name and style an outcome the API sent, falling back to the raw value for an unknown one. */
+export function outcomeFor(key: string): OutcomeDisplay {
+  return (
+    OUTCOMES.find((outcome) => outcome.key === key) ?? {
+      label: key,
+      badge: "secondary",
+    }
+  );
 }

@@ -3,15 +3,7 @@ import type { EnsembleComparison } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable";
 import { EnsemblePositionBar } from "@/components/models/ensemblePositionBar";
 import { Badge } from "@/components/ui/badge";
-
-/** Render a metric value at a fixed precision, so a column of them lines up. */
-function formatValue(value: number, units: string | null): string {
-  const rendered =
-    Math.abs(value) >= 1e-3 && Math.abs(value) < 1e6
-      ? value.toPrecision(4)
-      : value.toExponential(2);
-  return units ? `${rendered} ${units}` : rendered;
-}
+import { formatValue } from "@/lib/format";
 
 export const columns: ColumnDef<EnsembleComparison>[] = [
   {

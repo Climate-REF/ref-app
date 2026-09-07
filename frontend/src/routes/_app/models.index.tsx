@@ -31,15 +31,15 @@ function ModelsIndexPage() {
   const { mipEra, setMipEra } = useMipEra(search.mip_era);
 
   const { data, isLoading, error } = useQuery(
-    modelsListOptions({
-      query: {
-        mip_era: mipEra,
-        source_id_contains: search.source_id_contains || undefined,
-      },
-    }),
+    modelsListOptions({ query: { mip_era: mipEra } }),
   );
 
-  const models = data?.data ?? [];
+  // The listing is one row per model, so filtering here costs nothing and avoids a
+  // request per keystroke.
+  const needle = (search.source_id_contains ?? "").toLowerCase();
+  const models = (data?.data ?? []).filter((model) =>
+    model.source_id.toLowerCase().includes(needle),
+  );
 
   return (
     <div className="container mx-auto space-y-6 p-4">

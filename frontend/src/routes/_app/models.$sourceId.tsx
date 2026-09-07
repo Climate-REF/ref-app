@@ -81,7 +81,6 @@ function ModelDetailPage() {
     }),
   );
 
-  const counts = data?.execution_groups;
   const comparisons = ensemble.data?.data ?? [];
   const outliers = comparisons.filter((comparison) => comparison.is_outlier);
 
@@ -121,23 +120,25 @@ function ModelDetailPage() {
         )}
         {isLoading && <div>Loading model...</div>}
 
-        {counts && data && (
+        {data && (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Execution groups"
-                value={formatCount(counts.total)}
+                value={formatCount(data.execution_groups.total)}
                 hint={`Across ${formatCount(data.diagnostic_count)} diagnostics`}
               />
               <StatCard
                 title="Successful"
-                value={`${counts.success_rate_percentage}%`}
-                hint={`${formatCount(counts.successful)} of ${formatCount(counts.total)} groups`}
+                value={`${data.execution_groups.success_rate_percentage}%`}
+                hint={`${formatCount(data.execution_groups.successful)} of ${formatCount(data.execution_groups.total)} groups`}
               />
               <StatCard
                 title="Not successful"
-                value={formatCount(counts.failed + counts.running)}
-                hint={`${formatCount(counts.failed)} failed, ${formatCount(counts.running)} still running`}
+                value={formatCount(
+                  data.execution_groups.failed + data.execution_groups.running,
+                )}
+                hint={`${formatCount(data.execution_groups.failed)} failed, ${formatCount(data.execution_groups.running)} still running`}
               />
               <StatCard
                 title="Ensemble outliers"
@@ -152,7 +153,10 @@ function ModelDetailPage() {
 
             <Card>
               <CardContent className="space-y-4 pt-6">
-                <RunOutcomeBar counts={counts} className="w-full" />
+                <RunOutcomeBar
+                  counts={data.execution_groups}
+                  className="w-full"
+                />
                 <RunOutcomeLegend />
               </CardContent>
             </Card>

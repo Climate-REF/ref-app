@@ -1,15 +1,15 @@
 """Comparing one model's scalar values against the ensemble that reported the same metric."""
 
-import math
 from collections import defaultdict
 from collections.abc import Sequence
+from statistics import fmean, pstdev, quantiles
 from typing import Any, NamedTuple
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from ref_backend.core.mip_eras import cv_column, executions_in_mip_era
+from ref_backend.core.mip_eras import cmip_dataset_filter, cv_column
 from ref_backend.core.model_runs import latest_executions
 from ref_backend.models.climate_models import EnsembleComparison, EnsembleStatistics
 
@@ -30,40 +30,20 @@ def grouping_dimensions() -> list[str]:
     ]
 
 
-def quantile(sorted_values: Sequence[float], fraction: float) -> float:
-    """
-    Linearly interpolated quantile, matching the quartiles the ensemble charts draw.
-    """
-    if not sorted_values:
-        raise ValueError("no values")
-    if len(sorted_values) == 1:
-        return sorted_values[0]
-
-    position = (len(sorted_values) - 1) * fraction
-    lower = math.floor(position)
-    upper = math.ceil(position)
-    if lower == upper:
-        return sorted_values[lower]
-    return sorted_values[lower] + (sorted_values[upper] - sorted_values[lower]) * (position - lower)
-
-
 def _statistics(values: Sequence[float]) -> EnsembleStatistics:
+    """Describe the spread of one metric, using the interpolated quartiles the charts draw."""
     ordered = sorted(values)
-    mean = sum(ordered) / len(ordered)
-    std_dev = None
-    if len(ordered) > 1:
-        variance = sum((value - mean) ** 2 for value in ordered) / len(ordered)
-        std_dev = math.sqrt(variance)
+    lower, median, upper = quantiles(ordered, n=4, method="inclusive")
 
     return EnsembleStatistics(
         count=len(ordered),
         min=ordered[0],
-        lower_quartile=quantile(ordered, 0.25),
-        median=quantile(ordered, 0.5),
-        upper_quartile=quantile(ordered, 0.75),
+        lower_quartile=lower,
+        median=median,
+        upper_quartile=upper,
         max=ordered[-1],
-        mean=mean,
-        std_dev=std_dev,
+        mean=fmean(ordered),
+        std_dev=pstdev(ordered) if len(ordered) > 1 else None,
     )
 
 
@@ -96,7 +76,7 @@ class ScalarRow(NamedTuple):
     diagnostic_id: int
     source_id: str
     value: float
-    attributes: Any
+    units: str | None
     dimensions: tuple[str | None, ...]
 
 
@@ -105,7 +85,7 @@ def _scalar_rows(
     *,
     diagnostic_ids: Sequence[int],
     dimensions: Sequence[str],
-    execution_ids: Sequence[int] | None,
+    mip_era: str | None,
 ) -> list[ScalarRow]:
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
@@ -132,11 +112,13 @@ def _scalar_rows(
             value.value.isnot(None),
         )
     )
-    if execution_ids is not None:
-        statement = statement.where(value.execution_id.in_(execution_ids))
+    if mip_era:
+        # An execution with no CMIP input carries no era, so it answers to whichever is asked for.
+        statement = statement.where(or_(cmip_dataset_filter({"mip_era": mip_era}), ~cmip_dataset_filter({})))
 
     return [
-        ScalarRow(row[0], row[1], row[2], row[3], tuple(row[4:])) for row in session.execute(statement).all()
+        ScalarRow(row[0], row[1], row[2], _units(row[3]), tuple(row[4:]))
+        for row in session.execute(statement).all()
     ]
 
 
@@ -187,20 +169,11 @@ def ensemble_comparisons(
     if not diagnostics:
         return []
 
-    execution_ids: Sequence[int] | None = None
-    if mip_era:
-        # An era matching no execution must still exclude everything, hence the unusable id.
-        execution_ids = [
-            execution_id
-            for diagnostic_id in diagnostics
-            for execution_id in executions_in_mip_era(session, mip_era, diagnostic_id)
-        ] or [0]
-
     rows = _scalar_rows(
         session,
         diagnostic_ids=list(diagnostics),
         dimensions=dimensions,
-        execution_ids=execution_ids,
+        mip_era=mip_era,
     )
 
     # (diagnostic, metric key) -> model -> its values, one per member.
@@ -211,7 +184,7 @@ def ensemble_comparisons(
     for row in rows:
         group_key = (row.diagnostic_id, row.dimensions)
         grouped[group_key][row.source_id].append(float(row.value))
-        units.setdefault(group_key, _units(row.attributes))
+        units.setdefault(group_key, row.units)
 
     comparisons = []
     for (diagnostic_id, dimension_key), by_model in grouped.items():
@@ -239,7 +212,7 @@ def ensemble_comparisons(
                     for name, value in zip(dimensions, dimension_key, strict=True)
                     if value is not None
                 },
-                units=units.get((diagnostic_id, dimension_key)),
+                units=units[(diagnostic_id, dimension_key)],
                 model_value=model_value,
                 model_member_count=len(by_model[source_id]),
                 ensemble=statistics,

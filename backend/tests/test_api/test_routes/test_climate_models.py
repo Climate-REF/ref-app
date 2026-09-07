@@ -26,15 +26,6 @@ def test_model_list_counts_add_up(client: TestClient, settings):
         assert 0 <= counts["success_rate_percentage"] <= 100
 
 
-def test_model_list_filters_by_source_id(client: TestClient, settings):
-    r = client.get(f"{settings.API_V1_STR}/models/", params={"source_id_contains": "access"})
-
-    assert r.status_code == 200
-    source_ids = [model["source_id"] for model in r.json()["data"]]
-    assert source_ids
-    assert all("ACCESS" in source_id for source_id in source_ids)
-
-
 def test_model_list_filters_by_mip_era(client: TestClient, settings):
     r = client.get(f"{settings.API_V1_STR}/models/", params={"mip_era": "CMIP7"})
 

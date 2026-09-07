@@ -72,3 +72,17 @@ export function formatCoreHours(seconds: number | null | undefined): string {
     maximumFractionDigits: digits,
   });
 }
+
+/**
+ * Formats a metric value at a fixed precision, so a column of them lines up.
+ *
+ * Values too small or large to read as a decimal fall back to exponent notation.
+ */
+export function formatValue(value: number, units?: string | null): string {
+  const magnitude = Math.abs(value);
+  const rendered =
+    magnitude >= 1e-3 && magnitude < 1e6
+      ? value.toPrecision(4)
+      : value.toExponential(2);
+  return units ? `${rendered} ${units}` : rendered;
+}

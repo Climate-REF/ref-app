@@ -53,7 +53,6 @@ def _summary_fields(source_id: str, rows: list[ModelRunRow], facets: ModelFacets
 async def _list(
     session: SessionDep,
     mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
-    source_id_contains: str | None = Query(None, description="Filter models by source_id substring"),
 ) -> Collection[ModelSummary]:
     """
     List the models that have been run, with a tally of how their runs went.
@@ -67,10 +66,6 @@ async def _list(
         ModelSummary(**_summary_fields(source_id, source_rows, facets.get(source_id, _NO_FACETS)))
         for source_id, source_rows in _group_by_source_id(rows).items()
     ]
-    if source_id_contains:
-        needle = source_id_contains.lower()
-        summaries = [summary for summary in summaries if needle in summary.source_id.lower()]
-
     summaries.sort(key=lambda summary: summary.source_id)
     return Collection(data=summaries, total_count=len(summaries))
 
@@ -99,15 +94,14 @@ async def get(
 
     diagnostic_runs = [
         DiagnosticRuns(
-            diagnostic_id=diagnostic_id,
-            diagnostic_slug=diagnostics[diagnostic_id].slug,
-            diagnostic_name=diagnostics[diagnostic_id].name,
-            provider_slug=diagnostics[diagnostic_id].provider.slug,
-            provider_name=diagnostics[diagnostic_id].provider.name,
-            execution_groups=tally(diagnostic_rows),
+            diagnostic_id=diagnostic.id,
+            diagnostic_slug=diagnostic.slug,
+            diagnostic_name=diagnostic.name,
+            provider_slug=diagnostic.provider.slug,
+            provider_name=diagnostic.provider.name,
+            execution_groups=tally(by_diagnostic[diagnostic.id]),
         )
-        for diagnostic_id, diagnostic_rows in by_diagnostic.items()
-        if diagnostic_id in diagnostics
+        for diagnostic in diagnostics.values()
     ]
     diagnostic_runs.sort(key=lambda runs: (runs.provider_slug, runs.diagnostic_slug))
 

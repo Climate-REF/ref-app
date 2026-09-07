@@ -1,29 +1,23 @@
 import pytest
 
-from ref_backend.core.model_ensemble import _percentile, _units, quantile
+from ref_backend.core.model_ensemble import _percentile, _statistics, _units
 
 
-@pytest.mark.parametrize(
-    "fraction, expected",
-    [
-        (0.0, 1.0),
-        (0.25, 1.75),
-        (0.5, 2.5),
-        (0.75, 3.25),
-        (1.0, 4.0),
-    ],
-)
-def test_quantile_interpolates(fraction, expected):
-    assert quantile([1.0, 2.0, 3.0, 4.0], fraction) == expected
+def test_statistics_interpolates_the_quartiles():
+    stats = _statistics([4.0, 1.0, 3.0, 2.0])
+
+    assert (stats.min, stats.max) == (1.0, 4.0)
+    assert (stats.lower_quartile, stats.median, stats.upper_quartile) == (1.75, 2.5, 3.25)
+    assert stats.mean == 2.5
+    assert stats.std_dev == pytest.approx(1.118034)
 
 
-def test_quantile_single_value():
-    assert quantile([7.5], 0.25) == 7.5
+def test_statistics_of_one_model_has_no_spread():
+    stats = _statistics([7.5])
 
-
-def test_quantile_rejects_empty():
-    with pytest.raises(ValueError):
-        quantile([], 0.5)
+    assert stats.count == 1
+    assert stats.median == 7.5
+    assert stats.std_dev is None
 
 
 @pytest.mark.parametrize(

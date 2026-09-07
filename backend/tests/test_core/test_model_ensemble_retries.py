@@ -96,9 +96,17 @@ def test_a_retry_does_not_add_a_second_member(writable_session):
         assert comparison.ensemble.count == before[key].ensemble.count
 
 
-def test_the_fixture_copy_is_untouched(writable_session):
-    """The copy must be a copy, so a test that writes cannot reach the checked-in fixture."""
+def test_writes_do_not_reach_the_checked_in_fixture(writable_session):
+    """A write to the copy must leave the fixture in the repository alone."""
     original = Database.from_config(fixture_ref_config()).session
-    assert writable_session.scalar(select(func.count(models.Execution.id))) == original.scalar(
-        select(func.count(models.Execution.id))
+    before = original.scalar(select(func.count(models.Execution.id)))
+
+    group = writable_session.scalars(select(models.ExecutionGroup).limit(1)).one()
+    writable_session.add(
+        models.Execution(execution_group_id=group.id, dataset_hash="probe", output_fragment="probe")
     )
+    writable_session.commit()
+
+    assert writable_session.scalar(select(func.count(models.Execution.id))) == before + 1
+    original.expire_all()
+    assert original.scalar(select(func.count(models.Execution.id))) == before

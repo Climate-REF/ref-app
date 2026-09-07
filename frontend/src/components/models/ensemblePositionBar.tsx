@@ -1,4 +1,5 @@
 import type { EnsembleComparison } from "@/client";
+import { formatValue } from "@/lib/format";
 
 /** Place a value on the 0 to 100 scale spanning the ensemble's full range. */
 function position(comparison: EnsembleComparison, value: number): number {
@@ -29,7 +30,7 @@ export function EnsemblePositionBar({
   return (
     <div
       className="relative h-6 w-40"
-      title={`Model ${comparison.model_value.toPrecision(4)}, ensemble median ${ensemble.median.toPrecision(4)}`}
+      title={`Model ${formatValue(comparison.model_value, comparison.units)}, ensemble median ${formatValue(ensemble.median, comparison.units)}`}
     >
       <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
       <div

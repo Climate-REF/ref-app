@@ -1952,12 +1952,6 @@ export type ModelsListData = {
          * Restrict to one MIP era, CMIP6 or CMIP7
          */
         mip_era?: string | null;
-        /**
-         * Source Id Contains
-         *
-         * Filter models by source_id substring
-         */
-        source_id_contains?: string | null;
     };
     url: '/api/v1/models/';
 };
