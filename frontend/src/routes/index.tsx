@@ -6,6 +6,7 @@ import {
   datasetsListOptions,
   executionsListRecentExecutionGroupsOptions,
 } from "@/client/@tanstack/react-query.gen.ts";
+import { Cmip7AvailabilityCta } from "@/components/app/cmip7AvailabilityCta";
 import { ExecutionStats } from "@/components/dashboard/executionStats";
 import { RecentDatasets } from "@/components/dashboard/recentDatasets";
 import { RecentExecutions } from "@/components/dashboard/recentExecutions";
@@ -58,6 +59,9 @@ const Dashboard = () => {
             </div>
           </div>
         </section>
+        <div className="container mx-auto px-4 md:px-6">
+          <Cmip7AvailabilityCta />
+        </div>
         <MDXProvider>
           <article className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
             <IndexContent />
