@@ -1,3 +1,10 @@
+## v0.7.7 (2026-09-10)
+
+### Improvements
+
+- Charts are now shown once three models are available, rather than four. (#112)
+
+
 ## v0.7.6 (2026-09-07)
 
 ### Bug Fixes
