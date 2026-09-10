@@ -6,6 +6,7 @@ from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
+from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
@@ -69,13 +70,18 @@ class SPAStaticFiles(StaticFiles):
 
     Serves static files normally, but falls back to index.html for paths
     that don't match a real file (enabling client-side routing).
+    Missing files under the build's `assets/` directory still return a 404.
     """
 
     async def get_response(self, path: str, scope: Scope) -> Response:
         try:
             response = await super().get_response(path, scope)
-        except HTTPException:
-            response = await super().get_response(".", scope)
+        except HTTPException as exc:
+            # A missing build asset must 404, because the browser cannot run HTML as a script.
+            if exc.status_code != status.HTTP_404_NOT_FOUND or path.startswith("assets/"):
+                raise
+            # Not ".", because a directory lookup redirects to a trailing slash.
+            response = await super().get_response("index.html", scope)
 
         # The HTML names hashed asset files that the next deploy removes, so it must be revalidated.
         if response.headers.get("content-type", "").startswith("text/html"):

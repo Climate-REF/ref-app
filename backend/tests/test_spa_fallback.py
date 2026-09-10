@@ -2,8 +2,9 @@
 Tests for SPAStaticFiles fallback behavior.
 
 Verifies that client-side routes (e.g. /diagnostics?view=cards) are served
-index.html instead of returning 404, while real static assets and API routes
+index.html in place, without a redirect, while real static assets and API routes
 continue to work normally.
+Missing build assets must return a 404 rather than index.html.
 """
 
 import tempfile
@@ -69,21 +70,32 @@ class TestSPAStaticFiles:
 
     def test_unknown_path_falls_back_to_index(self, spa_client: TestClient):
         """Non-existent paths should fall back to index.html for client-side routing."""
-        r = spa_client.get("/diagnostics")
+        r = spa_client.get("/diagnostics", follow_redirects=False)
         assert r.status_code == 200
         assert "SPA Root" in r.text
+        assert r.headers["cache-control"] == "no-cache"
 
     def test_unknown_path_with_query_params(self, spa_client: TestClient):
         """Paths with query params should also fall back to index.html."""
-        r = spa_client.get("/diagnostics?view=cards")
+        r = spa_client.get("/diagnostics?view=cards", follow_redirects=False)
         assert r.status_code == 200
         assert "SPA Root" in r.text
 
     def test_nested_unknown_path(self, spa_client: TestClient):
         """Deeply nested non-existent paths should fall back to index.html."""
-        r = spa_client.get("/some/nested/route")
+        r = spa_client.get("/some/nested/route", follow_redirects=False)
         assert r.status_code == 200
         assert "SPA Root" in r.text
+
+    def test_missing_asset_returns_404(self, spa_client: TestClient):
+        """A chunk removed by a deploy should 404 so the browser fails the import cleanly."""
+        r = spa_client.get("/assets/themes-old.js", follow_redirects=False)
+        assert r.status_code == 404
+
+    def test_non_get_method_not_allowed(self, spa_client: TestClient):
+        """Only 404s fall back to index.html, so other errors pass through."""
+        r = spa_client.post("/explorer", follow_redirects=False)
+        assert r.status_code == 405
 
     def test_api_route_not_affected(self, spa_client: TestClient):
         """API routes registered before the static mount should still work."""
