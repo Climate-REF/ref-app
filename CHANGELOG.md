@@ -1,3 +1,12 @@
+## v0.7.12 (2026-09-10)
+
+### Bug Fixes
+
+- Released the database connection before streaming a result or log file,
+  so a slow download no longer holds a connection open for its whole duration.
+  Read files in 64KB chunks rather than 1KB, so downloads finish faster. (#118)
+
+
 ## v0.7.11 (2026-09-10)
 
 ### Improvements
