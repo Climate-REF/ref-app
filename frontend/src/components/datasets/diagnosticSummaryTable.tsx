@@ -1,13 +1,17 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
+import { useMemo } from "react";
 import type { DiagnosticSummary } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
+import { ValueStatus } from "@/components/diagnostics/valueStatus";
 
 const columnHelper = createColumnHelper<DiagnosticSummary>();
 
-export const columns: ColumnDef<DiagnosticSummary>[] = [
+const diagnosticColumns = (
+  valueFlagsFailed: boolean,
+): ColumnDef<DiagnosticSummary>[] => [
   {
     accessorKey: "name",
     enableSorting: true,
@@ -47,24 +51,14 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Scalar Values" />
     ),
-    cell: (cell) =>
-      cell.getValue() === null ? (
-        <span className="text-muted-foreground">Checking...</span>
-      ) : cell.getValue() ? (
-        <span
-          className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
-          title="This diagnostic has scalar metric values available."
-        >
-          ● Available
-        </span>
-      ) : (
-        <span
-          className="inline-flex items-center gap-1 text-muted-foreground"
-          title="No scalar metric values available."
-        >
-          ○ None
-        </span>
-      ),
+    cell: (cell) => (
+      <ValueStatus
+        available={cell.getValue<boolean | null>()}
+        failed={valueFlagsFailed}
+        availableTitle="This diagnostic has scalar metric values available."
+        noneTitle="No scalar metric values available."
+      />
+    ),
   },
   {
     accessorKey: "successful_execution_group_count",
@@ -150,10 +144,18 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
 
 interface DiagnosticSummaryTableProps {
   summaries: DiagnosticSummary[];
+  valueFlagsFailed?: boolean;
 }
 
-function DiagnosticSummaryTable({ summaries }: DiagnosticSummaryTableProps) {
+function DiagnosticSummaryTable({
+  summaries,
+  valueFlagsFailed = false,
+}: DiagnosticSummaryTableProps) {
   const navigate = useNavigate();
+  const columns = useMemo(
+    () => diagnosticColumns(valueFlagsFailed),
+    [valueFlagsFailed],
+  );
 
   const handleRowClick = (row: DiagnosticSummary) => {
     navigate({

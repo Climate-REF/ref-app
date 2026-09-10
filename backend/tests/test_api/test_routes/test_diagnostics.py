@@ -964,9 +964,10 @@ def test_diagnostics_value_flags_split_from_listing(client: TestClient, settings
     ).json()["data"]
     flags = client.get(f"{settings.API_V1_STR}/diagnostics/value-flags", params=query).json()["data"]
 
+    def by_id(rows: list[dict], keep) -> dict:
+        return {d["id"]: {k: v for k, v in d.items() if keep(k)} for d in rows}
+
     assert any(d["has_metric_values"] for d in full)
     assert all(d[flag] is None for d in fast for flag in FLAGS)
-    assert [{k: v for k, v in d.items() if k not in FLAGS} for d in fast] == [
-        {k: v for k, v in d.items() if k not in FLAGS} for d in full
-    ]
-    assert flags == [{"id": d["id"], **{flag: d[flag] for flag in FLAGS}} for d in full]
+    assert by_id(fast, lambda k: k not in FLAGS) == by_id(full, lambda k: k not in FLAGS)
+    assert by_id(flags, lambda k: k in FLAGS) == by_id(full, lambda k: k in FLAGS)

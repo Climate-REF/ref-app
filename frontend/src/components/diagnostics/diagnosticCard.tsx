@@ -12,32 +12,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-
-function ValueStatus({ available }: { available: boolean | null }) {
-  if (available === null) {
-    return <span className="text-muted-foreground">Checking...</span>;
-  }
-  return available ? (
-    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-      ● Available
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1 text-muted-foreground">
-      ○ None
-    </span>
-  );
-}
+import { ValueStatus } from "./valueStatus";
 
 interface DiagnosticCardProps {
   diagnostic: DiagnosticSummary;
   note?: string;
   noteURL?: string;
+  valueFlagsFailed?: boolean;
 }
 
 export function DiagnosticCard({
   diagnostic,
   note,
   noteURL,
+  valueFlagsFailed = false,
 }: DiagnosticCardProps) {
   return (
     <Card className="h-full flex flex-col">
@@ -78,13 +66,19 @@ export function DiagnosticCard({
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>
-            <ValueStatus available={diagnostic.has_scalar_values} />
+            <ValueStatus
+              available={diagnostic.has_scalar_values}
+              failed={valueFlagsFailed}
+            />
           </div>
 
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Series Values:</span>
-            <ValueStatus available={diagnostic.has_series_values} />
+            <ValueStatus
+              available={diagnostic.has_series_values}
+              failed={valueFlagsFailed}
+            />
           </div>
           {/* Total Executions */}
           <div className="flex items-center justify-between text-sm">

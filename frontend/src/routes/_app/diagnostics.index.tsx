@@ -15,6 +15,7 @@ import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LinkExternal } from "@/components/ui/link";
 import { useMipEra } from "@/hooks/useMipEra";
@@ -242,6 +243,22 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
+      {valueFlags.isError && (
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between gap-4">
+            Could not load which diagnostics have metric values, so the metric
+            values filter is not applied.
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => valueFlags.refetch()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
           {isLoading ? (
@@ -299,6 +316,7 @@ const Diagnostics = () => {
                   <DiagnosticCard
                     key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
                     diagnostic={diagnostic}
+                    valueFlagsFailed={valueFlags.isError}
                     note={note?.note}
                     noteURL={note?.noteUrl}
                   />
@@ -306,7 +324,10 @@ const Diagnostics = () => {
               })}
             </div>
           ) : (
-            <DiagnosticSummaryTable summaries={filteredDiagnostics} />
+            <DiagnosticSummaryTable
+              summaries={filteredDiagnostics}
+              valueFlagsFailed={valueFlags.isError}
+            />
           )}
 
           {filteredDiagnostics.length === 0 && (
