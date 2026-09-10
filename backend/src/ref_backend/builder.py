@@ -18,6 +18,7 @@ from climate_ref.database import Database
 from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
 from ref_backend.core.config import Settings
+from ref_backend.metrics import instrument_app
 
 description = """
 API for querying the results from the Climate Rapid Evaluation Framework (Climate REF).
@@ -134,6 +135,9 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             allow_methods=["GET"],
             allow_headers=["*"],
         )
+
+    # Registered before the static mount, so the SPA fallback does not swallow /metrics.
+    instrument_app(app)
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 

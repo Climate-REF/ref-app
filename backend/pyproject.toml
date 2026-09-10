@@ -14,6 +14,7 @@ dependencies = [
     "loguru",
     "pyyaml>=6.0",
     "fastapi-sqlalchemy-monitor>=1.1.3",
+    "prometheus-fastapi-instrumentator>=7.0.0",
 ]
 
 [dependency-groups]
