@@ -23,8 +23,14 @@ _client = httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS, follow_redirects=T
 
 def _forwarded_for(request: Request) -> str | None:
     """
-    Build the client chain that Plausible uses to derive a visitor hash.
+    Pick the visitor IP that Plausible uses to derive a visitor hash.
+
+    Plausible drops events from data centre IPs,
+    so prefer the Cloudflare client IP over the edge hop.
     """
+    cloudflare_client = request.headers.get("cf-connecting-ip")
+    if cloudflare_client:
+        return cloudflare_client
     existing = request.headers.get("x-forwarded-for")
     if existing:
         return existing
@@ -72,8 +78,10 @@ async def event(request: Request) -> Response:
         logger.warning(f"Could not forward a Plausible event: {exc}")
         return Response(status_code=202)
 
+    dropped = upstream.headers.get("x-plausible-dropped")
     return Response(
         content=upstream.content,
         status_code=upstream.status_code,
         media_type=upstream.headers.get("content-type"),
+        headers={"x-plausible-dropped": dropped} if dropped else None,
     )

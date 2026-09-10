@@ -58,6 +58,28 @@ def test_event_is_proxied(client: TestClient, upstream_requests):
     assert forwarded.headers["content-type"] == "text/plain"
     assert forwarded.headers["user-agent"] == "test-agent"
     assert forwarded.headers["x-forwarded-for"] == "testclient"
+    assert "x-plausible-dropped" not in response.headers
+
+
+def test_event_prefers_the_cloudflare_client_ip(client: TestClient, upstream_requests):
+    client.post(
+        "/log/api/event",
+        content=b'{"n":"pageview"}',
+        headers={"cf-connecting-ip": "203.0.113.7", "x-forwarded-for": "172.68.1.1"},
+    )
+
+    assert upstream_requests[0].headers["x-forwarded-for"] == "203.0.113.7"
+
+
+def test_event_passes_through_the_dropped_flag(client: TestClient, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(202, text="ok", headers={"x-plausible-dropped": "1"})
+
+    monkeypatch.setattr(analytics, "_client", httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+
+    response = client.post("/log/api/event", content=b'{"n":"pageview"}')
+
+    assert response.headers["x-plausible-dropped"] == "1"
 
 
 def test_event_survives_an_unreachable_upstream(client: TestClient, monkeypatch):
