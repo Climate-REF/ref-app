@@ -63,17 +63,17 @@ const Dashboard = () => {
           <Cmip7AvailabilityCta />
         </div>
         <MDXProvider>
-          <article className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
+          <article className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8 px-4 md:px-6">
             <IndexContent />
           </article>
         </MDXProvider>
-        <div className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8">
+        <div className="prose prose-slate dark:prose-invert flex flex-1 flex-col gap-4 container mx-auto mt-8 px-4 md:px-6">
           <DataHealthWarning />
         </div>
         <div className="flex justify-center">
           <CTA />
         </div>
-        <div className="container mx-auto space-y-8">
+        <div className="container mx-auto space-y-8 px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <ExecutionStats />
           </div>
@@ -89,7 +89,7 @@ const Dashboard = () => {
               <RecentDatasets datasets={recentDatasets.data?.data ?? []} />
             </div>
           </div>
-        </div>{" "}
+        </div>
       </div>
     </div>
   );
