@@ -5,14 +5,16 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from climate_ref import models
+from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
+from ref_backend.core.metric_values import metric_value_type_is
 from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
@@ -195,24 +197,18 @@ class DiagnosticSummary(BaseModel):
         group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
         aft = DiagnosticSummary._get_aft_link(diagnostic)
 
-        # Efficient existence check for both scalar and series metric values for this diagnostic
-        has_scalar_values = (
-            app_context.session.query(models.ScalarMetricValue)
-            .join(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-            .first()
-            is not None
-        )
+        def has_values(value_type: StoredMetricValueType) -> bool:
+            query = (
+                select(models.MetricValue.id)
+                .join(models.Execution)
+                .join(models.ExecutionGroup)
+                .where(models.ExecutionGroup.diagnostic_id == diagnostic.id, metric_value_type_is(value_type))
+                .limit(1)
+            )
+            return app_context.session.scalar(query) is not None
 
-        has_series_values = (
-            app_context.session.query(models.SeriesMetricValue)
-            .join(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-            .first()
-            is not None
-        )
+        has_scalar_values = has_values(StoredMetricValueType.SCALAR)
+        has_series_values = has_values(StoredMetricValueType.SERIES)
 
         has_metric_values = has_scalar_values or has_series_values
 

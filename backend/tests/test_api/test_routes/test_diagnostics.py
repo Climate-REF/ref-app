@@ -610,6 +610,38 @@ def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) 
     assert data["count"] >= 0
 
 
+def _diagnostics_with_values(session, value_class, *, promoted_only: bool) -> set[int]:
+    query = (
+        session.query(models.ExecutionGroup.diagnostic_id)
+        .join(models.Execution)
+        .join(value_class)
+        .join(models.Diagnostic, models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
+    )
+    if promoted_only:
+        query = query.filter(models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version)
+    return {row[0] for row in query.distinct()}
+
+
+def test_diagnostics_has_values_flags_match_each_value_type(client: TestClient, settings) -> None:
+    """The list and detail flags agree with a query against each metric value subclass."""
+    session = Database.from_config(test_ref_config(), run_migrations=False, read_only=True).session
+    listing = client.get(f"{settings.API_V1_STR}/diagnostics/").json()["data"]
+
+    for value_class, flag in [
+        (models.ScalarMetricValue, "has_scalar_values"),
+        (models.SeriesMetricValue, "has_series_values"),
+    ]:
+        promoted = _diagnostics_with_values(session, value_class, promoted_only=True)
+        assert promoted, flag
+        assert {d["id"] for d in listing if d[flag]} == promoted
+
+        any_version = _diagnostics_with_values(session, value_class, promoted_only=False)
+        for diagnostic in listing:
+            url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+            expected = diagnostic["id"] in any_version
+            assert client.get(url).json()[flag] == expected, (flag, diagnostic["slug"])
+
+
 def test_diagnostics_facets_cover_scalar_and_series_values(client: TestClient, settings) -> None:
     """Facets are the union of the scalar and series dimension values, and count both."""
     database = Database.from_config(test_ref_config(), run_migrations=False, read_only=True)
