@@ -56,7 +56,7 @@ const ExplorerLayout = () => {
         <Cmip7AvailabilityCta variant="inline" />
 
         <div className="grid gap-8 md:grid-cols-[340px_minmax(0,1fr)]">
-          <Card className="bg-muted/40 h-fit max-w-md">
+          <Card className="bg-muted/40 h-fit md:max-w-md">
             <CardContent className="space-y-4 py-2">
               <h2 className="font-semibold">Getting started</h2>
               <ol className="space-y-1.5 text-sm text-muted-foreground">
