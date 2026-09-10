@@ -1,3 +1,12 @@
+## v0.7.8 (2026-09-10)
+
+### Bug Fixes
+
+- Fixed the layout on phone widths.
+  The navigation links now sit behind a menu button on small screens, so pages no longer scroll sideways,
+  and the welcome dialog can be scrolled to reach its buttons. (#113)
+
+
 ## v0.7.7 (2026-09-10)
 
 ### Improvements
