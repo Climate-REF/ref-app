@@ -198,34 +198,23 @@ async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
     """
     Query the unique dimensions and metrics for all diagnostics (both scalar and series)
     """
-    # Get unique values for each CV dimension column from both scalar and series values
+    # Query the base class so no type filter is added.
+    # With one, SQLite walks the type index instead of the covering index on each dimension.
+    session = app_context.session
     dimension_summary = {}
-
-    # Get dimensions from scalar and series values using ORM queries
-    # to avoid raw SQL interpolation
-    for dimension_name in models.ScalarMetricValue._cv_dimensions:
-        if not hasattr(models.ScalarMetricValue, dimension_name):
+    for dimension_name in models.MetricValue._cv_dimensions:
+        if not hasattr(models.MetricValue, dimension_name):
             continue
 
-        scalar_col = getattr(models.ScalarMetricValue, dimension_name)
-        scalar_result = app_context.session.query(scalar_col).filter(scalar_col.isnot(None)).distinct().all()
-        scalar_values = {row[0] for row in scalar_result}
+        column = getattr(models.MetricValue, dimension_name)
+        values = session.scalars(select(column).where(column.isnot(None)).distinct())
+        dimension_summary[dimension_name] = sorted(values)
 
-        series_col = getattr(models.SeriesMetricValue, dimension_name)
-        series_result = app_context.session.query(series_col).filter(series_col.isnot(None)).distinct().all()
-        series_values = {row[0] for row in series_result}
-
-        # Combine and sort unique values
-        all_values = scalar_values.union(series_values)
-        dimension_summary[dimension_name] = sorted(list(all_values))
-
-    # Count both scalar and series values
-    scalar_count = app_context.session.query(models.ScalarMetricValue).count()
-    series_count = app_context.session.query(models.SeriesMetricValue).count()
+    count = session.scalar(select(func.count(models.MetricValue.id))) or 0
 
     return MetricValueFacetSummary(
         dimensions=dimension_summary,
-        count=scalar_count + series_count,
+        count=count,
     )
 
 
