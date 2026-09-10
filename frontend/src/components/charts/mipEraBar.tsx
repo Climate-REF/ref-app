@@ -73,7 +73,9 @@ function MipEraBar({ actions }: { actions?: ReactNode }) {
           </TabsList>
         </Tabs>
       </div>
-      {actions ? <div className="ml-auto">{actions}</div> : null}
+      {actions ? (
+        <div className="w-full sm:w-auto sm:ml-auto">{actions}</div>
+      ) : null}
     </div>
   );
 }
