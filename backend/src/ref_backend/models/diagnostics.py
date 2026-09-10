@@ -23,9 +23,12 @@ if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
 
 
-class DiagnosticSummary(BaseModel):
+class DiagnosticCatalogEntry(BaseModel):
     """
-    Summary information about a diagnostic.
+    Summary information about a diagnostic, without whether it has metric values.
+
+    Checking for metric values is the slow part of listing diagnostics,
+    so the catalog leaves it to `DiagnosticValueFlags`.
 
     A diagnostic is a specific metric or set of metrics calculated by a provider.
     Each diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.
@@ -54,18 +57,6 @@ class DiagnosticSummary(BaseModel):
     execution_groups: list[int]
     """
     List of IDs for the provider executions associated with this provider
-    """
-    has_metric_values: bool
-    """
-    Whether any scalar or series metric values exist in the database for this diagnostic
-    """
-    has_scalar_values: bool
-    """
-    Whether any scalar metric values exist in the database for this diagnostic
-    """
-    has_series_values: bool
-    """
-    Whether any series metric values exist in the database for this diagnostic
     """
     execution_count: int
     """
@@ -169,7 +160,7 @@ class DiagnosticSummary(BaseModel):
 
     @staticmethod
     def _apply_metadata_overrides(
-        summary: "DiagnosticSummary",
+        summary: "DiagnosticCatalogEntry",
         diagnostic: models.Diagnostic,
         metadata_cache: Mapping[str, DiagnosticMetadata],
     ) -> None:
@@ -189,6 +180,77 @@ class DiagnosticSummary(BaseModel):
                 summary.tags = metadata.tags
 
             logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
+
+    @staticmethod
+    def build_with_stats(  # noqa: PLR0913
+        diagnostic: models.Diagnostic,
+        app_context: "AppContext",
+        *,
+        execution_stats: dict[str, int],
+        execution_group_count: int,
+        successful_execution_group_count: int,
+        resource_usage: ExecutionResourceSummary | None = None,
+    ) -> "DiagnosticCatalogEntry":
+        """Build a DiagnosticCatalogEntry with pre-computed statistics to avoid N+1 queries."""
+        metadata_cache = DiagnosticCatalogEntry._ensure_metadata_cache(app_context)
+        group_by_summary = DiagnosticCatalogEntry._build_group_by_summary(diagnostic, app_context)
+        aft = DiagnosticCatalogEntry._get_aft_link(diagnostic)
+
+        try:
+            concrete_diagnostic = app_context.provider_registry.get_metric(
+                diagnostic.provider.slug, diagnostic.slug
+            )
+            description = concrete_diagnostic.__doc__ or ""
+        except KeyError:
+            logger.warning(
+                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
+            )
+            description = ""
+
+        # Build the base diagnostic summary
+        summary = DiagnosticCatalogEntry(
+            id=diagnostic.id,
+            provider=ProviderSummary.build(diagnostic.provider),
+            slug=diagnostic.slug,
+            name=diagnostic.name,
+            description=description,
+            execution_groups=[e.id for e in diagnostic.execution_groups],
+            execution_count=execution_stats["total"],
+            successful_execution_count=execution_stats["successful"],
+            execution_group_count=execution_group_count,
+            successful_execution_group_count=successful_execution_group_count,
+            promoted_version=diagnostic.promoted_version,
+            group_by=group_by_summary,
+            aft_link=aft,
+            resource_usage=resource_usage,
+        )
+
+        # Apply metadata overrides from YAML if available
+        DiagnosticCatalogEntry._apply_metadata_overrides(summary, diagnostic, metadata_cache)
+
+        return summary
+
+
+class DiagnosticSummary(DiagnosticCatalogEntry):
+    """
+    Summary information about a diagnostic.
+
+    A diagnostic is a specific metric or set of metrics calculated by a provider.
+    Each diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.
+    """
+
+    has_metric_values: bool
+    """
+    Whether any scalar or series metric values exist in the database for this diagnostic
+    """
+    has_scalar_values: bool
+    """
+    Whether any scalar metric values exist in the database for this diagnostic
+    """
+    has_series_values: bool
+    """
+    Whether any series metric values exist in the database for this diagnostic
+    """
 
     @staticmethod
     def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
@@ -299,56 +361,24 @@ class DiagnosticSummary(BaseModel):
         return summary
 
     @staticmethod
-    def build_with_stats(  # noqa: PLR0913
-        diagnostic: models.Diagnostic,
-        app_context: "AppContext",
-        *,
-        has_scalar_values: bool,
-        has_series_values: bool,
-        execution_stats: dict[str, int],
-        execution_group_count: int,
-        successful_execution_group_count: int,
-        resource_usage: ExecutionResourceSummary | None = None,
+    def from_catalog_entry(
+        entry: DiagnosticCatalogEntry, *, has_scalar_values: bool, has_series_values: bool
     ) -> "DiagnosticSummary":
-        """Build a DiagnosticSummary with pre-computed statistics to avoid N+1 queries."""
-        metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
-        group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
-        aft = DiagnosticSummary._get_aft_link(diagnostic)
-
-        has_metric_values = has_scalar_values or has_series_values
-        try:
-            concrete_diagnostic = app_context.provider_registry.get_metric(
-                diagnostic.provider.slug, diagnostic.slug
-            )
-            description = concrete_diagnostic.__doc__ or ""
-        except KeyError:
-            logger.warning(
-                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
-            )
-            description = ""
-
-        # Build the base diagnostic summary
-        summary = DiagnosticSummary(
-            id=diagnostic.id,
-            provider=ProviderSummary.build(diagnostic.provider),
-            slug=diagnostic.slug,
-            name=diagnostic.name,
-            description=description,
-            execution_groups=[e.id for e in diagnostic.execution_groups],
-            has_metric_values=has_metric_values,
+        """Add the metric value flags to a catalog entry."""
+        return DiagnosticSummary(
+            **dict(entry),
+            has_metric_values=has_scalar_values or has_series_values,
             has_scalar_values=has_scalar_values,
             has_series_values=has_series_values,
-            execution_count=execution_stats["total"],
-            successful_execution_count=execution_stats["successful"],
-            execution_group_count=execution_group_count,
-            successful_execution_group_count=successful_execution_group_count,
-            promoted_version=diagnostic.promoted_version,
-            group_by=group_by_summary,
-            aft_link=aft,
-            resource_usage=resource_usage,
         )
 
-        # Apply metadata overrides from YAML if available
-        DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
 
-        return summary
+class DiagnosticValueFlags(BaseModel):
+    """
+    Which kinds of metric values a diagnostic has
+    """
+
+    id: int
+    has_metric_values: bool
+    has_scalar_values: bool
+    has_series_values: bool

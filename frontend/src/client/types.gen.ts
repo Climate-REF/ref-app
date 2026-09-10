@@ -478,6 +478,26 @@ export type CollectionDataset = {
 };
 
 /**
+ * Collection[DiagnosticCatalogEntry]
+ */
+export type CollectionDiagnosticCatalogEntry = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticCatalogEntry>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+    /**
+     * Count
+     *
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+/**
  * Collection[DiagnosticSummary]
  */
 export type CollectionDiagnosticSummary = {
@@ -485,6 +505,26 @@ export type CollectionDiagnosticSummary = {
      * Data
      */
     data: Array<DiagnosticSummary>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+    /**
+     * Count
+     *
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+/**
+ * Collection[DiagnosticValueFlags]
+ */
+export type CollectionDiagnosticValueFlags = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticValueFlags>;
     /**
      * Total Count
      */
@@ -605,6 +645,75 @@ export type Dataset = {
 };
 
 /**
+ * DiagnosticCatalogEntry
+ *
+ * Summary information about a diagnostic, without whether it has metric values.
+ *
+ * Checking for metric values is the slow part of listing diagnostics,
+ * so the catalog leaves it to `DiagnosticValueFlags`.
+ *
+ * A diagnostic is a specific metric or set of metrics calculated by a provider.
+ * Each diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics.
+ */
+export type DiagnosticCatalogEntry = {
+    /**
+     * Id
+     */
+    id: number;
+    provider: ProviderSummary;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Execution Groups
+     */
+    execution_groups: Array<number>;
+    /**
+     * Execution Count
+     */
+    execution_count: number;
+    /**
+     * Successful Execution Count
+     */
+    successful_execution_count: number;
+    /**
+     * Execution Group Count
+     */
+    execution_group_count: number;
+    /**
+     * Successful Execution Group Count
+     */
+    successful_execution_group_count: number;
+    /**
+     * Promoted Version
+     */
+    promoted_version: number;
+    /**
+     * Group By
+     */
+    group_by: Array<GroupBy>;
+    aft_link: AftDiagnosticDetail | null;
+    /**
+     * Reference Datasets
+     */
+    reference_datasets?: Array<ReferenceDatasetLink> | null;
+    /**
+     * Tags
+     */
+    tags?: Array<string> | null;
+    resource_usage?: ExecutionResourceSummary | null;
+};
+
+/**
  * DiagnosticRuns
  *
  * How one diagnostic went for one model.
@@ -664,18 +773,6 @@ export type DiagnosticSummary = {
      */
     execution_groups: Array<number>;
     /**
-     * Has Metric Values
-     */
-    has_metric_values: boolean;
-    /**
-     * Has Scalar Values
-     */
-    has_scalar_values: boolean;
-    /**
-     * Has Series Values
-     */
-    has_series_values: boolean;
-    /**
      * Execution Count
      */
     execution_count: number;
@@ -709,6 +806,42 @@ export type DiagnosticSummary = {
      */
     tags?: Array<string> | null;
     resource_usage?: ExecutionResourceSummary | null;
+    /**
+     * Has Metric Values
+     */
+    has_metric_values: boolean;
+    /**
+     * Has Scalar Values
+     */
+    has_scalar_values: boolean;
+    /**
+     * Has Series Values
+     */
+    has_series_values: boolean;
+};
+
+/**
+ * DiagnosticValueFlags
+ *
+ * Which kinds of metric values a diagnostic has
+ */
+export type DiagnosticValueFlags = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Has Metric Values
+     */
+    has_metric_values: boolean;
+    /**
+     * Has Scalar Values
+     */
+    has_scalar_values: boolean;
+    /**
+     * Has Series Values
+     */
+    has_series_values: boolean;
 };
 
 /**
@@ -1581,6 +1714,20 @@ export type CollectionDatasetWritable = {
 };
 
 /**
+ * Collection[DiagnosticCatalogEntry]
+ */
+export type CollectionDiagnosticCatalogEntryWritable = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticCatalogEntry>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+};
+
+/**
  * Collection[DiagnosticSummary]
  */
 export type CollectionDiagnosticSummaryWritable = {
@@ -1588,6 +1735,20 @@ export type CollectionDiagnosticSummaryWritable = {
      * Data
      */
     data: Array<DiagnosticSummary>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+};
+
+/**
+ * Collection[DiagnosticValueFlags]
+ */
+export type CollectionDiagnosticValueFlagsWritable = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticValueFlags>;
     /**
      * Total Count
      */
@@ -2094,6 +2255,66 @@ export type DiagnosticsListResponses = {
 };
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
+
+export type DiagnosticsCatalogData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/diagnostics/catalog';
+};
+
+export type DiagnosticsCatalogErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsCatalogError = DiagnosticsCatalogErrors[keyof DiagnosticsCatalogErrors];
+
+export type DiagnosticsCatalogResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionDiagnosticCatalogEntry;
+};
+
+export type DiagnosticsCatalogResponse = DiagnosticsCatalogResponses[keyof DiagnosticsCatalogResponses];
+
+export type DiagnosticsValueFlagsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/diagnostics/value-flags';
+};
+
+export type DiagnosticsValueFlagsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsValueFlagsError = DiagnosticsValueFlagsErrors[keyof DiagnosticsValueFlagsErrors];
+
+export type DiagnosticsValueFlagsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionDiagnosticValueFlags;
+};
+
+export type DiagnosticsValueFlagsResponse = DiagnosticsValueFlagsResponses[keyof DiagnosticsValueFlagsResponses];
 
 export type DiagnosticsFacetsData = {
     body?: never;

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import {
-  diagnosticsListOptions,
+  diagnosticsCatalogOptions,
   executionsGetExecutionStatisticsOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
@@ -40,7 +40,7 @@ function Stat({
 }
 
 function ResourceUsagePage() {
-  const diagnostics = useQuery(diagnosticsListOptions());
+  const diagnostics = useQuery(diagnosticsCatalogOptions());
   const statistics = useQuery(executionsGetExecutionStatisticsOptions());
   const usage = statistics.data?.resource_usage;
 

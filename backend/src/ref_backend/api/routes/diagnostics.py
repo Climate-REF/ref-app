@@ -23,7 +23,9 @@ from ref_backend.core.reader_values import (
 from ref_backend.core.resource_usage import RESOURCE_AGGREGATES, summary_from_row
 from ref_backend.models import (
     Collection,
+    DiagnosticCatalogEntry,
     DiagnosticSummary,
+    DiagnosticValueFlags,
     Execution,
     ExecutionGroup,
     MetricValueCollection,
@@ -59,31 +61,18 @@ async def _get_diagnostic(
     return diagnostic
 
 
-@router.get("/", name="list")
-async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Collection[DiagnosticSummary]:
-    """
-    List the currently registered diagnostics
-
-    Pass `mip_era` to count only the execution groups that ran against that era.
-    """
-    diagnostics_query = app_context.session.query(models.Diagnostic)
+def _listed_diagnostics(app_context: AppContextDep) -> list[models.Diagnostic]:
+    query = app_context.session.query(models.Diagnostic)
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
-        diagnostics_query = diagnostics_query.join(models.Provider).filter(
+        query = query.join(models.Provider).filter(
             models.Provider.slug.in_(app_context.settings.DIAGNOSTIC_PROVIDERS)
         )
     if app_context.settings.DIAGNOSTIC_EXCLUDE:
-        diagnostics_query = diagnostics_query.filter(
-            models.Diagnostic.slug.notin_(app_context.settings.DIAGNOSTIC_EXCLUDE)
-        )
+        query = query.filter(models.Diagnostic.slug.notin_(app_context.settings.DIAGNOSTIC_EXCLUDE))
+    return query.all()
 
-    diagnostics = diagnostics_query.all()
 
-    if not diagnostics:
-        return Collection(data=[])
-
-    # Batch fetch all diagnostic statistics to avoid N+1 queries
-    diagnostic_ids = [d.id for d in diagnostics]
-
+def _group_scope(diagnostic_ids: list[int], mip_era: str | None) -> list[ColumnElement[bool]]:
     promoted_version = (
         select(models.Diagnostic.promoted_version)
         .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
@@ -96,29 +85,25 @@ async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Colle
     if mip_era:
         era_groups = select(models.ExecutionGroup.id).where(execution_group_filter({"mip_era": mip_era}))
         group_scope.append(models.ExecutionGroup.id.in_(era_groups))
+    return group_scope
 
-    # Check for scalar values existence
-    scalar_values_exist = (
+
+def _diagnostics_with_values(
+    app_context: AppContextDep, value_class: type[models.MetricValue], group_scope: list[ColumnElement[bool]]
+) -> set[int]:
+    rows = (
         app_context.session.query(models.ExecutionGroup.diagnostic_id)
         .join(models.Execution)
-        .join(models.ScalarMetricValue)
+        .join(value_class)
         .filter(*group_scope)
         .distinct()
-        .all()
     )
-    scalar_diagnostic_ids = {row[0] for row in scalar_values_exist}
+    return {row[0] for row in rows}
 
-    # Check for series values existence
-    series_values_exist = (
-        app_context.session.query(models.ExecutionGroup.diagnostic_id)
-        .join(models.Execution)
-        .join(models.SeriesMetricValue)
-        .filter(*group_scope)
-        .distinct()
-        .all()
-    )
-    series_diagnostic_ids = {row[0] for row in series_values_exist}
 
+def _catalog_entries(
+    app_context: AppContextDep, diagnostics: list[models.Diagnostic], group_scope: list[ColumnElement[bool]]
+) -> list[DiagnosticCatalogEntry]:
     # Count executions and roll up their resource usage per diagnostic
     execution_counts = (
         app_context.session.query(
@@ -176,19 +161,88 @@ async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Colle
     )
     successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
 
+    return [
+        DiagnosticCatalogEntry.build_with_stats(
+            m,
+            app_context,
+            execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
+            execution_group_count=group_counts.get(m.id, 0),
+            successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
+            resource_usage=resource_usage.get(m.id),
+        )
+        for m in diagnostics
+    ]
+
+
+@router.get("/", name="list")
+async def _list(app_context: AppContextDep, mip_era: str | None = None) -> Collection[DiagnosticSummary]:
+    """
+    List the currently registered diagnostics
+
+    Pass `mip_era` to count only the execution groups that ran against that era.
+    """
+    diagnostics = _listed_diagnostics(app_context)
+    if not diagnostics:
+        return Collection(data=[])
+
+    group_scope = _group_scope([d.id for d in diagnostics], mip_era)
+    scalar_ids = _diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope)
+    series_ids = _diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope)
     return Collection(
         data=[
-            DiagnosticSummary.build_with_stats(
-                m,
-                app_context,
-                has_scalar_values=m.id in scalar_diagnostic_ids,
-                has_series_values=m.id in series_diagnostic_ids,
-                execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
-                execution_group_count=group_counts.get(m.id, 0),
-                successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
-                resource_usage=resource_usage.get(m.id),
+            DiagnosticSummary.from_catalog_entry(
+                entry,
+                has_scalar_values=entry.id in scalar_ids,
+                has_series_values=entry.id in series_ids,
             )
-            for m in diagnostics
+            for entry in _catalog_entries(app_context, diagnostics, group_scope)
+        ]
+    )
+
+
+@router.get("/catalog", name="catalog")
+async def catalog(
+    app_context: AppContextDep, mip_era: str | None = None
+) -> Collection[DiagnosticCatalogEntry]:
+    """
+    List the diagnostics like `/diagnostics/`, without whether each has metric values
+
+    Checking for metric values is most of the cost of the full listing.
+    Fetch those from `/diagnostics/value-flags`.
+    """
+    diagnostics = _listed_diagnostics(app_context)
+    if not diagnostics:
+        return Collection(data=[])
+
+    group_scope = _group_scope([d.id for d in diagnostics], mip_era)
+    return Collection(data=_catalog_entries(app_context, diagnostics, group_scope))
+
+
+@router.get("/value-flags", name="value_flags")
+async def value_flags(
+    app_context: AppContextDep, mip_era: str | None = None
+) -> Collection[DiagnosticValueFlags]:
+    """
+    Whether each listed diagnostic has scalar and series values
+
+    These are the flags `/diagnostics/catalog` leaves out.
+    """
+    diagnostics = _listed_diagnostics(app_context)
+    if not diagnostics:
+        return Collection(data=[])
+
+    group_scope = _group_scope([d.id for d in diagnostics], mip_era)
+    scalar_ids = _diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope)
+    series_ids = _diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope)
+    return Collection(
+        data=[
+            DiagnosticValueFlags(
+                id=d.id,
+                has_metric_values=d.id in scalar_ids or d.id in series_ids,
+                has_scalar_values=d.id in scalar_ids,
+                has_series_values=d.id in series_ids,
+            )
+            for d in diagnostics
         ]
     )
 

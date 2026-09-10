@@ -949,3 +949,25 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
     assert relisted["execution_group_count"] == 0
+
+
+FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")
+
+
+@pytest.mark.parametrize("mip_era", [None, "CMIP6"])
+def test_diagnostics_catalog_and_value_flags_make_up_the_listing(
+    client: TestClient, settings, mip_era
+) -> None:
+    """The catalog is the listing without the flags, and the flags endpoint returns what they were."""
+    query = {"mip_era": mip_era} if mip_era else {}
+    full = client.get(f"{settings.API_V1_STR}/diagnostics/", params=query).json()["data"]
+    catalog = client.get(f"{settings.API_V1_STR}/diagnostics/catalog", params=query).json()["data"]
+    flags = client.get(f"{settings.API_V1_STR}/diagnostics/value-flags", params=query).json()["data"]
+
+    def by_id(rows: list[dict], keep) -> dict:
+        return {d["id"]: {k: v for k, v in d.items() if keep(k)} for d in rows}
+
+    assert any(d["has_metric_values"] for d in full)
+    assert not any(flag in d for d in catalog for flag in FLAGS)
+    assert by_id(catalog, lambda k: True) == by_id(full, lambda k: k not in FLAGS)
+    assert by_id(flags, lambda k: k in FLAGS) == by_id(full, lambda k: k in FLAGS)

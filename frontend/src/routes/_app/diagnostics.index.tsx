@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
-import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
-import type { DiagnosticSummary } from "@/client/types.gen";
+import {
+  diagnosticsCatalogOptions,
+  diagnosticsValueFlagsOptions,
+} from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
@@ -12,9 +14,14 @@ import { DiagnosticCard } from "@/components/diagnostics/diagnosticCard";
 import { DiagnosticsFilter } from "@/components/diagnostics/diagnosticsFilter";
 import { ViewToggle } from "@/components/diagnostics/viewToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LinkExternal } from "@/components/ui/link";
 import { useMipEra } from "@/hooks/useMipEra";
+import {
+  type CatalogDiagnostic,
+  withValueFlags,
+} from "@/lib/diagnosticCatalog";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
 const diagnosticNotes: { slug: string; note: string; noteUrl?: string }[] = [
@@ -88,19 +95,20 @@ const Diagnostics = () => {
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
   const { mipEra, setMipEra } = useMipEra(searchParams.mip_era);
+  // The value flags are the slow part of the listing, so they load separately and fill in once ready.
   const { data, isLoading, error } = useQuery(
-    diagnosticsListOptions({ query: { mip_era: mipEra } }),
+    diagnosticsCatalogOptions({ query: { mip_era: mipEra } }),
+  );
+  const valueFlags = useQuery(
+    diagnosticsValueFlagsOptions({ query: { mip_era: mipEra } }),
+  );
+  const diagnostics = useMemo(
+    () => withValueFlags(data?.data ?? [], valueFlags.data?.data),
+    [data, valueFlags.data],
   );
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
-    DiagnosticSummary[]
+    CatalogDiagnostic[]
   >([]);
-
-  // Update filtered diagnostics when data arrives
-  useEffect(() => {
-    if (data?.data) {
-      setFilteredDiagnostics(data.data);
-    }
-  }, [data]);
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -236,6 +244,22 @@ const Diagnostics = () => {
         </CardContent>
       </Card>
 
+      {valueFlags.isError && (
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between gap-4">
+            Could not load which diagnostics have metric values, so the metric
+            values filter is not applied.
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => valueFlags.refetch()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
           {isLoading ? (
@@ -247,7 +271,7 @@ const Diagnostics = () => {
             </div>
           ) : (
             <DiagnosticsFilter
-              diagnostics={data?.data || []}
+              diagnostics={diagnostics}
               onFilterChange={setFilteredDiagnostics}
               onFilterParamsChange={handleFilterChange}
               initialSearch={searchParams.search}
@@ -293,6 +317,7 @@ const Diagnostics = () => {
                   <DiagnosticCard
                     key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
                     diagnostic={diagnostic}
+                    valueFlagsFailed={valueFlags.isError}
                     note={note?.note}
                     noteURL={note?.noteUrl}
                   />
@@ -300,7 +325,10 @@ const Diagnostics = () => {
               })}
             </div>
           ) : (
-            <DiagnosticSummaryTable summaries={filteredDiagnostics} />
+            <DiagnosticSummaryTable
+              summaries={filteredDiagnostics}
+              valueFlagsFailed={valueFlags.isError}
+            />
           )}
 
           {filteredDiagnostics.length === 0 && (

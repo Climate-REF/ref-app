@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircleWarning } from "lucide-react";
-import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,18 +10,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ValueStatus } from "./valueStatus";
 
 interface DiagnosticCardProps {
-  diagnostic: DiagnosticSummary;
+  diagnostic: CatalogDiagnostic;
   note?: string;
   noteURL?: string;
+  valueFlagsFailed?: boolean;
 }
 
 export function DiagnosticCard({
   diagnostic,
   note,
   noteURL,
+  valueFlagsFailed = false,
 }: DiagnosticCardProps) {
   return (
     <Card className="h-full flex flex-col">
@@ -63,29 +66,19 @@ export function DiagnosticCard({
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>
-            {diagnostic.has_scalar_values ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                ● Available
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                ○ None
-              </span>
-            )}
+            <ValueStatus
+              available={diagnostic.has_scalar_values}
+              failed={valueFlagsFailed}
+            />
           </div>
 
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Series Values:</span>
-            {diagnostic.has_series_values ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                ● Available
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                ○ None
-              </span>
-            )}
+            <ValueStatus
+              available={diagnostic.has_series_values}
+              failed={valueFlagsFailed}
+            />
           </div>
           {/* Total Executions */}
           <div className="flex items-center justify-between text-sm">

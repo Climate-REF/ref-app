@@ -1,6 +1,5 @@
 import { Filter, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,10 +10,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 
 interface DiagnosticsFilterProps {
-  diagnostics: DiagnosticSummary[];
-  onFilterChange: (filteredDiagnostics: DiagnosticSummary[]) => void;
+  diagnostics: CatalogDiagnostic[];
+  onFilterChange: (filteredDiagnostics: CatalogDiagnostic[]) => void;
   onFilterParamsChange?: (
     search: string,
     providers: string[],
@@ -122,10 +122,12 @@ export function DiagnosticsFilter({
         );
       }
 
-      // Metric values filter
+      // Metric values filter, keeping diagnostics whose flags have not loaded yet
       if (metricValuesFilter !== null) {
         filtered = filtered.filter(
-          (diagnostic) => diagnostic.has_metric_values === metricValuesFilter,
+          (diagnostic) =>
+            diagnostic.has_metric_values === null ||
+            diagnostic.has_metric_values === metricValuesFilter,
         );
       }
 
@@ -145,8 +147,8 @@ export function DiagnosticsFilter({
     [diagnostics, onFilterChange, onFilterParamsChange],
   );
 
-  // Apply initial filters from URL on mount only
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run on initial mount to apply URL params
+  // Reapply the current filters whenever the diagnostics change, including when late value flags arrive.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: filter changes already apply themselves
   useEffect(() => {
     applyFilters(
       searchTerm,
@@ -154,9 +156,9 @@ export function DiagnosticsFilter({
       selectedAftIds,
       selectedThemes,
       showWithMetricValues,
-      false, // Don't update URL on initial mount
+      false,
     );
-  }, []);
+  }, [diagnostics]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);

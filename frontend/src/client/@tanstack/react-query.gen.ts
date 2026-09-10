@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsFacets, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, modelsEnsemble, modelsGet, modelsList, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsFacetsData, DiagnosticsFacetsResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionsData, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ModelsEnsembleData, ModelsEnsembleError, ModelsEnsembleResponse, ModelsGetData, ModelsGetError, ModelsGetResponse, ModelsListData, ModelsListError, ModelsListResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
+import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsCatalog, diagnosticsFacets, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, diagnosticsValueFlags, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, modelsEnsemble, modelsGet, modelsList, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsCatalogData, DiagnosticsCatalogError, DiagnosticsCatalogResponse, DiagnosticsFacetsData, DiagnosticsFacetsResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionsData, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, DiagnosticsValueFlagsData, DiagnosticsValueFlagsError, DiagnosticsValueFlagsResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ModelsEnsembleData, ModelsEnsembleError, ModelsEnsembleResponse, ModelsGetData, ModelsGetError, ModelsGetResponse, ModelsListData, ModelsListError, ModelsListResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -258,6 +258,51 @@ export const diagnosticsListOptions = (options?: Options<DiagnosticsListData>) =
         return data;
     },
     queryKey: diagnosticsListQueryKey(options)
+});
+
+export const diagnosticsCatalogQueryKey = (options?: Options<DiagnosticsCatalogData>) => createQueryKey('diagnosticsCatalog', options);
+
+/**
+ * Catalog
+ *
+ * List the diagnostics like `/diagnostics/`, without whether each has metric values
+ *
+ * Checking for metric values is most of the cost of the full listing.
+ * Fetch those from `/diagnostics/value-flags`.
+ */
+export const diagnosticsCatalogOptions = (options?: Options<DiagnosticsCatalogData>) => queryOptions<DiagnosticsCatalogResponse, DiagnosticsCatalogError, DiagnosticsCatalogResponse, ReturnType<typeof diagnosticsCatalogQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await diagnosticsCatalog({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: diagnosticsCatalogQueryKey(options)
+});
+
+export const diagnosticsValueFlagsQueryKey = (options?: Options<DiagnosticsValueFlagsData>) => createQueryKey('diagnosticsValueFlags', options);
+
+/**
+ * Value Flags
+ *
+ * Whether each listed diagnostic has scalar and series values
+ *
+ * These are the flags `/diagnostics/catalog` leaves out.
+ */
+export const diagnosticsValueFlagsOptions = (options?: Options<DiagnosticsValueFlagsData>) => queryOptions<DiagnosticsValueFlagsResponse, DiagnosticsValueFlagsError, DiagnosticsValueFlagsResponse, ReturnType<typeof diagnosticsValueFlagsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await diagnosticsValueFlags({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: diagnosticsValueFlagsQueryKey(options)
 });
 
 export const diagnosticsFacetsQueryKey = (options?: Options<DiagnosticsFacetsData>) => createQueryKey('diagnosticsFacets', options);
