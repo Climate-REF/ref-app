@@ -1,3 +1,16 @@
+## v0.7.11 (2026-09-10)
+
+### Improvements
+
+- The diagnostics catalog now appears straight away, and fills in which diagnostics have scalar and series values once those finish loading. (#116)
+
+### Bug Fixes
+
+- Fixed page view analytics going missing behind Cloudflare.
+  The analytics proxy now forwards the visitor IP that Cloudflare reports,
+  so Plausible no longer mistakes the visits for data centre traffic. (#117)
+
+
 ## v0.7.10 (2026-09-10)
 
 ### Improvements
