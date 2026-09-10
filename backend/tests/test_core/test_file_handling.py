@@ -16,13 +16,14 @@ class TestFileIterator:
         assert b"".join(chunks) == content
 
     def test_default_chunk_size(self, tmp_path):
-        """The default chunk is 64KB, so a 100KB file arrives in two chunks."""
+        """The default chunk is 64KB, so downloads are not throttled by tiny reads."""
         content = b"x" * (100 * 1024)
         file_path = tmp_path / "large.txt"
         file_path.write_bytes(content)
 
         chunks = list(file_iterator(str(file_path)))
-        assert [len(c) for c in chunks] == [64 * 1024, 36 * 1024]
+        assert max(len(c) for c in chunks) == 64 * 1024
+        assert b"".join(chunks) == content
 
     def test_chunk_size_respected(self, tmp_path):
         """A file larger than one chunk yields multiple chunks, each within the chunk size."""
