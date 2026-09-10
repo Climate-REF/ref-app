@@ -19,9 +19,12 @@ async def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> 
     if result is None:
         raise HTTPException(status_code=404, detail="Result not found")
 
-    file_path = resolve_artifact(
-        reader.artifacts.output_file, result.execution.output_fragment, result.filename
-    )
+    filename = result.filename
+    output_fragment = result.execution.output_fragment
+    # Release the connection now, so streaming the file does not hold it open
+    session.close()
+
+    file_path = resolve_artifact(reader.artifacts.output_file, output_fragment, filename)
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
@@ -30,5 +33,5 @@ async def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> 
     return StreamingResponse(
         file_iterator(str(file_path)),
         media_type=mime_type,
-        headers={"Content-Disposition": f"attachment; filename={result.filename}"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

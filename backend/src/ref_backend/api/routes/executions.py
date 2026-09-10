@@ -238,8 +238,11 @@ async def execution_logs(
     Fetch the logs for an execution result
     """
     execution = await _get_execution(group_id, execution_id, app_context)
+    output_fragment = execution.output_fragment
+    # Release the connection now, so streaming the file does not hold it open
+    app_context.session.close()
 
-    file_path = resolve_artifact(app_context.reader.artifacts.log_file, execution.output_fragment)
+    file_path = resolve_artifact(app_context.reader.artifacts.log_file, output_fragment)
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
