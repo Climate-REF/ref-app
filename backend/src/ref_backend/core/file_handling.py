@@ -24,7 +24,7 @@ def resolve_artifact(resolve: Callable[..., Path], *parts: str) -> Path:
         raise HTTPException(status_code=404, detail="Execution output not found")
 
 
-def file_iterator(file_path: str, chunk_size: int = 1024) -> Generator[bytes]:
+def file_iterator(file_path: str, chunk_size: int = 64 * 1024) -> Generator[bytes]:
     """
     Read a file in chunks
 

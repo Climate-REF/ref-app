@@ -1,5 +1,12 @@
+import asyncio
+
 import pytest
 from fastapi.testclient import TestClient
+
+from climate_ref.models import ExecutionOutput
+from ref_backend.api import deps
+from ref_backend.api.routes.results import get_result
+from ref_backend.testing import test_ref_config, test_settings
 
 
 def get_result_id(client: TestClient, settings) -> int:
@@ -47,3 +54,22 @@ def test_result_get_valid(client: TestClient, settings):
     assert r.status_code == 200
     # The results endpoint streams a file, so check that content is not empty
     assert len(r.content) > 0
+
+
+def test_result_releases_connection_before_streaming():
+    """The pooled connection goes back before the body is streamed."""
+    database = deps._get_database_dependency(test_settings(), test_ref_config())
+    pool = database._engine.pool
+    idle = pool.checkedout()
+
+    with database.session_scope() as session:
+        reader = deps._get_reader_dependency(database, test_ref_config(), session)
+        result = session.query(ExecutionOutput).first()
+        if result is None:
+            pytest.skip("No execution results available in test data")
+        assert pool.checkedout() == idle + 1
+
+        response = asyncio.run(get_result(session, reader, result.id))
+
+        assert response.status_code == 200
+        assert pool.checkedout() == idle
