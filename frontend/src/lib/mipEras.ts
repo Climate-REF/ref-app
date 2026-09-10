@@ -55,7 +55,7 @@ export function storeMipEra(era: MipEra) {
 }
 
 /** A chart needs at least this many distinct models before it is drawn at all. */
-export const MIN_MODELS_FOR_CHART = 4;
+export const MIN_MODELS_FOR_CHART = 3;
 
 /** A chart drawn from fewer than this many distinct models carries a sparse-sample warning. */
 export const MIN_MODELS_FOR_CONFIDENCE = 10;
