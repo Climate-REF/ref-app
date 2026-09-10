@@ -1,3 +1,15 @@
+## v0.8.0 (2026-09-10)
+
+### Features
+
+- Added a Prometheus `/metrics` endpoint with request count and latency histograms. (#120)
+
+### Bug Fixes
+
+- Fixed pages failing to load in Safari after a new release, with a cross-origin script error.
+  Direct links to pages are now served without a redirect. (#119)
+
+
 ## v0.7.12 (2026-09-10)
 
 ### Bug Fixes
