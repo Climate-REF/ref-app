@@ -13,6 +13,21 @@ import {
 } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
+function ValueStatus({ available }: { available: boolean | null }) {
+  if (available === null) {
+    return <span className="text-muted-foreground">Checking...</span>;
+  }
+  return available ? (
+    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+      ● Available
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 text-muted-foreground">
+      ○ None
+    </span>
+  );
+}
+
 interface DiagnosticCardProps {
   diagnostic: DiagnosticSummary;
   note?: string;
@@ -63,29 +78,13 @@ export function DiagnosticCard({
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Scalar Values:</span>
-            {diagnostic.has_scalar_values ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                ● Available
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                ○ None
-              </span>
-            )}
+            <ValueStatus available={diagnostic.has_scalar_values} />
           </div>
 
           {/* Metric Values Status */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Series Values:</span>
-            {diagnostic.has_series_values ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                ● Available
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                ○ None
-              </span>
-            )}
+            <ValueStatus available={diagnostic.has_series_values} />
           </div>
           {/* Total Executions */}
           <div className="flex items-center justify-between text-sm">

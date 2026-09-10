@@ -48,7 +48,9 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
       <DataTableColumnHeader column={column} title="Scalar Values" />
     ),
     cell: (cell) =>
-      cell.getValue() ? (
+      cell.getValue() === null ? (
+        <span className="text-muted-foreground">Checking...</span>
+      ) : cell.getValue() ? (
         <span
           className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
           title="This diagnostic has scalar metric values available."

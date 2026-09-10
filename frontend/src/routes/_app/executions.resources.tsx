@@ -40,7 +40,9 @@ function Stat({
 }
 
 function ResourceUsagePage() {
-  const diagnostics = useQuery(diagnosticsListOptions());
+  const diagnostics = useQuery(
+    diagnosticsListOptions({ query: { include_value_flags: false } }),
+  );
   const statistics = useQuery(executionsGetExecutionStatisticsOptions());
   const usage = statistics.data?.resource_usage;
 

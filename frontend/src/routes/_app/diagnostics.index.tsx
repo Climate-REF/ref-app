@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
-import { diagnosticsListOptions } from "@/client/@tanstack/react-query.gen";
+import {
+  diagnosticsListOptions,
+  diagnosticsValueFlagsOptions,
+} from "@/client/@tanstack/react-query.gen";
 import type { DiagnosticSummary } from "@/client/types.gen";
 import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraScope } from "@/components/charts/mipEraBar";
@@ -88,19 +91,22 @@ const Diagnostics = () => {
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
   const { mipEra, setMipEra } = useMipEra(searchParams.mip_era);
+  // The value flags are the slow part of the listing, so they load separately and fill in once ready.
   const { data, isLoading, error } = useQuery(
-    diagnosticsListOptions({ query: { mip_era: mipEra } }),
+    diagnosticsListOptions({
+      query: { mip_era: mipEra, include_value_flags: false },
+    }),
   );
+  const valueFlags = useQuery(
+    diagnosticsValueFlagsOptions({ query: { mip_era: mipEra } }),
+  );
+  const diagnostics = useMemo(() => {
+    const flags = new Map(valueFlags.data?.data.map((f) => [f.id, f]));
+    return (data?.data ?? []).map((d) => ({ ...d, ...flags.get(d.id) }));
+  }, [data, valueFlags.data]);
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
     DiagnosticSummary[]
   >([]);
-
-  // Update filtered diagnostics when data arrives
-  useEffect(() => {
-    if (data?.data) {
-      setFilteredDiagnostics(data.data);
-    }
-  }, [data]);
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -247,7 +253,7 @@ const Diagnostics = () => {
             </div>
           ) : (
             <DiagnosticsFilter
-              diagnostics={data?.data || []}
+              diagnostics={diagnostics}
               onFilterChange={setFilteredDiagnostics}
               onFilterParamsChange={handleFilterChange}
               initialSearch={searchParams.search}

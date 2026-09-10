@@ -498,6 +498,26 @@ export type CollectionDiagnosticSummary = {
 };
 
 /**
+ * Collection[DiagnosticValueFlags]
+ */
+export type CollectionDiagnosticValueFlags = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticValueFlags>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+    /**
+     * Count
+     *
+     * Number of data items present
+     */
+    readonly count: number;
+};
+
+/**
  * Collection[EnsembleComparison]
  */
 export type CollectionEnsembleComparison = {
@@ -666,15 +686,15 @@ export type DiagnosticSummary = {
     /**
      * Has Metric Values
      */
-    has_metric_values: boolean;
+    has_metric_values: boolean | null;
     /**
      * Has Scalar Values
      */
-    has_scalar_values: boolean;
+    has_scalar_values: boolean | null;
     /**
      * Has Series Values
      */
-    has_series_values: boolean;
+    has_series_values: boolean | null;
     /**
      * Execution Count
      */
@@ -709,6 +729,30 @@ export type DiagnosticSummary = {
      */
     tags?: Array<string> | null;
     resource_usage?: ExecutionResourceSummary | null;
+};
+
+/**
+ * DiagnosticValueFlags
+ *
+ * Which kinds of metric values a diagnostic has
+ */
+export type DiagnosticValueFlags = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Has Metric Values
+     */
+    has_metric_values: boolean;
+    /**
+     * Has Scalar Values
+     */
+    has_scalar_values: boolean;
+    /**
+     * Has Series Values
+     */
+    has_series_values: boolean;
 };
 
 /**
@@ -1595,6 +1639,20 @@ export type CollectionDiagnosticSummaryWritable = {
 };
 
 /**
+ * Collection[DiagnosticValueFlags]
+ */
+export type CollectionDiagnosticValueFlagsWritable = {
+    /**
+     * Data
+     */
+    data: Array<DiagnosticValueFlags>;
+    /**
+     * Total Count
+     */
+    total_count?: number | null;
+};
+
+/**
  * Collection[EnsembleComparison]
  */
 export type CollectionEnsembleComparisonWritable = {
@@ -2073,6 +2131,10 @@ export type DiagnosticsListData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Include Value Flags
+         */
+        include_value_flags?: boolean;
     };
     url: '/api/v1/diagnostics/';
 };
@@ -2094,6 +2156,36 @@ export type DiagnosticsListResponses = {
 };
 
 export type DiagnosticsListResponse = DiagnosticsListResponses[keyof DiagnosticsListResponses];
+
+export type DiagnosticsValueFlagsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mip Era
+         */
+        mip_era?: string | null;
+    };
+    url: '/api/v1/diagnostics/value-flags';
+};
+
+export type DiagnosticsValueFlagsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsValueFlagsError = DiagnosticsValueFlagsErrors[keyof DiagnosticsValueFlagsErrors];
+
+export type DiagnosticsValueFlagsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollectionDiagnosticValueFlags;
+};
+
+export type DiagnosticsValueFlagsResponse = DiagnosticsValueFlagsResponses[keyof DiagnosticsValueFlagsResponses];
 
 export type DiagnosticsFacetsData = {
     body?: never;
