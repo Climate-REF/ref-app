@@ -85,6 +85,18 @@ class TestSPAStaticFiles:
         assert r.status_code == 200
         assert "SPA Root" in r.text
 
+    def test_unknown_path_served_without_redirect(self, spa_client: TestClient):
+        """Client-side routes should be served in place, not redirected to a trailing slash."""
+        r = spa_client.get("/explorer/themes", follow_redirects=False)
+        assert r.status_code == 200
+        assert "SPA Root" in r.text
+        assert r.headers["cache-control"] == "no-cache"
+
+    def test_missing_asset_returns_404(self, spa_client: TestClient):
+        """A chunk removed by a deploy should 404 so the browser fails the import cleanly."""
+        r = spa_client.get("/assets/themes-old.js", follow_redirects=False)
+        assert r.status_code == 404
+
     def test_api_route_not_affected(self, spa_client: TestClient):
         """API routes registered before the static mount should still work."""
         r = spa_client.get("/api/v1/health")
