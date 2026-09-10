@@ -1,3 +1,10 @@
+## v0.7.9 (2026-09-10)
+
+### Improvements
+
+- Sped up loading the diagnostic facets, which could take over a minute on large databases. (#114)
+
+
 ## v0.7.8 (2026-09-10)
 
 ### Bug Fixes
