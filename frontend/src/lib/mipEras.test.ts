@@ -76,10 +76,10 @@ describe("sampleSize", () => {
     expect(result.models).toBe(3);
   });
 
-  it("needs more than three models before a chart is drawn", () => {
-    const three = ["a", "b", "c"].map((s) => model({ source_id: s }));
-    expect(sampleSize(three).enoughModels).toBe(false);
-    expect(sampleSize([...three, model({ source_id: "d" })]).enoughModels).toBe(
+  it("needs more than two models before a chart is drawn", () => {
+    const two = ["a", "b"].map((s) => model({ source_id: s }));
+    expect(sampleSize(two).enoughModels).toBe(false);
+    expect(sampleSize([...two, model({ source_id: "c" })]).enoughModels).toBe(
       true,
     );
   });
