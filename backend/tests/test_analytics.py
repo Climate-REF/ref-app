@@ -58,6 +58,7 @@ def test_event_is_proxied(client: TestClient, upstream_requests):
     assert forwarded.headers["content-type"] == "text/plain"
     assert forwarded.headers["user-agent"] == "test-agent"
     assert forwarded.headers["x-forwarded-for"] == "testclient"
+    assert "x-plausible-dropped" not in response.headers
 
 
 def test_event_prefers_the_cloudflare_client_ip(client: TestClient, upstream_requests):

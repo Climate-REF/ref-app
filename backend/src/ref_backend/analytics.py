@@ -23,10 +23,10 @@ _client = httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS, follow_redirects=T
 
 def _forwarded_for(request: Request) -> str | None:
     """
-    Build the client chain that Plausible uses to derive a visitor hash.
+    Pick the visitor IP that Plausible uses to derive a visitor hash.
 
     Plausible drops events from data centre IPs,
-    so the Cloudflare or ingress hop must never be reported as the visitor.
+    so prefer the Cloudflare client IP over the edge hop.
     """
     cloudflare_client = request.headers.get("cf-connecting-ip")
     if cloudflare_client:
