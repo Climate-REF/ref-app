@@ -610,6 +610,26 @@ def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) 
     assert data["count"] >= 0
 
 
+def test_diagnostics_facets_cover_scalar_and_series_values(client: TestClient, settings) -> None:
+    """Facets are the union of the scalar and series dimension values, and count both."""
+    database = Database.from_config(test_ref_config(), run_migrations=False, read_only=True)
+    session = database.session
+    scalars = session.query(models.ScalarMetricValue).all()
+    series = session.query(models.SeriesMetricValue).all()
+    assert scalars
+    assert series
+
+    expected = {}
+    for dimension_name in models.MetricValue._cv_dimensions:
+        values = {getattr(value, dimension_name) for value in [*scalars, *series]} - {None}
+        if values:
+            expected[dimension_name] = sorted(values)
+
+    data = client.get(f"{settings.API_V1_STR}/diagnostics/facets").json()
+    assert {key: values for key, values in data["dimensions"].items() if values} == expected
+    assert data["count"] == len(scalars) + len(series)
+
+
 def test_diagnostic_executions_ignores_truly_unknown_query_params(client: TestClient, settings) -> None:
     """Test that query params not matching any model attribute are silently ignored.
 
