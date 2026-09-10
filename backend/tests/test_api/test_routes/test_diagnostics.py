@@ -949,3 +949,24 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
     assert relisted["execution_group_count"] == 0
+
+
+FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")
+
+
+@pytest.mark.parametrize("mip_era", [None, "CMIP6"])
+def test_diagnostics_value_flags_split_from_listing(client: TestClient, settings, mip_era) -> None:
+    """Skipping the value checks nulls only the flags, and the flags endpoint returns what they were."""
+    query = {"mip_era": mip_era} if mip_era else {}
+    full = client.get(f"{settings.API_V1_STR}/diagnostics/", params=query).json()["data"]
+    fast = client.get(
+        f"{settings.API_V1_STR}/diagnostics/", params={**query, "include_value_flags": "false"}
+    ).json()["data"]
+    flags = client.get(f"{settings.API_V1_STR}/diagnostics/value-flags", params=query).json()["data"]
+
+    assert any(d["has_metric_values"] for d in full)
+    assert all(d[flag] is None for d in fast for flag in FLAGS)
+    assert [{k: v for k, v in d.items() if k not in FLAGS} for d in fast] == [
+        {k: v for k, v in d.items() if k not in FLAGS} for d in full
+    ]
+    assert flags == [{"id": d["id"], **{flag: d[flag] for flag in FLAGS}} for d in full]

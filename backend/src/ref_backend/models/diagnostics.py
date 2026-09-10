@@ -55,17 +55,23 @@ class DiagnosticSummary(BaseModel):
     """
     List of IDs for the provider executions associated with this provider
     """
-    has_metric_values: bool
+    has_metric_values: bool | None
     """
     Whether any scalar or series metric values exist in the database for this diagnostic
+
+    Null when the listing was asked to skip the value checks.
     """
-    has_scalar_values: bool
+    has_scalar_values: bool | None
     """
     Whether any scalar metric values exist in the database for this diagnostic
+
+    Null when the listing was asked to skip the value checks.
     """
-    has_series_values: bool
+    has_series_values: bool | None
     """
     Whether any series metric values exist in the database for this diagnostic
+
+    Null when the listing was asked to skip the value checks.
     """
     execution_count: int
     """
@@ -303,8 +309,8 @@ class DiagnosticSummary(BaseModel):
         diagnostic: models.Diagnostic,
         app_context: "AppContext",
         *,
-        has_scalar_values: bool,
-        has_series_values: bool,
+        has_scalar_values: bool | None,
+        has_series_values: bool | None,
         execution_stats: dict[str, int],
         execution_group_count: int,
         successful_execution_group_count: int,
@@ -315,7 +321,11 @@ class DiagnosticSummary(BaseModel):
         group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
         aft = DiagnosticSummary._get_aft_link(diagnostic)
 
-        has_metric_values = has_scalar_values or has_series_values
+        has_metric_values = (
+            None
+            if has_scalar_values is None or has_series_values is None
+            else has_scalar_values or has_series_values
+        )
         try:
             concrete_diagnostic = app_context.provider_registry.get_metric(
                 diagnostic.provider.slug, diagnostic.slug
@@ -352,3 +362,14 @@ class DiagnosticSummary(BaseModel):
         DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
 
         return summary
+
+
+class DiagnosticValueFlags(BaseModel):
+    """
+    Which kinds of metric values a diagnostic has
+    """
+
+    id: int
+    has_metric_values: bool
+    has_scalar_values: bool
+    has_series_values: bool
