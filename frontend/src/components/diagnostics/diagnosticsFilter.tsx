@@ -1,6 +1,5 @@
 import { Filter, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,10 +10,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 
 interface DiagnosticsFilterProps {
-  diagnostics: DiagnosticSummary[];
-  onFilterChange: (filteredDiagnostics: DiagnosticSummary[]) => void;
+  diagnostics: CatalogDiagnostic[];
+  onFilterChange: (filteredDiagnostics: CatalogDiagnostic[]) => void;
   onFilterParamsChange?: (
     search: string,
     providers: string[],

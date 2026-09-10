@@ -1,4 +1,4 @@
-import type { DiagnosticSummary } from "@/client";
+import type { DiagnosticCatalogEntry } from "@/client";
 
 const COLUMNS = [
   "provider",
@@ -27,7 +27,9 @@ function csvField(value: string | number | null | undefined): string {
  *
  * Rows are ordered by core hours to match the table, with diagnostics that recorded no CPU time last.
  */
-export function resourceUsageCsv(diagnostics: DiagnosticSummary[]): string {
+export function resourceUsageCsv(
+  diagnostics: DiagnosticCatalogEntry[],
+): string {
   const rows = [...diagnostics]
     .sort(
       (a, b) =>

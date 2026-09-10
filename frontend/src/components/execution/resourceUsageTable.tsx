@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
-import type { DiagnosticSummary } from "@/client";
+import type { DiagnosticCatalogEntry } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import {
@@ -11,15 +11,15 @@ import {
   formatDuration,
 } from "@/lib/format";
 
-const columnHelper = createColumnHelper<DiagnosticSummary>();
+const columnHelper = createColumnHelper<DiagnosticCatalogEntry>();
 
 function numericColumn(
   id: string,
   title: string,
   description: string,
-  accessor: (row: DiagnosticSummary) => number | null | undefined,
-  render: (value: number | undefined, row: DiagnosticSummary) => string,
-): ColumnDef<DiagnosticSummary> {
+  accessor: (row: DiagnosticCatalogEntry) => number | null | undefined,
+  render: (value: number | undefined, row: DiagnosticCatalogEntry) => string,
+): ColumnDef<DiagnosticCatalogEntry> {
   return {
     id,
     accessorFn: (row) => accessor(row) ?? undefined,
@@ -36,7 +36,7 @@ function numericColumn(
   };
 }
 
-export const columns: ColumnDef<DiagnosticSummary>[] = [
+export const columns: ColumnDef<DiagnosticCatalogEntry>[] = [
   {
     accessorKey: "name",
     enableSorting: true,
@@ -131,13 +131,13 @@ export const columns: ColumnDef<DiagnosticSummary>[] = [
 ];
 
 interface ResourceUsageTableProps {
-  diagnostics: DiagnosticSummary[];
+  diagnostics: DiagnosticCatalogEntry[];
 }
 
 export function ResourceUsageTable({ diagnostics }: ResourceUsageTableProps) {
   const navigate = useNavigate();
 
-  const handleRowClick = (row: DiagnosticSummary) => {
+  const handleRowClick = (row: DiagnosticCatalogEntry) => {
     navigate({
       to: "/diagnostics/$providerSlug/$diagnosticSlug",
       params: { providerSlug: row.provider.slug, diagnosticSlug: row.slug },

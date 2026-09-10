@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircleWarning } from "lucide-react";
-import type { DiagnosticSummary } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ValueStatus } from "./valueStatus";
 
 interface DiagnosticCardProps {
-  diagnostic: DiagnosticSummary;
+  diagnostic: CatalogDiagnostic;
   note?: string;
   noteURL?: string;
   valueFlagsFailed?: boolean;

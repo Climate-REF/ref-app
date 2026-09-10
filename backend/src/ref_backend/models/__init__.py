@@ -14,7 +14,7 @@ from ref_backend.models.aft import (
 )
 from ref_backend.models.common import Collection, GroupBy, ProviderSummary, T
 from ref_backend.models.datasets import CMIPDatasetMetadata, Dataset
-from ref_backend.models.diagnostics import DiagnosticSummary, DiagnosticValueFlags
+from ref_backend.models.diagnostics import DiagnosticCatalogEntry, DiagnosticSummary, DiagnosticValueFlags
 from ref_backend.models.executions import (
     Execution,
     ExecutionGroup,
@@ -48,6 +48,7 @@ __all__ = [
     "CMIPDatasetMetadata",
     "Collection",
     "Dataset",
+    "DiagnosticCatalogEntry",
     "DiagnosticRuns",
     "DiagnosticSummary",
     "DiagnosticValueFlags",

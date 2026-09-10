@@ -1,12 +1,12 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { DiagnosticSummary } from "@/client";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 import { DiagnosticsFilter } from "./diagnosticsFilter";
 
 function diagnostic(
   name: string,
   hasValues: boolean | null,
-): DiagnosticSummary {
+): CatalogDiagnostic {
   return {
     id: name.length,
     name,
@@ -27,7 +27,7 @@ function diagnostic(
   };
 }
 
-const names = (call: DiagnosticSummary[]) => call.map((d) => d.name);
+const names = (call: CatalogDiagnostic[]) => call.map((d) => d.name);
 
 describe("DiagnosticsFilter", () => {
   it("keeps the search applied when the value flags arrive", () => {

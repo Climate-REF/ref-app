@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsFacetsData, DiagnosticsFacetsResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionsData, DiagnosticsListExecutionsErrors, DiagnosticsListExecutionsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, DiagnosticsValueFlagsData, DiagnosticsValueFlagsErrors, DiagnosticsValueFlagsResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ModelsEnsembleData, ModelsEnsembleErrors, ModelsEnsembleResponses, ModelsGetData, ModelsGetErrors, ModelsGetResponses, ModelsListData, ModelsListErrors, ModelsListResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsCatalogData, DiagnosticsCatalogErrors, DiagnosticsCatalogResponses, DiagnosticsFacetsData, DiagnosticsFacetsResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionsData, DiagnosticsListExecutionsErrors, DiagnosticsListExecutionsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, DiagnosticsValueFlagsData, DiagnosticsValueFlagsErrors, DiagnosticsValueFlagsResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ModelsEnsembleData, ModelsEnsembleErrors, ModelsEnsembleResponses, ModelsGetData, ModelsGetErrors, ModelsGetResponses, ModelsListData, ModelsListErrors, ModelsListResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -63,18 +63,25 @@ export const datasetsExecutions = <ThrowOnError extends boolean = false>(options
  * List the currently registered diagnostics
  *
  * Pass `mip_era` to count only the execution groups that ran against that era.
- *
- * Checking for scalar and series values is most of the cost of this listing.
- * Pass `include_value_flags=false` to leave those flags null and fetch them from `/diagnostics/value-flags`.
  */
 export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsListData, ThrowOnError>): RequestResult<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError>({ url: '/api/v1/diagnostics/', ...options });
+
+/**
+ * Catalog
+ *
+ * List the diagnostics like `/diagnostics/`, without whether each has metric values
+ *
+ * Checking for metric values is most of the cost of the full listing.
+ * Fetch those from `/diagnostics/value-flags`.
+ */
+export const diagnosticsCatalog = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsCatalogData, ThrowOnError>): RequestResult<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError>({ url: '/api/v1/diagnostics/catalog', ...options });
 
 /**
  * Value Flags
  *
  * Whether each listed diagnostic has scalar and series values
  *
- * These are the flags `include_value_flags=false` leaves out of the diagnostics listing.
+ * These are the flags `/diagnostics/catalog` leaves out.
  */
 export const diagnosticsValueFlags = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsValueFlagsData, ThrowOnError>): RequestResult<DiagnosticsValueFlagsResponses, DiagnosticsValueFlagsErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsValueFlagsResponses, DiagnosticsValueFlagsErrors, ThrowOnError>({ url: '/api/v1/diagnostics/value-flags', ...options });
 

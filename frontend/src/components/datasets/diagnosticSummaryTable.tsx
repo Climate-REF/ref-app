@@ -2,16 +2,16 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import { SquareArrowOutUpRight } from "lucide-react";
 import { useMemo } from "react";
-import type { DiagnosticSummary } from "@/client";
 import { DataTableColumnHeader } from "@/components/dataTable/columnHeader.tsx";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
 import { ValueStatus } from "@/components/diagnostics/valueStatus";
+import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 
-const columnHelper = createColumnHelper<DiagnosticSummary>();
+const columnHelper = createColumnHelper<CatalogDiagnostic>();
 
 const diagnosticColumns = (
   valueFlagsFailed: boolean,
-): ColumnDef<DiagnosticSummary>[] => [
+): ColumnDef<CatalogDiagnostic>[] => [
   {
     accessorKey: "name",
     enableSorting: true,
@@ -142,22 +142,22 @@ const diagnosticColumns = (
   }),
 ];
 
-interface DiagnosticSummaryTableProps {
-  summaries: DiagnosticSummary[];
+interface CatalogDiagnosticTableProps {
+  summaries: CatalogDiagnostic[];
   valueFlagsFailed?: boolean;
 }
 
-function DiagnosticSummaryTable({
+function CatalogDiagnosticTable({
   summaries,
   valueFlagsFailed = false,
-}: DiagnosticSummaryTableProps) {
+}: CatalogDiagnosticTableProps) {
   const navigate = useNavigate();
   const columns = useMemo(
     () => diagnosticColumns(valueFlagsFailed),
     [valueFlagsFailed],
   );
 
-  const handleRowClick = (row: DiagnosticSummary) => {
+  const handleRowClick = (row: CatalogDiagnostic) => {
     navigate({
       to: "/diagnostics/$providerSlug/$diagnosticSlug",
       params: { providerSlug: row.provider.slug, diagnosticSlug: row.slug },
@@ -167,4 +167,4 @@ function DiagnosticSummaryTable({
     <DataTable data={summaries} columns={columns} onRowClick={handleRowClick} />
   );
 }
-export default DiagnosticSummaryTable;
+export default CatalogDiagnosticTable;

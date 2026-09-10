@@ -4,10 +4,9 @@ import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import {
-  diagnosticsListOptions,
+  diagnosticsCatalogOptions,
   diagnosticsValueFlagsOptions,
 } from "@/client/@tanstack/react-query.gen";
-import type { DiagnosticSummary } from "@/client/types.gen";
 import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import DiagnosticSummaryTable from "@/components/datasets/diagnosticSummaryTable.tsx";
@@ -19,6 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LinkExternal } from "@/components/ui/link";
 import { useMipEra } from "@/hooks/useMipEra";
+import {
+  type CatalogDiagnostic,
+  withValueFlags,
+} from "@/lib/diagnosticCatalog";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
 const diagnosticNotes: { slug: string; note: string; noteUrl?: string }[] = [
@@ -94,19 +97,17 @@ const Diagnostics = () => {
   const { mipEra, setMipEra } = useMipEra(searchParams.mip_era);
   // The value flags are the slow part of the listing, so they load separately and fill in once ready.
   const { data, isLoading, error } = useQuery(
-    diagnosticsListOptions({
-      query: { mip_era: mipEra, include_value_flags: false },
-    }),
+    diagnosticsCatalogOptions({ query: { mip_era: mipEra } }),
   );
   const valueFlags = useQuery(
     diagnosticsValueFlagsOptions({ query: { mip_era: mipEra } }),
   );
-  const diagnostics = useMemo(() => {
-    const flags = new Map(valueFlags.data?.data.map((f) => [f.id, f]));
-    return (data?.data ?? []).map((d) => ({ ...d, ...flags.get(d.id) }));
-  }, [data, valueFlags.data]);
+  const diagnostics = useMemo(
+    () => withValueFlags(data?.data ?? [], valueFlags.data?.data),
+    [data, valueFlags.data],
+  );
   const [filteredDiagnostics, setFilteredDiagnostics] = useState<
-    DiagnosticSummary[]
+    CatalogDiagnostic[]
   >([]);
 
   const handleViewChange = (newView: "cards" | "table") => {
