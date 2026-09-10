@@ -1,3 +1,10 @@
+## v0.7.10 (2026-09-10)
+
+### Improvements
+
+- Sped up the executions list and diagnostic pages, which could take tens of seconds on large databases. (#115)
+
+
 ## v0.7.9 (2026-09-10)
 
 ### Improvements
