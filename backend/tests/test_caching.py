@@ -83,4 +83,4 @@ class TestLiveEndpointsAreNotStored:
     def test_api_default_ttl(self, client: TestClient):
         r = client.get("/api/v1/diagnostics/")
         assert r.status_code == 200
-        assert r.headers["cache-control"] == "public, max-age=300"
+        assert r.headers["cache-control"] == "public, max-age=600"
