@@ -64,10 +64,12 @@ class CacheControlMiddleware:
             await self.app(scope, receive, send)
             return
 
-        policy = self.policy(scope["method"], scope["path"])
+        path = scope["path"]
+        policy = self.policy(scope["method"], path)
         if policy is None:
             await self.app(scope, receive, send)
             return
+        is_api = path.startswith(self.api_prefix)
 
         async def send_with_policy(message: Message) -> None:
             if message["type"] == "http.response.start":
@@ -75,6 +77,10 @@ class CacheControlMiddleware:
                 value = self.header_value(policy, message["status"], headers.get("content-type", ""))
                 if value is not None and "cache-control" not in headers:
                     headers["cache-control"] = value
+                # CORS reflects the caller's origin, so the edge must keep one copy per origin.
+                # Starlette only adds this when an Origin arrived, and a copy without it matches everyone.
+                if is_api and "origin" not in headers.get("vary", "").lower():
+                    headers.add_vary_header("Origin")
             await send(message)
 
         await self.app(scope, receive, send_with_policy)

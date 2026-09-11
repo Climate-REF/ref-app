@@ -77,6 +77,12 @@ class TestCacheControlMiddleware:
         assert r.status_code == 404
         assert r.headers["cache-control"] == "no-store"
 
+    def test_api_varies_on_origin_without_one(self, spa_client: TestClient):
+        assert spa_client.get("/api/v1/things").headers["vary"] == "Origin"
+
+    def test_static_does_not_vary(self, spa_client: TestClient):
+        assert "vary" not in spa_client.get("/favicon.ico").headers
+
     def test_pages_are_revalidated(self, spa_client: TestClient):
         assert spa_client.get("/docs").headers["cache-control"] == "no-cache"
 
@@ -95,6 +101,13 @@ class TestLiveEndpointsAreNotStored:
         r = client.get(path)
         assert r.status_code == 200
         assert r.headers["cache-control"] == "no-store"
+
+
+class TestVaryOrigin:
+    def test_vary_is_not_duplicated_by_cors(self, client: TestClient):
+        r = client.get("/api/v1/diagnostics/", headers={"origin": "http://localhost:5173"})
+        assert r.headers["access-control-allow-origin"] == "http://localhost:5173"
+        assert r.headers["vary"] == "Origin"
 
 
 class TestDefaultTTLs:
