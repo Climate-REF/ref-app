@@ -1,5 +1,5 @@
 """
-Cache-Control policy for every response the app serves.
+Cache-Control and Vary policy for every response the app serves.
 
 dashboard.climate-ref.org is fronted by Cloudflare, which handles the caching according to the headers we set.
 """
@@ -18,9 +18,13 @@ STATIC_DEFAULT = "public, max-age=3600"
 UNCACHED_API_PATHS = ("utils/health-check/", "utils/about")
 
 
+def _vary_names(vary: str) -> set[str]:
+    return {name.strip().lower() for name in vary.split(",")}
+
+
 class CacheControlMiddleware:
     """
-    Sets ``Cache-Control`` on successful responses that did not choose their own.
+    Sets ``Cache-Control`` on responses that did not choose their own, and ``Vary: Origin`` on the API.
 
     HTML pages name hashed asset files that the next deploy removes, so they are always revalidated.
     """
@@ -78,8 +82,7 @@ class CacheControlMiddleware:
                 if value is not None and "cache-control" not in headers:
                     headers["cache-control"] = value
                 # CORS reflects the caller's origin, so the edge must keep one copy per origin.
-                # Starlette only adds this when an Origin arrived, and a copy without it matches everyone.
-                if is_api and "origin" not in headers.get("vary", "").lower():
+                if is_api and "origin" not in _vary_names(headers.get("vary", "")):
                     headers.add_vary_header("Origin")
             await send(message)
 
