@@ -13,7 +13,7 @@ from ref_backend.builder import SPAStaticFiles
 from ref_backend.caching import CacheControlMiddleware
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def spa_client():
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
@@ -94,6 +94,8 @@ class TestLiveEndpointsAreNotStored:
         assert r.status_code == 200
         assert r.headers["cache-control"] == "no-store"
 
+
+class TestDefaultTTLs:
     def test_results_default_ttl(self, client: TestClient):
         groups = client.get("/api/v1/executions").json()["data"]
         outputs = [

@@ -73,7 +73,6 @@ class TestSPAStaticFiles:
         r = spa_client.get("/diagnostics", follow_redirects=False)
         assert r.status_code == 200
         assert "SPA Root" in r.text
-        assert r.headers["cache-control"] == "no-cache"
 
     def test_unknown_path_with_query_params(self, spa_client: TestClient):
         """Paths with query params should also fall back to index.html."""

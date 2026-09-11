@@ -85,10 +85,6 @@ class SPAStaticFiles(StaticFiles):
             # Not ".", because a directory lookup redirects to a trailing slash.
             response = await super().get_response("index.html", scope)
 
-        # The HTML names hashed asset files that the next deploy removes, so it must be revalidated.
-        if response.headers.get("content-type", "").startswith("text/html"):
-            response.headers["Cache-Control"] = "no-cache"
-
         return response
 
 

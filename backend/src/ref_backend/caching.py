@@ -22,7 +22,7 @@ class CacheControlMiddleware:
     """
     Sets ``Cache-Control`` on successful responses that did not choose their own.
 
-    HTML is decided by ``SPAStaticFiles``, which marks it ``no-cache`` before this runs.
+    HTML names hashed asset files that the next deploy removes, so it is always revalidated.
     """
 
     def __init__(self, app: ASGIApp, api_prefix: str, api_max_age: int, results_max_age: int):
@@ -30,28 +30,22 @@ class CacheControlMiddleware:
         self.api_prefix = api_prefix.rstrip("/") + "/"
         self.results_prefix = self.api_prefix + "results/"
         self.uncached_paths = frozenset({"/metrics", *(self.api_prefix + p for p in UNCACHED_API_PATHS)})
-        self.api_max_age = api_max_age
-        self.results_max_age = results_max_age
+        self.api_policy = f"public, max-age={api_max_age}"
+        self.results_policy = f"public, max-age={results_max_age}"
 
     def policy(self, method: str, path: str) -> str | None:
         if method not in ("GET", "HEAD"):
             # A CORS preflight keeps its own Access-Control-Max-Age, anything else is a write.
             return None if method == "OPTIONS" else NO_STORE
-        return self.read_policy(path)
-
-    def read_policy(self, path: str) -> str:
         if path in self.uncached_paths:
             return NO_STORE
         if path.startswith("/assets/"):
             return IMMUTABLE
         if path.startswith(self.results_prefix):
-            return f"public, max-age={self.results_max_age}"
+            return self.results_policy
         if path.startswith(self.api_prefix):
-            return f"public, max-age={self.api_max_age}"
-        if "." in path.rsplit("/", 1)[-1]:
-            return STATIC_ONE_HOUR
-        # Pages such as the API docs and client-side routes are revalidated on every load.
-        return NO_CACHE
+            return self.api_policy
+        return STATIC_ONE_HOUR
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -67,7 +61,8 @@ class CacheControlMiddleware:
             if message["type"] == "http.response.start" and message["status"] == status.HTTP_200_OK:
                 headers = MutableHeaders(scope=message)
                 if "cache-control" not in headers:
-                    headers["cache-control"] = policy
+                    is_html = headers.get("content-type", "").startswith("text/html")
+                    headers["cache-control"] = NO_CACHE if is_html else policy
             await send(message)
 
         await self.app(scope, receive, send_with_policy)
