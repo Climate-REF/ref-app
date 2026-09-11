@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import { FigureGallery } from "@/components/diagnostics/figureGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,5 +34,5 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/figures",
 )({
   component: Figures,
-  validateSearch: zodValidator(mipEraSearchSchema),
+  validateSearch: mipEraSearchSchema,
 });

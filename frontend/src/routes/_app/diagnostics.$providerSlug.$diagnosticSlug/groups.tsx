@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable.tsx";
 import { useMipEra } from "@/hooks/useMipEra";
@@ -27,7 +26,7 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/groups",
 )({
   component: Executions,
-  validateSearch: zodValidator(mipEraSearchSchema),
+  validateSearch: mipEraSearchSchema,
   staticData: {
     title: "Execution Groups",
   },

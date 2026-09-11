@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Values } from "@/components/execution/values";
 import {
@@ -69,7 +68,7 @@ const ScalarValuesTab = () => {
 
 export const Route = createFileRoute("/_app/executions/$groupId/scalar")({
   component: ScalarValuesTab,
-  validateSearch: zodValidator(scalarValuesSearchSchema),
+  validateSearch: scalarValuesSearchSchema,
   staticData: {
     title: "Scalar Values",
   },

@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { Suspense } from "react";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
 import { ErrorBoundary, ErrorFallback } from "@/components/app";
@@ -103,5 +102,5 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer",
 )({
   component: Explorer,
-  validateSearch: zodValidator(mipEraSearchSchema),
+  validateSearch: mipEraSearchSchema,
 });

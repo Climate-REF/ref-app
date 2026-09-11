@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
@@ -23,7 +22,7 @@ const ExecutionsSearchSchema = z.object({
 
 export const Route = createFileRoute("/_app/executions/")({
   component: ExecutionsListPage,
-  validateSearch: zodValidator(ExecutionsSearchSchema),
+  validateSearch: ExecutionsSearchSchema,
   staticData: {
     title: "Executions",
   },
