@@ -96,18 +96,21 @@ class TestLiveEndpointsAreNotStored:
 
 
 class TestDefaultTTLs:
-    def test_results_default_ttl(self, client: TestClient):
+    @pytest.mark.parametrize("suffix", [".png", ".html"])
+    def test_results_default_ttl(self, client: TestClient, suffix: str):
         groups = client.get("/api/v1/executions").json()["data"]
         outputs = [
             o
             for g in groups
             for e in client.get(f"/api/v1/executions/{g['id']}").json()["executions"]
             for o in e["outputs"]
+            if o["filename"].endswith(suffix)
         ]
         if not outputs:
-            pytest.skip("No execution results available in test data")
+            pytest.skip(f"No {suffix} results available in test data")
         r = client.get(f"/api/v1/results/{outputs[0]['id']}")
         assert r.status_code == 200
+        assert r.headers["content-type"].startswith("text/html") == (suffix == ".html")
         assert r.headers["cache-control"] == "public, max-age=2592000"
 
     def test_api_default_ttl(self, client: TestClient):

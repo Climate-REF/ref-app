@@ -12,7 +12,7 @@ NO_STORE = "no-store"
 NO_CACHE = "no-cache"
 IMMUTABLE = "public, max-age=31536000, immutable"
 # Unhashed static files such as favicons and the manifest.
-STATIC_ONE_HOUR = "public, max-age=3600"
+STATIC_DEFAULT = "public, max-age=3600"
 
 # Live status, and answers that change on every deploy.
 UNCACHED_API_PATHS = ("utils/health-check/", "utils/about")
@@ -22,7 +22,7 @@ class CacheControlMiddleware:
     """
     Sets ``Cache-Control`` on successful responses that did not choose their own.
 
-    HTML names hashed asset files that the next deploy removes, so it is always revalidated.
+    HTML pages name hashed asset files that the next deploy removes, so they are always revalidated.
     """
 
     def __init__(self, app: ASGIApp, api_prefix: str, api_max_age: int, results_max_age: int):
@@ -35,7 +35,7 @@ class CacheControlMiddleware:
 
     def policy(self, method: str, path: str) -> str | None:
         if method not in ("GET", "HEAD"):
-            # A CORS preflight keeps its own Access-Control-Max-Age, anything else is a write.
+            # A CORS preflight keeps its own Access-Control-Max-Age.
             return None if method == "OPTIONS" else NO_STORE
         if path in self.uncached_paths:
             return NO_STORE
@@ -45,7 +45,7 @@ class CacheControlMiddleware:
             return self.results_policy
         if path.startswith(self.api_prefix):
             return self.api_policy
-        return STATIC_ONE_HOUR
+        return STATIC_DEFAULT
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -61,8 +61,11 @@ class CacheControlMiddleware:
             if message["type"] == "http.response.start" and message["status"] == status.HTTP_200_OK:
                 headers = MutableHeaders(scope=message)
                 if "cache-control" not in headers:
-                    is_html = headers.get("content-type", "").startswith("text/html")
-                    headers["cache-control"] = NO_CACHE if is_html else policy
+                    # Only pages are HTML on the static surface. An HTML result file is still a result.
+                    is_page = policy == STATIC_DEFAULT and headers.get("content-type", "").startswith(
+                        "text/html"
+                    )
+                    headers["cache-control"] = NO_CACHE if is_page else policy
             await send(message)
 
         await self.app(scope, receive, send_with_policy)
