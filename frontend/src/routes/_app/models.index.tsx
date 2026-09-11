@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { modelsListOptions } from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
@@ -19,7 +18,7 @@ const ModelsSearchSchema = z.object({
 
 export const Route = createFileRoute("/_app/models/")({
   component: ModelsIndexPage,
-  validateSearch: zodValidator(ModelsSearchSchema),
+  validateSearch: ModelsSearchSchema,
   staticData: {
     title: "Models",
   },

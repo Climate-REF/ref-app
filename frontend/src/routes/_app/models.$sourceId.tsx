@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
   modelsEnsembleOptions,
@@ -33,7 +32,7 @@ const ModelSearchSchema = z.object(mipEraSearchFields);
 
 export const Route = createFileRoute("/_app/models/$sourceId")({
   component: ModelDetailPage,
-  validateSearch: zodValidator(ModelSearchSchema),
+  validateSearch: ModelSearchSchema,
   staticData: {
     title: "Model",
   },

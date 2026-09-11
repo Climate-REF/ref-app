@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import { Values } from "@/components/execution/values";
@@ -74,7 +73,7 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/series",
 )({
   component: SeriesValuesTab,
-  validateSearch: zodValidator(valuesSearchSchema),
+  validateSearch: valuesSearchSchema,
   staticData: {
     title: "Series Values",
   },

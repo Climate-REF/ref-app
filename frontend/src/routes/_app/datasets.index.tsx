@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
   datasetsListInfiniteOptions,
@@ -20,7 +19,7 @@ const DatasetsSearchSchema = z.object({
 
 export const Route = createFileRoute("/_app/datasets/")({
   component: SourcesIndexPage,
-  validateSearch: zodValidator(DatasetsSearchSchema),
+  validateSearch: DatasetsSearchSchema,
   staticData: {
     title: "Datasets",
   },

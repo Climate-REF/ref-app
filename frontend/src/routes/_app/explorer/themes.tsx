@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { useState } from "react";
 import { z } from "zod";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
@@ -65,5 +64,5 @@ const Themes = () => {
 
 export const Route = createFileRoute("/_app/explorer/themes")({
   component: Themes,
-  validateSearch: zodValidator(themesSchema),
+  validateSearch: themesSchema,
 });
