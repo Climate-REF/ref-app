@@ -41,7 +41,7 @@ def spa_client():
         def docs():
             return {"ok": True}
 
-        @app.post("/log/api/event")
+        @app.post("/log/api/event", status_code=202)
         def event():
             return {"ok": True}
 
@@ -72,10 +72,10 @@ class TestCacheControlMiddleware:
     def test_results_use_long_ttl(self, spa_client: TestClient):
         assert spa_client.get("/api/v1/results/1").headers["cache-control"] == "public, max-age=999"
 
-    def test_errors_are_not_cached(self, spa_client: TestClient):
+    def test_errors_are_not_stored(self, spa_client: TestClient):
         r = spa_client.get("/api/v1/missing")
         assert r.status_code == 404
-        assert "cache-control" not in r.headers
+        assert r.headers["cache-control"] == "no-store"
 
     def test_pages_are_revalidated(self, spa_client: TestClient):
         assert spa_client.get("/docs").headers["cache-control"] == "no-cache"
@@ -84,7 +84,9 @@ class TestCacheControlMiddleware:
         assert "cache-control" not in spa_client.options("/log/api/event").headers
 
     def test_writes_are_not_stored(self, spa_client: TestClient):
-        assert spa_client.post("/log/api/event").headers["cache-control"] == "no-store"
+        r = spa_client.post("/log/api/event")
+        assert r.status_code == 202
+        assert r.headers["cache-control"] == "no-store"
 
 
 class TestLiveEndpointsAreNotStored:

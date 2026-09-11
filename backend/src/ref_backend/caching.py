@@ -47,6 +47,18 @@ class CacheControlMiddleware:
             return self.api_policy
         return STATIC_DEFAULT
 
+    @staticmethod
+    def header_value(policy: str, status_code: int, content_type: str) -> str | None:
+        """Return the header for one response, or None when the status should keep its own caching."""
+        if policy == NO_STORE or status_code >= status.HTTP_400_BAD_REQUEST:
+            return NO_STORE
+        if status_code != status.HTTP_200_OK:
+            return None
+        # Only pages are HTML on the static surface. An HTML result file is still a result.
+        if policy == STATIC_DEFAULT and content_type.startswith("text/html"):
+            return NO_CACHE
+        return policy
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -58,14 +70,11 @@ class CacheControlMiddleware:
             return
 
         async def send_with_policy(message: Message) -> None:
-            if message["type"] == "http.response.start" and message["status"] == status.HTTP_200_OK:
+            if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
-                if "cache-control" not in headers:
-                    # Only pages are HTML on the static surface. An HTML result file is still a result.
-                    is_page = policy == STATIC_DEFAULT and headers.get("content-type", "").startswith(
-                        "text/html"
-                    )
-                    headers["cache-control"] = NO_CACHE if is_page else policy
+                value = self.header_value(policy, message["status"], headers.get("content-type", ""))
+                if value is not None and "cache-control" not in headers:
+                    headers["cache-control"] = value
             await send(message)
 
         await self.app(scope, receive, send_with_policy)
