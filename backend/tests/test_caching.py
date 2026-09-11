@@ -37,8 +37,16 @@ def spa_client():
         def missing():
             raise HTTPException(status_code=404)
 
+        @app.get("/docs")
+        def docs():
+            return {"ok": True}
+
         @app.post("/log/api/event")
         def event():
+            return {"ok": True}
+
+        @app.options("/log/api/event")
+        def preflight():
             return {"ok": True}
 
         app.mount("/", SPAStaticFiles(directory=str(root), html=True), name="static")
@@ -69,6 +77,12 @@ class TestCacheControlMiddleware:
         assert r.status_code == 404
         assert "cache-control" not in r.headers
 
+    def test_pages_are_revalidated(self, spa_client: TestClient):
+        assert spa_client.get("/docs").headers["cache-control"] == "no-cache"
+
+    def test_preflight_is_left_alone(self, spa_client: TestClient):
+        assert "cache-control" not in spa_client.options("/log/api/event").headers
+
     def test_writes_are_not_stored(self, spa_client: TestClient):
         assert spa_client.post("/log/api/event").headers["cache-control"] == "no-store"
 
@@ -79,6 +93,20 @@ class TestLiveEndpointsAreNotStored:
         r = client.get(path)
         assert r.status_code == 200
         assert r.headers["cache-control"] == "no-store"
+
+    def test_results_default_ttl(self, client: TestClient):
+        groups = client.get("/api/v1/executions").json()["data"]
+        outputs = [
+            o
+            for g in groups
+            for e in client.get(f"/api/v1/executions/{g['id']}").json()["executions"]
+            for o in e["outputs"]
+        ]
+        if not outputs:
+            pytest.skip("No execution results available in test data")
+        r = client.get(f"/api/v1/results/{outputs[0]['id']}")
+        assert r.status_code == 200
+        assert r.headers["cache-control"] == "public, max-age=2592000"
 
     def test_api_default_ttl(self, client: TestClient):
         r = client.get("/api/v1/diagnostics/")

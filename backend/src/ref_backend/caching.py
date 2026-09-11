@@ -9,18 +9,13 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 NO_STORE = "no-store"
+NO_CACHE = "no-cache"
 IMMUTABLE = "public, max-age=31536000, immutable"
 # Unhashed static files such as favicons and the manifest.
 STATIC_ONE_HOUR = "public, max-age=3600"
 
 # Live status, and answers that change on every deploy.
-UNCACHED_PATHS = frozenset(
-    {
-        "/metrics",
-        "/api/v1/utils/health-check/",
-        "/api/v1/utils/about",
-    }
-)
+UNCACHED_API_PATHS = ("utils/health-check/", "utils/about")
 
 
 class CacheControlMiddleware:
@@ -34,13 +29,18 @@ class CacheControlMiddleware:
         self.app = app
         self.api_prefix = api_prefix.rstrip("/") + "/"
         self.results_prefix = self.api_prefix + "results/"
+        self.uncached_paths = frozenset({"/metrics", *(self.api_prefix + p for p in UNCACHED_API_PATHS)})
         self.api_max_age = api_max_age
         self.results_max_age = results_max_age
 
-    def policy(self, method: str, path: str) -> str:
+    def policy(self, method: str, path: str) -> str | None:
         if method not in ("GET", "HEAD"):
-            return NO_STORE
-        if path in UNCACHED_PATHS:
+            # A CORS preflight keeps its own Access-Control-Max-Age, anything else is a write.
+            return None if method == "OPTIONS" else NO_STORE
+        return self.read_policy(path)
+
+    def read_policy(self, path: str) -> str:
+        if path in self.uncached_paths:
             return NO_STORE
         if path.startswith("/assets/"):
             return IMMUTABLE
@@ -48,7 +48,10 @@ class CacheControlMiddleware:
             return f"public, max-age={self.results_max_age}"
         if path.startswith(self.api_prefix):
             return f"public, max-age={self.api_max_age}"
-        return STATIC_ONE_HOUR
+        if "." in path.rsplit("/", 1)[-1]:
+            return STATIC_ONE_HOUR
+        # Pages such as the API docs and client-side routes are revalidated on every load.
+        return NO_CACHE
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -56,6 +59,9 @@ class CacheControlMiddleware:
             return
 
         policy = self.policy(scope["method"], scope["path"])
+        if policy is None:
+            await self.app(scope, receive, send)
+            return
 
         async def send_with_policy(message: Message) -> None:
             if message["type"] == "http.response.start" and message["status"] == status.HTTP_200_OK:
