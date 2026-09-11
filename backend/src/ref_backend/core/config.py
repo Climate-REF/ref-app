@@ -74,6 +74,18 @@ class Settings(BaseSettings):
     Ignored for non-SQLite databases.
     """
     STATIC_DIR: str | None = None
+    API_CACHE_MAX_AGE: int = 600  # 10m
+    """
+    Seconds that browsers may keep a successful API response.
+
+    Health, metrics and about are never cached regardless of this value.
+    """
+    RESULTS_CACHE_MAX_AGE: int = 2592000  # 30d
+    """
+    Seconds that browsers may keep a result file.
+
+    A result file never changes once written.
+    """
     USE_TEST_DATA: bool = False
     """
     Use test data for development purposes.
