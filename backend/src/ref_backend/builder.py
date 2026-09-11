@@ -17,6 +17,7 @@ from climate_ref.config import Config
 from climate_ref.database import Database
 from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
+from ref_backend.caching import CacheControlMiddleware
 from ref_backend.core.config import Settings
 from ref_backend.metrics import instrument_app
 
@@ -135,6 +136,13 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             allow_methods=["GET"],
             allow_headers=["*"],
         )
+
+    app.add_middleware(
+        CacheControlMiddleware,
+        api_prefix=settings.API_V1_STR,
+        api_max_age=settings.API_CACHE_MAX_AGE,
+        results_max_age=settings.RESULTS_CACHE_MAX_AGE,
+    )
 
     # Registered before the static mount, so the SPA fallback does not swallow /metrics.
     instrument_app(app)
