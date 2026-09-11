@@ -1,3 +1,25 @@
+## v0.8.1 (2026-09-11)
+
+### Improvements
+
+- Sets an explicit `Cache-Control` policy on every response, so Cloudflare can be told to respect the origin.
+
+  - Hashed build assets are immutable.
+  - HTML is revalidated on every load.
+  - Result files keep for 30 days (`RESULTS_CACHE_MAX_AGE`).
+  - Other API responses keep for 10 minutes (`API_CACHE_MAX_AGE`).
+  - The health, metrics and about endpoints are never stored.
+
+  (#121)
+- Sends `Vary: Origin` on every API response, so Cloudflare keeps one cached copy per origin. (#122)
+
+### Trivial Changes
+
+- Updates zod to v4 and drops the `@tanstack/zod-adapter` package.
+  Route search schemas are now passed straight to `validateSearch`. (#79)
+- Updates the frontend non-major dependencies. (#111)
+
+
 ## v0.8.0 (2026-09-10)
 
 ### Features
