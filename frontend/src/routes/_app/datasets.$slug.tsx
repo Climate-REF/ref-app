@@ -35,7 +35,8 @@ export const Route = createFileRoute("/_app/datasets/$slug")({
     title: "Dataset Details",
   },
   errorComponent: ({ error }) => {
-    return <div>Error: {error.message}</div>;
+    const message = error instanceof Error ? error.message : String(error);
+    return <div>Error: {message}</div>;
   },
 });
 
