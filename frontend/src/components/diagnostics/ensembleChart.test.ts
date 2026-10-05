@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { KNOWN_CATEGORY_ORDERS, sortCategories } from "./ensembleChart";
+import {
+  formatCategoryLabel,
+  KNOWN_CATEGORY_ORDERS,
+  sortCategories,
+} from "./ensembleChart";
 
 type NamedItem = { name: string };
 
@@ -46,6 +50,12 @@ describe("sortCategories", () => {
     expect(result).toEqual(["ANN", "DJF", "MAM", "JJA", "SON"]);
   });
 
+  it("handles lowercase PMP season values", () => {
+    const input = items("ann", "djf", "jja", "mam", "son");
+    const result = names(sortCategories(input));
+    expect(result).toEqual(["ann", "djf", "mam", "jja", "son"]);
+  });
+
   it("preserves original order for non-season data", () => {
     const input = items("region_c", "region_a", "region_b");
     const result = names(sortCategories(input));
@@ -73,5 +83,17 @@ describe("sortCategories", () => {
     const input = items("Temperature", "DJF", "MAM");
     const result = names(sortCategories(input));
     expect(result).toEqual(["Temperature", "DJF", "MAM"]);
+  });
+});
+
+describe("formatCategoryLabel", () => {
+  it("expands ann to annual", () => {
+    expect(formatCategoryLabel("ann")).toBe("annual");
+    expect(formatCategoryLabel("ANN")).toBe("annual");
+  });
+
+  it("leaves other values unchanged", () => {
+    expect(formatCategoryLabel("djf")).toBe("djf");
+    expect(formatCategoryLabel("historical")).toBe("historical");
   });
 });
