@@ -176,6 +176,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
 
 interface ExecutionGroupTableProps {
   executionGroups?: ExecutionGroup[];
+  loading?: boolean;
   providerSlug?: string;
   diagnosticSlug?: string;
 }
@@ -235,6 +236,7 @@ function ExecutionGroupTableWithQuery({
 
 function ExecutionGroupTable({
   executionGroups,
+  loading,
   providerSlug,
   diagnosticSlug,
 }: ExecutionGroupTableProps) {
@@ -260,6 +262,7 @@ function ExecutionGroupTable({
     <DataTable
       data={executionGroups ?? []}
       columns={columns}
+      loading={loading}
       onRowClick={handleRowClick}
     />
   );
