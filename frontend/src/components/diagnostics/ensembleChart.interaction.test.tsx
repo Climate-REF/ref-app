@@ -37,20 +37,17 @@ function chart(data: ReturnType<typeof point>[], clipMax?: number) {
 function markers(container: HTMLElement) {
   return [...container.querySelectorAll<SVGGElement>("[data-box-point]")];
 }
+// The chart wrapper sits at the page origin in jsdom, so page and chart coordinates match.
+function position(marker: SVGGElement) {
+  const x = Number(marker.dataset.x);
+  const y = Number(marker.dataset.y);
+  return { clientX: x, clientY: y, pageX: x, pageY: y };
+}
 function hover(container: HTMLElement, target: SVGGElement) {
-  // jsdom does not lay out SVG. Give each rendered marker a screen position.
-  for (const [index, marker] of markers(container).entries()) {
-    vi.spyOn(marker, "getBoundingClientRect").mockReturnValue({
-      left: marker === target ? 295 : 100 + index * 10,
-      top: marker === target ? 195 : 100,
-      width: 10,
-      height: 10,
-    } as DOMRect);
-  }
-  fireEvent.mouseMove(container.querySelector(".recharts-wrapper")!, {
-    clientX: 300,
-    clientY: 200,
-  });
+  fireEvent.mouseMove(
+    container.querySelector(".recharts-wrapper")!,
+    position(target),
+  );
 }
 
 describe("box plot selection", () => {
@@ -77,12 +74,12 @@ describe("box plot selection", () => {
       point(10, "one", "A"),
       point(10, "two", "A"),
     ]);
+    // Markers 0 and 1 share a position, so either may win, but only one may highlight.
     hover(container, markers(container)[1]);
     expect(container.querySelectorAll('[stroke="#EF4444"]')).toHaveLength(1);
-    expect(markers(container)[1].querySelector("path")).toHaveAttribute(
-      "stroke",
-      "#EF4444",
-    );
+    expect(
+      markers(container)[2].querySelector('[stroke="#EF4444"]'),
+    ).toBeNull();
   });
   it("updates selection after a throttled mouse move", () => {
     vi.useFakeTimers();
@@ -92,10 +89,10 @@ describe("box plot selection", () => {
         point(20, "one", "A"),
       ]);
       hover(container, markers(container)[0]);
-      fireEvent.mouseMove(container.querySelector(".recharts-wrapper")!, {
-        clientX: 115,
-        clientY: 105,
-      });
+      fireEvent.mouseMove(
+        container.querySelector(".recharts-wrapper")!,
+        position(markers(container)[1]),
+      );
       act(() => vi.advanceTimersByTime(50));
       expect(markers(container)[1].querySelector("path")).toHaveAttribute(
         "stroke",
@@ -114,9 +111,7 @@ describe("box plot selection", () => {
       ]);
       hover(container, markers(container)[0]);
       fireEvent.touchMove(container.querySelector(".recharts-wrapper")!, {
-        changedTouches: [
-          { clientX: 115, clientY: 105, pageX: 115, pageY: 105 },
-        ],
+        changedTouches: [position(markers(container)[1])],
       });
       act(() => vi.advanceTimersByTime(50));
       expect(markers(container)[1].querySelector("path")).toHaveAttribute(

@@ -119,6 +119,8 @@ export function BoxWhiskerShape({
         <g
           key={points[idx].id}
           data-box-point={idx}
+          data-x={whiskerX}
+          data-y={scaleV}
           data-category={categoryName}
           data-group={prefix}
         >

@@ -25,12 +25,26 @@ import {
 } from "@/components/explorer/grouping";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
 
-// Well-known category orderings for common climate dimensions
+// Well-known category orderings for common climate dimensions (matched case-insensitively)
 export const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
   // Meteorological seasons (Annual first, then chronological)
-  season: ["Annual", "annual", "ANN", "DJF", "MAM", "JJA", "SON"],
+  season: ["Annual", "ANN", "DJF", "MAM", "JJA", "SON"],
   experiment_id: EXPERIMENT_ORDER,
 };
+
+// Display labels for abbreviated category values (keyed by lowercase value)
+const CATEGORY_LABELS: Record<string, string> = {
+  ann: "annual",
+};
+
+export function formatCategoryLabel(name: string): string {
+  return CATEGORY_LABELS[name.toLowerCase()] ?? name;
+}
+
+function indexOfIgnoreCase(order: string[], name: string): number {
+  const lower = name.toLowerCase();
+  return order.findIndex((item) => item.toLowerCase() === lower);
+}
 
 /**
  * Sort chart categories using a known ordering if one exists,
@@ -43,23 +57,21 @@ export function sortCategories<T extends { name: string }>(
   const order = categoryOrder;
   if (!order) {
     // Auto-detect: check if all category names match a known ordering
-    const names = new Set(items.map((item) => item.name));
     for (const knownOrder of Object.values(KNOWN_CATEGORY_ORDERS)) {
-      if (
-        names.size <= knownOrder.length &&
-        [...names].every((n) => knownOrder.includes(n))
-      ) {
-        return [...items].sort(
-          (a, b) => knownOrder.indexOf(a.name) - knownOrder.indexOf(b.name),
-        );
+      const ranked = items.map((item) => ({
+        item,
+        rank: indexOfIgnoreCase(knownOrder, item.name),
+      }));
+      if (ranked.every(({ rank }) => rank !== -1)) {
+        return ranked.sort((a, b) => a.rank - b.rank).map(({ item }) => item);
       }
     }
     return items;
   }
 
   return [...items].sort((a, b) => {
-    const aIdx = order.indexOf(a.name);
-    const bIdx = order.indexOf(b.name);
+    const aIdx = indexOfIgnoreCase(order, a.name);
+    const bIdx = indexOfIgnoreCase(order, b.name);
     // Items not in the order go to the end, preserving relative order
     if (aIdx === -1 && bIdx === -1) return 0;
     if (aIdx === -1) return 1;
@@ -372,20 +384,26 @@ export const EnsembleChart = ({
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
           barCategoryGap={barCategoryGap}
           onMouseLeave={() => setHighlightedPoint(null)}
-          onMouseMove={(state, event) => {
-            if (!state.isTooltipActive || !chartRef.current) {
+          onMouseMove={(state) => {
+            const { chartX, chartY } = state;
+            if (
+              !state.isTooltipActive ||
+              chartX === undefined ||
+              chartY === undefined ||
+              !chartRef.current
+            ) {
               setHighlightedPoint(null);
               return;
             }
             let nearest: typeof highlightedPoint = null;
             let distance = Number.POSITIVE_INFINITY;
-            // Recharts can deliver throttled mouse events or Touch objects.
-            for (const marker of chartRef.current.querySelectorAll<SVGGraphicsElement>(
+            // Compare in chart coordinates rather than measuring the rendered markers,
+            // whose client rects were offset in Firefox.
+            for (const marker of chartRef.current.querySelectorAll<SVGGElement>(
               "[data-box-point]",
             )) {
-              const bounds = marker.getBoundingClientRect();
-              const dx = event.clientX - (bounds.left + bounds.width / 2);
-              const dy = event.clientY - (bounds.top + bounds.height / 2);
+              const dx = chartX - Number(marker.dataset.x);
+              const dy = chartY - Number(marker.dataset.y);
               const nextDistance = dx * dx + dy * dy;
               if (nextDistance >= distance) continue;
               const categoryName = marker.dataset.category!;
@@ -411,6 +429,7 @@ export const EnsembleChart = ({
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
             dataKey="name"
+            tickFormatter={formatCategoryLabel}
             tickLine={false}
             axisLine={{ stroke: "#E5E7EB" }}
             tickMargin={10}
@@ -456,7 +475,7 @@ export const EnsembleChart = ({
                 return null;
               const outliers = datum?.__outliers;
               const closestDataPoint = highlightedPoint.point;
-              const label = highlightedPoint.categoryName;
+              const label = formatCategoryLabel(highlightedPoint.categoryName);
               if (coordinate === undefined) {
                 return null;
               }
@@ -561,7 +580,7 @@ export const EnsembleChart = ({
             <Bar
               key={groupName}
               dataKey={(d) => d?.groups?.[groupName]?.median}
-              name={groupName}
+              name={formatCategoryLabel(groupName)}
               fill={groupColor(hueDimension, groupName, index)}
               isAnimationActive={false}
               shape={

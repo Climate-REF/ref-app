@@ -111,14 +111,13 @@ function SourcesIndexPage() {
               onFilterChange={handleFilterChange}
               onClear={handleClearFilters}
             />
-            {isLoading && !data && <div>Loading datasets...</div>}
             {status === "error" && (
               <div>Error loading datasets: {String(error)}</div>
             )}
             <DatasetTable
               data={datasets}
               sourceType={search.dataset_type}
-              loading={isLoading || isFetchingNextPage}
+              loading={isLoading}
             />
             {hasNextPage && (
               <Button

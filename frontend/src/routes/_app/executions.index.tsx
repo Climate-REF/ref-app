@@ -144,7 +144,6 @@ function ExecutionsListPage() {
               onClear={handleClearFilters}
             />
 
-            {isLoading && !data && <div>Loading executions...</div>}
             {status === "error" && (
               <div className="text-destructive">
                 Error loading executions: {String(error)}
@@ -159,7 +158,10 @@ function ExecutionsListPage() {
               ) : (
                 <MipEraEmptyState what="execution groups" />
               ))}
-            <ExecutionGroupTable executionGroups={executionGroups} />
+            <ExecutionGroupTable
+              executionGroups={executionGroups}
+              loading={isLoading}
+            />
             {hasNextPage && (
               <div className="flex justify-center">
                 <Button
