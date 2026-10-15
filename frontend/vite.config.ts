@@ -66,8 +66,8 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     sentryVitePlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: "cmip-ipo",
-      project: "ref-app-backend",
+      org: "climate-resource",
+      project: "ref-app-frontend",
     }),
   ],
   resolve: {
