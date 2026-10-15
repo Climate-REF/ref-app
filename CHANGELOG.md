@@ -1,3 +1,14 @@
+## v0.8.2 (2026-10-15)
+
+### Bug Fixes
+
+- Season box-whisker charts now show seasons in chronological order and label "ann" as "annual".
+  Box-whisker chart tooltips now show for the correct point under the cursor in Firefox.
+  The executions list now shows placeholder rows while loading instead of "No results.".
+  The datasets list now keeps its rows visible while loading more. (#127)
+- Moved frontend error reporting to the climate-resource Sentry organisation. (#130)
+
+
 ## v0.8.1 (2026-09-11)
 
 ### Improvements
