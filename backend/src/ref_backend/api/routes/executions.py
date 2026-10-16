@@ -10,14 +10,14 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from starlette.responses import StreamingResponse
+from starlette.responses import Response, StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import DatasetFile
 from climate_ref.results import ExecutionGroupFilter, MetricValueFilter
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
-from ref_backend.core.file_handling import file_iterator, resolve_artifact
+from ref_backend.core.file_handling import file_iterator, resolve_artifact, tail_lines
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
@@ -31,7 +31,6 @@ from ref_backend.core.resource_usage import resource_usage_overall
 from ref_backend.models import (
     Collection,
     Dataset,
-    DiagnosticSummary,
     Execution,
     ExecutionGroup,
     ExecutionStats,
@@ -148,12 +147,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     page_ids = [group.id for group in groups[offset : offset + limit]]
 
     data = []
-    summaries: dict[int, DiagnosticSummary] = {}
     for eg in _load_execution_groups(session, page_ids):
         try:
-            if eg.diagnostic_id not in summaries:
-                summaries[eg.diagnostic_id] = DiagnosticSummary.build(eg.diagnostic, app_context)
-            data.append(ExecutionGroup.build(eg, app_context, summaries[eg.diagnostic_id]))
+            data.append(ExecutionGroup.build(eg, app_context))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
             continue
@@ -233,9 +229,14 @@ async def execution_logs(
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
-) -> StreamingResponse:
+    lines: int | None = Query(
+        None, ge=1, le=500, description="Only return this many lines from the end of the log"
+    ),
+) -> Response:
     """
     Fetch the logs for an execution result
+
+    Pass `lines` to fetch only the end of the log, rather than the whole file.
     """
     execution = await _get_execution(group_id, execution_id, app_context)
     output_fragment = execution.output_fragment
@@ -249,11 +250,12 @@ async def execution_logs(
         logger.warning(f"Log file not found: {file_path}")
         raise HTTPException(status_code=404, detail="Log file not found")
 
-    return StreamingResponse(
-        file_iterator(str(file_path)),
-        media_type=mime_type,
-        headers={"Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"},
-    )
+    headers = {"Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"}
+    if lines is not None:
+        tail = "".join(f"{line}\n" for line in tail_lines(file_path, lines))
+        return Response(tail, media_type=mime_type, headers=headers)
+
+    return StreamingResponse(file_iterator(str(file_path)), media_type=mime_type, headers=headers)
 
 
 @router.get("/{group_id}/metric_bundle")

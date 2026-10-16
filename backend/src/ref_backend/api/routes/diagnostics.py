@@ -296,9 +296,6 @@ async def list_execution_groups(
     if mip_era:
         group_filters.append(execution_group_filter({"mip_era": mip_era}))
 
-    # Precompute the diagnostic summary once (shared across all groups)
-    diagnostic_summary = DiagnosticSummary.build(diagnostic, app_context)
-
     # Eager-load relationships to avoid per-item queries
     execution_groups = (
         app_context.session.query(models.ExecutionGroup)
@@ -307,12 +304,7 @@ async def list_execution_groups(
         .all()
     )
 
-    return Collection(
-        data=[
-            ExecutionGroup.build(e, app_context, diagnostic_summary=diagnostic_summary)
-            for e in execution_groups
-        ]
-    )
+    return Collection(data=[ExecutionGroup.build(e, app_context) for e in execution_groups])
 
 
 @router.get(

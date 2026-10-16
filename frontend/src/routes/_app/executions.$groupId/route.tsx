@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { format } from "date-fns";
 import {
+  diagnosticsGetOptions,
   executionsExecutionOptions,
   executionsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
@@ -37,17 +38,26 @@ const ExecutionInfoLayout = () => {
     }),
   );
 
+  const { data: diagnostic } = useSuspenseQuery(
+    diagnosticsGetOptions({
+      path: {
+        provider_slug: data.provider_slug,
+        diagnostic_slug: data.diagnostic_slug,
+      },
+    }),
+  );
+
   const executionId = undefined;
 
-  const hasScalar = data.diagnostic.has_scalar_values;
-  const hasSeries = data.diagnostic.has_series_values;
+  const hasScalar = diagnostic.has_scalar_values;
+  const hasSeries = diagnostic.has_series_values;
 
   // Determine the active tab based on the current URL pathname
   const activeTab = location.pathname.split("/").pop() || "datasets";
 
   return (
     <>
-      <title>{`${data?.diagnostic?.name} - ${data?.key} - Climate-REF`}</title>
+      <title>{`${diagnostic.name} - ${data?.key} - Climate-REF`}</title>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <DetailsPanel
@@ -59,11 +69,11 @@ const ExecutionInfoLayout = () => {
                   to="/diagnostics/$providerSlug/$diagnosticSlug"
                   className="underline"
                   params={{
-                    providerSlug: data.diagnostic.provider.slug,
-                    diagnosticSlug: data.diagnostic.slug,
+                    providerSlug: data.provider_slug,
+                    diagnosticSlug: data.diagnostic_slug,
                   }}
                 >
-                  {data.diagnostic.name}
+                  {diagnostic.name}
                 </Link>
               </>
             }
@@ -72,7 +82,7 @@ const ExecutionInfoLayout = () => {
                 executionGroup={groupId}
                 executionId={(
                   executionId ??
-                  data.latest_execution?.id ??
+                  data.executions.at(-1)?.id ??
                   ""
                 ).toString()}
               />
@@ -101,7 +111,11 @@ const ExecutionInfoLayout = () => {
                     className="mt-1"
                     title="Whether the selected execution completed without errors."
                   >
-                    {execution.successful ? "Success" : "Failed"}
+                    {execution.successful === null
+                      ? "Running"
+                      : execution.successful
+                        ? "Success"
+                        : "Failed"}
                   </Badge>
                 ),
               },

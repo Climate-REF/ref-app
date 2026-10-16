@@ -81,6 +81,10 @@ export const columns: ColumnDef<Execution>[] = [
         <Badge variant="outline" title="Execution succeeded.">
           Success
         </Badge>
+      ) : cell.getValue() === null ? (
+        <Badge variant="secondary" title="Execution is still running.">
+          Running
+        </Badge>
       ) : (
         <Badge variant="destructive" title="Execution failed.">
           Failed

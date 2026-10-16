@@ -9,7 +9,6 @@ from sqlalchemy.orm import selectinload
 from climate_ref import models
 from climate_ref.models.execution import ResultOutputType
 from ref_backend.core.resource_usage import ExecutionResourceSummary
-from ref_backend.models.diagnostics import DiagnosticSummary
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
@@ -47,7 +46,7 @@ class ExecutionOutput(BaseModel):
 EXECUTION_GROUP_LOAD_OPTIONS = (
     selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
     selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
-    selectinload(models.ExecutionGroup.diagnostic),
+    selectinload(models.ExecutionGroup.diagnostic).selectinload(models.Diagnostic.provider),
 )
 
 
@@ -56,33 +55,31 @@ class ExecutionGroup(BaseModel):
     key: str
     dirty: bool
     executions: "list[Execution]"
-    latest_execution: "Execution | None"
+    """
+    Executions of this group, oldest first, so the latest execution is the last one
+    """
     selectors: dict[str, tuple[tuple[str, str], ...]]
-    diagnostic: DiagnosticSummary
+    provider_slug: str
+    """
+    Slug of the provider of the diagnostic, which with `diagnostic_slug` identifies the diagnostic
+    """
+    diagnostic_slug: str
+    """
+    Slug of the diagnostic, unique within its provider
+    """
     created_at: datetime
     updated_at: datetime
 
     @staticmethod
-    def build(
-        execution_group: models.ExecutionGroup,
-        app_context: "AppContext",
-        diagnostic_summary: "DiagnosticSummary | None" = None,
-    ) -> "ExecutionGroup":
-        latest_execution = None
-        if len(execution_group.executions):
-            latest_execution = execution_group.executions[-1]
-
-        # Reuse a precomputed DiagnosticSummary when provided to avoid N+1 DB queries
-        diagnostic = diagnostic_summary or DiagnosticSummary.build(execution_group.diagnostic, app_context)
-
+    def build(execution_group: models.ExecutionGroup, app_context: "AppContext") -> "ExecutionGroup":
         return ExecutionGroup(
             id=execution_group.id,
             key=execution_group.key,
             dirty=execution_group.dirty,
             executions=[Execution.build(r, app_context) for r in execution_group.executions],
-            latest_execution=Execution.build(latest_execution, app_context) if latest_execution else None,
             selectors=execution_group.selectors,
-            diagnostic=diagnostic,
+            provider_slug=execution_group.diagnostic.provider.slug,
+            diagnostic_slug=execution_group.diagnostic.slug,
             created_at=execution_group.created_at,
             updated_at=execution_group.updated_at,
         )
@@ -92,7 +89,10 @@ class Execution(BaseModel):
     id: int
     dataset_hash: str
     dataset_count: int
-    successful: bool
+    successful: bool | None
+    """
+    Whether the execution succeeded, or null while it is still running
+    """
     retracted: bool
     created_at: datetime
     updated_at: datetime
@@ -115,7 +115,7 @@ class Execution(BaseModel):
         outputs = [ExecutionOutput.build(o, app_context) for o in execution.outputs]
         return Execution(
             id=execution.id,
-            successful=execution.successful or False,
+            successful=execution.successful,
             retracted=execution.retracted,
             dataset_hash=execution.dataset_hash,
             dataset_count=len(execution.datasets),

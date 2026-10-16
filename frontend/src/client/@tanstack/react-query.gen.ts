@@ -620,6 +620,8 @@ export const executionsExecutionLogsQueryKey = (options: Options<ExecutionsExecu
  * Execution Logs
  *
  * Fetch the logs for an execution result
+ *
+ * Pass `lines` to fetch only the end of the log, rather than the whole file.
  */
 export const executionsExecutionLogsOptions = (options: Options<ExecutionsExecutionLogsData>) => queryOptions<unknown, ExecutionsExecutionLogsError, unknown, ReturnType<typeof executionsExecutionLogsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
