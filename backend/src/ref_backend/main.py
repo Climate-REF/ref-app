@@ -2,6 +2,8 @@
 Main entry point for the FastAPI application
 """
 
+from http import HTTPStatus
+
 import dotenv
 from fastapi import HTTPException, Request, Response
 from fastapi.exception_handlers import (
@@ -55,5 +57,7 @@ if settings.USE_TEST_DATA:
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
-    logger.error(f"HTTP Exception: {exc.detail}")
+    # Client errors are mostly crawlers walking the OpenAPI routes, so only server errors log at error.
+    level = "ERROR" if exc.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR else "INFO"
+    logger.log(level, f"HTTP Exception {exc.status_code}: {exc.detail}")
     return await fasthttp_exception_handler(request, exc)
