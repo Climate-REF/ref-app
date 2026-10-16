@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, X } from "lucide-react";
+import { z } from "zod";
 import { PageHeader } from "@/components/app/pageHeader";
 import {
   DiagnosticFailuresCard,
   DiagnosticFailuresCardSkeleton,
 } from "@/components/failures/diagnosticFailuresCard";
+import { ModelFailuresList } from "@/components/failures/modelFailures";
 import {
   ProviderHealthOverview,
   ProviderHealthOverviewSkeleton,
@@ -20,9 +22,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { apiErrorMessage } from "@/lib/apiError";
+import { failuresByModel, groupsToShow } from "@/lib/failures";
+
+const FailuresSearchSchema = z.object({
+  model: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_app/executions/failures")({
   component: FailuresPage,
+  validateSearch: FailuresSearchSchema,
   staticData: {
     title: "Failures",
   },
@@ -30,16 +38,22 @@ export const Route = createFileRoute("/_app/executions/failures")({
 
 function FailuresPage() {
   const { data, isLoading, error, retry } = useFailures();
+  const { model } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const selectModel = (selected: string | undefined) =>
+    navigate({ search: (prev) => ({ ...prev, model: selected }) });
+
   const failing = (data ?? []).filter(
-    (failures) => failures.failedGroups.length > 0,
+    (failures) => groupsToShow(failures, model).length > 0,
   );
+  const models = failuresByModel(data ?? []);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       <title>Failures - Climate-REF</title>
       <PageHeader
         title="Failures"
-        description="Diagnostics with execution groups whose latest execution failed. Execution groups are counted at the current version of each diagnostic. Expand a failed group to see the end of its log."
+        description="Diagnostics with execution groups whose latest execution failed. Execution groups are counted at the current version of each diagnostic. Expand a failed group to see the errors in its log."
       />
 
       {error && (
@@ -88,9 +102,49 @@ function FailuresPage() {
             </CardContent>
           </Card>
 
+          {models.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Models</CardTitle>
+                <CardDescription>
+                  Models with the most failed execution groups. A model failing
+                  in many diagnostics usually points to a problem with its data.
+                  Select one to list only its failures.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ModelFailuresList
+                  models={models}
+                  selected={model}
+                  onSelect={selectModel}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {model && (
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span>
+                Showing the failures of{" "}
+                <span className="font-medium">{model}</span> in {failing.length}{" "}
+                {failing.length === 1 ? "diagnostic" : "diagnostics"}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => selectModel(undefined)}
+              >
+                <X className="size-4" />
+                Show all models
+              </Button>
+            </div>
+          )}
+
           {failing.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No execution groups are failing.
+              {model
+                ? `No execution groups of ${model} are failing.`
+                : "No execution groups are failing."}
             </p>
           ) : (
             <div className="space-y-4">
@@ -98,6 +152,7 @@ function FailuresPage() {
                 <DiagnosticFailuresCard
                   key={`${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`}
                   failures={failures}
+                  model={model}
                 />
               ))}
             </div>
