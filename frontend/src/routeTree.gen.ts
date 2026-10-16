@@ -22,6 +22,7 @@ import { Route as AppDatasetsSlugRouteImport } from './routes/_app/datasets.$slu
 import { Route as AppDiagnosticsIndexRouteImport } from './routes/_app/diagnostics.index'
 import { Route as AppExecutionsIndexRouteImport } from './routes/_app/executions.index'
 import { Route as AppExecutionsGroupIdRouteRouteImport } from './routes/_app/executions.$groupId/route'
+import { Route as AppExecutionsFailuresRouteImport } from './routes/_app/executions.failures'
 import { Route as AppExecutionsResourcesRouteImport } from './routes/_app/executions.resources'
 import { Route as AppExplorerIndexRouteImport } from './routes/_app/explorer/index'
 import { Route as AppExplorerThemesRouteImport } from './routes/_app/explorer/themes'
@@ -108,6 +109,11 @@ const AppExecutionsGroupIdRouteRoute =
     path: '/executions/$groupId',
     getParentRoute: () => AppRouteRoute,
   } as any)
+const AppExecutionsFailuresRoute = AppExecutionsFailuresRouteImport.update({
+  id: '/executions/failures',
+  path: '/executions/failures',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppExecutionsResourcesRoute = AppExecutionsResourcesRouteImport.update({
   id: '/executions/resources',
   path: '/executions/resources',
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
   '/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/executions/failures': typeof AppExecutionsFailuresRoute
   '/executions/resources': typeof AppExecutionsResourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
   '/models/$sourceId': typeof AppModelsSourceIdRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/content/privacy': typeof ContentPrivacyRoute
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/executions/failures': typeof AppExecutionsFailuresRoute
   '/executions/resources': typeof AppExecutionsResourcesRoute
   '/explorer/themes': typeof AppExplorerThemesRoute
   '/models/$sourceId': typeof AppModelsSourceIdRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/content/terms-of-use': typeof ContentTermsOfUseRoute
   '/_app/executions/$groupId': typeof AppExecutionsGroupIdRouteRouteWithChildren
   '/_app/datasets/$slug': typeof AppDatasetsSlugRoute
+  '/_app/executions/failures': typeof AppExecutionsFailuresRoute
   '/_app/executions/resources': typeof AppExecutionsResourcesRoute
   '/_app/explorer/themes': typeof AppExplorerThemesRoute
   '/_app/models/$sourceId': typeof AppModelsSourceIdRoute
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/content/terms-of-use'
     | '/executions/$groupId'
     | '/datasets/$slug'
+    | '/executions/failures'
     | '/executions/resources'
     | '/explorer/themes'
     | '/models/$sourceId'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/content/privacy'
     | '/content/terms-of-use'
     | '/datasets/$slug'
+    | '/executions/failures'
     | '/executions/resources'
     | '/explorer/themes'
     | '/models/$sourceId'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/content/terms-of-use'
     | '/_app/executions/$groupId'
     | '/_app/datasets/$slug'
+    | '/_app/executions/failures'
     | '/_app/executions/resources'
     | '/_app/explorer/themes'
     | '/_app/models/$sourceId'
@@ -524,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/executions/$groupId'
       fullPath: '/executions/$groupId'
       preLoaderRoute: typeof AppExecutionsGroupIdRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/executions/failures': {
+      id: '/_app/executions/failures'
+      path: '/executions/failures'
+      fullPath: '/executions/failures'
+      preLoaderRoute: typeof AppExecutionsFailuresRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/executions/resources': {
@@ -742,6 +761,7 @@ interface AppRouteRouteChildren {
   AppExplorerRouteRoute: typeof AppExplorerRouteRouteWithChildren
   AppExecutionsGroupIdRouteRoute: typeof AppExecutionsGroupIdRouteRouteWithChildren
   AppDatasetsSlugRoute: typeof AppDatasetsSlugRoute
+  AppExecutionsFailuresRoute: typeof AppExecutionsFailuresRoute
   AppExecutionsResourcesRoute: typeof AppExecutionsResourcesRoute
   AppModelsSourceIdRoute: typeof AppModelsSourceIdRoute
   AppSettingsApiEndpointRoute: typeof AppSettingsApiEndpointRoute
@@ -756,6 +776,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppExplorerRouteRoute: AppExplorerRouteRouteWithChildren,
   AppExecutionsGroupIdRouteRoute: AppExecutionsGroupIdRouteRouteWithChildren,
   AppDatasetsSlugRoute: AppDatasetsSlugRoute,
+  AppExecutionsFailuresRoute: AppExecutionsFailuresRoute,
   AppExecutionsResourcesRoute: AppExecutionsResourcesRoute,
   AppModelsSourceIdRoute: AppModelsSourceIdRoute,
   AppSettingsApiEndpointRoute: AppSettingsApiEndpointRoute,

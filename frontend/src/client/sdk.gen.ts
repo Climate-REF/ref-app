@@ -186,6 +186,8 @@ export const executionsExecutionDatasets = <ThrowOnError extends boolean = false
  * Execution Logs
  *
  * Fetch the logs for an execution result
+ *
+ * Pass `lines` to fetch only the end of the log, rather than the whole file.
  */
 export const executionsExecutionLogs = <ThrowOnError extends boolean = false>(options: Options<ExecutionsExecutionLogsData, ThrowOnError>): RequestResult<ExecutionsExecutionLogsResponses, ExecutionsExecutionLogsErrors, ThrowOnError> => (options.client ?? client).get<ExecutionsExecutionLogsResponses, ExecutionsExecutionLogsErrors, ThrowOnError>({ url: '/api/v1/executions/{group_id}/logs', ...options });
 

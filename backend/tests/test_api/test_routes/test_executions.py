@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from ref_backend.api.routes import executions as executions_routes
+
 
 def test_execution_list_count(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/executions")
@@ -456,7 +458,7 @@ def test_execution_list_pagination(client: TestClient, settings) -> None:
 def test_execution_carries_resource_usage(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/executions/?limit=50")
     assert r.status_code == 200
-    executions = [g["latest_execution"] for g in r.json()["data"] if g["latest_execution"]]
+    executions = [g["executions"][-1] for g in r.json()["data"] if g["executions"]]
     assert executions
     for execution in executions:
         assert set(execution) >= {"wall_seconds", "cpu_seconds", "peak_memory_bytes"}
@@ -475,3 +477,76 @@ def test_execution_statistics_resource_usage(client: TestClient, settings) -> No
     assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
     assert usage["cpu_seconds_total"] > 0
     assert usage["peak_memory_bytes_max"] >= usage["peak_memory_bytes_min"] > 0
+
+
+def test_execution_logs(client: TestClient, settings, monkeypatch, tmp_path):
+    group_id = get_execution_group_id(client, settings)
+    log_file = tmp_path / "out.log"
+    log_file.write_text("\n".join(f"line {i}" for i in range(30)) + "\n")
+    monkeypatch.setattr(executions_routes, "resolve_artifact", lambda *_: log_file)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/logs")
+
+    assert r.status_code == 200
+    assert r.text == log_file.read_text()
+
+
+def test_execution_logs_lines(client: TestClient, settings, monkeypatch, tmp_path):
+    group_id = get_execution_group_id(client, settings)
+    log_file = tmp_path / "out.log"
+    log_file.write_text("\n".join(f"line {i}" for i in range(30)) + "\n")
+    monkeypatch.setattr(executions_routes, "resolve_artifact", lambda *_: log_file)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/logs?lines=5")
+
+    assert r.status_code == 200
+    assert r.text.splitlines() == [f"line {i}" for i in range(25, 30)]
+
+
+@pytest.mark.parametrize("lines", [0, 501])
+def test_execution_logs_lines_out_of_range(client: TestClient, settings, lines):
+    group_id = get_execution_group_id(client, settings)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/logs?lines={lines}")
+
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize("query", ["", "?lines=5"])
+def test_execution_logs_missing_log(client: TestClient, settings, monkeypatch, tmp_path, query):
+    group_id = get_execution_group_id(client, settings)
+    monkeypatch.setattr(executions_routes, "resolve_artifact", lambda *_: tmp_path / "missing.log")
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/logs{query}")
+
+    assert r.status_code == 404
+
+
+def test_execution_running_is_not_reported_as_failed(client: TestClient, settings) -> None:
+    groups = client.get(f"{settings.API_V1_STR}/executions/?limit=100").json()["data"]
+    outcomes = {e["successful"] for g in groups for e in g["executions"]}
+
+    assert outcomes <= {True, False, None}
+    assert False in outcomes, "fixture should hold a failed execution"
+
+
+def test_execution_group_shape(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?limit=50")
+    assert r.status_code == 200
+    groups = r.json()["data"]
+    assert groups
+    for group in groups:
+        assert "diagnostic" not in group
+        assert "latest_execution" not in group
+        assert group["provider_slug"]
+        assert group["diagnostic_slug"]
+        # Oldest first, so the latest execution is the last one
+        created = [e["created_at"] for e in group["executions"]]
+        assert created == sorted(created)
+
+
+def test_execution_group_last_execution_is_latest(client: TestClient, settings) -> None:
+    group = client.get(f"{settings.API_V1_STR}/executions/?limit=1").json()["data"][0]
+    latest = client.get(f"{settings.API_V1_STR}/executions/{group['id']}/execution").json()
+
+    assert group["executions"][-1]["id"] == latest["id"]

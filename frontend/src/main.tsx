@@ -9,6 +9,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { client } from "@/client/client.gen";
 import { getStoredApiEndpoint } from "@/lib/apiEndpoint";
+import { installApiErrors, retryUnlessNotFound } from "@/lib/apiError";
 import { routeTree } from "@/routeTree.gen";
 
 import "./styles/global.css";
@@ -49,7 +50,10 @@ window.addEventListener("vite:preloadError", (event) => {
 });
 
 client.setConfig({ baseUrl: getStoredApiEndpoint() });
-const queryClient = new QueryClient();
+installApiErrors(client);
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: retryUnlessNotFound } },
+});
 
 const router = createRouter({
   routeTree,

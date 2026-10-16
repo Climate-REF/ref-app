@@ -21,9 +21,35 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import { useDiagnosticLookup } from "@/hooks/useDiagnosticLookup";
 import { formatDuration } from "@/lib/format";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
+
+/** The name of a group's diagnostic or its provider, falling back to the slug until the catalog loads. */
+function DiagnosticCell({
+  group,
+  show,
+  className,
+}: {
+  group: ExecutionGroup;
+  show: "diagnostic" | "provider";
+  className: string;
+}) {
+  const diagnostic = useDiagnosticLookup()(
+    group.provider_slug,
+    group.diagnostic_slug,
+  );
+  const val =
+    show === "diagnostic"
+      ? (diagnostic?.name ?? group.diagnostic_slug)
+      : (diagnostic?.provider.name ?? group.provider_slug);
+  return (
+    <span className={className} title={val}>
+      {val}
+    </span>
+  );
+}
 
 export const columns: ColumnDef<ExecutionGroup>[] = [
   {
@@ -54,28 +80,26 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
     },
   },
   {
-    accessorKey: "diagnostic.name",
+    accessorKey: "diagnostic_slug",
     header: "Diagnostic",
-    cell: ({ getValue }) => {
-      const val = String(getValue() ?? "");
-      return (
-        <span className="block truncate max-w-[240px]" title={val}>
-          {val}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <DiagnosticCell
+        group={row.original}
+        show="diagnostic"
+        className="block truncate max-w-[240px]"
+      />
+    ),
   },
   {
-    accessorKey: "diagnostic.provider.name",
+    accessorKey: "provider_slug",
     header: "Provider",
-    cell: ({ getValue }) => {
-      const val = String(getValue() ?? "");
-      return (
-        <span className="block truncate max-w-[180px]" title={val}>
-          {val}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <DiagnosticCell
+        group={row.original}
+        show="provider"
+        className="block truncate max-w-[180px]"
+      />
+    ),
   },
   {
     accessorKey: "key",
@@ -103,7 +127,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         Datasets
       </span>
     ),
-    accessorFn: (row) => row.latest_execution?.dataset_count,
+    accessorFn: (row) => row.executions.at(-1)?.dataset_count,
   },
   {
     header: () => (
@@ -132,11 +156,16 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         Successful
       </span>
     ),
-    accessorKey: "latest_execution.successful",
+    id: "successful",
+    accessorFn: (row) => row.executions.at(-1)?.successful,
     cell: (cell) =>
       cell.getValue() ? (
         <Badge variant="outline" title="Latest execution succeeded.">
           Yes
+        </Badge>
+      ) : cell.getValue() === null ? (
+        <Badge variant="secondary" title="Latest execution is still running.">
+          Running
         </Badge>
       ) : (
         <Badge variant="destructive" title="Latest execution failed.">
@@ -151,7 +180,7 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
         Wall time
       </span>
     ),
-    accessorFn: (row) => row.latest_execution?.wall_seconds,
+    accessorFn: (row) => row.executions.at(-1)?.wall_seconds,
     cell: ({ getValue }) => formatDuration(getValue<number | null>()),
   },
   {

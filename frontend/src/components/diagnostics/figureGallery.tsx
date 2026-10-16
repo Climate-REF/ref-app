@@ -197,7 +197,7 @@ export function FigureGallery({
     () =>
       groups.flatMap((group) => {
         // Only use the latest execution to avoid showing duplicate/outdated figures
-        const latestExecution = group.latest_execution;
+        const latestExecution = group.executions.at(-1);
         if (!latestExecution) return [];
         return (latestExecution.outputs ?? [])
           .filter((output) => output.output_type === "plot")

@@ -962,7 +962,7 @@ export type Execution = {
     /**
      * Successful
      */
-    successful: boolean;
+    successful: boolean | null;
     /**
      * Retracted
      */
@@ -1013,7 +1013,6 @@ export type ExecutionGroup = {
      * Executions
      */
     executions: Array<Execution>;
-    latest_execution: Execution | null;
     /**
      * Selectors
      */
@@ -1023,7 +1022,14 @@ export type ExecutionGroup = {
             string
         ]>;
     };
-    diagnostic: DiagnosticSummary;
+    /**
+     * Provider Slug
+     */
+    provider_slug: string;
+    /**
+     * Diagnostic Slug
+     */
+    diagnostic_slug: string;
     /**
      * Created At
      */
@@ -2711,6 +2717,12 @@ export type ExecutionsExecutionLogsData = {
          * Execution Id
          */
         execution_id?: string | null;
+        /**
+         * Lines
+         *
+         * Only return this many lines from the end of the log
+         */
+        lines?: number | null;
     };
     url: '/api/v1/executions/{group_id}/logs';
 };

@@ -15,6 +15,7 @@ from ref_backend.models import (
     Dataset,
     ExecutionGroup,
 )
+from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -111,6 +112,7 @@ async def executions(
     """
     execution_groups_query = (
         app_context.session.query(models.ExecutionGroup)
+        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
         .join(models.ExecutionGroup.executions)
         .join(models.Execution.datasets)
         .filter(models.Dataset.id == dataset_id)

@@ -127,9 +127,14 @@ function ExecutionsListPage() {
           </div>
         }
         actions={
-          <Button variant="outline" asChild>
-            <Link to="/executions/resources">Resource usage</Link>
-          </Button>
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/executions/failures">Failures</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/executions/resources">Resource usage</Link>
+            </Button>
+          </>
         }
       />
 
