@@ -93,3 +93,91 @@ export function failureSummary(failures: DiagnosticFailures): string {
 export function failuresAnchor(diagnostic: DiagnosticCatalogEntry): string {
   return `${diagnostic.provider.slug}-${diagnostic.slug}`;
 }
+
+/** The model run an execution group evaluated, read from its CMIP6 or CMIP7 selectors */
+export interface GroupFacets {
+  model?: string;
+  experiment?: string;
+  member?: string;
+}
+
+export function groupFacets(group: ExecutionGroup): GroupFacets {
+  const pairs = group.selectors.cmip6 ?? group.selectors.cmip7 ?? [];
+  const value = (key: string) => pairs.find(([name]) => name === key)?.[1];
+  return {
+    model: value("source_id"),
+    experiment: value("experiment_id"),
+    // CMIP6 calls the ensemble member member_id, CMIP7 variant_label
+    member: value("member_id") ?? value("variant_label"),
+  };
+}
+
+/** When the group last succeeded before its latest execution, or undefined if it never did */
+export function lastSucceededAt(group: ExecutionGroup): string | undefined {
+  // Executions are oldest first, and the last one is the failure itself
+  return group.executions
+    .slice(0, -1)
+    .findLast((execution) => execution.successful === true)?.updated_at;
+}
+
+/** When the failed executions of a diagnostic's groups ran, oldest and most recent */
+export function failedRunRange(
+  failures: DiagnosticFailures,
+): { first: string; last: string } | undefined {
+  const dates = failures.failedGroups
+    .map((group) => group.executions.at(-1)?.updated_at)
+    .filter((date) => date !== undefined)
+    .sort();
+  return dates.length > 0
+    ? { first: dates[0], last: dates[dates.length - 1] }
+    : undefined;
+}
+
+/** Failed groups of one model, across diagnostics */
+export interface ModelFailures {
+  model: string;
+  groups: number;
+  diagnostics: number;
+}
+
+/** Count the failed groups of each model, most failures first */
+export function failuresByModel(
+  diagnostics: DiagnosticFailures[],
+): ModelFailures[] {
+  const byModel = new Map<
+    string,
+    { groups: number; diagnostics: Set<string> }
+  >();
+  for (const failures of diagnostics) {
+    const diagnostic = `${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`;
+    for (const group of failures.failedGroups) {
+      const { model } = groupFacets(group);
+      if (model === undefined) {
+        continue;
+      }
+      const entry = byModel.get(model) ?? { groups: 0, diagnostics: new Set() };
+      entry.groups += 1;
+      entry.diagnostics.add(diagnostic);
+      byModel.set(model, entry);
+    }
+  }
+  return [...byModel.entries()]
+    .map(([model, { groups, diagnostics }]) => ({
+      model,
+      groups,
+      diagnostics: diagnostics.size,
+    }))
+    .sort((a, b) => b.groups - a.groups || a.model.localeCompare(b.model));
+}
+
+/** The failed groups of a diagnostic to show, only those of `model` when one is given */
+export function groupsToShow(
+  failures: DiagnosticFailures,
+  model?: string,
+): ExecutionGroup[] {
+  return model === undefined
+    ? failures.failedGroups
+    : failures.failedGroups.filter(
+        (group) => groupFacets(group).model === model,
+      );
+}
