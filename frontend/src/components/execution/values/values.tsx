@@ -64,14 +64,13 @@ export function Values({ valueType, ...props }: ValuesProps) {
   const {
     filters,
     setFilters,
-    finalDisplayedValues,
+    displayedValues,
     setRowSelection,
     rowSelection,
     excludedRowIds,
     setExcludedRowIds,
   } = useValuesProcessor<Value>({
     initialValues: filteredValues,
-    loading: props.loading,
     initialFilters: props.initialFilters,
     onFiltersChange: props.onFiltersChange,
   });
@@ -151,7 +150,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
 
           {valueType === "scalars" ? (
             <ScalarDataTable
-              values={finalDisplayedValues as ProcessedScalarValue[]}
+              values={displayedValues as ProcessedScalarValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}
@@ -159,7 +158,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
             />
           ) : (
             <SeriesDataTable
-              values={finalDisplayedValues as ProcessedSeriesValue[]}
+              values={displayedValues as ProcessedSeriesValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}

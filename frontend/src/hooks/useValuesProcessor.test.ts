@@ -16,7 +16,6 @@ describe("useValuesProcessor setFilters", () => {
     const { result } = renderHook(() =>
       useValuesProcessor({
         initialValues: [],
-        loading: false,
         onFiltersChange,
       }),
     );
@@ -37,7 +36,6 @@ describe("useValuesProcessor setFilters", () => {
     const { result } = renderHook(() =>
       useValuesProcessor({
         initialValues: [],
-        loading: false,
         onFiltersChange,
       }),
     );
@@ -56,7 +54,6 @@ describe("useValuesProcessor setFilters", () => {
     const { result } = renderHook(() =>
       useValuesProcessor({
         initialValues: [],
-        loading: false,
         initialFilters: [facetFilter("a")],
         onFiltersChange,
       }),
@@ -66,5 +63,24 @@ describe("useValuesProcessor setFilters", () => {
 
     expect(result.current.filters).toEqual([]);
     expect(onFiltersChange).toHaveBeenCalledWith([]);
+  });
+});
+
+describe("useValuesProcessor displayedValues", () => {
+  it("applies the facet filters and keys rows by their id", () => {
+    const initialValues = [
+      { id: 1, dimensions: { source_id: "A" } },
+      { id: 2, dimensions: { source_id: "B" } },
+    ];
+    const { result } = renderHook(() =>
+      useValuesProcessor({
+        initialValues,
+        initialFilters: [facetFilter("a")],
+      }),
+    );
+
+    expect(result.current.displayedValues).toEqual([
+      { ...initialValues[0], rowId: "1" },
+    ]);
   });
 });
