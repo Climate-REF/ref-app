@@ -7,10 +7,11 @@ import type {
 import {
   diagnosticHealth,
   failedRunRange,
+  failureDays,
+  failureSummary,
   failuresByModel,
   failuresByReason,
   groupFacets,
-  groupsToShow,
   lastSucceededAt,
   reasonBreakdown,
   summariseFailures,
@@ -264,33 +265,76 @@ describe("failure reasons", () => {
   });
 });
 
-describe("groupsToShow", () => {
-  const failures = () =>
-    summariseFailures(
-      [diagnostic("pmp", "enso", 3, 0)],
-      [
-        modelGroup("A", [[false, "2026-09-04", "system_error"]]),
-        modelGroup("B", [[false, "2026-09-04", "system_error"]]),
-        modelGroup("B", [[false, "2026-09-04", "diagnostic_error"]]),
-      ],
-    )[0];
+describe("filtering", () => {
+  const groups = () => [
+    modelGroup("A", [[false, "2026-09-04T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-09-20T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-10-12T10:00:00", "diagnostic_error"]]),
+    // Still running, so it has neither a failure reason nor a failure date
+    modelGroup("B", [[null, "2026-10-13T10:00:00"]]),
+  ];
+  const summarise = (filters: Parameters<typeof summariseFailures>[2]) =>
+    summariseFailures([diagnostic("pmp", "enso", 10, 6)], groups(), filters)[0];
+  const models = (failures: ReturnType<typeof summarise>) =>
+    failures.failedGroups.map((g) => groupFacets(g).model);
 
-  it("shows every failed group without filters", () => {
-    expect(groupsToShow(failures())).toHaveLength(3);
+  it("counts every unsuccessful group without filters", () => {
+    const failures = summarise({});
+    expect(failures.failedGroups).toHaveLength(3);
+    expect(failures.running).toBe(1);
   });
 
-  it("keeps the groups matching every filter given", () => {
-    const models = (groups: ExecutionGroup[]) =>
-      groups.map((g) => groupFacets(g).model);
-    expect(models(groupsToShow(failures(), { model: "B" }))).toEqual([
-      "B",
+  it("keeps the failed groups matching every filter", () => {
+    expect(models(summarise({ model: "B" }))).toEqual(["B", "B"]);
+    expect(models(summarise({ reason: "system_error" }))).toEqual(["A", "B"]);
+    expect(models(summarise({ model: "B", reason: "system_error" }))).toEqual([
       "B",
     ]);
+    expect(models(summarise({ from: "2026-09-05", to: "2026-09-30" }))).toEqual(
+      ["B"],
+    );
+    expect(models(summarise({ to: "2026-09-04" }))).toEqual(["A"]);
+  });
+
+  it("keeps running groups when filtering by failure reason or time", () => {
     expect(
-      models(groupsToShow(failures(), { reason: "system_error" })),
-    ).toEqual(["A", "B"]);
+      summarise({ reason: "diagnostic_error", from: "2026-10-01" }).running,
+    ).toBe(1);
+    expect(summarise({ model: "A" }).running).toBe(0);
+  });
+
+  it("works out the health from the matching failures", () => {
+    // Six groups succeeded, so a diagnostic with matching failures is partly failing
+    expect(summarise({ reason: "system_error" }).health).toBe("partial");
+    expect(summarise({ reason: "result_error" }).health).toBe("healthy");
+  });
+});
+
+describe("failureDays", () => {
+  it("spans the first and last day a group failed, ignoring running groups", () => {
     expect(
-      models(groupsToShow(failures(), { model: "B", reason: "system_error" })),
-    ).toEqual(["B"]);
+      failureDays([
+        modelGroup("A", [[false, "2026-09-20T10:00:00"]]),
+        modelGroup("B", [[false, "2026-09-04T23:59:00"]]),
+        modelGroup("C", [[null, "2026-10-13T10:00:00"]]),
+      ]),
+    ).toEqual({ from: "2026-09-04", to: "2026-09-20" });
+  });
+
+  it("is undefined when nothing failed", () => {
+    expect(failureDays([])).toBeUndefined();
+  });
+});
+
+describe("failureSummary", () => {
+  it("names the model and failure reason it is narrowed to", () => {
+    const [failures] = summariseFailures(
+      [diagnostic("pmp", "enso", 4, 3)],
+      [modelGroup("CanESM5", [[false, "2026-09-04", "system_error"]])],
+    );
+    expect(failureSummary(failures)).toBe("1 of 4 execution groups failed");
+    expect(
+      failureSummary(failures, { model: "CanESM5", reason: "system_error" }),
+    ).toBe("1 of 4 CanESM5 execution groups failed (System error)");
   });
 });

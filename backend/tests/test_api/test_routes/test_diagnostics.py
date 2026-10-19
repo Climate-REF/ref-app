@@ -971,3 +971,27 @@ def test_diagnostics_catalog_and_value_flags_make_up_the_listing(
     assert not any(flag in d for d in catalog for flag in FLAGS)
     assert by_id(catalog, lambda k: True) == by_id(full, lambda k: k not in FLAGS)
     assert by_id(flags, lambda k: k in FLAGS) == by_id(full, lambda k: k in FLAGS)
+
+
+def test_diagnostics_catalog_counts_one_model(client: TestClient, settings):
+    def counts(query: str = "") -> dict[str, tuple[int, int]]:
+        r = client.get(f"{settings.API_V1_STR}/diagnostics/catalog{query}")
+        assert r.status_code == 200
+        return {
+            f"{d['provider']['slug']}/{d['slug']}": (
+                d["execution_group_count"],
+                d["successful_execution_group_count"],
+            )
+            for d in r.json()["data"]
+        }
+
+    everything = counts()
+    model = counts("?source_id=ACCESS-ESM1-5")
+    nothing = counts("?source_id=no-such-model")
+
+    # Every diagnostic is still listed, with the model's share of its groups
+    assert model.keys() == everything.keys()
+    assert all(model[k][0] <= everything[k][0] and model[k][1] <= everything[k][1] for k in everything)
+    assert sum(total for total, _ in model.values()) > 0
+    assert sum(total for total, _ in model.values()) < sum(total for total, _ in everything.values())
+    assert all(total == 0 for total, _ in nothing.values())

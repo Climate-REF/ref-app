@@ -1,9 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsCatalogOptions } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
-import { summariseFailures } from "@/lib/failures";
 import type { MipEra } from "@/lib/mipEras";
 
 const PAGE_SIZE = 1000;
@@ -37,34 +35,37 @@ async function fetchUnsuccessfulGroups(
   return [first, ...rest].flatMap((p) => p.data);
 }
 
-/** How every diagnostic's execution groups of one MIP era turned out, and the groups that failed. */
-export function useFailures(mipEra: MipEra) {
-  // Both requests count only the groups that ran against this era
-  const catalog = useQuery(
-    diagnosticsCatalogOptions({ query: { mip_era: mipEra } }),
-  );
+/**
+ * The diagnostic catalog and the unsuccessful execution groups of one MIP era, for the failures page
+ *
+ * The catalog counts only the groups of `model` when one is given, so each diagnostic's totals
+ * match a page filtered to that model. The unsuccessful groups cover every model,
+ * so the page can count the failures of each.
+ */
+export function useFailures(mipEra: MipEra, model?: string) {
+  const catalog = useQuery({
+    ...diagnosticsCatalogOptions({
+      query: { mip_era: mipEra, source_id: model },
+    }),
+    // Keep showing the previous counts while another model's load
+    placeholderData: keepPreviousData,
+  });
   const unsuccessful = useQuery({
     queryKey: ["executions", "unsuccessful", mipEra],
     queryFn: () => fetchUnsuccessfulGroups(mipEra),
   });
-
-  const data = useMemo(
-    () =>
-      catalog.data && unsuccessful.data
-        ? summariseFailures(catalog.data.data, unsuccessful.data)
-        : undefined,
-    [catalog.data, unsuccessful.data],
-  );
 
   // A failed query that is being retried counts as loading again
   const failed = [catalog, unsuccessful].filter(
     (query) => query.isError && !query.isFetching,
   );
   const error = failed.length > 0 ? failed[0].error : null;
+  const loaded = catalog.data !== undefined && unsuccessful.data !== undefined;
 
   return {
-    data,
-    isLoading: data === undefined && error === null,
+    catalog: catalog.data?.data,
+    unsuccessful: unsuccessful.data,
+    isLoading: !loaded && error === null,
     error,
     retry: () => {
       for (const query of failed) {

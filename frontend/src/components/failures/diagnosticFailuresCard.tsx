@@ -18,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
-import { describeFailureReason, failureReasonOf } from "@/lib/failureReasons";
+import { failureReasonOf } from "@/lib/failureReasons";
 import {
   type DiagnosticFailures,
   type FailureFilters,
@@ -26,7 +26,6 @@ import {
   failureSummary,
   failuresAnchor,
   groupFacets,
-  groupsToShow,
   lastSucceededAt,
   reasonBreakdown,
 } from "@/lib/failures";
@@ -116,14 +115,13 @@ export function DiagnosticFailuresCard({
   filters = {},
 }: {
   failures: DiagnosticFailures;
-  /** Only list the failed groups matching these */
+  /** What the failures were narrowed to, named in the summary */
   filters?: FailureFilters;
 }) {
   const [showAll, setShowAll] = useState(false);
   const { diagnostic } = failures;
-  const groups = groupsToShow(failures, filters);
-  const reasons = reasonBreakdown(failures.failedGroups);
-  const filtered = filters.model !== undefined || filters.reason !== undefined;
+  const groups = failures.failedGroups;
+  const reasons = reasonBreakdown(groups);
   const when = failedRunsText(failures);
   const shown = showAll ? groups : groups.slice(0, INITIAL_GROUPS);
   const unfinished = [
@@ -150,7 +148,7 @@ export function DiagnosticFailuresCard({
         </CardTitle>
         <CardDescription className="space-y-0.5">
           <p>
-            {failureSummary(failures)}
+            {failureSummary(failures, filters)}
             {unfinished.length > 0 && ` (${unfinished.join(", ")})`}
           </p>
           {when && <p>{when}</p>}
@@ -162,15 +160,6 @@ export function DiagnosticFailuresCard({
               </span>
             ))}
           </p>
-          {filtered && (
-            <p>
-              Showing {groups.length} failed{" "}
-              {groups.length === 1 ? "group" : "groups"}
-              {filters.model && ` of ${filters.model}`}
-              {filters.reason &&
-                ` with ${describeFailureReason(filters.reason).label.toLowerCase()}`}
-            </p>
-          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

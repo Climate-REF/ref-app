@@ -2244,6 +2244,10 @@ export type DiagnosticsListData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/';
 };
@@ -2274,6 +2278,10 @@ export type DiagnosticsCatalogData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/catalog';
 };
@@ -2304,6 +2312,10 @@ export type DiagnosticsValueFlagsData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/value-flags';
 };

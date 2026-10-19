@@ -1,5 +1,5 @@
 import type { DiagnosticCatalogEntry, ExecutionGroup } from "@/client";
-import { failureReasonOf } from "./failureReasons";
+import { describeFailureReason, failureReasonOf } from "./failureReasons";
 
 /**
  * How a diagnostic's execution groups turned out
@@ -40,13 +40,20 @@ export interface DiagnosticFailures {
  * and the unsuccessful groups split the rest into failed, running and not started.
  * Groups of a diagnostic the catalog does not list are left out.
  * Diagnostics are ordered by provider then diagnostic slug.
+ *
+ * Only the unsuccessful groups matching `filters` are counted. When filtering by model,
+ * pass a catalog counting only that model's groups, so the totals and successes match.
  */
 export function summariseFailures(
   catalog: DiagnosticCatalogEntry[],
   unsuccessful: ExecutionGroup[],
+  filters: FailureFilters = {},
 ): DiagnosticFailures[] {
   const groupsByDiagnostic = new Map<string, ExecutionGroup[]>();
   for (const group of unsuccessful) {
+    if (!matchesFilters(group, filters)) {
+      continue;
+    }
     const key = `${group.provider_slug}/${group.diagnostic_slug}`;
     groupsByDiagnostic.set(key, [
       ...(groupsByDiagnostic.get(key) ?? []),
@@ -85,9 +92,17 @@ export function summariseFailures(
     });
 }
 
-/** Summarise how many of a diagnostic's execution groups failed, e.g. "3 of 12 execution groups failed". */
-export function failureSummary(failures: DiagnosticFailures): string {
-  return `${failures.failedGroups.length} of ${failures.total} execution groups failed`;
+/**
+ * Summarise how many of a diagnostic's execution groups failed, naming what the count is narrowed to,
+ * e.g. "3 of 12 execution groups failed" or "1 of 4 CanESM5 execution groups failed (System error)"
+ */
+export function failureSummary(
+  failures: DiagnosticFailures,
+  { model, reason }: FailureFilters = {},
+): string {
+  const groups = model ? `${model} execution groups` : "execution groups";
+  const why = reason ? ` (${describeFailureReason(reason).label})` : "";
+  return `${failures.failedGroups.length} of ${failures.total} ${groups} failed${why}`;
 }
 
 /** The anchor a failing diagnostic's section is reachable at on the failures page. */
@@ -201,16 +216,52 @@ export function reasonBreakdown(
 export interface FailureFilters {
   model?: string;
   reason?: string;
+  /** The first day failures are counted from, as YYYY-MM-DD */
+  from?: string;
+  /** The last day failures are counted up to, as YYYY-MM-DD */
+  to?: string;
 }
 
-/** The failed groups of a diagnostic to show, those matching every filter given */
-export function groupsToShow(
-  failures: DiagnosticFailures,
-  { model, reason }: FailureFilters = {},
-): ExecutionGroup[] {
-  return failures.failedGroups.filter(
-    (group) =>
-      (model === undefined || groupFacets(group).model === model) &&
-      (reason === undefined || failureReasonOf(group) === reason),
-  );
+/** The day a failed group's latest execution failed, as YYYY-MM-DD */
+const failedOn = (group: ExecutionGroup) =>
+  group.executions.at(-1)?.updated_at.slice(0, 10);
+
+/**
+ * Whether an unsuccessful group matches the filters
+ *
+ * The model applies to every group. The reason and time range describe failures,
+ * so a running or not started group, which has neither, is kept.
+ */
+export function matchesFilters(
+  group: ExecutionGroup,
+  { model, reason, from, to }: FailureFilters,
+): boolean {
+  if (model !== undefined && groupFacets(group).model !== model) {
+    return false;
+  }
+  if (group.executions.at(-1)?.successful !== false) {
+    return true;
+  }
+  if (reason !== undefined && failureReasonOf(group) !== reason) {
+    return false;
+  }
+  if (from === undefined && to === undefined) {
+    return true;
+  }
+  const day = failedOn(group) ?? "";
+  return (from === undefined || day >= from) && (to === undefined || day <= to);
+}
+
+/** The first and last day any of these groups failed, as YYYY-MM-DD, or undefined if none did */
+export function failureDays(
+  groups: ExecutionGroup[],
+): { from: string; to: string } | undefined {
+  const days = groups
+    .filter((group) => group.executions.at(-1)?.successful === false)
+    .map(failedOn)
+    .filter((day) => day !== undefined)
+    .sort();
+  return days.length > 0
+    ? { from: days[0], to: days[days.length - 1] }
+    : undefined;
 }

@@ -245,7 +245,8 @@ export const diagnosticsListQueryKey = (options?: Options<DiagnosticsListData>) 
  *
  * List the currently registered diagnostics
  *
- * Pass `mip_era` to count only the execution groups that ran against that era.
+ * Pass `mip_era` to count only the execution groups that ran against that era,
+ * and `source_id` to count only those that ran against that model.
  */
 export const diagnosticsListOptions = (options?: Options<DiagnosticsListData>) => queryOptions<DiagnosticsListResponse, DiagnosticsListError, DiagnosticsListResponse, ReturnType<typeof diagnosticsListQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -269,6 +270,8 @@ export const diagnosticsCatalogQueryKey = (options?: Options<DiagnosticsCatalogD
  *
  * Checking for metric values is most of the cost of the full listing.
  * Fetch those from `/diagnostics/value-flags`.
+ *
+ * Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
  */
 export const diagnosticsCatalogOptions = (options?: Options<DiagnosticsCatalogData>) => queryOptions<DiagnosticsCatalogResponse, DiagnosticsCatalogError, DiagnosticsCatalogResponse, ReturnType<typeof diagnosticsCatalogQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
