@@ -13,7 +13,7 @@ import {
   seriesLineColor,
 } from "./seriesCanvas";
 import { SeriesLegend } from "./seriesLegend";
-import { useChartScales } from "./useChartScales";
+import { type ChartMargins, useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
 import { findTooltipPoints, useSpatialIndex } from "./useSpatialIndex";
 import {
@@ -43,6 +43,34 @@ interface SimpleSeriesVisualizationProps {
 
 const CHART_HEIGHT = 700;
 
+interface TooltipState {
+  visible: boolean;
+  x: number;
+  y: number;
+  nearest: NearestResult | null;
+  allAtX: NearestResult[];
+}
+
+const HIDDEN_TOOLTIP: TooltipState = {
+  visible: false,
+  x: 0,
+  y: 0,
+  nearest: null,
+  allAtX: [],
+};
+
+/** Where a mouse event is within the plot area, which starts inside the margins */
+function plotPosition(
+  e: React.MouseEvent<HTMLCanvasElement>,
+  margins: ChartMargins,
+) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left - margins.left,
+    y: e.clientY - rect.top - margins.top,
+  };
+}
+
 export function SeriesVisualization({
   seriesValues,
   referenceSeriesValues = [],
@@ -66,13 +94,8 @@ export function SeriesVisualization({
   const [containerWidth, setContainerWidth] = useState(800);
 
   // Tooltip state
-  const [tooltipState, setTooltipState] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    nearest: NearestResult | null;
-    allAtX: NearestResult[];
-  }>({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
+  const [tooltipState, setTooltipState] =
+    useState<TooltipState>(HIDDEN_TOOLTIP);
   const tooltipRafRef = useRef<number>(0);
 
   // Observe container width for responsive sizing
@@ -228,9 +251,7 @@ export function SeriesVisualization({
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       // Capture values synchronously — React pools events, so currentTarget
       // and coordinates become null inside requestAnimationFrame.
-      const rect = e.currentTarget.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left - margins.left;
-      const mouseY = e.clientY - rect.top - margins.top;
+      const { x: mouseX, y: mouseY } = plotPosition(e, margins);
 
       cancelAnimationFrame(tooltipRafRef.current);
       tooltipRafRef.current = requestAnimationFrame(() => {
@@ -269,11 +290,7 @@ export function SeriesVisualization({
             hoveredLabelRef.current = null;
           }
           canvasRef.current?.redraw();
-          setTooltipState((prev) =>
-            prev.visible
-              ? { visible: false, x: 0, y: 0, nearest: null, allAtX: [] }
-              : prev,
-          );
+          setTooltipState((prev) => (prev.visible ? HIDDEN_TOOLTIP : prev));
         }
       });
     },
@@ -284,15 +301,13 @@ export function SeriesVisualization({
     cancelAnimationFrame(tooltipRafRef.current);
     hoveredLabelRef.current = null;
     crosshairRef.current = null;
-    setTooltipState({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
+    setTooltipState(HIDDEN_TOOLTIP);
     canvasRef.current?.redraw();
   }, []);
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left - margins.left;
-      const mouseY = e.clientY - rect.top - margins.top;
+      const { x: mouseX, y: mouseY } = plotPosition(e, margins);
 
       const nearest = spatialIndex.findNearest(
         mouseX,
