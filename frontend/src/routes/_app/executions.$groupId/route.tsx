@@ -13,10 +13,11 @@ import {
   executionsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
-import { Badge } from "@/components/ui/badge";
+import { ExecutionStatusBadge } from "@/components/execution/executionStatusBadge";
 
 import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { executionStatus } from "@/lib/executionStatus";
 import { formatBytes, formatDuration } from "@/lib/format";
 
 const ExecutionInfoLayout = () => {
@@ -107,16 +108,10 @@ const ExecutionInfoLayout = () => {
               {
                 label: "Status",
                 value: (
-                  <Badge
+                  <ExecutionStatusBadge
                     className="mt-1"
-                    title="Whether the selected execution completed without errors."
-                  >
-                    {execution.successful === null
-                      ? "Running"
-                      : execution.successful
-                        ? "Success"
-                        : "Failed"}
-                  </Badge>
+                    status={executionStatus(execution)}
+                  />
                 ),
               },
               {
