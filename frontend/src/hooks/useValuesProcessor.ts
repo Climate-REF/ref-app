@@ -26,7 +26,6 @@ interface UseValuesProcessorProps<
 > {
   initialValues: T[];
   initialFilters?: MetricFilter[]; // now supports facet/isolate/exclude filters
-  initialExcludedRowIds?: string[];
   onFiltersChange?: (filters: MetricFilter[]) => void;
 }
 
@@ -42,14 +41,10 @@ export function useValuesProcessor<
 >({
   initialValues,
   initialFilters,
-  initialExcludedRowIds,
   onFiltersChange,
 }: UseValuesProcessorProps<T>) {
   const [filters, setInternalFilters] = useState<MetricFilter[]>(
     initialFilters || [],
-  );
-  const [excludedRowIds, setExcludedRowIds] = useState<Set<string>>(
-    new Set(initialExcludedRowIds ?? []),
   );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -68,13 +63,6 @@ export function useValuesProcessor<
     onFiltersChange?.(resolvedFilters);
   };
 
-  const handleExcludeRowIds = (excluded: SetStateAction<Set<string>>) => {
-    // Reset the row selection when excluding rows
-    setRowSelection({});
-
-    setExcludedRowIds(excluded);
-  };
-
   // The database id keeps a row's id stable across fetches
   const displayedValues = useMemo(
     () =>
@@ -89,8 +77,6 @@ export function useValuesProcessor<
     filters,
     setFilters,
     displayedValues,
-    excludedRowIds,
-    setExcludedRowIds: handleExcludeRowIds,
     rowSelection,
     setRowSelection,
   };

@@ -67,8 +67,6 @@ export function Values({ valueType, ...props }: ValuesProps) {
     displayedValues,
     setRowSelection,
     rowSelection,
-    excludedRowIds,
-    setExcludedRowIds,
   } = useValuesProcessor<Value>({
     initialValues: filteredValues,
     initialFilters: props.initialFilters,
@@ -138,8 +136,6 @@ export function Values({ valueType, ...props }: ValuesProps) {
                 filters={filters}
                 setFilters={setFilters}
                 rowSelection={rowSelection}
-                excludedRowIds={excludedRowIds}
-                setExcludedRowIds={setExcludedRowIds}
               />
             </div>
             <Button variant="outline" size="sm" onClick={props.onDownload}>

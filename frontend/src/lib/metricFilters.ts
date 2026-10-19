@@ -1,4 +1,9 @@
-import type { FacetFilter, MetricFilter } from "@/components/explorer/types";
+import type {
+  ExcludeFilter,
+  FacetFilter,
+  IsolateFilter,
+  MetricFilter,
+} from "@/components/explorer/types";
 
 /**
  * Split a comma separated list, trimming each entry and dropping empty ones.
@@ -35,5 +40,27 @@ export function applyFacetFilters<
         .map((v) => String(v).trim())
         .includes(String(dimension).trim());
     }),
+  );
+}
+
+/**
+ * Add `ids` to the first `mode` filter in `filters`, or append a new `mode` filter when there is none.
+ */
+export function mergeIdFilter(
+  filters: MetricFilter[],
+  mode: (IsolateFilter | ExcludeFilter)["type"],
+  ids: Iterable<string>,
+): MetricFilter[] {
+  const index = filters.findIndex((filter) => filter.type === mode);
+  if (index < 0) {
+    return [
+      ...filters,
+      { type: mode, id: crypto.randomUUID(), ids: new Set(ids) },
+    ];
+  }
+  return filters.map((filter, i) =>
+    i === index && filter.type === mode
+      ? { ...filter, ids: new Set([...filter.ids, ...ids]) }
+      : filter,
   );
 }

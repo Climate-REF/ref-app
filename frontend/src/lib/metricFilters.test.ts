@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { FacetFilter } from "@/components/explorer/types";
-import { applyFacetFilters, parseCommaList } from "./metricFilters";
+import type { FacetFilter, MetricFilter } from "@/components/explorer/types";
+import {
+  applyFacetFilters,
+  mergeIdFilter,
+  parseCommaList,
+} from "./metricFilters";
 
 describe("parseCommaList", () => {
   it("splits on commas and trims each entry", () => {
@@ -93,5 +97,54 @@ describe("applyFacetFilters", () => {
         applyFacetFilters([value(7, { member: 1 })], [facet("member", "1")]),
       ),
     ).toEqual([7]);
+  });
+});
+
+describe("mergeIdFilter", () => {
+  const facet: FacetFilter = {
+    type: "facet",
+    id: "f",
+    facetKey: "source_id",
+    values: ["A"],
+  };
+
+  it("appends a new filter when there is none of that mode", () => {
+    expect(mergeIdFilter([facet], "isolate", ["1", "2"])).toEqual([
+      facet,
+      { type: "isolate", id: expect.any(String), ids: new Set(["1", "2"]) },
+    ]);
+  });
+
+  it("adds the ids to the first filter of that mode", () => {
+    const filters: MetricFilter[] = [
+      { type: "exclude", id: "e", ids: new Set(["9"]) },
+      { type: "isolate", id: "i", ids: new Set(["1"]) },
+      facet,
+    ];
+    expect(mergeIdFilter(filters, "isolate", ["1", "2"])).toEqual([
+      filters[0],
+      { type: "isolate", id: "i", ids: new Set(["1", "2"]) },
+      facet,
+    ]);
+  });
+
+  it("leaves the other mode alone", () => {
+    const isolate: MetricFilter = {
+      type: "isolate",
+      id: "i",
+      ids: new Set(["1"]),
+    };
+    const merged = mergeIdFilter([isolate], "exclude", ["1"]);
+    expect(merged[0]).toBe(isolate);
+    expect(merged[1]).toMatchObject({ type: "exclude", ids: new Set(["1"]) });
+  });
+
+  it("does not change the input", () => {
+    const ids = new Set(["1"]);
+    const filters: MetricFilter[] = [{ type: "isolate", id: "i", ids }];
+    mergeIdFilter(filters, "isolate", ["2"]);
+    expect(filters).toEqual([
+      { type: "isolate", id: "i", ids: new Set(["1"]) },
+    ]);
   });
 });
