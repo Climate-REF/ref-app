@@ -30,12 +30,10 @@ function MetricValuesTable({
   valueType,
   search,
   result: { metricValues, isLoading, initialFilters, pagination, handlers },
-  filtersInUrl,
 }: {
   valueType: ValueType;
   search: Pick<ExecutionValuesSearch, "detect_outliers" | "include_unverified">;
   result: ReturnType<typeof useMetricValues>;
-  filtersInUrl?: boolean;
 }) {
   return (
     <Values
@@ -48,8 +46,8 @@ function MetricValuesTable({
       onDetectOutliersChange={handlers.onDetectOutliersChange}
       initialIncludeUnverified={search.include_unverified}
       onIncludeUnverifiedChange={handlers.onIncludeUnverifiedChange}
-      initialFilters={filtersInUrl ? initialFilters : undefined}
-      onFiltersChange={filtersInUrl ? handlers.onFiltersChange : undefined}
+      initialFilters={initialFilters}
+      onFiltersChange={handlers.onFiltersChange}
       valueType={valueType === "scalar" ? "scalars" : "series"}
       onDownload={handlers.onDownload}
       pagination={pagination}
@@ -87,7 +85,6 @@ export function DiagnosticValuesPanel({
           valueType={valueType}
           search={search}
           result={result}
-          filtersInUrl
         />
       </MipEraScope>
     </div>
