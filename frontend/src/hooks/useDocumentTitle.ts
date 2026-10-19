@@ -1,36 +1,12 @@
 import { useMatches } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-
-const BASE_TITLE = "Climate-REF";
+import { titleFromMatches } from "@/lib/documentTitle";
 
 /**
- * Hook that updates the document title based on the current route's staticData.
- * Uses route matches to find the most specific title in the route hierarchy.
- * Returns the current title for use with React's <title> component.
+ * The document title for the current route, from the most specific route's `staticData.title`
  *
- * For dynamic titles, you can still use <title> which will override this hook.
+ * It is returned for use with React's <title> component.
+ * For dynamic titles, a page can still render its own <title>, which overrides this one.
  */
 export function useDocumentTitle() {
-  const matches = useMatches();
-  const [title, setTitle] = useState(BASE_TITLE);
-
-  useEffect(() => {
-    // Find the most specific route with a title in staticData
-    // Iterate from the end (most specific) to start (least specific)
-    for (let i = matches.length - 1; i >= 0; i--) {
-      const match = matches[i];
-      const routeTitle = match?.staticData?.title;
-
-      if (routeTitle && typeof routeTitle === "string") {
-        const fullTitle = `${routeTitle} - ${BASE_TITLE}`;
-        setTitle(fullTitle);
-        return;
-      }
-    }
-
-    // If no title found, use base title
-    setTitle(BASE_TITLE);
-  }, [matches]);
-
-  return title;
+  return titleFromMatches(useMatches());
 }
