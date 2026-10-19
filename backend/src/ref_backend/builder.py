@@ -95,6 +95,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
     if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
         sentry_sdk.init(
             dsn=str(settings.SENTRY_DSN),
+            release=settings.GIT_COMMIT,
             enable_tracing=True,
         )
 
