@@ -3,6 +3,7 @@ import { experimentLegend } from "@/components/charts/experimentColors";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
+import { ChartEmptyState } from "./chartEmptyState";
 import { TaylorDiagramContent } from "./taylorDiagramContent";
 import { transformToTaylorModels } from "./taylorModels";
 import { useExplorerMetricValues } from "./useExplorerMetricValues";
@@ -70,16 +71,11 @@ export function TaylorDiagramContentWrapper({
 
   if (allModels.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-        <div className="text-center text-sm text-gray-500">
-          <p>No Taylor diagram data available</p>
-          <p className="text-xs mt-1">
-            This diagnostic requires Spatial Distribution metrics with
-            <i> Correlation </i> and <i> Normalized Standard Deviation </i>{" "}
-            statistics
-          </p>
-        </div>
-      </div>
+      <ChartEmptyState title="No Taylor diagram data available">
+        This diagnostic requires Spatial Distribution metrics with
+        <i> Correlation </i> and <i> Normalized Standard Deviation </i>{" "}
+        statistics
+      </ChartEmptyState>
     );
   }
 

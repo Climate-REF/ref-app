@@ -1,6 +1,7 @@
 import { flip, offset, shift, useFloating } from "@floating-ui/react";
 import * as d3 from "d3";
 import { useEffect, useId, useRef, useState } from "react";
+import { ChartEmptyState } from "./chartEmptyState";
 import {
   CORRELATION_TICKS,
   RMSE_CONTOURS,
@@ -66,7 +67,7 @@ function drawStddevGrid(
     .attr("y", center.y - 5)
     .attr("width", 10)
     .attr("height", 10)
-    .attr("fill", "black");
+    .attr("fill", "currentColor");
 
   svg
     .append("path")
@@ -89,7 +90,7 @@ function drawAxes(svg: Svg, geometry: TaylorGeometry) {
       .attr("y1", y1)
       .attr("x2", x2)
       .attr("y2", y2)
-      .attr("stroke", "black");
+      .attr("stroke", "currentColor");
 
   line(center.x, center.y, center.x + end, center.y);
   line(center.x, center.y, center.x, center.y - end);
@@ -212,7 +213,7 @@ function drawCorrelationTicks(svg: Svg, geometry: TaylorGeometry) {
     .attr("text-anchor", "middle")
     .attr("font-size", "14px")
     .attr("font-weight", "600")
-    .attr("fill", "#555")
+    .style("fill", "var(--muted-foreground)")
     .attr(
       "transform",
       `rotate(${titleAngle * (180 / Math.PI)}, ${title.x}, ${title.y})`,
@@ -339,15 +340,10 @@ export function TaylorDiagramContent({
   // Handle empty state
   if (models.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-        <div className="text-center text-sm text-gray-500">
-          <p>No model data available</p>
-          <p className="text-xs mt-1">
-            This diagram requires models with correlation and standard deviation
-            values
-          </p>
-        </div>
-      </div>
+      <ChartEmptyState title="No model data available">
+        This diagram requires models with correlation and standard deviation
+        values
+      </ChartEmptyState>
     );
   }
 
@@ -358,6 +354,9 @@ export function TaylorDiagramContent({
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
+        // Text and axes take the theme's text colour
+        className="text-foreground"
+        fill="currentColor"
         onMouseMove={(event) =>
           setMousePosition({ x: event.clientX, y: event.clientY })
         }
@@ -370,22 +369,22 @@ export function TaylorDiagramContent({
             pointerEvents: "none",
             zIndex: 50,
           }}
-          className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-[200px]"
+          className="bg-popover text-popover-foreground border rounded-lg shadow-lg p-4 min-w-[200px]"
         >
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+            <div className="text-sm font-semibold border-b pb-2">
               {hoveredModel.name}
             </div>
             <div className="text-xs space-y-1">
               <div className="flex justify-between">
-                <span className="text-gray-600">Correlation:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Correlation:</span>
+                <span className="font-medium">
                   {hoveredModel.correlation.toFixed(3)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Std Dev:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Std Dev:</span>
+                <span className="font-medium">
                   {hoveredModel.stddev.toFixed(3)}
                 </span>
               </div>

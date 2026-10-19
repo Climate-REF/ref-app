@@ -6,6 +6,7 @@ import { isSeriesValue } from "@/components/execution/values/types";
 import { ExplorerCardDropdown } from "../explorerCardDropdown";
 import { ExplorerCardFrame } from "../explorerCardFrame";
 import type { SeriesChartContent as SeriesChartContentType } from "../types";
+import { ChartEmptyState } from "./chartEmptyState";
 import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface SeriesChartContentProps {
@@ -35,15 +36,10 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       <ExplorerCardFrame contentItem={contentItem} menu={menu}>
         <div className="space-y-3">
           {filterBar}
-          <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-            <div className="text-center text-sm text-gray-500">
-              <p>No series data available</p>
-              <p className="text-xs mt-1">
-                This diagnostic may not have series data or filters may be too
-                restrictive
-              </p>
-            </div>
-          </div>
+          <ChartEmptyState title="No series data available">
+            This diagnostic may not have series data or filters may be too
+            restrictive
+          </ChartEmptyState>
         </div>
       </ExplorerCardFrame>
     );

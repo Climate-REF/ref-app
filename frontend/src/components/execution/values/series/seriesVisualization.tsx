@@ -316,11 +316,11 @@ export function SeriesVisualization({
             <div className="text-lg font-medium text-amber-600">
               Too Many Series to Display
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Found {totalSeries} series values, but only up to {maxSeriesLimit}{" "}
               can be displayed for performance reasons.
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               Please use the filtering options above to reduce the number of
               series, or download the data as CSV for analysis.
             </div>
@@ -332,7 +332,7 @@ export function SeriesVisualization({
 
   if (totalSeries === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-muted-foreground py-8">
         No series data available
       </div>
     );
