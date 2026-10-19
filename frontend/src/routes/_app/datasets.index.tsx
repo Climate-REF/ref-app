@@ -10,6 +10,7 @@ import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card";
+import { nextOffset } from "@/lib/pagination";
 
 const DatasetsSearchSchema = z.object({
   dataset_type: z.string().default("cmip6"),
@@ -44,13 +45,8 @@ function SourcesIndexPage() {
     ...datasetsListInfiniteOptions({
       query: { ...search, limit: 50 },
     }),
-    getNextPageParam: (lastPage, allPages) => {
-      const loaded = allPages.reduce((acc, page) => acc + (page.count || 0), 0);
-      if (lastPage.total_count != null && loaded < lastPage.total_count) {
-        return loaded;
-      }
-      return undefined;
-    },
+    initialPageParam: 0,
+    getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
   });
 
   const datasets = data?.pages.flatMap((page) => page.data) || [];

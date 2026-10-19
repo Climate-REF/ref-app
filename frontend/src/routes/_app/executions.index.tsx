@@ -1,8 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { executionsListRecentExecutionGroupsQueryKey } from "@/client/@tanstack/react-query.gen";
-import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
+import { executionsListRecentExecutionGroupsInfiniteOptions } from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
 import { MipEraEmptyState, MipEraScope } from "@/components/charts/mipEraBar";
 import ExecutionGroupTable from "@/components/execution/executionGroupTable";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
+import { nextOffset } from "@/lib/pagination";
 
 const ExecutionsSearchSchema = z.object({
   diagnostic_name_contains: z.string().optional(),
@@ -62,31 +62,12 @@ function ExecutionsListPage() {
     isLoading,
     error,
   } = useInfiniteQuery({
-    queryKey: executionsListRecentExecutionGroupsQueryKey(queryOptions),
-    queryFn: async ({ pageParam = 0 }) => {
-      const { data } = await executionsListRecentExecutionGroups({
-        ...queryOptions,
-        query: {
-          ...queryOptions.query,
-          offset: pageParam,
-        },
-      });
-      return data;
-    },
+    ...executionsListRecentExecutionGroupsInfiniteOptions(queryOptions),
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
-      const loaded = (allPages ?? []).reduce(
-        (acc, page) => acc + (page?.data?.length ?? 0),
-        0,
-      );
-      if (lastPage?.total_count && loaded < lastPage.total_count) {
-        return loaded;
-      }
-      return undefined;
-    },
+    getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
   });
 
-  const executionGroups = data?.pages.flatMap((page) => page?.data ?? []) || [];
+  const executionGroups = data?.pages.flatMap((page) => page.data) ?? [];
 
   const updateSearch = (patch: Partial<typeof search>) => {
     // Remove empty values to keep URL clean and keep types aligned with Route.validateSearch
