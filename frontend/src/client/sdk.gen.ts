@@ -62,7 +62,8 @@ export const datasetsExecutions = <ThrowOnError extends boolean = false>(options
  *
  * List the currently registered diagnostics
  *
- * Pass `mip_era` to count only the execution groups that ran against that era.
+ * Pass `mip_era` to count only the execution groups that ran against that era,
+ * and `source_id` to count only those that ran against that model.
  */
 export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsListData, ThrowOnError>): RequestResult<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError>({ url: '/api/v1/diagnostics/', ...options });
 
@@ -73,6 +74,8 @@ export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: 
  *
  * Checking for metric values is most of the cost of the full listing.
  * Fetch those from `/diagnostics/value-flags`.
+ *
+ * Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
  */
 export const diagnosticsCatalog = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsCatalogData, ThrowOnError>): RequestResult<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError>({ url: '/api/v1/diagnostics/catalog', ...options });
 
@@ -153,9 +156,13 @@ export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = 
  * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
+ * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroups = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsListRecentExecutionGroupsData, ThrowOnError>): RequestResult<ExecutionsListRecentExecutionGroupsResponses, ExecutionsListRecentExecutionGroupsErrors, ThrowOnError> => (options?.client ?? client).get<ExecutionsListRecentExecutionGroupsResponses, ExecutionsListRecentExecutionGroupsErrors, ThrowOnError>({ url: '/api/v1/executions/', ...options });
 

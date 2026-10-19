@@ -18,15 +18,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
+import { failureReasonOf } from "@/lib/failureReasons";
 import {
   type DiagnosticFailures,
+  type FailureFilters,
   failedRunRange,
   failureSummary,
   failuresAnchor,
   groupFacets,
-  groupsToShow,
   lastSucceededAt,
+  reasonBreakdown,
 } from "@/lib/failures";
+import { FailureReasonBadge } from "./failureReasonBadge";
 import { HealthDot } from "./health";
 import { LogExcerpt } from "./logExcerpt";
 
@@ -81,6 +84,10 @@ function FailedGroupItem({ group }: { group: ExecutionGroup }) {
               </span>
             </span>
           </CollapsibleTrigger>
+          <FailureReasonBadge
+            reason={failureReasonOf(group)}
+            className="shrink-0"
+          />
           <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
             {format(new Date(execution.updated_at), "yyyy-MM-dd HH:mm")}
           </span>
@@ -105,15 +112,16 @@ function FailedGroupItem({ group }: { group: ExecutionGroup }) {
 /** A diagnostic with failing execution groups, listing each with what its log says about the failure. */
 export function DiagnosticFailuresCard({
   failures,
-  model,
+  filters = {},
 }: {
   failures: DiagnosticFailures;
-  /** Only list the failed groups of this model */
-  model?: string;
+  /** What the failures were narrowed to, named in the summary */
+  filters?: FailureFilters;
 }) {
   const [showAll, setShowAll] = useState(false);
   const { diagnostic } = failures;
-  const groups = groupsToShow(failures, model);
+  const groups = failures.failedGroups;
+  const reasons = reasonBreakdown(groups);
   const when = failedRunsText(failures);
   const shown = showAll ? groups : groups.slice(0, INITIAL_GROUPS);
   const unfinished = [
@@ -140,16 +148,18 @@ export function DiagnosticFailuresCard({
         </CardTitle>
         <CardDescription className="space-y-0.5">
           <p>
-            {failureSummary(failures)}
+            {failureSummary(failures, filters)}
             {unfinished.length > 0 && ` (${unfinished.join(", ")})`}
           </p>
           {when && <p>{when}</p>}
-          {model && (
-            <p>
-              Showing {groups.length} failed{" "}
-              {groups.length === 1 ? "group" : "groups"} of {model}
-            </p>
-          )}
+          <p className="flex flex-wrap items-center gap-1">
+            {reasons.map(({ reason, groups: count }) => (
+              <span key={reason} className="inline-flex items-center gap-1">
+                <FailureReasonBadge reason={reason} />
+                <span className="text-xs">{count}</span>
+              </span>
+            ))}
+          </p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

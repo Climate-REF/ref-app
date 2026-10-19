@@ -1,4 +1,5 @@
 import type { DiagnosticCatalogEntry, ExecutionGroup } from "@/client";
+import { describeFailureReason, failureReasonOf } from "./failureReasons";
 
 /**
  * How a diagnostic's execution groups turned out
@@ -39,13 +40,20 @@ export interface DiagnosticFailures {
  * and the unsuccessful groups split the rest into failed, running and not started.
  * Groups of a diagnostic the catalog does not list are left out.
  * Diagnostics are ordered by provider then diagnostic slug.
+ *
+ * Only the unsuccessful groups matching `filters` are counted. When filtering by model,
+ * pass a catalog counting only that model's groups, so the totals and successes match.
  */
 export function summariseFailures(
   catalog: DiagnosticCatalogEntry[],
   unsuccessful: ExecutionGroup[],
+  filters: FailureFilters = {},
 ): DiagnosticFailures[] {
   const groupsByDiagnostic = new Map<string, ExecutionGroup[]>();
   for (const group of unsuccessful) {
+    if (!matchesFilters(group, filters)) {
+      continue;
+    }
     const key = `${group.provider_slug}/${group.diagnostic_slug}`;
     groupsByDiagnostic.set(key, [
       ...(groupsByDiagnostic.get(key) ?? []),
@@ -84,9 +92,17 @@ export function summariseFailures(
     });
 }
 
-/** Summarise how many of a diagnostic's execution groups failed, e.g. "3 of 12 execution groups failed". */
-export function failureSummary(failures: DiagnosticFailures): string {
-  return `${failures.failedGroups.length} of ${failures.total} execution groups failed`;
+/**
+ * Summarise how many of a diagnostic's execution groups failed, naming what the count is narrowed to,
+ * e.g. "3 of 12 execution groups failed" or "1 of 4 CanESM5 execution groups failed (System error)"
+ */
+export function failureSummary(
+  failures: DiagnosticFailures,
+  { model, reason }: FailureFilters = {},
+): string {
+  const groups = model ? `${model} execution groups` : "execution groups";
+  const why = reason ? ` (${describeFailureReason(reason).label})` : "";
+  return `${failures.failedGroups.length} of ${failures.total} ${groups} failed${why}`;
 }
 
 /** The anchor a failing diagnostic's section is reachable at on the failures page. */
@@ -133,51 +149,119 @@ export function failedRunRange(
     : undefined;
 }
 
-/** Failed groups of one model, across diagnostics */
-export interface ModelFailures {
-  model: string;
+/** Failed groups that share something, such as a model or a failure reason, across diagnostics */
+export interface FailureCount {
+  key: string;
   groups: number;
   diagnostics: number;
+}
+
+/** Count the failed groups by `keyOf`, most failures first, leaving out groups without a key */
+function countFailures(
+  diagnostics: DiagnosticFailures[],
+  keyOf: (group: ExecutionGroup) => string | undefined,
+): FailureCount[] {
+  const byKey = new Map<string, { groups: number; diagnostics: Set<string> }>();
+  for (const failures of diagnostics) {
+    const diagnostic = `${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`;
+    for (const group of failures.failedGroups) {
+      const key = keyOf(group);
+      if (key === undefined) {
+        continue;
+      }
+      const entry = byKey.get(key) ?? { groups: 0, diagnostics: new Set() };
+      entry.groups += 1;
+      entry.diagnostics.add(diagnostic);
+      byKey.set(key, entry);
+    }
+  }
+  return [...byKey.entries()]
+    .map(([key, { groups, diagnostics }]) => ({
+      key,
+      groups,
+      diagnostics: diagnostics.size,
+    }))
+    .sort((a, b) => b.groups - a.groups || a.key.localeCompare(b.key));
 }
 
 /** Count the failed groups of each model, most failures first */
 export function failuresByModel(
   diagnostics: DiagnosticFailures[],
-): ModelFailures[] {
-  const byModel = new Map<
-    string,
-    { groups: number; diagnostics: Set<string> }
-  >();
-  for (const failures of diagnostics) {
-    const diagnostic = `${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`;
-    for (const group of failures.failedGroups) {
-      const { model } = groupFacets(group);
-      if (model === undefined) {
-        continue;
-      }
-      const entry = byModel.get(model) ?? { groups: 0, diagnostics: new Set() };
-      entry.groups += 1;
-      entry.diagnostics.add(diagnostic);
-      byModel.set(model, entry);
-    }
-  }
-  return [...byModel.entries()]
-    .map(([model, { groups, diagnostics }]) => ({
-      model,
-      groups,
-      diagnostics: diagnostics.size,
-    }))
-    .sort((a, b) => b.groups - a.groups || a.model.localeCompare(b.model));
+): FailureCount[] {
+  return countFailures(diagnostics, (group) => groupFacets(group).model);
 }
 
-/** The failed groups of a diagnostic to show, only those of `model` when one is given */
-export function groupsToShow(
-  failures: DiagnosticFailures,
-  model?: string,
-): ExecutionGroup[] {
-  return model === undefined
-    ? failures.failedGroups
-    : failures.failedGroups.filter(
-        (group) => groupFacets(group).model === model,
-      );
+/** Count the failed groups by why they failed, most failures first */
+export function failuresByReason(
+  diagnostics: DiagnosticFailures[],
+): FailureCount[] {
+  return countFailures(diagnostics, failureReasonOf);
+}
+
+/** How many of these failed groups failed for each reason, most first */
+export function reasonBreakdown(
+  groups: ExecutionGroup[],
+): { reason: string; groups: number }[] {
+  const counts = new Map<string, number>();
+  for (const group of groups) {
+    const reason = failureReasonOf(group);
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([reason, groups]) => ({ reason, groups }))
+    .sort((a, b) => b.groups - a.groups || a.reason.localeCompare(b.reason));
+}
+
+/** What the failures page is narrowed to */
+export interface FailureFilters {
+  model?: string;
+  reason?: string;
+  /** The first day failures are counted from, as YYYY-MM-DD */
+  from?: string;
+  /** The last day failures are counted up to, as YYYY-MM-DD */
+  to?: string;
+}
+
+/** The day a failed group's latest execution failed, as YYYY-MM-DD */
+const failedOn = (group: ExecutionGroup) =>
+  group.executions.at(-1)?.updated_at.slice(0, 10);
+
+/**
+ * Whether an unsuccessful group matches the filters
+ *
+ * The model applies to every group. The reason and time range describe failures,
+ * so a running or not started group, which has neither, is kept.
+ */
+export function matchesFilters(
+  group: ExecutionGroup,
+  { model, reason, from, to }: FailureFilters,
+): boolean {
+  if (model !== undefined && groupFacets(group).model !== model) {
+    return false;
+  }
+  if (group.executions.at(-1)?.successful !== false) {
+    return true;
+  }
+  if (reason !== undefined && failureReasonOf(group) !== reason) {
+    return false;
+  }
+  if (from === undefined && to === undefined) {
+    return true;
+  }
+  const day = failedOn(group) ?? "";
+  return (from === undefined || day >= from) && (to === undefined || day <= to);
+}
+
+/** The first and last day any of these groups failed, as YYYY-MM-DD, or undefined if none did */
+export function failureDays(
+  groups: ExecutionGroup[],
+): { from: string; to: string } | undefined {
+  const days = groups
+    .filter((group) => group.executions.at(-1)?.successful === false)
+    .map(failedOn)
+    .filter((day) => day !== undefined)
+    .sort();
+  return days.length > 0
+    ? { from: days[0], to: days[days.length - 1] }
+    : undefined;
 }

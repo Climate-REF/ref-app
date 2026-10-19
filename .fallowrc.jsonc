@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  // Generated code (@hey-api/openapi-ts client, TanStack route tree) stays in the
+  // module graph so imports resolve, but its findings are hidden.
+  "ignoreFindings": ["frontend/src/client/**", "**/*.gen.ts"],
+  "duplicates": {
+    "ignore": ["frontend/src/client/**", "**/*.gen.ts"]
+  },
+  "health": {
+    "ignore": ["frontend/src/client/**", "**/*.gen.ts"]
+  }
+}

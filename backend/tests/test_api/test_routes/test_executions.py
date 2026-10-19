@@ -550,3 +550,44 @@ def test_execution_group_last_execution_is_latest(client: TestClient, settings) 
     latest = client.get(f"{settings.API_V1_STR}/executions/{group['id']}/execution").json()
 
     assert group["executions"][-1]["id"] == latest["id"]
+
+
+def test_execution_list_leaves_out_outputs_by_default(client: TestClient, settings) -> None:
+    groups = client.get(f"{settings.API_V1_STR}/executions/?limit=50").json()["data"]
+    executions = [e for g in groups for e in g["executions"]]
+
+    assert executions
+    assert all(e["outputs"] is None for e in executions)
+
+
+def test_execution_list_includes_outputs_on_request(client: TestClient, settings) -> None:
+    groups = client.get(f"{settings.API_V1_STR}/executions/?limit=50&include_outputs=true").json()["data"]
+    executions = [e for g in groups for e in g["executions"]]
+
+    assert all(isinstance(e["outputs"], list) for e in executions)
+    assert any(e["outputs"] for e in executions), "fixture should hold executions with outputs"
+
+
+def test_execution_group_detail_includes_outputs(client: TestClient, settings) -> None:
+    group = client.get(f"{settings.API_V1_STR}/executions/?limit=1").json()["data"][0]
+    detail = client.get(f"{settings.API_V1_STR}/executions/{group['id']}").json()
+
+    assert all(isinstance(e["outputs"], list) for e in detail["executions"])
+
+
+def test_execution_failure_reason(client: TestClient, settings) -> None:
+    groups = client.get(f"{settings.API_V1_STR}/executions/?limit=100").json()["data"]
+    executions = [e for g in groups for e in g["executions"]]
+
+    assert all(e["failure_reason"] is None for e in executions if e["successful"] is not False)
+    # The fixture's failure predates the column, so the migration marked it unknown
+    assert {e["failure_reason"] for e in executions if e["successful"] is False} == {"unknown"}
+
+
+def test_execution_list_filters_by_failure_reason(client: TestClient, settings) -> None:
+    unknown = client.get(f"{settings.API_V1_STR}/executions/?limit=100&failure_reason=unknown").json()
+    other = client.get(f"{settings.API_V1_STR}/executions/?limit=100&failure_reason=system_error").json()
+
+    assert unknown["total_count"] == 1
+    assert unknown["data"][0]["executions"][-1]["failure_reason"] == "unknown"
+    assert other["total_count"] == 0

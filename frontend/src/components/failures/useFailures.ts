@@ -1,17 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ExecutionGroup } from "@/client";
 import { diagnosticsCatalogOptions } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
-import { summariseFailures } from "@/lib/failures";
+import type { MipEra } from "@/lib/mipEras";
 
 const PAGE_SIZE = 1000;
 
-/** Every execution group whose latest execution failed, is running, or has not started, newest first. */
-async function fetchUnsuccessfulGroups(): Promise<ExecutionGroup[]> {
+/**
+ * Every execution group of one MIP era whose latest execution failed, is running, or has not started,
+ * newest first
+ */
+async function fetchUnsuccessfulGroups(
+  mipEra: MipEra,
+): Promise<ExecutionGroup[]> {
   const page = async (offset: number) => {
     const { data } = await executionsListRecentExecutionGroups({
-      query: { successful: false, limit: PAGE_SIZE, offset },
+      query: { successful: false, mip_era: mipEra, limit: PAGE_SIZE, offset },
       throwOnError: true,
     });
     return data;
@@ -31,31 +35,37 @@ async function fetchUnsuccessfulGroups(): Promise<ExecutionGroup[]> {
   return [first, ...rest].flatMap((p) => p.data);
 }
 
-/** How every diagnostic's execution groups turned out, and the groups that failed. */
-export function useFailures() {
-  const catalog = useQuery(diagnosticsCatalogOptions());
-  const unsuccessful = useQuery({
-    queryKey: ["executions", "unsuccessful"],
-    queryFn: fetchUnsuccessfulGroups,
+/**
+ * The diagnostic catalog and the unsuccessful execution groups of one MIP era, for the failures page
+ *
+ * The catalog counts only the groups of `model` when one is given, so each diagnostic's totals
+ * match a page filtered to that model. The unsuccessful groups cover every model,
+ * so the page can count the failures of each.
+ */
+export function useFailures(mipEra: MipEra, model?: string) {
+  const catalog = useQuery({
+    ...diagnosticsCatalogOptions({
+      query: { mip_era: mipEra, source_id: model },
+    }),
+    // Keep showing the previous counts while another model's load
+    placeholderData: keepPreviousData,
   });
-
-  const data = useMemo(
-    () =>
-      catalog.data && unsuccessful.data
-        ? summariseFailures(catalog.data.data, unsuccessful.data)
-        : undefined,
-    [catalog.data, unsuccessful.data],
-  );
+  const unsuccessful = useQuery({
+    queryKey: ["executions", "unsuccessful", mipEra],
+    queryFn: () => fetchUnsuccessfulGroups(mipEra),
+  });
 
   // A failed query that is being retried counts as loading again
   const failed = [catalog, unsuccessful].filter(
     (query) => query.isError && !query.isFetching,
   );
   const error = failed.length > 0 ? failed[0].error : null;
+  const loaded = catalog.data !== undefined && unsuccessful.data !== undefined;
 
   return {
-    data,
-    isLoading: data === undefined && error === null,
+    catalog: catalog.data?.data,
+    unsuccessful: unsuccessful.data,
+    isLoading: !loaded && error === null,
     error,
     retry: () => {
       for (const query of failed) {

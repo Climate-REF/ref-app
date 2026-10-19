@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { useMemo } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/app/pageHeader";
+import type { DayRange } from "@/components/failures/dayRangePicker";
 import {
   DiagnosticFailuresCard,
   DiagnosticFailuresCardSkeleton,
 } from "@/components/failures/diagnosticFailuresCard";
-import { ModelFailuresList } from "@/components/failures/modelFailures";
+import { FailureFilterBar } from "@/components/failures/failureFilters";
 import {
   ProviderHealthOverview,
   ProviderHealthOverviewSkeleton,
@@ -21,11 +23,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useMipEra } from "@/hooks/useMipEra";
 import { apiErrorMessage } from "@/lib/apiError";
-import { failuresByModel, groupsToShow } from "@/lib/failures";
+import { describeFailureReason } from "@/lib/failureReasons";
+import {
+  type FailureFilters,
+  failureDays,
+  failuresByModel,
+  failuresByReason,
+  summariseFailures,
+} from "@/lib/failures";
+import { type MipEra, mipEraSearchFields } from "@/lib/mipEras";
+
+const day = z.string().regex(/^\d{4}-\d\d-\d\d$/);
 
 const FailuresSearchSchema = z.object({
   model: z.string().optional(),
+  reason: z.string().optional(),
+  from: day.optional(),
+  to: day.optional(),
+  ...mipEraSearchFields,
 });
 
 export const Route = createFileRoute("/_app/executions/failures")({
@@ -36,24 +53,123 @@ export const Route = createFileRoute("/_app/executions/failures")({
   },
 });
 
-function FailuresPage() {
-  const { data, isLoading, error, retry } = useFailures();
-  const { model } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
-  const selectModel = (selected: string | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, model: selected }) });
+const reasonLabel = (key: string) => describeFailureReason(key).label;
+const reasonDescription = (key: string) =>
+  describeFailureReason(key).description;
 
-  const failing = (data ?? []).filter(
-    (failures) => groupsToShow(failures, model).length > 0,
+function FailuresPage() {
+  const search = Route.useSearch();
+  const { model, reason, from, to } = search;
+  const { mipEra } = useMipEra(search.mip_era);
+  const { catalog, unsuccessful, isLoading, error, retry } = useFailures(
+    mipEra,
+    model,
   );
-  const models = failuresByModel(data ?? []);
+  const navigate = useNavigate({ from: Route.fullPath });
+  const updateSearch = (patch: Partial<typeof search>) =>
+    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+  // The two eras mostly name their models differently, and their failures span different days,
+  // so neither a model nor a time range carries over
+  const selectMipEra = (next: MipEra) =>
+    updateSearch({
+      mip_era: next,
+      model: undefined,
+      from: undefined,
+      to: undefined,
+    });
+
+  const filters: FailureFilters = useMemo(
+    () => ({ model, reason, from, to }),
+    [model, reason, from, to],
+  );
+  const allDays = useMemo(
+    () => (unsuccessful ? failureDays(unsuccessful) : undefined),
+    [unsuccessful],
+  );
+  const selectDays = (days: DayRange) =>
+    updateSearch({ from: days.from, to: days.to });
+
+  const { diagnostics, reasonCounts, modelCounts, failureDaySet } =
+    useMemo(() => {
+      if (!catalog || !unsuccessful) {
+        return {
+          diagnostics: undefined,
+          reasonCounts: [],
+          modelCounts: [],
+          failureDaySet: new Set<string>(),
+        };
+      }
+      const summarise = (narrowed: FailureFilters) =>
+        summariseFailures(catalog, unsuccessful, narrowed);
+      return {
+        diagnostics: summarise(filters),
+        // Each dropdown counts what selecting a value would show, given the other filters
+        reasonCounts: failuresByReason(
+          summarise({ ...filters, reason: undefined }),
+        ),
+        modelCounts: failuresByModel(
+          summarise({ ...filters, model: undefined }),
+        ),
+        // The calendar marks the days with failures matching the other filters
+        failureDaySet: new Set(
+          summarise({ ...filters, from: undefined, to: undefined })
+            .flatMap((failures) => failures.failedGroups)
+            .map((group) => group.executions.at(-1)?.updated_at.slice(0, 10))
+            .filter((day) => day !== undefined),
+        ),
+      };
+    }, [catalog, unsuccessful, filters]);
+
+  const failing = (diagnostics ?? []).filter(
+    (failures) => failures.failedGroups.length > 0,
+  );
+  const failedGroups = failing.reduce(
+    (sum, failures) => sum + failures.failedGroups.length,
+    0,
+  );
+  const filtered = [model, reason, from, to].some(
+    (value) => value !== undefined,
+  );
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <title>Failures - Climate-REF</title>
+      <title>{`Failures (${mipEra}) - Climate-REF`}</title>
       <PageHeader
         title="Failures"
         description="Diagnostics with execution groups whose latest execution failed. Execution groups are counted at the current version of each diagnostic. Expand a failed group to see the errors in its log."
+      />
+
+      <FailureFilterBar
+        mipEra={mipEra}
+        onMipEra={selectMipEra}
+        reasonCounts={reasonCounts}
+        reason={reason}
+        onReason={(selected) => updateSearch({ reason: selected })}
+        reasonLabel={reasonLabel}
+        reasonDescription={reasonDescription}
+        modelCounts={modelCounts}
+        model={model}
+        onModel={(selected) => updateSearch({ model: selected })}
+        days={{ from, to }}
+        allDays={allDays}
+        failureDays={failureDaySet}
+        onDays={selectDays}
+        onClear={
+          filtered
+            ? () =>
+                updateSearch({
+                  model: undefined,
+                  reason: undefined,
+                  from: undefined,
+                  to: undefined,
+                })
+            : undefined
+        }
+        summary={
+          diagnostics &&
+          `${failedGroups} failed execution ${failedGroups === 1 ? "group" : "groups"} in ${failing.length} ${failing.length === 1 ? "diagnostic" : "diagnostics"}`
+        }
+        disabled={!diagnostics}
       />
 
       {error && (
@@ -87,64 +203,30 @@ function FailuresPage() {
         </div>
       )}
 
-      {data && (
+      {diagnostics && (
         <>
           <Card>
             <CardHeader>
               <CardTitle>Providers</CardTitle>
               <CardDescription>
-                Each dot is a diagnostic. Hover for details, and click a failing
-                one to jump to its failed execution groups.
+                Each dot is a diagnostic, coloured by the failures matching the
+                filters. Hover for details, and click a failing one to jump to
+                its failed execution groups.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProviderHealthOverview diagnostics={data} />
+              <ProviderHealthOverview
+                diagnostics={diagnostics}
+                filters={filters}
+              />
             </CardContent>
           </Card>
 
-          {models.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Models</CardTitle>
-                <CardDescription>
-                  Models with the most failed execution groups. A model failing
-                  in many diagnostics usually points to a problem with its data.
-                  Select one to list only its failures.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ModelFailuresList
-                  models={models}
-                  selected={model}
-                  onSelect={selectModel}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {model && (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span>
-                Showing the failures of{" "}
-                <span className="font-medium">{model}</span> in {failing.length}{" "}
-                {failing.length === 1 ? "diagnostic" : "diagnostics"}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => selectModel(undefined)}
-              >
-                <X className="size-4" />
-                Show all models
-              </Button>
-            </div>
-          )}
-
           {failing.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              {model
-                ? `No execution groups of ${model} are failing.`
-                : "No execution groups are failing."}
+              {filtered
+                ? "No failing execution groups match these filters."
+                : `No ${mipEra} execution groups are failing.`}
             </p>
           ) : (
             <div className="space-y-4">
@@ -152,7 +234,7 @@ function FailuresPage() {
                 <DiagnosticFailuresCard
                   key={`${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`}
                   failures={failures}
-                  model={model}
+                  filters={filters}
                 />
               ))}
             </div>

@@ -7,10 +7,13 @@ import type {
 import {
   diagnosticHealth,
   failedRunRange,
+  failureDays,
+  failureSummary,
   failuresByModel,
+  failuresByReason,
   groupFacets,
-  groupsToShow,
   lastSucceededAt,
+  reasonBreakdown,
   summariseFailures,
 } from "./failures";
 
@@ -116,7 +119,7 @@ describe("summariseFailures", () => {
 /** A group of one model whose executions have these outcomes and dates, oldest first */
 const modelGroup = (
   model: string,
-  runs: [boolean | null, string][],
+  runs: [boolean | null, string, string?][],
   selectorType: "cmip6" | "cmip7" = "cmip6",
 ) =>
   ({
@@ -132,7 +135,8 @@ const modelGroup = (
       obs4mips: [["source_id", "HadISST-1-1"]],
     },
     executions: runs.map(
-      ([successful, updated_at]) => ({ successful, updated_at }) as Execution,
+      ([successful, updated_at, failure_reason = null]) =>
+        ({ successful, updated_at, failure_reason }) as Execution,
     ),
   }) as unknown as ExecutionGroup;
 
@@ -219,24 +223,118 @@ describe("failuresByModel", () => {
       ],
     );
     expect(failuresByModel(summaries)).toEqual([
-      { model: "ICON-ESM-LR", groups: 3, diagnostics: 2 },
-      { model: "CESM2", groups: 1, diagnostics: 1 },
+      { key: "ICON-ESM-LR", groups: 3, diagnostics: 2 },
+      { key: "CESM2", groups: 1, diagnostics: 1 },
     ]);
   });
 });
 
-describe("groupsToShow", () => {
-  it("keeps every failed group without a model, and only the model's groups with one", () => {
-    const [failures] = summariseFailures(
-      [diagnostic("pmp", "enso", 2, 0)],
+describe("failure reasons", () => {
+  const summaries = () =>
+    summariseFailures(
+      [diagnostic("pmp", "enso", 5, 0), diagnostic("pmp", "other", 5, 0)],
       [
-        modelGroup("A", [[false, "2026-09-04"]]),
-        modelGroup("B", [[false, "2026-09-04"]]),
+        modelGroup("A", [[false, "2026-09-04", "system_error"]]),
+        modelGroup("B", [
+          [false, "2026-09-01", "diagnostic_error"],
+          [false, "2026-09-04", "system_error"],
+        ]),
+        {
+          ...modelGroup("A", [[false, "2026-09-04", "diagnostic_error"]]),
+          diagnostic_slug: "other",
+        },
+        // A failure from an API that does not report reasons
+        modelGroup("C", [[false, "2026-09-04"]]),
       ],
     );
-    expect(groupsToShow(failures)).toHaveLength(2);
+
+  it("counts the failed groups by the reason their latest execution failed", () => {
+    expect(failuresByReason(summaries())).toEqual([
+      { key: "system_error", groups: 2, diagnostics: 1 },
+      { key: "diagnostic_error", groups: 1, diagnostics: 1 },
+      { key: "not_recorded", groups: 1, diagnostics: 1 },
+    ]);
+  });
+
+  it("breaks a diagnostic's failures down by reason", () => {
+    const [enso] = summaries();
+    expect(reasonBreakdown(enso.failedGroups)).toEqual([
+      { reason: "system_error", groups: 2 },
+      { reason: "not_recorded", groups: 1 },
+    ]);
+  });
+});
+
+describe("filtering", () => {
+  const groups = () => [
+    modelGroup("A", [[false, "2026-09-04T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-09-20T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-10-12T10:00:00", "diagnostic_error"]]),
+    // Still running, so it has neither a failure reason nor a failure date
+    modelGroup("B", [[null, "2026-10-13T10:00:00"]]),
+  ];
+  const summarise = (filters: Parameters<typeof summariseFailures>[2]) =>
+    summariseFailures([diagnostic("pmp", "enso", 10, 6)], groups(), filters)[0];
+  const models = (failures: ReturnType<typeof summarise>) =>
+    failures.failedGroups.map((g) => groupFacets(g).model);
+
+  it("counts every unsuccessful group without filters", () => {
+    const failures = summarise({});
+    expect(failures.failedGroups).toHaveLength(3);
+    expect(failures.running).toBe(1);
+  });
+
+  it("keeps the failed groups matching every filter", () => {
+    expect(models(summarise({ model: "B" }))).toEqual(["B", "B"]);
+    expect(models(summarise({ reason: "system_error" }))).toEqual(["A", "B"]);
+    expect(models(summarise({ model: "B", reason: "system_error" }))).toEqual([
+      "B",
+    ]);
+    expect(models(summarise({ from: "2026-09-05", to: "2026-09-30" }))).toEqual(
+      ["B"],
+    );
+    expect(models(summarise({ to: "2026-09-04" }))).toEqual(["A"]);
+  });
+
+  it("keeps running groups when filtering by failure reason or time", () => {
     expect(
-      groupsToShow(failures, "B").map((g) => groupFacets(g).model),
-    ).toEqual(["B"]);
+      summarise({ reason: "diagnostic_error", from: "2026-10-01" }).running,
+    ).toBe(1);
+    expect(summarise({ model: "A" }).running).toBe(0);
+  });
+
+  it("works out the health from the matching failures", () => {
+    // Six groups succeeded, so a diagnostic with matching failures is partly failing
+    expect(summarise({ reason: "system_error" }).health).toBe("partial");
+    expect(summarise({ reason: "result_error" }).health).toBe("healthy");
+  });
+});
+
+describe("failureDays", () => {
+  it("spans the first and last day a group failed, ignoring running groups", () => {
+    expect(
+      failureDays([
+        modelGroup("A", [[false, "2026-09-20T10:00:00"]]),
+        modelGroup("B", [[false, "2026-09-04T23:59:00"]]),
+        modelGroup("C", [[null, "2026-10-13T10:00:00"]]),
+      ]),
+    ).toEqual({ from: "2026-09-04", to: "2026-09-20" });
+  });
+
+  it("is undefined when nothing failed", () => {
+    expect(failureDays([])).toBeUndefined();
+  });
+});
+
+describe("failureSummary", () => {
+  it("names the model and failure reason it is narrowed to", () => {
+    const [failures] = summariseFailures(
+      [diagnostic("pmp", "enso", 4, 3)],
+      [modelGroup("CanESM5", [[false, "2026-09-04", "system_error"]])],
+    );
+    expect(failureSummary(failures)).toBe("1 of 4 execution groups failed");
+    expect(
+      failureSummary(failures, { model: "CanESM5", reason: "system_error" }),
+    ).toBe("1 of 4 CanESM5 execution groups failed (System error)");
   });
 });

@@ -968,6 +968,10 @@ export type Execution = {
      */
     successful: boolean | null;
     /**
+     * Failure Reason
+     */
+    failure_reason: string | null;
+    /**
      * Retracted
      */
     retracted: boolean;
@@ -982,7 +986,7 @@ export type Execution = {
     /**
      * Outputs
      */
-    outputs: Array<ExecutionOutput>;
+    outputs: Array<ExecutionOutput> | null;
     /**
      * Wall Seconds
      */
@@ -2244,6 +2248,10 @@ export type DiagnosticsListData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/';
 };
@@ -2274,6 +2282,10 @@ export type DiagnosticsCatalogData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/catalog';
 };
@@ -2304,6 +2316,10 @@ export type DiagnosticsValueFlagsData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Source Id
+         */
+        source_id?: string | null;
     };
     url: '/api/v1/diagnostics/value-flags';
 };
@@ -2579,6 +2595,10 @@ export type ExecutionsListRecentExecutionGroupsData = {
          */
         successful?: boolean | null;
         /**
+         * Failure Reason
+         */
+        failure_reason?: string | null;
+        /**
          * Source Id
          */
         source_id?: string | null;
@@ -2586,6 +2606,12 @@ export type ExecutionsListRecentExecutionGroupsData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Include Outputs
+         *
+         * Include the files produced by each execution; they are left out by default
+         */
+        include_outputs?: boolean;
     };
     url: '/api/v1/executions/';
 };

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   type DiagnosticFailures,
+  type FailureFilters,
   failureSummary,
   failuresAnchor,
 } from "@/lib/failures";
@@ -30,7 +31,13 @@ function groupByProvider(diagnostics: DiagnosticFailures[]): ProviderGroup[] {
   return [...groups.values()];
 }
 
-function DiagnosticDot({ failures }: { failures: DiagnosticFailures }) {
+function DiagnosticDot({
+  failures,
+  filters,
+}: {
+  failures: DiagnosticFailures;
+  filters?: FailureFilters;
+}) {
   const { diagnostic } = failures;
   const dot = <HealthDot health={failures.health} />;
 
@@ -65,7 +72,7 @@ function DiagnosticDot({ failures }: { failures: DiagnosticFailures }) {
         <p>
           {failures.total === 0
             ? "No execution groups"
-            : failureSummary(failures)}
+            : failureSummary(failures, filters)}
         </p>
         <p className="opacity-80">{HEALTH[failures.health].label}</p>
       </TooltipContent>
@@ -76,8 +83,11 @@ function DiagnosticDot({ failures }: { failures: DiagnosticFailures }) {
 /** One row of dots per provider, one dot per diagnostic, coloured by how its execution groups turned out. */
 export function ProviderHealthOverview({
   diagnostics,
+  filters,
 }: {
   diagnostics: DiagnosticFailures[];
+  /** What the failures were narrowed to, named in each dot's summary */
+  filters?: FailureFilters;
 }) {
   return (
     <div className="space-y-4">
@@ -104,6 +114,7 @@ export function ProviderHealthOverview({
                   <DiagnosticDot
                     key={failures.diagnostic.slug}
                     failures={failures}
+                    filters={filters}
                   />
                 ))}
               </div>

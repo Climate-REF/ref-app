@@ -245,7 +245,8 @@ export const diagnosticsListQueryKey = (options?: Options<DiagnosticsListData>) 
  *
  * List the currently registered diagnostics
  *
- * Pass `mip_era` to count only the execution groups that ran against that era.
+ * Pass `mip_era` to count only the execution groups that ran against that era,
+ * and `source_id` to count only those that ran against that model.
  */
 export const diagnosticsListOptions = (options?: Options<DiagnosticsListData>) => queryOptions<DiagnosticsListResponse, DiagnosticsListError, DiagnosticsListResponse, ReturnType<typeof diagnosticsListQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -269,6 +270,8 @@ export const diagnosticsCatalogQueryKey = (options?: Options<DiagnosticsCatalogD
  *
  * Checking for metric values is most of the cost of the full listing.
  * Fetch those from `/diagnostics/value-flags`.
+ *
+ * Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
  */
 export const diagnosticsCatalogOptions = (options?: Options<DiagnosticsCatalogData>) => queryOptions<DiagnosticsCatalogResponse, DiagnosticsCatalogError, DiagnosticsCatalogResponse, ReturnType<typeof diagnosticsCatalogQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -492,9 +495,13 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
+ * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroupsOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => queryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ReturnType<typeof executionsListRecentExecutionGroupsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -523,9 +530,13 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
+ * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroupsInfiniteOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => {
     const opts = infiniteQueryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, InfiniteData<ExecutionsListRecentExecutionGroupsResponse>, QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>, number | Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(

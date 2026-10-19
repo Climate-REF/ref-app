@@ -11,6 +11,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useApiEndpoint } from "@/hooks/useApiEndpoint";
+import { useStagingDashboard } from "@/hooks/useStagingMode";
+import { isEndpointOffered } from "@/lib/apiEndpoint";
 
 export function ApiEndpointSelector() {
   const {
@@ -22,7 +24,13 @@ export function ApiEndpointSelector() {
     clearEndpoint,
     isUsingOverride,
   } = useApiEndpoint();
-  const availableEndpoints = getAvailableEndpoints();
+  const stagingDashboard = useStagingDashboard();
+  const availableEndpoints = getAvailableEndpoints().filter((endpoint) =>
+    isEndpointOffered(endpoint.key, {
+      stagingDashboard,
+      current: endpoint.isCurrent,
+    }),
+  );
 
   const handleEndpointChange = (value: string) => {
     changeEndpoint(value as any);
