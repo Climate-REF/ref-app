@@ -103,6 +103,15 @@ class Execution(BaseModel):
     """
     Whether the execution succeeded, or null while it is still running
     """
+    failure_reason: str | None
+    """
+    Why a failed execution failed, or null for one that succeeded or is still running
+
+    One of climate-ref's `ExecutionFailureReason` values: `diagnostic_error`, `system_error`,
+    `result_error`, `abandoned`, `not_started`, `cancelled` or `unknown`.
+    Failures recorded before climate-ref 0.19 are `unknown`.
+    It is plain text, so values added by later climate-ref versions pass through unchanged.
+    """
     retracted: bool
     created_at: datetime
     updated_at: datetime
@@ -133,6 +142,7 @@ class Execution(BaseModel):
         return Execution(
             id=execution.id,
             successful=execution.successful,
+            failure_reason=execution.failure_reason,
             retracted=execution.retracted,
             dataset_hash=execution.dataset_hash,
             dataset_count=len(execution.datasets),

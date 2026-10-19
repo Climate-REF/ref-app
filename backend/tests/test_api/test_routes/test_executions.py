@@ -573,3 +573,21 @@ def test_execution_group_detail_includes_outputs(client: TestClient, settings) -
     detail = client.get(f"{settings.API_V1_STR}/executions/{group['id']}").json()
 
     assert all(isinstance(e["outputs"], list) for e in detail["executions"])
+
+
+def test_execution_failure_reason(client: TestClient, settings) -> None:
+    groups = client.get(f"{settings.API_V1_STR}/executions/?limit=100").json()["data"]
+    executions = [e for g in groups for e in g["executions"]]
+
+    assert all(e["failure_reason"] is None for e in executions if e["successful"] is not False)
+    # The fixture's failure predates the column, so the migration marked it unknown
+    assert {e["failure_reason"] for e in executions if e["successful"] is False} == {"unknown"}
+
+
+def test_execution_list_filters_by_failure_reason(client: TestClient, settings) -> None:
+    unknown = client.get(f"{settings.API_V1_STR}/executions/?limit=100&failure_reason=unknown").json()
+    other = client.get(f"{settings.API_V1_STR}/executions/?limit=100&failure_reason=system_error").json()
+
+    assert unknown["total_count"] == 1
+    assert unknown["data"][0]["executions"][-1]["failure_reason"] == "unknown"
+    assert other["total_count"] == 0

@@ -964,6 +964,10 @@ export type Execution = {
      */
     successful: boolean | null;
     /**
+     * Failure Reason
+     */
+    failure_reason: string | null;
+    /**
      * Retracted
      */
     retracted: boolean;
@@ -2574,6 +2578,10 @@ export type ExecutionsListRecentExecutionGroupsData = {
          * Successful
          */
         successful?: boolean | null;
+        /**
+         * Failure Reason
+         */
+        failure_reason?: string | null;
         /**
          * Source Id
          */

@@ -159,6 +159,37 @@ describe("summariseLog", () => {
     ]);
   });
 
+  it("lists climate-ref's record of why the execution failed first", () => {
+    const log = [
+      esmvaltool("ERROR", "Missing data for preprocessor ecs/tas:"),
+      ...WRAPPER_TRACEBACK,
+      "",
+      "REF: execution failed (system_error): the diagnostic reported failure",
+    ].join("\n");
+
+    expect(summariseLog(log)).toEqual({
+      kind: "errors",
+      system: true,
+      lines: [
+        "REF: execution failed (system_error): the diagnostic reported failure",
+        "Missing data for preprocessor ecs/tas:",
+      ],
+    });
+  });
+
+  it("counts only a recorded system error as one", () => {
+    const summary = summariseLog(
+      "REF: execution failed (diagnostic_error): the diagnostic reported failure",
+    );
+    expect(summary).toEqual({
+      kind: "errors",
+      system: false,
+      lines: [
+        "REF: execution failed (diagnostic_error): the diagnostic reported failure",
+      ],
+    });
+  });
+
   it("ignores harmless mamba warnings and dask shutting down", () => {
     const log = [
       ref(

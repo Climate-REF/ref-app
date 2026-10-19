@@ -153,6 +153,7 @@ export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = 
  * - provider_name_contains (case-insensitive substring of the provider slug)
  * - dirty
  * - successful (filters by latest execution success)
+ * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)

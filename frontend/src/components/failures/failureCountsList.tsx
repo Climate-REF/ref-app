@@ -1,52 +1,52 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { ModelFailures } from "@/lib/failures";
+import type { FailureCount } from "@/lib/failures";
 import { cn } from "@/lib/utils";
 
-/** Models listed before the rest are hidden behind "Show all". */
-const INITIAL_MODELS = 12;
+/** Entries listed before the rest are hidden behind "Show all". */
+const INITIAL_ENTRIES = 12;
 
 /**
- * The models with the most failed execution groups, each selectable to list only its failures
+ * Failed execution groups counted by something they share, such as a model or a failure reason,
+ * each selectable to list only its failures
  */
-export function ModelFailuresList({
-  models,
+export function FailureCountsList({
+  counts,
   selected,
   onSelect,
+  labelOf = (key) => key,
+  titleOf = (key) => key,
+  noun,
 }: {
-  models: ModelFailures[];
+  counts: FailureCount[];
   selected?: string;
-  onSelect: (model: string | undefined) => void;
+  onSelect: (key: string | undefined) => void;
+  labelOf?: (key: string) => string;
+  titleOf?: (key: string) => string;
+  /** What the entries are, for "Show all 40 models" */
+  noun: string;
 }) {
   const [showAll, setShowAll] = useState(false);
-  if (models.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No failed execution group names a model.
-      </p>
-    );
-  }
-  const shown = showAll ? models : models.slice(0, INITIAL_MODELS);
+  const shown = showAll ? counts : counts.slice(0, INITIAL_ENTRIES);
 
   return (
     <div className="space-y-2">
       <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
-        {shown.map(({ model, groups, diagnostics }) => {
-          const active = model === selected;
+        {shown.map(({ key, groups, diagnostics }) => {
+          const active = key === selected;
           return (
-            <li key={model}>
+            <li key={key}>
               <button
                 type="button"
                 aria-pressed={active}
-                onClick={() => onSelect(active ? undefined : model)}
+                onClick={() => onSelect(active ? undefined : key)}
+                title={titleOf(key)}
                 className={cn(
                   "flex w-full items-baseline justify-between gap-2 rounded-md border px-2 py-1 text-left text-sm hover:bg-accent",
                   active && "border-primary bg-accent",
                 )}
               >
-                <span className="truncate font-medium" title={model}>
-                  {model}
-                </span>
+                <span className="truncate font-medium">{labelOf(key)}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {groups} failed in {diagnostics}{" "}
                   {diagnostics === 1 ? "diagnostic" : "diagnostics"}
@@ -56,13 +56,13 @@ export function ModelFailuresList({
           );
         })}
       </ul>
-      {models.length > INITIAL_MODELS && (
+      {counts.length > INITIAL_ENTRIES && (
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowAll((prev) => !prev)}
         >
-          {showAll ? "Show fewer" : `Show all ${models.length} models`}
+          {showAll ? "Show fewer" : `Show all ${counts.length} ${noun}`}
         </Button>
       )}
     </div>

@@ -111,6 +111,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     provider_name_contains: str | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
+    failure_reason: str | None = None,
     source_id: str | None = None,
     mip_era: str | None = None,
     include_outputs: bool = Query(
@@ -127,6 +128,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     - provider_name_contains (case-insensitive substring of the provider slug)
     - dirty
     - successful (filters by latest execution success)
+    - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
     - source_id (filters groups that include an execution whose datasets
         include a CMIP6 or CMIP7 dataset with this source_id)
     - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
@@ -148,6 +150,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
         key=lambda group: (group.updated_at, group.id),
         reverse=True,
     )
+
+    if failure_reason is not None:
+        groups = [group for group in groups if group.failure_reason == failure_reason]
 
     # Selectors do not record source_id, so match on the datasets used.
     if source_id or mip_era:

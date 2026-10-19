@@ -1,4 +1,5 @@
 import type { DiagnosticCatalogEntry, ExecutionGroup } from "@/client";
+import { failureReasonOf } from "./failureReasons";
 
 /**
  * How a diagnostic's execution groups turned out
@@ -133,51 +134,83 @@ export function failedRunRange(
     : undefined;
 }
 
-/** Failed groups of one model, across diagnostics */
-export interface ModelFailures {
-  model: string;
+/** Failed groups that share something, such as a model or a failure reason, across diagnostics */
+export interface FailureCount {
+  key: string;
   groups: number;
   diagnostics: number;
+}
+
+/** Count the failed groups by `keyOf`, most failures first, leaving out groups without a key */
+function countFailures(
+  diagnostics: DiagnosticFailures[],
+  keyOf: (group: ExecutionGroup) => string | undefined,
+): FailureCount[] {
+  const byKey = new Map<string, { groups: number; diagnostics: Set<string> }>();
+  for (const failures of diagnostics) {
+    const diagnostic = `${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`;
+    for (const group of failures.failedGroups) {
+      const key = keyOf(group);
+      if (key === undefined) {
+        continue;
+      }
+      const entry = byKey.get(key) ?? { groups: 0, diagnostics: new Set() };
+      entry.groups += 1;
+      entry.diagnostics.add(diagnostic);
+      byKey.set(key, entry);
+    }
+  }
+  return [...byKey.entries()]
+    .map(([key, { groups, diagnostics }]) => ({
+      key,
+      groups,
+      diagnostics: diagnostics.size,
+    }))
+    .sort((a, b) => b.groups - a.groups || a.key.localeCompare(b.key));
 }
 
 /** Count the failed groups of each model, most failures first */
 export function failuresByModel(
   diagnostics: DiagnosticFailures[],
-): ModelFailures[] {
-  const byModel = new Map<
-    string,
-    { groups: number; diagnostics: Set<string> }
-  >();
-  for (const failures of diagnostics) {
-    const diagnostic = `${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`;
-    for (const group of failures.failedGroups) {
-      const { model } = groupFacets(group);
-      if (model === undefined) {
-        continue;
-      }
-      const entry = byModel.get(model) ?? { groups: 0, diagnostics: new Set() };
-      entry.groups += 1;
-      entry.diagnostics.add(diagnostic);
-      byModel.set(model, entry);
-    }
-  }
-  return [...byModel.entries()]
-    .map(([model, { groups, diagnostics }]) => ({
-      model,
-      groups,
-      diagnostics: diagnostics.size,
-    }))
-    .sort((a, b) => b.groups - a.groups || a.model.localeCompare(b.model));
+): FailureCount[] {
+  return countFailures(diagnostics, (group) => groupFacets(group).model);
 }
 
-/** The failed groups of a diagnostic to show, only those of `model` when one is given */
+/** Count the failed groups by why they failed, most failures first */
+export function failuresByReason(
+  diagnostics: DiagnosticFailures[],
+): FailureCount[] {
+  return countFailures(diagnostics, failureReasonOf);
+}
+
+/** How many of these failed groups failed for each reason, most first */
+export function reasonBreakdown(
+  groups: ExecutionGroup[],
+): { reason: string; groups: number }[] {
+  const counts = new Map<string, number>();
+  for (const group of groups) {
+    const reason = failureReasonOf(group);
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([reason, groups]) => ({ reason, groups }))
+    .sort((a, b) => b.groups - a.groups || a.reason.localeCompare(b.reason));
+}
+
+/** What the failures page is narrowed to */
+export interface FailureFilters {
+  model?: string;
+  reason?: string;
+}
+
+/** The failed groups of a diagnostic to show, those matching every filter given */
 export function groupsToShow(
   failures: DiagnosticFailures,
-  model?: string,
+  { model, reason }: FailureFilters = {},
 ): ExecutionGroup[] {
-  return model === undefined
-    ? failures.failedGroups
-    : failures.failedGroups.filter(
-        (group) => groupFacets(group).model === model,
-      );
+  return failures.failedGroups.filter(
+    (group) =>
+      (model === undefined || groupFacets(group).model === model) &&
+      (reason === undefined || failureReasonOf(group) === reason),
+  );
 }

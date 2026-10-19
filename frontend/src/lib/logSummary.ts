@@ -39,6 +39,11 @@ const EXCEPTION = /^[A-Za-z_][\w.]*(?:Error|Exception|Exit)(?::|$)/;
 const PROVIDER_ERROR = /^ERROR\b/;
 /** PMP reports a failed metric as a warning and carries on */
 const PROVIDER_WARNING = /^warning: metrics calculation failed\b/;
+/**
+ * climate-ref's own record of why the execution failed, appended to the log since climate-ref 0.19,
+ * e.g. "REF: execution failed (system_error): the diagnostic reported failure"
+ */
+const REF_FAILURE = /^REF: execution failed \(([\w-]+)\): /;
 /** loguru's variable annotations in tracebacks, e.g. "    │    └ ExecutionDefinition(...)" */
 const ANNOTATION = /^\s*[│└├]/;
 /** The provider's captured output, logged by climate-ref after "stdout: " or "stderr: " */
@@ -113,6 +118,8 @@ const CONTINUATION_LINES = 6;
 
 export function summariseLog(text: string, maxLines = 30): LogSummary {
   const lines = text.split("\n").map((line) => line.trimEnd());
+  const recorded: string[] = [];
+  let recordedSystemError = false;
   const system: string[] = [];
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -149,6 +156,13 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim() || ANNOTATION.test(line)) {
+      continue;
+    }
+
+    const failure = REF_FAILURE.exec(line);
+    if (failure) {
+      recorded.push(line.trim());
+      recordedSystemError ||= failure[1] === "system_error";
       continue;
     }
 
@@ -224,6 +238,7 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
     (line) => !SECONDARY.some((pattern) => pattern.test(line)),
   );
   const found = [
+    ...recorded,
     ...latestOfEach(system),
     ...(specific.length > 0 || system.length > 0 ? specific : errors),
   ];
@@ -231,7 +246,7 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
     return {
       kind: "errors",
       lines: shorten(unique(found)),
-      system: system.length > 0,
+      system: system.length > 0 || recordedSystemError,
     };
   }
   if (warnings.length > 0) {
