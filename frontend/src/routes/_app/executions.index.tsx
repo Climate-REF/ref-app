@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
 import { nextOffset } from "@/lib/pagination";
+import { dropEmpty } from "@/lib/search";
 
 const ExecutionsSearchSchema = z.object({
   diagnostic_name_contains: z.string().optional(),
@@ -70,15 +71,7 @@ function ExecutionsListPage() {
   const executionGroups = data?.pages.flatMap((page) => page.data) ?? [];
 
   const updateSearch = (patch: Partial<typeof search>) => {
-    // Remove empty values to keep URL clean and keep types aligned with Route.validateSearch
-    const next: Partial<typeof search> = { ...search, ...patch };
-    (Object.keys(next) as (keyof typeof next)[]).forEach((k) => {
-      const v = next[k];
-      if (v === undefined || v === "") {
-        delete next[k];
-      }
-    });
-    navigate({ search: next as typeof search });
+    navigate({ search: dropEmpty({ ...search, ...patch }) as typeof search });
   };
 
   const handleFilterChange = (newFilters: Record<string, any>) => {

@@ -7,6 +7,7 @@ import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card";
+import { collectFacets } from "@/lib/datasetFacets";
 import { nextOffset } from "@/lib/pagination";
 
 /** Facet filters by name, also read from the JSON string older links carry. Anything malformed means no facet filters. */
@@ -74,27 +75,7 @@ function SourcesIndexPage() {
   } = useInfiniteQuery(datasetsQueryOptions(search));
 
   const datasets = data?.pages.flatMap((page) => page.data) || [];
-  const allFacets = datasets.reduce(
-    (acc, ds) => {
-      if (ds.metadata) {
-        for (const [key, value] of Object.entries(ds.metadata)) {
-          if (!acc[key]) {
-            acc[key] = new Set();
-          }
-          acc[key].add(value);
-        }
-      }
-      return acc;
-    },
-    {} as Record<string, Set<string>>,
-  );
-
-  const facetsForFilter = Object.fromEntries(
-    Object.entries(allFacets).map(([key, valueSet]) => [
-      key,
-      Array.from(valueSet),
-    ]),
-  );
+  const facetsForFilter = collectFacets(datasets);
 
   const handleFilterChange = (newFilters: Partial<DatasetsSearch>) => {
     const next = { ...search, ...newFilters };
