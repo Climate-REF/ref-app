@@ -8,8 +8,6 @@ const INITIAL_MODELS = 12;
 
 /**
  * The models with the most failed execution groups, each selectable to list only its failures
- *
- * A model failing across many diagnostics points to a problem with its data rather than with one diagnostic.
  */
 export function ModelFailuresList({
   models,
