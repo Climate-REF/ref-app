@@ -36,7 +36,10 @@ from ref_backend.models import (
     ExecutionStats,
     MetricValueCollection,
 )
-from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
+from ref_backend.models.executions import (
+    EXECUTION_GROUP_LOAD_OPTIONS,
+    EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS,
+)
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
@@ -48,7 +51,9 @@ def _parse_int_id(value: str, resource: str) -> int:
         raise HTTPException(status_code=404, detail=f"{resource} not found") from None
 
 
-def _load_execution_groups(session: Session, group_ids: Sequence[int]) -> list[models.ExecutionGroup]:
+def _load_execution_groups(
+    session: Session, group_ids: Sequence[int], include_outputs: bool = True
+) -> list[models.ExecutionGroup]:
     """
     Load the ORM rows for execution groups the reader has already selected
 
@@ -58,9 +63,12 @@ def _load_execution_groups(session: Session, group_ids: Sequence[int]) -> list[m
     if not group_ids:
         return []
 
+    load_options = (
+        EXECUTION_GROUP_LOAD_OPTIONS if include_outputs else EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS
+    )
     rows = (
         session.query(models.ExecutionGroup)
-        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
+        .options(*load_options)
         .filter(models.ExecutionGroup.id.in_(group_ids))
         .all()
     )
@@ -105,6 +113,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     successful: bool | None = None,
     source_id: str | None = None,
     mip_era: str | None = None,
+    include_outputs: bool = Query(
+        False, description="Include the files produced by each execution; they are left out by default"
+    ),
 ) -> Collection[ExecutionGroup]:
     """
     List the most recent execution groups
@@ -119,6 +130,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     - source_id (filters groups that include an execution whose datasets
         include a CMIP6 or CMIP7 dataset with this source_id)
     - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+
+    Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+    make up most of the response. Fetch one group's files from `/executions/{group_id}`.
     """
     session = app_context.session
 
@@ -147,9 +161,9 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     page_ids = [group.id for group in groups[offset : offset + limit]]
 
     data = []
-    for eg in _load_execution_groups(session, page_ids):
+    for eg in _load_execution_groups(session, page_ids, include_outputs=include_outputs):
         try:
-            data.append(ExecutionGroup.build(eg, app_context))
+            data.append(ExecutionGroup.build(eg, app_context, include_outputs=include_outputs))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
             continue

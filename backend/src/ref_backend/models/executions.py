@@ -42,11 +42,16 @@ class ExecutionOutput(BaseModel):
         )
 
 
-# Everything ExecutionGroup.build touches, so a page of groups loads in a fixed number of queries.
-EXECUTION_GROUP_LOAD_OPTIONS = (
-    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
+# Everything ExecutionGroup.build touches without outputs,
+# so a page of groups loads in a fixed number of queries.
+EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS = (
     selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
     selectinload(models.ExecutionGroup.diagnostic).selectinload(models.Diagnostic.provider),
+)
+# Everything ExecutionGroup.build touches, including each execution's outputs.
+EXECUTION_GROUP_LOAD_OPTIONS = (
+    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
+    *EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS,
 )
 
 
@@ -71,12 +76,17 @@ class ExecutionGroup(BaseModel):
     updated_at: datetime
 
     @staticmethod
-    def build(execution_group: models.ExecutionGroup, app_context: "AppContext") -> "ExecutionGroup":
+    def build(
+        execution_group: models.ExecutionGroup, app_context: "AppContext", include_outputs: bool = True
+    ) -> "ExecutionGroup":
         return ExecutionGroup(
             id=execution_group.id,
             key=execution_group.key,
             dirty=execution_group.dirty,
-            executions=[Execution.build(r, app_context) for r in execution_group.executions],
+            executions=[
+                Execution.build(r, app_context, include_outputs=include_outputs)
+                for r in execution_group.executions
+            ],
             selectors=execution_group.selectors,
             provider_slug=execution_group.diagnostic.provider.slug,
             diagnostic_slug=execution_group.diagnostic.slug,
@@ -96,7 +106,10 @@ class Execution(BaseModel):
     retracted: bool
     created_at: datetime
     updated_at: datetime
-    outputs: "list[ExecutionOutput]"
+    outputs: "list[ExecutionOutput] | None"
+    """
+    Files produced by the execution, or null when the request left them out
+    """
     wall_seconds: float | None
     """
     Wall clock time taken by the execution, in seconds
@@ -111,8 +124,12 @@ class Execution(BaseModel):
     """
 
     @staticmethod
-    def build(execution: models.Execution, app_context: "AppContext") -> "Execution":
-        outputs = [ExecutionOutput.build(o, app_context) for o in execution.outputs]
+    def build(
+        execution: models.Execution, app_context: "AppContext", include_outputs: bool = True
+    ) -> "Execution":
+        outputs = (
+            [ExecutionOutput.build(o, app_context) for o in execution.outputs] if include_outputs else None
+        )
         return Execution(
             id=execution.id,
             successful=execution.successful,

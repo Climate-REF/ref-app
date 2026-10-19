@@ -27,6 +27,12 @@ const REF_LINE =
 /** An ESMValTool log line, e.g. "2026-09-04 15:02:18,956 UTC [3081509] ERROR   message" */
 const ESMVALTOOL_LINE =
   /\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d+ UTC \[\d+\] (\w+)\s+(.*)$/;
+/**
+ * A line in Python's standard logging format, as dask and other libraries print it,
+ * e.g. "2026-10-17 11:18:28,537 - distributed.scheduler - ERROR - message"
+ */
+const STANDARD_LINE =
+  /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d+ - \S+ - (DEBUG|INFO|WARNING|ERROR|CRITICAL) - /;
 /** The raised exception, at the start of a line, e.g. "ValueError: message" */
 const EXCEPTION = /^[A-Za-z_][\w.]*(?:Error|Exception|Exit)(?::|$)/;
 /** Errors a provider's command printed without either log format, e.g. PMP's "ERROR File ..." */
@@ -52,7 +58,11 @@ const SYSTEM_ERRORS = [
   /Cannot allocate memory|Out of memory|oom-kill|OOMKilled/i,
   /^Killed$|Segmentation fault|Bus error|core dumped/,
   // A command killed by a signal, e.g. -9 when it was killed for using too much memory
-  /returned non-zero exit status -\d+/,
+  /(?:returned non-zero exit status|exited with code) -\d+/,
+  // dask restarting workers that ran out of memory, and giving up on their task
+  /exceeded \d+% memory budget/,
+  /workers? died while trying to run it/,
+  /\bKilledWorker\b/,
   /: command not found$/,
   /Connection refused|Name or service not known|Temporary failure in name resolution|Network is unreachable/,
 ];
@@ -66,6 +76,8 @@ const BOILERPLATE = [
   /^Set 'log_level' to 'debug' to get more information/,
   /^Resulting cubes:$/,
   /^Failed to run \[/,
+  /^Command output:$/,
+  /^Command exited with code \d+: /,
   /^If the files are available, please check the debug log/,
   /^To see your current configuration, run the command/,
   /^To see the available example configurations, run the command/,
@@ -78,7 +90,7 @@ const BOILERPLATE = [
  */
 const SECONDARY = [
   /^subprocess\.CalledProcessError: Command /,
-  /^climate_ref_core\.exceptions\.CondaCommandError: Failed to run /,
+  /^climate_ref_core\.exceptions\.CondaCommandError: /,
   /^(?:[\w.]+\.)?(?:StreamClosedError|CommClosedError|BrokenPipeError)\b/,
   /ConnectionPool is closed/,
 ];
@@ -148,6 +160,17 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
       continue;
     }
 
+    // Kept whole, as its timestamp places it relative to the failure
+    const standard = STANDARD_LINE.exec(line);
+    if (standard) {
+      if (isErrorLevel(standard[1])) {
+        errors.push(line);
+      } else if (standard[1] === "WARNING") {
+        warnings.push(line);
+      }
+      continue;
+    }
+
     if (ref) {
       const [, level, raw] = ref;
       if (CAPTURED_OUTPUT.test(raw)) {
@@ -178,6 +201,19 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
   }
 
   const unique = (found: string[]) => [...new Set(found.map(clip))];
+  /**
+   * A system error repeated with different numbers (a worker's address, a process id) is one problem,
+   * so only its most recent occurrence is kept
+   */
+  const latestOfEach = (found: string[]) => {
+    const byShape = new Map<string, string>();
+    for (const line of found) {
+      const shape = line.replace(/\d+/g, "#");
+      byShape.delete(shape);
+      byShape.set(shape, line);
+    }
+    return [...byShape.values()];
+  };
   const shorten = (found: string[]) =>
     found.length > maxLines
       ? [...found.slice(0, maxLines - 5), "…", ...found.slice(-4)]
@@ -188,7 +224,7 @@ export function summariseLog(text: string, maxLines = 30): LogSummary {
     (line) => !SECONDARY.some((pattern) => pattern.test(line)),
   );
   const found = [
-    ...system,
+    ...latestOfEach(system),
     ...(specific.length > 0 || system.length > 0 ? specific : errors),
   ];
   if (found.length > 0) {

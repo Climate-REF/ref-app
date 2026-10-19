@@ -120,7 +120,7 @@ class TestVaryOrigin:
 class TestDefaultTTLs:
     @pytest.mark.parametrize("suffix", [".png", ".html"])
     def test_results_default_ttl(self, client: TestClient, suffix: str):
-        groups = client.get("/api/v1/executions").json()["data"]
+        groups = client.get("/api/v1/executions?include_outputs=true").json()["data"]
         outputs = [
             o
             for g in groups

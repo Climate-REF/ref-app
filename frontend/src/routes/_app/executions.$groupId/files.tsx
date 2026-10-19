@@ -14,7 +14,7 @@ const FilesTab = () => {
     }),
   );
 
-  return <ExecutionFilesContainer outputs={execution.outputs} />;
+  return <ExecutionFilesContainer outputs={execution.outputs ?? []} />;
 };
 
 export const Route = createFileRoute("/_app/executions/$groupId/files")({

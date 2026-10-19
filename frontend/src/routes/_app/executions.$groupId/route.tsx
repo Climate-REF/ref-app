@@ -145,7 +145,7 @@ const ExecutionInfoLayout = () => {
               },
               {
                 label: "Number of outputs",
-                value: execution.outputs.length,
+                value: execution.outputs?.length ?? 0,
               },
             ]}
           />

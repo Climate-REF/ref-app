@@ -978,7 +978,7 @@ export type Execution = {
     /**
      * Outputs
      */
-    outputs: Array<ExecutionOutput>;
+    outputs: Array<ExecutionOutput> | null;
     /**
      * Wall Seconds
      */
@@ -2582,6 +2582,12 @@ export type ExecutionsListRecentExecutionGroupsData = {
          * Mip Era
          */
         mip_era?: string | null;
+        /**
+         * Include Outputs
+         *
+         * Include the files produced by each execution; they are left out by default
+         */
+        include_outputs?: boolean;
     };
     url: '/api/v1/executions/';
 };

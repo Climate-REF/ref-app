@@ -72,6 +72,93 @@ describe("summariseLog", () => {
     ]);
   });
 
+  it("finds dask running out of memory, once per problem and the most recent occurrence", () => {
+    const dask = (
+      level: string,
+      logger: string,
+      message: string,
+      time: string,
+    ) => `2026-10-17 11:${time} - ${logger} - ${level} - ${message}`;
+    const log = [
+      ref("ERROR", "Command output: "),
+      esmvaltool("INFO", "Starting task fire_evaluation/fire_evaluation"),
+      dask(
+        "WARNING",
+        "distributed.worker.memory",
+        "Worker is at 80% memory usage. Pausing worker.  Process memory: 3.21 GiB -- Worker memory limit: 4.00 GiB",
+        "17:32,154",
+      ),
+      dask(
+        "WARNING",
+        "distributed.nanny.memory",
+        "Worker tcp://127.0.0.1:33821 (pid=628) exceeded 95% memory budget. Restarting...",
+        "17:34,574",
+      ),
+      dask("WARNING", "distributed.nanny", "Restarting worker", "17:34,820"),
+      dask(
+        "WARNING",
+        "distributed.nanny.memory",
+        "Worker tcp://127.0.0.1:42205 (pid=843) exceeded 95% memory budget. Restarting...",
+        "18:28,374",
+      ),
+      dask(
+        "ERROR",
+        "distributed.scheduler",
+        "Task finalize-hlgfinalizecompute-9642884bc0b8476aa3168238f5667081 marked as failed because 4 workers died while trying to run it",
+        "18:28,537",
+      ),
+      esmvaltool(
+        "ERROR",
+        "Program terminated abnormally, see stack trace below for more information:",
+      ),
+      "esmvalcore._task.DiagnosticError: Diagnostic script fire/fire_diagnostic.py failed with return code 1.",
+      ref(
+        "ERROR",
+        "Command exited with code 1: ['micromamba', 'run', 'esmvaltool', 'run']",
+      ),
+      ref("ERROR", "Execution failed"),
+      "subprocess.CalledProcessError: Command '['micromamba', 'run', 'esmvaltool', 'run']' returned non-zero exit status 1.",
+      "climate_ref_core.exceptions.CondaCommandError: Command exited with code 1: ['micromamba', 'run', 'esmvaltool', 'run']",
+    ].join("\n");
+
+    expect(summariseLog(log)).toEqual({
+      kind: "errors",
+      system: true,
+      lines: [
+        "2026-10-17 11:18:28,374 - distributed.nanny.memory - WARNING - Worker tcp://127.0.0.1:42205 (pid=843) exceeded 95% memory budget. Restarting...",
+        "2026-10-17 11:18:28,537 - distributed.scheduler - ERROR - Task finalize-hlgfinalizecompute-9642884bc0b8476aa3168238f5667081 marked as failed because 4 workers died while trying to run it",
+        "esmvalcore._task.DiagnosticError: Diagnostic script fire/fire_diagnostic.py failed with return code 1.",
+      ],
+    });
+  });
+
+  it("keeps a command killed by a signal in climate-ref's newer wording", () => {
+    const log = [
+      ref(
+        "ERROR",
+        "Command exited with code -9: ['micromamba', 'run', 'esmvaltool', 'run']",
+      ),
+      "climate_ref_core.exceptions.CondaCommandError: Command exited with code -9: ['micromamba', 'run', 'esmvaltool', 'run']",
+    ].join("\n");
+
+    const summary = summariseLog(log);
+    expect(summary.system).toBe(true);
+    expect(summary.lines[0]).toBe(
+      "Command exited with code -9: ['micromamba', 'run', 'esmvaltool', 'run']",
+    );
+  });
+
+  it("finds errors in Python's standard logging format", () => {
+    const log = [
+      "2026-10-17 11:18:28,537 - some.library - INFO - Loading",
+      "2026-10-17 11:18:29,000 - some.library - ERROR - Could not read the input",
+    ].join("\n");
+
+    expect(summariseLog(log).lines).toEqual([
+      "2026-10-17 11:18:29,000 - some.library - ERROR - Could not read the input",
+    ]);
+  });
+
   it("ignores harmless mamba warnings and dask shutting down", () => {
     const log = [
       ref(

@@ -12,7 +12,7 @@ from ref_backend.testing import test_ref_config, test_settings
 def get_result_id(client: TestClient, settings) -> int:
     """Helper to get a valid result ID from an execution."""
     # Get an execution group
-    r = client.get(f"{settings.API_V1_STR}/executions")
+    r = client.get(f"{settings.API_V1_STR}/executions?include_outputs=true")
     assert r.status_code == 200
     data = r.json()
 

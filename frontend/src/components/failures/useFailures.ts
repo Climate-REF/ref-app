@@ -4,14 +4,20 @@ import type { ExecutionGroup } from "@/client";
 import { diagnosticsCatalogOptions } from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
 import { summariseFailures } from "@/lib/failures";
+import type { MipEra } from "@/lib/mipEras";
 
 const PAGE_SIZE = 1000;
 
-/** Every execution group whose latest execution failed, is running, or has not started, newest first. */
-async function fetchUnsuccessfulGroups(): Promise<ExecutionGroup[]> {
+/**
+ * Every execution group of one MIP era whose latest execution failed, is running, or has not started,
+ * newest first
+ */
+async function fetchUnsuccessfulGroups(
+  mipEra: MipEra,
+): Promise<ExecutionGroup[]> {
   const page = async (offset: number) => {
     const { data } = await executionsListRecentExecutionGroups({
-      query: { successful: false, limit: PAGE_SIZE, offset },
+      query: { successful: false, mip_era: mipEra, limit: PAGE_SIZE, offset },
       throwOnError: true,
     });
     return data;
@@ -31,12 +37,15 @@ async function fetchUnsuccessfulGroups(): Promise<ExecutionGroup[]> {
   return [first, ...rest].flatMap((p) => p.data);
 }
 
-/** How every diagnostic's execution groups turned out, and the groups that failed. */
-export function useFailures() {
-  const catalog = useQuery(diagnosticsCatalogOptions());
+/** How every diagnostic's execution groups of one MIP era turned out, and the groups that failed. */
+export function useFailures(mipEra: MipEra) {
+  // Both requests count only the groups that ran against this era
+  const catalog = useQuery(
+    diagnosticsCatalogOptions({ query: { mip_era: mipEra } }),
+  );
   const unsuccessful = useQuery({
-    queryKey: ["executions", "unsuccessful"],
-    queryFn: fetchUnsuccessfulGroups,
+    queryKey: ["executions", "unsuccessful", mipEra],
+    queryFn: () => fetchUnsuccessfulGroups(mipEra),
   });
 
   const data = useMemo(

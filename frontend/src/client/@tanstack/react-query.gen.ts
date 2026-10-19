@@ -495,6 +495,9 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroupsOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => queryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ReturnType<typeof executionsListRecentExecutionGroupsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -526,6 +529,9 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroupsInfiniteOptions = (options?: Options<ExecutionsListRecentExecutionGroupsData>) => {
     const opts = infiniteQueryOptions<ExecutionsListRecentExecutionGroupsResponse, ExecutionsListRecentExecutionGroupsError, InfiniteData<ExecutionsListRecentExecutionGroupsResponse>, QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>, number | Pick<QueryKey<Options<ExecutionsListRecentExecutionGroupsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(

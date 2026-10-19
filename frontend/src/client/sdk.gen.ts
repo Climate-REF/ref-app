@@ -156,6 +156,9 @@ export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = 
  * - source_id (filters groups that include an execution whose datasets
  * include a CMIP6 or CMIP7 dataset with this source_id)
  * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ *
+ * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
+ * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
  */
 export const executionsListRecentExecutionGroups = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsListRecentExecutionGroupsData, ThrowOnError>): RequestResult<ExecutionsListRecentExecutionGroupsResponses, ExecutionsListRecentExecutionGroupsErrors, ThrowOnError> => (options?.client ?? client).get<ExecutionsListRecentExecutionGroupsResponses, ExecutionsListRecentExecutionGroupsErrors, ThrowOnError>({ url: '/api/v1/executions/', ...options });
 
