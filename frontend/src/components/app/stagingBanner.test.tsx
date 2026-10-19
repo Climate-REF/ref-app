@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { utilsAboutOptions } from "@/client/@tanstack/react-query.gen";
 import { StagingBanner } from "./stagingBanner";
 
-const renderBanner = (environment?: "production" | "staging") => {
+const renderBanner = (environment?: "production" | "staging" | "preview") => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -27,6 +27,11 @@ const renderBanner = (environment?: "production" | "staging") => {
 describe("StagingBanner", () => {
   it("names a staging deployment", () => {
     renderBanner("staging");
+    expect(screen.getByText(/Staging site/)).toBeInTheDocument();
+  });
+
+  it("names a pull request preview as staging", () => {
+    renderBanner("preview");
     expect(screen.getByText(/Staging site/)).toBeInTheDocument();
   });
 

@@ -19,7 +19,7 @@ class About(BaseModel):
     last_updated: datetime | None
     """When an execution group was last updated, or None if there are no executions."""
 
-    environment: Literal["local", "staging", "production"]
+    environment: Literal["local", "staging", "preview", "production"]
     """
     The deployment this API is serving.
 

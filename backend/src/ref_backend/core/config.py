@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_HOST: str = "http://localhost:8000"
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    ENVIRONMENT: Literal["local", "staging", "preview", "production"] = "local"
     LOG_LEVEL: str = "INFO"
     GIT_COMMIT: str | None = None
     """Commit the image was built from, set at build time."""

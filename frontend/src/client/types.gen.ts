@@ -400,7 +400,7 @@ export type About = {
     /**
      * Environment
      */
-    environment: 'local' | 'staging' | 'production';
+    environment: 'local' | 'staging' | 'preview' | 'production';
 };
 
 /**

@@ -2,6 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { utilsAboutOptions } from "@/client/@tanstack/react-query.gen";
 import { getDefaultApiEndpoint } from "@/lib/apiEndpoint";
 
+// A pull request preview serves unreleased code, so it is a staging site too.
+const isStagingEnvironment = (environment?: string) =>
+  environment === "staging" || environment === "preview";
+
 /**
  * Whether the API being read is a staging deployment.
  *
@@ -10,7 +14,7 @@ import { getDefaultApiEndpoint } from "@/lib/apiEndpoint";
  */
 export function useStagingMode(): boolean {
   const { data } = useQuery(utilsAboutOptions());
-  return data?.environment === "staging";
+  return isStagingEnvironment(data?.environment);
 }
 
 /**
@@ -23,5 +27,5 @@ export function useStagingDashboard(): boolean {
   const { data } = useQuery(
     utilsAboutOptions({ baseUrl: getDefaultApiEndpoint() }),
   );
-  return data?.environment === "staging";
+  return isStagingEnvironment(data?.environment);
 }
