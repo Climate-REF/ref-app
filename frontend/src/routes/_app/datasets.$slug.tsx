@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { ExecutionGroup } from "@/client";
 import {
   datasetsExecutionsOptions,
   datasetsGetOptions,
@@ -42,20 +41,18 @@ export const Route = createFileRoute("/_app/datasets/$slug")({
 
 function DatasetPage() {
   const { dataset, executions } = Route.useLoaderData();
-  const ds = dataset;
-  const exs = (executions?.data as unknown as ExecutionGroup[]) ?? [];
 
   return (
     <div className="container mx-auto p-4">
-      <title>{`${ds.slug} - Climate-REF`}</title>
+      <title>{`${dataset.slug} - Climate-REF`}</title>
       <DetailsPanel
-        title={ds.slug}
-        description={ds.dataset_type}
+        title={dataset.slug}
+        description={dataset.dataset_type}
         action={
-          ds.more_info_url && (
+          dataset.more_info_url && (
             <Button asChild>
               <a
-                href={ds.more_info_url}
+                href={dataset.more_info_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -65,9 +62,9 @@ function DatasetPage() {
           )
         }
         items={[
-          { label: "Slug", value: ds.slug },
-          ...(ds.metadata
-            ? Object.entries(ds.metadata).map(([key, value]) => ({
+          { label: "Slug", value: dataset.slug },
+          ...(dataset.metadata
+            ? Object.entries(dataset.metadata).map(([key, value]) => ({
                 label: key,
                 value: value,
               }))
@@ -80,7 +77,7 @@ function DatasetPage() {
           <CardTitle>Executions</CardTitle>
         </CardHeader>
         <CardContent>
-          <ExecutionGroupTable executionGroups={exs} />
+          <ExecutionGroupTable executionGroups={executions.data} />
         </CardContent>
       </Card>
     </div>
