@@ -1,5 +1,12 @@
 import type * as d3 from "d3";
-import { memo, useCallback, useEffect, useRef } from "react";
+import {
+  memo,
+  type Ref,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartMargins, XScaleType } from "./useChartScales";
 import {
@@ -67,7 +74,13 @@ export interface CrosshairPosition {
   nearestColor: string;
 }
 
+/** Lets the chart redraw the canvas for hover changes without re-rendering it */
+export interface SeriesCanvasHandle {
+  redraw: () => void;
+}
+
 interface SeriesCanvasProps {
+  ref?: Ref<SeriesCanvasHandle>;
   chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
   indexName: string;
@@ -92,6 +105,7 @@ interface SeriesCanvasProps {
 }
 
 export const SeriesCanvas = memo(function SeriesCanvas({
+  ref,
   chartData,
   seriesMetadata,
   indexName,
@@ -143,80 +157,25 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     // Draw grid
     drawGrid(ctx, xScale, yScale, innerWidth, innerHeight, isDark);
 
-    const hoveredLabel = hoveredLabelRef.current;
-    for (const meta of orderSeriesForDraw(
+    drawSeriesLines(ctx, {
+      chartData,
       seriesMetadata,
+      indexName,
       hiddenLabels,
-      hoveredLabel,
-    )) {
-      const stroke = seriesStroke(
-        meta,
-        {
-          hidden: hiddenLabels.has(meta.label),
-          hovered: meta.label === hoveredLabel,
-        },
-        isDark,
-      );
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.width;
-      ctx.globalAlpha = stroke.alpha;
+      hoveredLabel: hoveredLabelRef.current,
+      xScale,
+      yScale,
+      isDark,
+    });
 
-      ctx.beginPath();
-      let started = false;
-      for (const row of chartData) {
-        const value = plottablePoint(row, indexName, meta.seriesIndex);
-        if (!value) {
-          started = false;
-          continue;
-        }
-        const px = xScale(value.x);
-        const py = yScale(value.y);
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-      }
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 1;
-
-    // Draw crosshair
-    const crosshair = crosshairRef.current;
-    if (crosshair) {
-      // Vertical line at snapped X position
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = "#94A3B8";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(crosshair.dataPixelX, 0);
-      ctx.lineTo(crosshair.dataPixelX, innerHeight);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Dot on nearest point
-      ctx.beginPath();
-      ctx.arc(
-        crosshair.nearestPixelX,
-        crosshair.nearestPixelY,
-        5,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fillStyle = crosshair.nearestColor;
-      ctx.fill();
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+    if (crosshairRef.current) {
+      drawCrosshair(ctx, crosshairRef.current, innerHeight);
     }
 
     ctx.restore();
 
     // Draw axes outside clip region
-    drawAxes(
-      ctx,
+    drawAxes(ctx, {
       xScale,
       yScale,
       margins,
@@ -228,7 +187,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
       metricName,
       units,
       indexUnits,
-    );
+    });
   }, [
     chartData,
     seriesMetadata,
@@ -257,16 +216,17 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     return () => cancelAnimationFrame(rafRef.current);
   }, [draw]);
 
-  // Expose redraw for hover updates (called from parent via ref)
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (el) {
-      (el as HTMLCanvasElement & { redraw: () => void }).redraw = () => {
+  // Hover changes live in refs, so the chart asks for a redraw instead of re-rendering
+  useImperativeHandle(
+    ref,
+    () => ({
+      redraw: () => {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(draw);
-      };
-    }
-  }, [draw]);
+      },
+    }),
+    [draw],
+  );
 
   return (
     <div className="relative" style={{ width, height }}>
@@ -280,6 +240,96 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     </div>
   );
 });
+
+/** What the series lines are drawn from */
+interface SeriesLinesOptions {
+  chartData: ChartDataPoint[];
+  seriesMetadata: SeriesMetadata[];
+  indexName: string;
+  hiddenLabels: Set<string>;
+  hoveredLabel: string | null;
+  xScale: XScaleType;
+  yScale: d3.ScaleLinear<number, number>;
+  isDark: boolean;
+}
+
+/** Draw a line per series, breaking it where a value is missing */
+function drawSeriesLines(
+  ctx: CanvasRenderingContext2D,
+  {
+    chartData,
+    seriesMetadata,
+    indexName,
+    hiddenLabels,
+    hoveredLabel,
+    xScale,
+    yScale,
+    isDark,
+  }: SeriesLinesOptions,
+) {
+  for (const meta of orderSeriesForDraw(
+    seriesMetadata,
+    hiddenLabels,
+    hoveredLabel,
+  )) {
+    const stroke = seriesStroke(
+      meta,
+      {
+        hidden: hiddenLabels.has(meta.label),
+        hovered: meta.label === hoveredLabel,
+      },
+      isDark,
+    );
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.globalAlpha = stroke.alpha;
+
+    ctx.beginPath();
+    let started = false;
+    for (const row of chartData) {
+      const value = plottablePoint(row, indexName, meta.seriesIndex);
+      if (!value) {
+        started = false;
+        continue;
+      }
+      const px = xScale(value.x);
+      const py = yScale(value.y);
+      if (!started) {
+        ctx.moveTo(px, py);
+        started = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+/** Draw the hover crosshair: a vertical line at the data position and a dot on the nearest point */
+function drawCrosshair(
+  ctx: CanvasRenderingContext2D,
+  crosshair: CrosshairPosition,
+  innerHeight: number,
+) {
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = "#94A3B8";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(crosshair.dataPixelX, 0);
+  ctx.lineTo(crosshair.dataPixelX, innerHeight);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.arc(crosshair.nearestPixelX, crosshair.nearestPixelY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = crosshair.nearestColor;
+  ctx.fill();
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
 
 function drawGrid(
   ctx: CanvasRenderingContext2D,
@@ -341,19 +391,36 @@ function axisTitle(name: string, units?: string): string {
   return units ? `${name} (${units})` : name;
 }
 
+/** What the axes are drawn from */
+interface AxesOptions {
+  xScale: XScaleType;
+  yScale: d3.ScaleLinear<number, number>;
+  margins: ChartMargins;
+  innerWidth: number;
+  innerHeight: number;
+  indexName: string;
+  isDark: boolean;
+  isTimeAxis: boolean;
+  metricName?: string;
+  units?: string;
+  indexUnits?: string;
+}
+
 function drawAxes(
   ctx: CanvasRenderingContext2D,
-  xScale: XScaleType,
-  yScale: d3.ScaleLinear<number, number>,
-  margins: ChartMargins,
-  innerWidth: number,
-  innerHeight: number,
-  indexName: string,
-  isDark: boolean,
-  isTimeAxis: boolean,
-  metricName?: string,
-  units?: string,
-  indexUnits?: string,
+  {
+    xScale,
+    yScale,
+    margins,
+    innerWidth,
+    innerHeight,
+    indexName,
+    isDark,
+    isTimeAxis,
+    metricName,
+    units,
+    indexUnits,
+  }: AxesOptions,
 ) {
   ctx.save();
 

@@ -9,6 +9,7 @@ import { CanvasTooltip } from "./canvasTooltip";
 import {
   type CrosshairPosition,
   SeriesCanvas,
+  type SeriesCanvasHandle,
   seriesLineColor,
 } from "./seriesCanvas";
 import { SeriesLegend } from "./seriesLegend";
@@ -61,6 +62,7 @@ export function SeriesVisualization({
   const [groupByDimension, setGroupByDimension] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<CrosshairPosition | null>(null);
+  const canvasRef = useRef<SeriesCanvasHandle>(null);
   const [containerWidth, setContainerWidth] = useState(800);
 
   // Tooltip state
@@ -218,10 +220,7 @@ export function SeriesVisualization({
     hoveredLabelRef.current = label;
     setHoveredLabel(label);
     // Trigger canvas redraw without React re-render
-    const canvas = containerRef.current?.querySelector("canvas") as
-      | (HTMLCanvasElement & { redraw?: () => void })
-      | null;
-    canvas?.redraw?.();
+    canvasRef.current?.redraw();
   }, []);
 
   // Canvas mouse handlers
@@ -229,10 +228,7 @@ export function SeriesVisualization({
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       // Capture values synchronously — React pools events, so currentTarget
       // and coordinates become null inside requestAnimationFrame.
-      const canvas = e.currentTarget as HTMLCanvasElement & {
-        redraw?: () => void;
-      };
-      const rect = canvas.getBoundingClientRect();
+      const rect = e.currentTarget.getBoundingClientRect();
       const mouseX = e.clientX - rect.left - margins.left;
       const mouseY = e.clientY - rect.top - margins.top;
 
@@ -258,7 +254,7 @@ export function SeriesVisualization({
             nearestColor: seriesLineColor(nearest.metadata, isDark),
           };
 
-          canvas.redraw?.();
+          canvasRef.current?.redraw();
 
           setTooltipState({
             visible: true,
@@ -272,7 +268,7 @@ export function SeriesVisualization({
           if (hoveredLabelRef.current !== null) {
             hoveredLabelRef.current = null;
           }
-          canvas.redraw?.();
+          canvasRef.current?.redraw();
           setTooltipState((prev) =>
             prev.visible
               ? { visible: false, x: 0, y: 0, nearest: null, allAtX: [] }
@@ -289,10 +285,7 @@ export function SeriesVisualization({
     hoveredLabelRef.current = null;
     crosshairRef.current = null;
     setTooltipState({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
-    const canvas = containerRef.current?.querySelector("canvas") as
-      | (HTMLCanvasElement & { redraw?: () => void })
-      | null;
-    canvas?.redraw?.();
+    canvasRef.current?.redraw();
   }, []);
 
   const handleCanvasClick = useCallback(
@@ -383,6 +376,7 @@ export function SeriesVisualization({
           </div>
           <div className="relative">
             <SeriesCanvas
+              ref={canvasRef}
               chartData={chartData}
               seriesMetadata={seriesMetadata}
               indexName={indexName}
