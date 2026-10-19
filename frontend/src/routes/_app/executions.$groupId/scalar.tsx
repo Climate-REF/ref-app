@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useExecutionMetricValues } from "@/hooks/useExecutionMetricValues";
-import { DEFAULT_PAGE_SIZE } from "@/hooks/useMetricValues";
+import { DEFAULT_PAGE_SIZE } from "@/lib/valuesSearch";
 
 const scalarValuesSearchSchema = z
   .object({

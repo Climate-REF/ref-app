@@ -3,9 +3,9 @@ import { z } from "zod";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import { Values } from "@/components/execution/values";
 import { useDiagnosticMetricValues } from "@/hooks/useDiagnosticMetricValues";
-import { DEFAULT_PAGE_SIZE } from "@/hooks/useMetricValues";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchFields } from "@/lib/mipEras";
+import { DEFAULT_PAGE_SIZE } from "@/lib/valuesSearch";
 
 const valuesSearchSchema = z
   .object({
@@ -59,8 +59,6 @@ const SeriesValuesTab = () => {
           initialFilters={initialFilters}
           valueType="series"
           onFiltersChange={handlers.onFiltersChange}
-          onCurrentGroupingChange={handlers.onCurrentGroupingChange}
-          onFilteredDataChange={handlers.onFilteredDataChange}
           onDownload={handlers.onDownload}
           pagination={pagination}
         />

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { parseCommaList } from "@/lib/metricFilters";
 import { cn } from "@/lib/utils";
 
 interface FilterAddPopoverProps extends ComponentProps<typeof Button> {
@@ -245,10 +246,7 @@ export function FilterAddPopover({
                   variant="outline"
                   disabled={idText.trim().length === 0 || !onAddIds}
                   onClick={() => {
-                    const ids = idText
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean);
+                    const ids = parseCommaList(idText);
                     if (onAddIds && ids.length > 0) {
                       onAddIds(idMode, new Set(ids));
                       setIdText("");
