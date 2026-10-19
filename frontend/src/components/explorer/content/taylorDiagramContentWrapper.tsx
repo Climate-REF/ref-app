@@ -1,75 +1,16 @@
 import { useMemo } from "react";
-import {
-  experimentLegend,
-  getFixedDimensionColor,
-} from "@/components/charts/experimentColors";
+import { experimentLegend } from "@/components/charts/experimentColors";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
-import {
-  TaylorDiagramContent,
-  type TaylorDiagramModel,
-} from "./taylorDiagramContent";
+import { TaylorDiagramContent } from "./taylorDiagramContent";
+import { transformToTaylorModels } from "./taylorModels";
 import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface TaylorDiagramContentWrapperProps {
   contentItem: Extract<ExplorerCardContent, { type: "taylor-diagram" }>;
   height?: number;
   width?: number;
-}
-
-/**
- * Transforms ILAMB scalar metric values into TaylorDiagramModel format.
- * Expects metrics with metric="Spatial Distribution" containing
- * "Correlation" and "Normalized Standard Deviation" statistics.
- */
-function transformToTaylorModels(values: ScalarValue[]): TaylorDiagramModel[] {
-  // Group values by model/dataset identifier
-  const modelGroups = new Map<
-    string,
-    { correlation?: number; stddev?: number; color?: string }
-  >();
-
-  for (const value of values) {
-    // Check if this is a Spatial Distribution metric
-    if (value.dimensions.metric !== "Spatial Distribution") continue;
-
-    // A model can run both historical and esm-hist, so key on both.
-    const sourceId =
-      value.dimensions.source_id ||
-      value.dimensions.reference_dataset_slug ||
-      "unknown";
-    const experimentId = value.dimensions.experiment_id;
-    const modelId = experimentId ? `${sourceId} (${experimentId})` : sourceId;
-
-    let group = modelGroups.get(modelId);
-    if (!group) {
-      group = { color: getFixedDimensionColor("experiment_id", experimentId) };
-      modelGroups.set(modelId, group);
-    }
-
-    // Extract the relevant statistics
-    if (value.dimensions.statistic === "Correlation") {
-      group.correlation = value.value;
-    } else if (value.dimensions.statistic === "Normalized Standard Deviation") {
-      group.stddev = value.value;
-    }
-  }
-
-  // Convert to TaylorDiagramModel array, filtering out incomplete data
-  const models: TaylorDiagramModel[] = [];
-  for (const [name, data] of modelGroups) {
-    if (data.correlation !== undefined && data.stddev !== undefined) {
-      models.push({
-        name,
-        correlation: data.correlation,
-        stddev: data.stddev,
-        color: data.color,
-      });
-    }
-  }
-
-  return models;
 }
 
 interface TaylorDiagramSectionProps {
