@@ -24,6 +24,7 @@ async def about(session: SessionDep, settings: SettingsDep) -> About:
 
     return About(
         app_version=version("ref-backend"),
+        commit=settings.GIT_COMMIT,
         ref_version=version("climate-ref"),
         last_updated=last_updated,
         environment=settings.ENVIRONMENT,

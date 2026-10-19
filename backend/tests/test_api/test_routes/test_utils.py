@@ -29,6 +29,7 @@ def test_about(client: TestClient, settings) -> None:
 
     assert data["app_version"]
     assert data["ref_version"]
+    assert data["commit"] == settings.GIT_COMMIT
 
     database = deps._get_database_dependency(test_settings(), test_ref_config())
     with database.session_scope() as session:

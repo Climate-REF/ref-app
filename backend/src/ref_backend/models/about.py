@@ -10,6 +10,9 @@ class About(BaseModel):
     app_version: str
     """Version of the ref-app that is serving this API."""
 
+    commit: str | None
+    """Commit the running image was built from, or None outside a container build."""
+
     ref_version: str
     """Version of the climate-ref package that the results were read with."""
 

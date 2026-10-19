@@ -64,6 +64,9 @@ COPY --from=frontend --chown=app:app /frontend/dist /app/static
 
 RUN chown -R app:app /app
 
+ARG GIT_COMMIT
+ENV GIT_COMMIT=$GIT_COMMIT
+
 # Switch to non-root user -- use numeric ID for k8s systems that enforce runAsUser
 USER 1000
 

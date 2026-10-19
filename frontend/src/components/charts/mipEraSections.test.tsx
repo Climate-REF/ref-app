@@ -27,6 +27,7 @@ const renderChart = (
   });
   queryClient.setQueryData(utilsAboutOptions().queryKey, {
     app_version: "0.0.0",
+    commit: null,
     ref_version: "0.0.0",
     last_updated: null,
     environment,
