@@ -74,7 +74,13 @@ const cmipColumns = [
 ];
 const otherColumns = [...LEADING_COLUMNS, ...TRAILING_COLUMNS];
 
-/** The columns for a table of `sourceType` datasets, as a reference stable across renders. */
-export function datasetColumns(sourceType: string): ColumnDef<Dataset>[] {
-  return isCmipSourceType(sourceType) ? cmipColumns : otherColumns;
+/**
+ * The columns for a table of `sourceType` datasets, as a reference stable across renders
+ *
+ * Without a source type, for datasets of several types, only the columns every dataset has.
+ */
+export function datasetColumns(sourceType?: string): ColumnDef<Dataset>[] {
+  return sourceType && isCmipSourceType(sourceType)
+    ? cmipColumns
+    : otherColumns;
 }
