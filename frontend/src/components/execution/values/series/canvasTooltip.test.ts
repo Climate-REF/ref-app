@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildTooltipModel,
   formatDelta,
   formatXValue,
   formatYValue,
@@ -64,6 +65,63 @@ describe("otherTooltipEntries", () => {
     const { others, remaining } = otherTooltipEntries(entries(12), entry(20));
     expect(others).toHaveLength(7);
     expect(remaining).toBe(5);
+  });
+});
+
+describe("buildTooltipModel", () => {
+  /** A point of series `seriesIndex` with value `y` */
+  function valued(seriesIndex: number, y: number, isReference = false) {
+    const result = entry(seriesIndex);
+    return {
+      ...result,
+      point: { ...result.point, y },
+      metadata: { ...result.metadata, isReference },
+    };
+  }
+
+  it("gives each series its difference from the reference", () => {
+    const nearest = valued(0, 5);
+    const reference = valued(1, 3, true);
+    const other = valued(2, 1);
+    const model = buildTooltipModel(nearest, [nearest, reference, other]);
+    expect(model.delta).toBe(2);
+    expect(
+      model.others.map((other) => [
+        other.entry.metadata.seriesIndex,
+        other.delta,
+      ]),
+    ).toEqual([
+      [1, null],
+      [2, -2],
+    ]);
+  });
+
+  it("gives no differences without a reference", () => {
+    const allAtX = [valued(0, 5), valued(1, 3)];
+    const model = buildTooltipModel(allAtX[0], allAtX);
+    expect(model.delta).toBeNull();
+    expect(model.others[0].delta).toBeNull();
+  });
+
+  it("gives the reference itself no difference", () => {
+    const reference = valued(0, 3, true);
+    const model = buildTooltipModel(reference, [reference, valued(1, 4)]);
+    expect(model.delta).toBeNull();
+    expect(model.others[0].delta).toBe(1);
+  });
+
+  it("ranks the nearest series by value, highest first", () => {
+    const allAtX = [valued(0, 2), valued(1, 9), valued(2, 5)];
+    expect(buildTooltipModel(allAtX[0], allAtX).rank).toBe(3);
+    expect(buildTooltipModel(allAtX[1], allAtX).rank).toBe(1);
+    expect(buildTooltipModel(allAtX[2], allAtX).rank).toBe(2);
+  });
+
+  it("counts the series left out of the list", () => {
+    const allAtX = entries(10);
+    const model = buildTooltipModel(allAtX[0], allAtX);
+    expect(model.others).toHaveLength(7);
+    expect(model.remaining).toBe(2);
   });
 });
 

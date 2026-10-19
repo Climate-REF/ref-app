@@ -83,6 +83,50 @@ export function otherTooltipEntries(
   return { others, remaining: candidates.length - others.length };
 }
 
+interface TooltipModel {
+  /** The series listed under the nearest one, with their difference from the reference */
+  others: { entry: NearestResult; delta: number | null }[];
+  /** How many series are left out of the list */
+  remaining: number;
+  /** The nearest series' difference from the reference */
+  delta: number | null;
+  /** Where the nearest series ranks among the series at its x, highest value first */
+  rank: number;
+}
+
+/**
+ * What the tooltip shows for the series at the nearest point's x
+ *
+ * A difference from the reference is null when there is no reference at this x
+ * or the series is a reference itself.
+ */
+export function buildTooltipModel(
+  nearest: NearestResult,
+  allAtX: NearestResult[],
+): TooltipModel {
+  const { others, remaining } = otherTooltipEntries(allAtX, nearest);
+
+  const referenceValue =
+    allAtX.find((r) => r.metadata.isReference)?.point.y ?? null;
+  const deltaOf = ({ point, metadata }: NearestResult) =>
+    referenceValue !== null && !metadata.isReference
+      ? point.y - referenceValue
+      : null;
+
+  const sortedByValue = [...allAtX].sort((a, b) => b.point.y - a.point.y);
+  const rank =
+    sortedByValue.findIndex(
+      (r) => r.metadata.seriesIndex === nearest.metadata.seriesIndex,
+    ) + 1;
+
+  return {
+    others: others.map((entry) => ({ entry, delta: deltaOf(entry) })),
+    remaining,
+    delta: deltaOf(nearest),
+    rank,
+  };
+}
+
 export function CanvasTooltip({
   visible,
   x,
@@ -98,18 +142,7 @@ export function CanvasTooltip({
     return null;
   }
 
-  const { others, remaining } = otherTooltipEntries(allAtX, nearest);
-
-  // Find reference value at this X for delta computation
-  const referenceEntry = allAtX.find((r) => r.metadata.isReference);
-  const referenceValue = referenceEntry?.point.y ?? null;
-
-  // Compute rank of nearest among all visible series (sorted by value descending)
-  const sortedByValue = [...allAtX].sort((a, b) => b.point.y - a.point.y);
-  const nearestRank =
-    sortedByValue.findIndex(
-      (r) => r.metadata.seriesIndex === nearest.metadata.seriesIndex,
-    ) + 1;
+  const { others, remaining, delta, rank } = buildTooltipModel(nearest, allAtX);
 
   // Position tooltip to avoid going off-screen
   const tooltipWidth = 320;
@@ -158,20 +191,20 @@ export function CanvasTooltip({
               </span>
             )}
           </span>
-          {referenceValue !== null && !nearest.metadata.isReference && (
+          {delta !== null && (
             <span
               className={`font-mono tabular-nums ${
-                nearest.point.y - referenceValue >= 0
+                delta >= 0
                   ? "text-red-600 dark:text-red-400"
                   : "text-blue-600 dark:text-blue-400"
               }`}
             >
-              {formatDelta(nearest.point.y - referenceValue)} vs ref
+              {formatDelta(delta)} vs ref
             </span>
           )}
           {allAtX.length > 1 && (
             <span className="text-muted-foreground">
-              {ordinal(nearestRank)} of {allAtX.length}
+              {ordinal(rank)} of {allAtX.length}
             </span>
           )}
         </div>
@@ -191,42 +224,36 @@ export function CanvasTooltip({
       {/* Other series at this X position */}
       {others.length > 0 && (
         <div className="space-y-0.5">
-          {others.map(({ point, metadata }) => {
-            const delta =
-              referenceValue !== null && !metadata.isReference
-                ? point.y - referenceValue
-                : null;
-            return (
+          {others.map(({ entry: { point, metadata }, delta }) => (
+            <div
+              key={metadata.seriesIndex}
+              className="flex items-center gap-2 opacity-70"
+            >
               <div
-                key={metadata.seriesIndex}
-                className="flex items-center gap-2 opacity-70"
-              >
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{
-                    backgroundColor: metadata.color,
-                  }}
-                />
-                <span className="text-muted-foreground truncate flex-1 max-w-36">
-                  {metadata.label}
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{
+                  backgroundColor: metadata.color,
+                }}
+              />
+              <span className="text-muted-foreground truncate flex-1 max-w-36">
+                {metadata.label}
+              </span>
+              <span className="font-mono text-foreground tabular-nums">
+                {formatYValue(point.y)}
+              </span>
+              {delta !== null && (
+                <span
+                  className={`font-mono tabular-nums ${
+                    delta >= 0
+                      ? "text-red-600/60 dark:text-red-400/60"
+                      : "text-blue-600/60 dark:text-blue-400/60"
+                  }`}
+                >
+                  {formatDelta(delta)}
                 </span>
-                <span className="font-mono text-foreground tabular-nums">
-                  {formatYValue(point.y)}
-                </span>
-                {delta !== null && (
-                  <span
-                    className={`font-mono tabular-nums ${
-                      delta >= 0
-                        ? "text-red-600/60 dark:text-red-400/60"
-                        : "text-blue-600/60 dark:text-blue-400/60"
-                    }`}
-                  >
-                    {formatDelta(delta)}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              )}
+            </div>
+          ))}
         </div>
       )}
 
