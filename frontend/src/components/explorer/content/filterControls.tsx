@@ -13,7 +13,8 @@ import {
 import { ipccRegionName } from "@/lib/ipccRegions";
 import type { FilterControl } from "../types";
 
-interface FilterableCard {
+/** A card whose values can be narrowed by its filters and filter controls. */
+export interface FilterableCard {
   provider: string;
   diagnostic: string;
   otherFilters?: Record<string, string>;

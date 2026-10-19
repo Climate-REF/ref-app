@@ -1,12 +1,8 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
-import type { MetricValueCollection } from "@/client/types.gen";
 import {
   experimentLegend,
   getFixedDimensionColor,
 } from "@/components/charts/experimentColors";
-import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { MipEraSections } from "@/components/charts/mipEraSections";
 import type { ScalarValue } from "@/components/execution/values/types";
 import type { ExplorerCardContent } from "../types";
@@ -14,6 +10,7 @@ import {
   TaylorDiagramContent,
   type TaylorDiagramModel,
 } from "./taylorDiagramContent";
+import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface TaylorDiagramContentWrapperProps {
   contentItem: Extract<ExplorerCardContent, { type: "taylor-diagram" }>;
@@ -125,23 +122,7 @@ export function TaylorDiagramContentWrapper({
   height = 460,
   width = 500,
 }: TaylorDiagramContentWrapperProps) {
-  const selectedMipEra = useSelectedMipEra();
-  const { data } = useSuspenseQuery(
-    diagnosticsListMetricValuesOptions({
-      path: {
-        provider_slug: contentItem.provider,
-        diagnostic_slug: contentItem.diagnostic,
-      },
-      query: {
-        value_type: "scalar",
-        limit: 500,
-        ...contentItem.otherFilters,
-        mip_era: selectedMipEra ?? undefined,
-      },
-    }),
-  );
-
-  const collection = data as MetricValueCollection;
+  const { collection } = useExplorerMetricValues(contentItem, "scalar");
   const values = (collection?.data as ScalarValue[]) ?? [];
 
   const allModels = useMemo(() => transformToTaylorModels(values), [values]);
