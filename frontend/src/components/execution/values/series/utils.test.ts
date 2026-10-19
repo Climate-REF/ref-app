@@ -7,6 +7,7 @@ import {
   formatIndexValue,
   formatTimeTick,
   getDimensionKeys,
+  groupLegendItems,
   hiddenLabelsWithSolo,
   type LegendItem,
   labelDimensions,
@@ -947,6 +948,40 @@ describe("labelDimensions", () => {
         ["B", { source_id: "other" }],
       ]),
     );
+  });
+});
+
+describe("groupLegendItems", () => {
+  const dims = new Map<string, Record<string, string>>([
+    ["A", { experiment_id: "ssp585" }],
+    ["B", { experiment_id: "historical" }],
+    ["C", { experiment_id: "ssp585" }],
+    ["D", {}],
+  ]);
+
+  it("groups items by their label's dimension value, ordered by value", () => {
+    const groups = groupLegendItems(
+      [item("A"), item("B"), item("C")],
+      "experiment_id",
+      dims,
+    );
+    expect(
+      groups.map(([key, items]) => [key, items.map((i) => i.label)]),
+    ).toEqual([
+      ["historical", ["B"]],
+      ["ssp585", ["A", "C"]],
+    ]);
+  });
+
+  it("groups items without the dimension under Unknown", () => {
+    const groups = groupLegendItems(
+      [item("D"), item("E")],
+      "experiment_id",
+      dims,
+    );
+    expect(
+      groups.map(([key, items]) => [key, items.map((i) => i.label)]),
+    ).toEqual([["Unknown", ["D", "E"]]]);
   });
 });
 

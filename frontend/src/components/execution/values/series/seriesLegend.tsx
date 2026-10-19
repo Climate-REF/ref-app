@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { LegendItem } from "./utils";
+import { groupLegendItems, type LegendItem, toggleInSet } from "./utils";
 
 interface SeriesLegendProps {
   uniqueLabels: LegendItem[];
@@ -56,37 +56,16 @@ export const SeriesLegend = memo(function SeriesLegend({
     );
   }, [uniqueLabels, searchQuery]);
 
-  // Group labels by dimension value
-  const groupedLabels = useMemo(() => {
-    if (!groupByDimension) {
-      return null;
-    }
-
-    const groups = new Map<string, LegendItem[]>();
-    for (const item of filteredLabels) {
-      const dims = labelDimensionMap.get(item.label);
-      const groupKey = dims?.[groupByDimension] ?? "Unknown";
-      const group = groups.get(groupKey);
-      if (group) {
-        group.push(item);
-      } else {
-        groups.set(groupKey, [item]);
-      }
-    }
-
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredLabels, groupByDimension, labelDimensionMap]);
+  const groupedLabels = useMemo(
+    () =>
+      groupByDimension
+        ? groupLegendItems(filteredLabels, groupByDimension, labelDimensionMap)
+        : null,
+    [filteredLabels, groupByDimension, labelDimensionMap],
+  );
 
   const toggleGroupCollapse = useCallback((groupKey: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
+    setCollapsedGroups((prev) => toggleInSet(prev, groupKey));
   }, []);
 
   const toggleGroupVisibility = useCallback(
@@ -104,6 +83,19 @@ export const SeriesLegend = memo(function SeriesLegend({
   const visibleCount = uniqueLabels.filter(
     (item) => !hiddenLabels.has(item.label),
   ).length;
+
+  const renderEntry = (item: LegendItem) => (
+    <LegendEntry
+      key={item.label}
+      item={item}
+      isHidden={hiddenLabels.has(item.label)}
+      isHovered={hoveredLabel === item.label}
+      isSoloed={soloedLabel === item.label}
+      onToggle={() => onToggleLabel(item.label)}
+      onHover={onHoverLabel}
+      onSolo={() => onSoloLabel(item.label)}
+    />
+  );
 
   return (
     <div className="w-72 flex-shrink-0 flex flex-col gap-2">
@@ -221,18 +213,7 @@ export const SeriesLegend = memo(function SeriesLegend({
                   </div>
                   <CollapsibleContent>
                     <div className="ml-3 space-y-0.5">
-                      {items.map((item) => (
-                        <LegendEntry
-                          key={item.label}
-                          item={item}
-                          isHidden={hiddenLabels.has(item.label)}
-                          isHovered={hoveredLabel === item.label}
-                          isSoloed={soloedLabel === item.label}
-                          onToggle={() => onToggleLabel(item.label)}
-                          onHover={onHoverLabel}
-                          onSolo={() => onSoloLabel(item.label)}
-                        />
-                      ))}
+                      {items.map(renderEntry)}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -241,18 +222,7 @@ export const SeriesLegend = memo(function SeriesLegend({
           </div>
         ) : (
           <div className="space-y-0.5 pr-3">
-            {filteredLabels.map((item) => (
-              <LegendEntry
-                key={item.label}
-                item={item}
-                isHidden={hiddenLabels.has(item.label)}
-                isHovered={hoveredLabel === item.label}
-                isSoloed={soloedLabel === item.label}
-                onToggle={() => onToggleLabel(item.label)}
-                onHover={onHoverLabel}
-                onSolo={() => onSoloLabel(item.label)}
-              />
-            ))}
+            {filteredLabels.map(renderEntry)}
           </div>
         )}
       </ScrollArea>

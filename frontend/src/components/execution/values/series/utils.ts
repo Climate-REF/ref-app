@@ -481,6 +481,30 @@ export function labelDimensions(
   return map;
 }
 
+/**
+ * Group legend items by their label's value of `dimension`, ordered by that value
+ *
+ * Items whose label has no value for the dimension are grouped under "Unknown".
+ */
+export function groupLegendItems(
+  items: LegendItem[],
+  dimension: string,
+  labelDimensionMap: Map<string, Record<string, string>>,
+): [string, LegendItem[]][] {
+  const groups = new Map<string, LegendItem[]>();
+  for (const item of items) {
+    const groupKey =
+      labelDimensionMap.get(item.label)?.[dimension] ?? "Unknown";
+    const group = groups.get(groupKey);
+    if (group) {
+      group.push(item);
+    } else {
+      groups.set(groupKey, [item]);
+    }
+  }
+  return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
 /** The labels hidden from the chart: all but the soloed label and references while soloing, otherwise `hiddenLabels` */
 export function hiddenLabelsWithSolo(
   hiddenLabels: Set<string>,
