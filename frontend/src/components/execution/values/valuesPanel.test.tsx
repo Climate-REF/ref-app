@@ -3,8 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { executionValuesSearchSchema } from "@/lib/valuesSearch";
 import { ExecutionValuesPanel } from "./valuesPanel";
 
+/** The executions of the group the panel shows, which the group query returns */
+let groupExecutions: { id: number; successful: boolean | null }[] = [];
+const valuesQuery = vi.fn();
+
 vi.mock("@tanstack/react-query", async () => ({
   ...(await vi.importActual("@tanstack/react-query")),
+  useSuspenseQuery: () => ({ data: { executions: groupExecutions } }),
   useQuery: () => ({
     data: {
       data: [],
@@ -14,11 +19,13 @@ vi.mock("@tanstack/react-query", async () => ({
       types: ["scalar"],
     },
     isLoading: false,
+    ...valuesQuery(),
   }),
 }));
 
 describe("ExecutionValuesPanel", () => {
   it("keeps its filters in the URL", () => {
+    groupExecutions = [{ id: 3, successful: true }];
     const navigate = vi.fn();
     render(
       <ExecutionValuesPanel
@@ -45,5 +52,25 @@ describe("ExecutionValuesPanel", () => {
       },
       replace: true,
     });
+  });
+
+  it("says a group that has never run has no values, without querying them", () => {
+    groupExecutions = [];
+    valuesQuery.mockClear();
+    render(
+      <ExecutionValuesPanel
+        groupId="1"
+        search={executionValuesSearchSchema.parse({})}
+        navigate={vi.fn()}
+        valueType="series"
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "This execution group has not run yet, so there are no series values to show.",
+      ),
+    ).toBeInTheDocument();
+    expect(valuesQuery).not.toHaveBeenCalled();
   });
 });

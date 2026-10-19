@@ -1,12 +1,6 @@
 import type { useNavigate } from "@tanstack/react-router";
 import { MipEraScope } from "@/components/charts/mipEraBar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ExecutionTabCard } from "@/components/execution/executionTabCard";
 import { useDiagnosticMetricValues } from "@/hooks/useDiagnosticMetricValues";
 import { useExecutionMetricValues } from "@/hooks/useExecutionMetricValues";
 import type { useMetricValues } from "@/hooks/useMetricValues";
@@ -91,37 +85,39 @@ export function DiagnosticValuesPanel({
   );
 }
 
-/** An execution group's scalar or series values. */
-export function ExecutionValuesPanel({
+type ExecutionValuesPanelProps = ValuesPanelProps<ExecutionValuesSearch> & {
+  groupId: string;
+};
+
+/** An execution group's values, queried only once the group has run. */
+function ExecutionValuesTable({
   groupId,
   search,
   navigate,
   valueType,
-}: ValuesPanelProps<ExecutionValuesSearch> & { groupId: string }) {
+}: ExecutionValuesPanelProps) {
   const result = useExecutionMetricValues({
     groupId,
     search,
     valueType,
     navigate,
   });
-  const kind = valueType === "scalar" ? "Scalar" : "Series";
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{kind} Values</CardTitle>
-        <CardDescription>
-          {kind} metrics from the current execution. Use facets to filter and
-          Export to download as CSV.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <MetricValuesTable
-          valueType={valueType}
-          search={search}
-          result={result}
-        />
-      </CardContent>
-    </Card>
+    <MetricValuesTable valueType={valueType} search={search} result={result} />
+  );
+}
+
+/** An execution group's scalar or series values. */
+export function ExecutionValuesPanel(props: ExecutionValuesPanelProps) {
+  const kind = props.valueType === "scalar" ? "Scalar" : "Series";
+  return (
+    <ExecutionTabCard
+      groupId={props.groupId}
+      title={`${kind} Values`}
+      description={`${kind} metrics from the current execution. Use facets to filter and Export to download as CSV.`}
+      what={`${kind.toLowerCase()} values`}
+    >
+      <ExecutionValuesTable {...props} />
+    </ExecutionTabCard>
   );
 }
