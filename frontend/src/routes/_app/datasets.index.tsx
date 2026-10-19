@@ -1,10 +1,7 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import {
-  datasetsListInfiniteOptions,
-  datasetsListOptions,
-} from "@/client/@tanstack/react-query.gen";
+import { datasetsListInfiniteOptions } from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
 import DatasetTable from "@/components/datasets/datasetTable";
 import { FilterPanel } from "@/components/datasets/filterPanel";
@@ -12,11 +9,44 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { nextOffset } from "@/lib/pagination";
 
+/** Facet filters by name, also read from the JSON string older links carry. Anything malformed means no facet filters. */
+const facetsSearch = z
+  .preprocess((value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+    try {
+      return JSON.parse(value);
+    } catch {
+      return undefined;
+    }
+  }, z.record(z.string(), z.string()).optional())
+  .catch(undefined);
+
 const DatasetsSearchSchema = z.object({
   dataset_type: z.string().default("cmip6"),
   name_contains: z.string().optional(),
-  facets: z.string().optional(),
+  facets: facetsSearch,
 });
+
+type DatasetsSearch = z.infer<typeof DatasetsSearchSchema>;
+
+/** The infinite query for the datasets matching the page's filters, shared by the loader and the page. */
+const datasetsQueryOptions = ({ facets, ...search }: DatasetsSearch) =>
+  infiniteQueryOptions({
+    ...datasetsListInfiniteOptions({
+      query: {
+        ...search,
+        facets:
+          facets && Object.keys(facets).length > 0
+            ? JSON.stringify(facets)
+            : undefined,
+        limit: 50,
+      },
+    }),
+    initialPageParam: 0,
+    getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
+  });
 
 export const Route = createFileRoute("/_app/datasets/")({
   component: SourcesIndexPage,
@@ -24,9 +54,9 @@ export const Route = createFileRoute("/_app/datasets/")({
   staticData: {
     title: "Datasets",
   },
-  loader: async ({ context: { queryClient } }) => {
-    return queryClient.ensureQueryData(datasetsListOptions());
-  },
+  loaderDeps: ({ search }) => search,
+  loader: ({ context: { queryClient }, deps }) =>
+    queryClient.prefetchInfiniteQuery(datasetsQueryOptions(deps)),
 });
 
 function SourcesIndexPage() {
@@ -41,13 +71,7 @@ function SourcesIndexPage() {
     status,
     isLoading,
     error,
-  } = useInfiniteQuery({
-    ...datasetsListInfiniteOptions({
-      query: { ...search, limit: 50 },
-    }),
-    initialPageParam: 0,
-    getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
-  });
+  } = useInfiniteQuery(datasetsQueryOptions(search));
 
   const datasets = data?.pages.flatMap((page) => page.data) || [];
   const allFacets = datasets.reduce(
@@ -72,16 +96,15 @@ function SourcesIndexPage() {
     ]),
   );
 
-  const handleFilterChange = (newFilters: Record<string, any>) => {
-    const searchParams: Record<string, any> = { ...search, ...newFilters };
-
-    if (Object.keys(newFilters.facets ?? {}).length > 0) {
-      searchParams.facets = JSON.stringify(newFilters.facets);
-    } else {
-      delete searchParams.facets;
+  const handleFilterChange = (newFilters: Partial<DatasetsSearch>) => {
+    const next = { ...search, ...newFilters };
+    if (!next.name_contains) {
+      delete next.name_contains;
     }
-
-    navigate({ search: searchParams });
+    if (next.facets && Object.keys(next.facets).length === 0) {
+      delete next.facets;
+    }
+    navigate({ search: next });
   };
 
   const handleClearFilters = () => {
@@ -100,10 +123,7 @@ function SourcesIndexPage() {
           <div className="flex flex-col gap-4">
             <FilterPanel
               facets={facetsForFilter}
-              filters={{
-                ...search,
-                facets: JSON.parse(search?.facets ?? "{}"),
-              }}
+              filters={search}
               onFilterChange={handleFilterChange}
               onClear={handleClearFilters}
             />

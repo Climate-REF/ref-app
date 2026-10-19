@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
+import { DebouncedInput } from "@/components/app/debouncedInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -52,16 +52,10 @@ export function FilterPanel({
           </SelectContent>
         </Select>
 
-        <Input
+        <DebouncedInput
           placeholder="Filter by Instance ID..."
-          defaultValue={filters.name_contains || ""}
-          onChange={(e) => {
-            const value = e.target.value;
-            const handler = setTimeout(() => {
-              onFilterChange({ name_contains: value });
-            }, 200);
-            return () => clearTimeout(handler);
-          }}
+          value={filters.name_contains || ""}
+          onValueChange={(value) => onFilterChange({ name_contains: value })}
           className="max-w-sm"
         />
         <FilterAddPopover
