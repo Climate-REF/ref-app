@@ -6,6 +6,7 @@ import {
   modelsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { PageHeader } from "@/components/app/pageHeader";
+import { StatCard } from "@/components/app/statCard";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import { DiagnosticRunsTable } from "@/components/models/diagnosticRunsTable";
 import { EnsembleComparisonTable } from "@/components/models/ensembleComparisonTable";
@@ -38,30 +39,6 @@ export const Route = createFileRoute("/_app/models/$sourceId")({
     title: "Model",
   },
 });
-
-function StatCard({
-  title,
-  value,
-  hint,
-}: {
-  title: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm leading-none font-semibold">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-      </CardContent>
-    </Card>
-  );
-}
 
 function ModelDetailPage() {
   const { sourceId } = Route.useParams();
@@ -144,11 +121,8 @@ function ModelDetailPage() {
               />
               <StatCard
                 title="Ensemble outliers"
-                value={
-                  ensemble.isLoading
-                    ? "..."
-                    : `${formatCount(outliers.length)} / ${formatCount(comparisons.length)}`
-                }
+                loading={ensemble.isLoading}
+                value={`${formatCount(outliers.length)} / ${formatCount(comparisons.length)}`}
                 hint="Metrics beyond the ensemble's inter-quartile fences"
               />
             </div>
