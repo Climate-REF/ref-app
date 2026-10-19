@@ -120,8 +120,8 @@ function FailuresPage() {
                   <CardHeader>
                     <CardTitle>Models</CardTitle>
                     <CardDescription>
-                      Models with the most failed execution groups. 
-                      Select one to list only its failures.
+                      Models with the most failed execution groups. Select one
+                      to list only its failures.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

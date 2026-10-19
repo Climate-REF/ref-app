@@ -3,6 +3,7 @@ export const API_ENDPOINTS = {
   NESRC: "https://api.climate-ref.org",
   ALCF: "https://api-alcf.climate-ref.org",
   CR: "https://api-cr.climate-ref.org",
+  STAGING: "https://staging.climate-ref.org",
   LOCAL: "/",
 } as const;
 
@@ -12,11 +13,18 @@ export type ApiEndpointKey = keyof typeof API_ENDPOINTS;
 export const API_ENDPOINT_STORAGE_KEY = "climate-ref-api-endpoint";
 
 /**
+ * The endpoint this deployment of the dashboard uses unless the visitor picks another
+ */
+export function getDefaultApiEndpoint(): string {
+  return import.meta.env.VITE_BASE_URL ?? "/";
+}
+
+/**
  * Get the stored API endpoint from local storage
  * Falls back to VITE_BASE_URL environment variable if no selection exists
  */
 export function getStoredApiEndpoint(): string {
-  const defaultEndpoint = import.meta.env.VITE_BASE_URL ?? "/";
+  const defaultEndpoint = getDefaultApiEndpoint();
 
   if (typeof window === "undefined") {
     // Server-side rendering fallback
@@ -109,7 +117,25 @@ export function getEndpointDisplayName(key: ApiEndpointKey): string {
       return "Localhost";
     case "CR":
       return "Climate Resource";
+    case "STAGING":
+      return "Staging";
     default:
       return "Unknown";
   }
+}
+
+/**
+ * Whether the settings offer an endpoint
+ *
+ * Staging is only offered on the staging deployment of the dashboard,
+ * or while it is the endpoint in use, so the list never hides the current choice.
+ */
+export function isEndpointOffered(
+  key: ApiEndpointKey,
+  {
+    stagingDashboard,
+    current,
+  }: { stagingDashboard: boolean; current: boolean },
+): boolean {
+  return key !== "STAGING" || stagingDashboard || current;
 }

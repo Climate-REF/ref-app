@@ -6,6 +6,7 @@ import {
   getCurrentEndpointKey,
   getEndpointDisplayName,
   getStoredApiEndpoint,
+  isEndpointOffered,
   isUsingEndpointOverride,
   storeApiEndpoint,
 } from "./apiEndpoint";
@@ -80,6 +81,11 @@ describe("getCurrentEndpointKey", () => {
     expect(getCurrentEndpointKey()).toBe("ALCF");
   });
 
+  it("returns correct key for known URL (STAGING)", () => {
+    localStorageMock.setItem(API_ENDPOINT_STORAGE_KEY, API_ENDPOINTS.STAGING);
+    expect(getCurrentEndpointKey()).toBe("STAGING");
+  });
+
   it("returns correct key for known URL (LOCAL)", () => {
     localStorageMock.setItem(API_ENDPOINT_STORAGE_KEY, API_ENDPOINTS.LOCAL);
     expect(getCurrentEndpointKey()).toBe("LOCAL");
@@ -127,5 +133,35 @@ describe("getEndpointDisplayName", () => {
 
   it("returns 'Climate Resource' for CR key", () => {
     expect(getEndpointDisplayName("CR")).toBe("Climate Resource");
+  });
+
+  it("returns 'Staging' for STAGING key", () => {
+    expect(getEndpointDisplayName("STAGING")).toBe("Staging");
+  });
+});
+
+describe("isEndpointOffered", () => {
+  it("offers staging only on the staging dashboard", () => {
+    expect(
+      isEndpointOffered("STAGING", { stagingDashboard: true, current: false }),
+    ).toBe(true);
+    expect(
+      isEndpointOffered("STAGING", { stagingDashboard: false, current: false }),
+    ).toBe(false);
+  });
+
+  it("offers staging while it is the endpoint in use", () => {
+    expect(
+      isEndpointOffered("STAGING", { stagingDashboard: false, current: true }),
+    ).toBe(true);
+  });
+
+  it("offers every other endpoint everywhere", () => {
+    expect(
+      isEndpointOffered("NESRC", { stagingDashboard: false, current: false }),
+    ).toBe(true);
+    expect(
+      isEndpointOffered("LOCAL", { stagingDashboard: true, current: false }),
+    ).toBe(true);
   });
 });
