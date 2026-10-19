@@ -1,4 +1,3 @@
-import * as d3 from "d3-array";
 import { scaleLinear } from "d3-scale";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -13,10 +12,6 @@ import {
   YAxis,
 } from "recharts";
 import type { ScalarValue } from "@/client/types.gen";
-import {
-  EXPERIMENT_ORDER,
-  getFixedDimensionColor,
-} from "@/components/charts/experimentColors";
 import { BoxWhiskerShape } from "@/components/execution/values/boxWhiskerShape.tsx";
 import type { ChartGroupingConfig } from "@/components/explorer/grouping";
 import {
@@ -24,86 +19,16 @@ import {
   initializeGroupingConfig,
 } from "@/components/explorer/grouping";
 import { createScaledTickFormatter } from "../execution/values/series/utils";
-
-// Well-known category orderings for common climate dimensions (matched case-insensitively)
-export const KNOWN_CATEGORY_ORDERS: Record<string, string[]> = {
-  // Meteorological seasons (Annual first, then chronological)
-  season: ["Annual", "ANN", "DJF", "MAM", "JJA", "SON"],
-  experiment_id: EXPERIMENT_ORDER,
-};
-
-// Display labels for abbreviated category values (keyed by lowercase value)
-const CATEGORY_LABELS: Record<string, string> = {
-  ann: "annual",
-};
-
-export function formatCategoryLabel(name: string): string {
-  return CATEGORY_LABELS[name.toLowerCase()] ?? name;
-}
-
-function indexOfIgnoreCase(order: string[], name: string): number {
-  const lower = name.toLowerCase();
-  return order.findIndex((item) => item.toLowerCase() === lower);
-}
-
-/**
- * Sort chart categories using a known ordering if one exists,
- * otherwise preserve the original order.
- */
-export function sortCategories<T extends { name: string }>(
-  items: T[],
-  categoryOrder?: string[],
-): T[] {
-  const order = categoryOrder;
-  if (!order) {
-    // Auto-detect: check if all category names match a known ordering
-    for (const knownOrder of Object.values(KNOWN_CATEGORY_ORDERS)) {
-      const ranked = items.map((item) => ({
-        item,
-        rank: indexOfIgnoreCase(knownOrder, item.name),
-      }));
-      if (ranked.every(({ rank }) => rank !== -1)) {
-        return ranked.sort((a, b) => a.rank - b.rank).map(({ item }) => item);
-      }
-    }
-    return items;
-  }
-
-  return [...items].sort((a, b) => {
-    const aIdx = indexOfIgnoreCase(order, a.name);
-    const bIdx = indexOfIgnoreCase(order, b.name);
-    // Items not in the order go to the end, preserving relative order
-    if (aIdx === -1 && bIdx === -1) return 0;
-    if (aIdx === -1) return 1;
-    if (bIdx === -1) return -1;
-    return aIdx - bIdx;
-  });
-}
-
-// Color palette for different groups
-const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00ff00",
-  "#0088fe",
-  "#00c49f",
-  "#ffbb28",
-  "#ff8042",
-  "#8dd1e1",
-];
-
-// Reserved colours win, so an experiment looks the same on every chart.
-function groupColor(
-  dimension: string | undefined,
-  value: string,
-  index: number,
-): string {
-  return (
-    getFixedDimensionColor(dimension, value) ?? COLORS[index % COLORS.length]
-  );
-}
+import {
+  buildEnsembleChartData,
+  categoryAxisLayout,
+  computeYDomain,
+  ENSEMBLE_GROUP,
+  type EnsembleCategory,
+  formatCategoryLabel,
+  groupColor,
+  hueGroupNames,
+} from "./ensembleChartData";
 
 interface EnsembleChartProps {
   data: ScalarValue[];
@@ -124,14 +49,11 @@ interface EnsembleChartProps {
   categoryOrder?: string[];
 }
 
-interface GroupStatistics {
-  min: number;
-  lowerQuartile: number;
-  median: number;
-  upperQuartile: number;
-  max: number;
-  values: number[];
-  points: ScalarValue[];
+/** The data point nearest the pointer, and the box it belongs to */
+interface HighlightedPoint {
+  categoryName: string;
+  groupName: string;
+  point: ScalarValue;
 }
 
 export const EmptyEnsembleChart = () => {
@@ -153,6 +75,134 @@ const chartHeight = 500;
 const marginTop = 24;
 const marginBottom = 10;
 
+/**
+ * The data point whose marker is nearest to a position in chart coordinates
+ *
+ * Markers are compared by the chart coordinates they carry rather than by measuring them,
+ * because their client rects were offset in Firefox.
+ */
+function findNearestPoint(
+  container: HTMLElement,
+  x: number,
+  y: number,
+  categoriesByName: Map<string, EnsembleCategory>,
+): HighlightedPoint | null {
+  let nearest: HighlightedPoint | null = null;
+  let distance = Number.POSITIVE_INFINITY;
+  for (const marker of container.querySelectorAll<SVGGElement>(
+    "[data-box-point]",
+  )) {
+    const dx = x - Number(marker.dataset.x);
+    const dy = y - Number(marker.dataset.y);
+    const nextDistance = dx * dx + dy * dy;
+    if (nextDistance >= distance) continue;
+    const categoryName = marker.dataset.category!;
+    const groupName = marker.dataset.group!;
+    const point =
+      categoriesByName.get(categoryName)?.groups[groupName]?.points[
+        Number(marker.dataset.boxPoint)
+      ];
+    if (!point) continue;
+    distance = nextDistance;
+    nearest = { categoryName, groupName, point };
+  }
+  return nearest;
+}
+
+interface EnsembleTooltipProps {
+  active?: boolean;
+  coordinate?: { x?: number };
+  chartWidth?: number;
+  highlightedPoint: HighlightedPoint | null;
+  /** The category of the highlighted point */
+  category: EnsembleCategory | undefined;
+  /** Whether the chart has several boxes per category, so the box's group is named */
+  hasHueGroups: boolean;
+  format: (v: number) => string;
+  metricUnits: string;
+}
+
+/** The statistics of the highlighted point's box, and the point itself */
+function EnsembleTooltip({
+  active,
+  coordinate,
+  chartWidth = 0,
+  highlightedPoint,
+  category,
+  hasHueGroups,
+  format,
+  metricUnits,
+}: EnsembleTooltipProps) {
+  if (!active || !highlightedPoint || coordinate === undefined) return null;
+  const { categoryName, groupName, point } = highlightedPoint;
+  const stats = category?.groups[groupName];
+  // The highlighted point may be from data the chart no longer shows
+  if (!stats?.points.includes(point)) return null;
+  const clipped = category?.__outliers[groupName] ?? 0;
+  // If cursor is on the right half of the chart, show tooltip on the left
+  const onLeft =
+    coordinate.x !== undefined &&
+    chartWidth > 0 &&
+    coordinate.x > chartWidth / 2;
+
+  return (
+    <div
+      className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg min-w-[300px]"
+      style={{
+        borderColor: "hsl(var(--border))",
+        transform: onLeft ? "translate(-370px, -20%)" : "translate(20px, -20%)",
+      }}
+    >
+      <div className="mb-2 font-medium">
+        {formatCategoryLabel(categoryName)}
+        {groupName !== ENSEMBLE_GROUP && hasHueGroups && (
+          <span className="ml-2 text-muted-foreground">({groupName})</span>
+        )}
+      </div>
+
+      <div className="mb-3">
+        <div className="mb-1 font-semibold">Statistics</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          {renderKV("Min", format(stats.min))}
+          {renderKV("Q1", format(stats.lowerQuartile))}
+          {renderKV("Median", format(stats.median))}
+          {renderKV("Q3", format(stats.upperQuartile))}
+          {renderKV("Max", format(stats.max))}
+          {renderKV("Count", String(stats.values.length + clipped))}
+          {clipped > 0 && (
+            <div className="col-span-2 mt-1 text-muted-foreground">
+              ({clipped} outliers clipped)
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1 font-semibold">Closest Data Point</div>
+        <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-x-4">
+            {renderKV("Value", format(Number(point.value)))}
+            {renderKV("Units", metricUnits)}
+          </div>
+          <div className="mt-2">
+            <div className="font-semibold mb-1">Dimensions:</div>
+            <div className="grid grid-cols-1 gap-y-1 text-xs">
+              {Object.entries(point.dimensions).map(([key, value]) => (
+                <div key={key} className="grid grid-cols-2 gap-x-2">
+                  <span className="text-muted-foreground truncate">{key}:</span>
+                  <span className="truncate max-w-[150px]" title={value}>
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const EnsembleChart = ({
   data,
   metricName,
@@ -168,11 +218,8 @@ export const EnsembleChart = ({
   categoryOrder,
 }: EnsembleChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [highlightedPoint, setHighlightedPoint] = useState<{
-    categoryName: string;
-    groupName: string;
-    point: ScalarValue;
-  } | null>(null);
+  const [highlightedPoint, setHighlightedPoint] =
+    useState<HighlightedPoint | null>(null);
 
   // Extract available dimensions and initialize grouping config
   const availableDimensions = useMemo(
@@ -180,243 +227,66 @@ export const EnsembleChart = ({
     [data],
   );
 
-  const finalGroupingConfig = useMemo(() => {
+  const { groupBy, hue } = useMemo(() => {
     return initializeGroupingConfig(availableDimensions, groupingConfig);
   }, [availableDimensions, groupingConfig]);
 
-  // Group data by the specified groupBy dimension
-  const groupByDimension = finalGroupingConfig.groupBy || "metric";
-  const hueDimension = finalGroupingConfig.hue;
-
-  // When groupBy and hue are the same, don't create subgroups
-  // This prevents odd spacing where only one bar has data at each x-axis position
-  const isSelfHued = hueDimension === groupByDimension;
-
-  // Group by the main dimension (x-axis), then by hue within each group,
-  // and compute box-whisker statistics for each subgroup.
-  const sortedChartData = useMemo(() => {
-    const primaryGroupedData = Object.groupBy(
-      data,
-      (d: ScalarValue) => d.dimensions[groupByDimension] ?? metricName,
-    );
-
-    const chartData = Object.entries(primaryGroupedData).map(
-      (
-        [groupName, values]: [string, ScalarValue[] | undefined],
-        categoryIndex,
-      ) => {
-        if (!values || values.length === 0) {
-          return {
-            name: groupName,
-            groups: {},
-            __outliers: {},
-            __categoryColor: isSelfHued
-              ? groupColor(groupByDimension, groupName, categoryIndex)
-              : undefined,
-          };
-        }
-
-        // If hue dimension is specified (and different from groupBy), create sub-groups
-        let subGroups: { [key: string]: ScalarValue[] };
-        if (!isSelfHued && hueDimension && hueDimension !== "none") {
-          // Normal hue: create sub-groups based on hue dimension
-          subGroups = Object.groupBy(
-            values,
-            (d: ScalarValue) => d.dimensions[hueDimension] ?? "Unknown",
-          ) as { [key: string]: ScalarValue[] };
-        } else {
-          // Single group if no hue dimension or hue === groupBy
-          subGroups = { ensemble: values };
-        }
-
-        const groups: { [key: string]: GroupStatistics | null } = {};
-        const outliers: { [key: string]: number } = {};
-
-        Object.entries(subGroups).forEach(([subGroupName, subGroupValues]) => {
-          const allValues: number[] =
-            subGroupValues
-              ?.map((d: ScalarValue) => Number(d.value))
-              ?.filter((v: number) => Number.isFinite(v)) ?? [];
-
-          const points = subGroupValues
-            .filter((d) => Number.isFinite(Number(d.value)))
-            .filter(
-              (d) =>
-                (clipMin === undefined || Number(d.value) >= clipMin) &&
-                (clipMax === undefined || Number(d.value) <= clipMax),
-            )
-            .sort((a, b) => Number(a.value) - Number(b.value));
-          const filteredValues = points.map((point) => Number(point.value));
-
-          if (filteredValues.length === 0) {
-            groups[subGroupName] = null;
-            outliers[subGroupName] = 0;
-          } else {
-            const min = d3.min(filteredValues)!;
-            const max = d3.max(filteredValues)!;
-            const q1 = d3.quantile(filteredValues, 0.25)!;
-            const median = d3.median(filteredValues)!;
-            const q3 = d3.quantile(filteredValues, 0.75)!;
-
-            groups[subGroupName] = {
-              min,
-              lowerQuartile: q1,
-              median,
-              upperQuartile: q3,
-              max,
-              values: filteredValues,
-              points,
-            };
-            outliers[subGroupName] = allValues.length - filteredValues.length;
-          }
-        });
-
-        return {
-          name: groupName,
-          groups,
-          __outliers: outliers,
-          __categoryColor: isSelfHued
-            ? groupColor(groupByDimension, groupName, categoryIndex)
-            : undefined,
-        };
-      },
-    );
-
-    // Sort categories using explicit order or well-known orderings (e.g., seasons)
-    return sortCategories(chartData, categoryOrder);
-  }, [
-    data,
-    groupByDimension,
-    hueDimension,
-    isSelfHued,
-    metricName,
-    clipMin,
-    clipMax,
-    categoryOrder,
-  ]);
-
-  const categoriesByName = useMemo(
-    () => new Map(sortedChartData.map((datum) => [datum.name, datum])),
-    [sortedChartData],
+  const chartData = useMemo(
+    () =>
+      buildEnsembleChartData(data, {
+        groupBy,
+        hue,
+        fallbackCategory: metricName,
+        clipMin,
+        clipMax,
+        categoryOrder,
+      }),
+    [data, groupBy, hue, metricName, clipMin, clipMax, categoryOrder],
   );
 
-  // Get all unique group names for rendering multiple bars
-  const allGroupNames = useMemo(() => {
-    const names = new Set<string>();
-    sortedChartData.forEach((d) => {
-      Object.keys(d.groups).forEach((groupName) => {
-        names.add(groupName);
-      });
-    });
-    const sorted = Array.from(names)
-      .sort()
-      .map((name) => ({ name }));
-    return sortCategories(
-      sorted,
-      hueDimension ? KNOWN_CATEGORY_ORDERS[hueDimension] : undefined,
-    ).map((item) => item.name);
-  }, [sortedChartData, hueDimension]);
+  const categoriesByName = useMemo(
+    () => new Map(chartData.map((datum) => [datum.name, datum])),
+    [chartData],
+  );
 
-  const scale = useMemo(() => {
-    const allFiniteValues = sortedChartData
-      .flatMap((d) =>
-        Object.values(d.groups)
-          .filter((group) => group !== null)
-          .flatMap((group) => [group.min, group.max]),
-      )
-      .filter((v) => Number.isFinite(v)) as number[];
+  const allGroupNames = useMemo(
+    () => hueGroupNames(chartData, hue),
+    [chartData, hue],
+  );
 
-    // Find the global min and max
-    let minVal: number;
-    let maxVal: number;
-
-    if (allFiniteValues.length === 0) {
-      minVal = 0;
-      maxVal = 1;
-    } else if (symmetricalAxes) {
-      // Use symmetrical axes centered on zero
-      const maxAbs = Math.max(...allFiniteValues.map(Math.abs));
-      minVal = -maxAbs;
-      maxVal = maxAbs;
-    } else {
-      minVal = Math.min(...allFiniteValues);
-      maxVal = Math.max(...allFiniteValues);
-    }
-
-    // If all values are identical, add some padding to ensure a range
-    if (minVal === maxVal) {
-      const pad = Math.max(1, Math.abs(minVal) * 0.1);
-      minVal -= pad;
-      maxVal += pad;
-    }
-    // Add some padding to the domain
-    const range = maxVal - minVal;
-    const padding = range * 0.05;
-
-    return scaleLinear()
-      .domain([
-        yMin !== undefined ? yMin : minVal - padding,
-        yMax !== undefined ? yMax : maxVal + padding,
-      ])
-      .nice();
-  }, [sortedChartData, symmetricalAxes, yMin, yMax]);
-  const yDomain = scale.domain() as [number, number];
+  const yDomain = useMemo(
+    () => computeYDomain(chartData, { symmetricalAxes, yMin, yMax }),
+    [chartData, symmetricalAxes, yMin, yMax],
+  );
+  const scale = useMemo(() => scaleLinear().domain(yDomain), [yDomain]);
 
   const fmt = valueFormatter ?? createScaledTickFormatter(yDomain);
 
-  // Rotate x-axis labels when there are many items to keep them visible
-  const shouldRotateXAxis = sortedChartData.length > 6;
-
-  // Adjust spacing based on number of items
-  // make them closer together when there are many
-  const barCategoryGap =
-    sortedChartData.length > 20
-      ? "2%"
-      : sortedChartData.length > 10
-        ? "5%"
-        : "20%";
+  const { barCategoryGap, ...xAxisLayout } = categoryAxisLayout(
+    chartData.length,
+  );
 
   return (
     <div ref={chartRef} className="w-full h-full">
       <ResponsiveContainer width="100%" height={chartHeight}>
         <ComposedChart
-          data={sortedChartData}
+          data={chartData}
           margin={{ top: marginTop, right: 24, left: 12, bottom: marginBottom }}
           barCategoryGap={barCategoryGap}
           onMouseLeave={() => setHighlightedPoint(null)}
-          onMouseMove={(state) => {
-            const { chartX, chartY } = state;
-            if (
-              !state.isTooltipActive ||
-              chartX === undefined ||
-              chartY === undefined ||
-              !chartRef.current
-            ) {
-              setHighlightedPoint(null);
-              return;
-            }
-            let nearest: typeof highlightedPoint = null;
-            let distance = Number.POSITIVE_INFINITY;
-            // Compare in chart coordinates rather than measuring the rendered markers,
-            // whose client rects were offset in Firefox.
-            for (const marker of chartRef.current.querySelectorAll<SVGGElement>(
-              "[data-box-point]",
-            )) {
-              const dx = chartX - Number(marker.dataset.x);
-              const dy = chartY - Number(marker.dataset.y);
-              const nextDistance = dx * dx + dy * dy;
-              if (nextDistance >= distance) continue;
-              const categoryName = marker.dataset.category!;
-              const groupName = marker.dataset.group!;
-              const datum = categoriesByName.get(categoryName);
-              const point =
-                datum?.groups[groupName]?.points[
-                  Number(marker.dataset.boxPoint)
-                ];
-              if (!point) continue;
-              distance = nextDistance;
-              nearest = { categoryName, groupName, point };
-            }
+          onMouseMove={({ isTooltipActive, chartX, chartY }) => {
+            const nearest =
+              isTooltipActive &&
+              chartX !== undefined &&
+              chartY !== undefined &&
+              chartRef.current
+                ? findNearestPoint(
+                    chartRef.current,
+                    chartX,
+                    chartY,
+                    categoriesByName,
+                  )
+                : null;
             setHighlightedPoint((previous) =>
               previous?.point === nearest?.point &&
               previous?.categoryName === nearest?.categoryName &&
@@ -433,14 +303,7 @@ export const EnsembleChart = ({
             tickLine={false}
             axisLine={{ stroke: "#E5E7EB" }}
             tickMargin={10}
-            angle={shouldRotateXAxis ? -45 : 0}
-            textAnchor={shouldRotateXAxis ? "end" : "middle"}
-            height={shouldRotateXAxis ? 100 : 30}
-            interval={
-              sortedChartData.length > 20
-                ? Math.floor(sortedChartData.length / 20)
-                : 0
-            }
+            {...xAxisLayout}
           />
           <YAxis
             width={64}
@@ -466,111 +329,22 @@ export const EnsembleChart = ({
             wrapperStyle={{ zIndex: 1000 }}
             animationDuration={500}
             offset={20}
-            content={({ active, coordinate, viewBox }) => {
-              if (!active || !highlightedPoint) return null;
-              const datum = categoriesByName.get(highlightedPoint.categoryName);
-              const statsKey = highlightedPoint.groupName;
-              const groupStats = datum?.groups[statsKey];
-              if (!groupStats?.points.includes(highlightedPoint.point))
-                return null;
-              const outliers = datum?.__outliers;
-              const closestDataPoint = highlightedPoint.point;
-              const label = formatCategoryLabel(highlightedPoint.categoryName);
-              if (coordinate === undefined) {
-                return null;
-              }
-
-              let side = "right";
-              const chartWidth = viewBox?.width ?? 0;
-              if (
-                coordinate?.x !== undefined &&
-                chartWidth > 0 &&
-                coordinate.x > chartWidth / 2
-              ) {
-                // If cursor is on the right half of the chart, show tooltip on the left
-                side = "left";
-              }
-
-              return (
-                <div
-                  className="rounded-md border bg-white dark:bg-muted p-2 text-xs shadow-lg min-w-[300px]"
-                  style={{
-                    borderColor: "hsl(var(--border))",
-                    transform:
-                      side === "right"
-                        ? "translate(20px, -20%)"
-                        : "translate(-370px, -20%)",
-                  }}
-                >
-                  <div className="mb-2 font-medium">
-                    {label}
-                    {statsKey !== "ensemble" && allGroupNames.length > 1 && (
-                      <span className="ml-2 text-muted-foreground">
-                        ({statsKey})
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Ensemble Statistics */}
-                  <div className="mb-3">
-                    <div className="mb-1 font-semibold">Statistics</div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                      {renderKV("Min", fmt(Number(groupStats.min)))}
-                      {renderKV("Q1", fmt(Number(groupStats.lowerQuartile)))}
-                      {renderKV("Median", fmt(Number(groupStats.median)))}
-                      {renderKV("Q3", fmt(Number(groupStats.upperQuartile)))}
-                      {renderKV("Max", fmt(Number(groupStats.max)))}
-                      {renderKV(
-                        "Count",
-                        String(
-                          groupStats.values.length +
-                            (outliers?.[statsKey] ?? 0),
-                        ),
-                      )}
-                      {outliers?.[statsKey] ? (
-                        <div className="col-span-2 mt-1 text-muted-foreground">
-                          ({outliers[statsKey]} outliers clipped)
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {/* Closest Data Point */}
-                  <div>
-                    <div className="mb-1 font-semibold">Closest Data Point</div>
-                    <div className="space-y-1">
-                      <div className="grid grid-cols-2 gap-x-4">
-                        {renderKV("Value", fmt(Number(closestDataPoint.value)))}
-                        {renderKV("Units", metricUnits)}
-                      </div>
-                      <div className="mt-2">
-                        <div className="font-semibold mb-1">Dimensions:</div>
-                        <div className="grid grid-cols-1 gap-y-1 text-xs">
-                          {Object.entries(closestDataPoint.dimensions).map(
-                            ([key, value]) => (
-                              <div
-                                key={key}
-                                className="grid grid-cols-2 gap-x-2"
-                              >
-                                <span className="text-muted-foreground truncate">
-                                  {key}:
-                                </span>
-                                <span
-                                  className="truncate max-w-[150px]"
-                                  title={value}
-                                >
-                                  {value}
-                                </span>
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
+            content={({ active, coordinate, viewBox }) => (
+              <EnsembleTooltip
+                active={active}
+                coordinate={coordinate}
+                chartWidth={viewBox?.width}
+                highlightedPoint={highlightedPoint}
+                category={
+                  highlightedPoint
+                    ? categoriesByName.get(highlightedPoint.categoryName)
+                    : undefined
+                }
+                hasHueGroups={allGroupNames.length > 1}
+                format={fmt}
+                metricUnits={metricUnits}
+              />
+            )}
           />
           {/* Show legend if there are multiple groups */}
           {allGroupNames.length > 1 && <Legend />}
@@ -581,7 +355,7 @@ export const EnsembleChart = ({
               key={groupName}
               dataKey={(d) => d?.groups?.[groupName]?.median}
               name={formatCategoryLabel(groupName)}
-              fill={groupColor(hueDimension, groupName, index)}
+              fill={groupColor(hue, groupName, index)}
               isAnimationActive={false}
               shape={
                 <BoxWhiskerShape
