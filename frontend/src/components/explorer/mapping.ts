@@ -39,7 +39,6 @@ function baseFields(api: AftCollectionCardContent) {
     description: api.description ?? undefined,
     interpretation: api.interpretation ?? undefined,
     span: api.span ?? undefined,
-    placeholder: api.placeholder ?? undefined,
     referenceDatasets: api.reference_datasets ?? undefined,
   };
 }

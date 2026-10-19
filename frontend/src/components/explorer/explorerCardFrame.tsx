@@ -31,18 +31,10 @@ export function ExplorerCardFrame({
 
   return (
     <div className={cn("relative group", spanClass)}>
-      <Card
-        className={cn(
-          "h-full flex flex-col",
-          contentItem.placeholder ? "border-red-500" : "",
-        )}
-      >
+      <Card className="h-full flex flex-col">
         <CardHeader className="flex items-start justify-between">
           <div className="flex flex-col gap-2">
-            <CardTitle>
-              {contentItem.placeholder ? "PLACEHOLDER: " : ""}{" "}
-              {contentItem.title}
-            </CardTitle>
+            <CardTitle>{contentItem.title}</CardTitle>
             <div className="min-h-8">
               {contentItem.description && (
                 <CardDescription>{contentItem.description}</CardDescription>

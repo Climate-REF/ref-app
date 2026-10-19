@@ -18,7 +18,6 @@ export type BaseCardContent = {
   description?: string | ReactNode;
   interpretation?: string;
   span?: 1 | 2;
-  placeholder?: boolean;
   referenceDatasets?: ReferenceDatasetLink[];
 };
 
@@ -71,7 +70,6 @@ export type ExplorerCardContent =
 export type ExplorerCard = {
   title: string;
   description?: string | ReactNode;
-  placeholder?: boolean;
   content: ExplorerCardContent[];
 };
 
