@@ -1,6 +1,84 @@
 import { describe, expect, it } from "vitest";
 import type { MetricFilter } from "@/components/explorer/types";
-import { filtersToSearch, searchToFilters } from "./valuesSearch";
+import {
+  DEFAULT_PAGE_SIZE,
+  diagnosticValuesSearchSchema,
+  executionValuesSearchSchema,
+  filtersToSearch,
+  searchToFilters,
+} from "./valuesSearch";
+
+describe.each([
+  ["executionValuesSearchSchema", executionValuesSearchSchema],
+  ["diagnosticValuesSearchSchema", diagnosticValuesSearchSchema],
+])("%s", (_, schema) => {
+  it("fills in the defaults", () => {
+    expect(schema.parse({})).toEqual({
+      detect_outliers: "iqr",
+      include_unverified: false,
+      offset: 0,
+      limit: DEFAULT_PAGE_SIZE,
+    });
+  });
+
+  it("reads include_unverified as true only for true", () => {
+    expect(
+      schema.parse({ include_unverified: "true" }).include_unverified,
+    ).toBe(true);
+    expect(schema.parse({ include_unverified: true }).include_unverified).toBe(
+      true,
+    );
+    expect(
+      schema.parse({ include_unverified: "false" }).include_unverified,
+    ).toBe(false);
+    expect(schema.parse({ include_unverified: "yes" }).include_unverified).toBe(
+      false,
+    );
+  });
+
+  it("coerces pagination params to numbers", () => {
+    expect(schema.parse({ offset: "25", limit: "100" })).toMatchObject({
+      offset: 25,
+      limit: 100,
+    });
+  });
+
+  it("rejects invalid outlier and pagination params", () => {
+    expect(() => schema.parse({ detect_outliers: "zscore" })).toThrow();
+    expect(() => schema.parse({ offset: -1 })).toThrow();
+    expect(() => schema.parse({ limit: 0 })).toThrow();
+  });
+
+  it("passes facet params through", () => {
+    expect(schema.parse({ source_id: "CESM2,GFDL" })).toMatchObject({
+      source_id: "CESM2,GFDL",
+    });
+  });
+});
+
+describe("diagnosticValuesSearchSchema", () => {
+  it("keeps the series grouping and MIP era", () => {
+    expect(
+      diagnosticValuesSearchSchema.parse({
+        groupBy: "source_id",
+        hue: "experiment_id",
+        style: "member_id",
+        mip_era: "CMIP7",
+      }),
+    ).toMatchObject({
+      groupBy: "source_id",
+      hue: "experiment_id",
+      style: "member_id",
+      mip_era: "CMIP7",
+    });
+  });
+
+  it("rejects an unknown MIP era", () => {
+    expect(() =>
+      diagnosticValuesSearchSchema.parse({ mip_era: "CMIP5" }),
+    ).toThrow();
+  });
+});
 
 describe("searchToFilters", () => {
   it("turns each facet param into a facet filter", () => {

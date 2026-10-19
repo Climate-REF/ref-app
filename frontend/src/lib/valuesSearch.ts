@@ -1,7 +1,43 @@
+import { z } from "zod";
 import type { MetricFilter } from "@/components/explorer/types";
 import { parseCommaList } from "./metricFilters";
+import { mipEraSearchFields } from "./mipEras";
 
 export const DEFAULT_PAGE_SIZE = 50;
+
+// Outlier and pagination params every values tab shares
+const valuesSearchFields = {
+  detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
+  include_unverified: z.coerce
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
+  offset: z.coerce.number().int().nonnegative().default(0),
+  limit: z.coerce.number().int().positive().default(DEFAULT_PAGE_SIZE),
+};
+
+/** Search params of an execution group's values tabs. Any other param is a facet filter. */
+export const executionValuesSearchSchema = z
+  .object(valuesSearchFields)
+  .catchall(z.string().optional());
+
+/** Search params of a diagnostic's values tabs, which also pick the series grouping and MIP era. */
+export const diagnosticValuesSearchSchema = z
+  .object({
+    groupBy: z.string().optional(),
+    hue: z.string().optional(),
+    style: z.string().optional(),
+    ...valuesSearchFields,
+    ...mipEraSearchFields,
+  })
+  .catchall(z.string().optional());
+
+export type ExecutionValuesSearch = z.output<
+  typeof executionValuesSearchSchema
+>;
+export type DiagnosticValuesSearch = z.output<
+  typeof diagnosticValuesSearchSchema
+>;
 
 // Search params that are not facet filters
 const NOT_FACET_PARAMS = [
