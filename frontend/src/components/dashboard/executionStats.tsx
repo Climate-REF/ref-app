@@ -30,7 +30,7 @@ export function ExecutionStats() {
 
   if (error) {
     return (
-      <Card className="max-w-1/2]">
+      <Card className="max-w-1/2">
         <CardHeader>
           <CardTitle>Execution Statistics</CardTitle>
           <CardDescription>Failed to load execution statistics</CardDescription>

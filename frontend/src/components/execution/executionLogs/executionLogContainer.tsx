@@ -171,7 +171,13 @@ export function ExecutionLogContainer({
             disabled={isBusy}
             size="sm"
             onClick={() =>
-              downloadTextFile(logContent, `logs-${executionId}.txt`)
+              downloadTextFile(
+                logContent,
+                // Without an execution the logs are the group's latest execution's
+                executionId
+                  ? `logs-${groupId}-${executionId}.txt`
+                  : `logs-${groupId}.txt`,
+              )
             }
           >
             <Download className="mr-2 h-4 w-4" />

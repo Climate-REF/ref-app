@@ -135,6 +135,7 @@ const Diagnostics = () => {
         metricValues:
           metricValues === null ? undefined : metricValues ? "true" : "false",
       }),
+      replace: true,
     });
   };
 
@@ -294,7 +295,8 @@ const Diagnostics = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, index) => (
             <Card
-              key={`diagnostic-skeleton-${Date.now()}-${index}`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: Placeholders have no identity
+              key={`diagnostic-skeleton-${index}`}
               className="animate-pulse"
             >
               <CardContent className="p-6">

@@ -54,7 +54,7 @@ export function installApiErrors(client: Client) {
   );
 }
 
-function isNotFound(error: unknown): boolean {
+export function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
 }
 

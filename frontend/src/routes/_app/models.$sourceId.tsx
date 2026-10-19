@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMipEra } from "@/hooks/useMipEra";
+import { apiErrorMessage, isNotFound } from "@/lib/apiError";
 import { formatCount } from "@/lib/format";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
@@ -114,7 +115,9 @@ function ModelDetailPage() {
       <MipEraScope mipEra={mipEra} setMipEra={setMipEra}>
         {error && (
           <div className="text-destructive">
-            This model has no {mipEra} runs. {String(error)}
+            {isNotFound(error)
+              ? `This model has no ${mipEra} runs.`
+              : `Error loading model: ${apiErrorMessage(error)}`}
           </div>
         )}
         {isLoading && <div>Loading model...</div>}
