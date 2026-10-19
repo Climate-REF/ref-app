@@ -52,7 +52,7 @@ export function filterLogs(
 }
 
 /** The badge colours for a log level. */
-export function levelClass(level: string | null): string {
+export function levelClass(level: string): string {
   switch (level) {
     case "DEBUG":
       return "bg-green-500/10 text-green-500";

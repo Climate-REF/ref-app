@@ -16,6 +16,7 @@ import {
 
 const LEVEL_BUTTONS: { value: LogLevelFilter; label: string }[] = [
   { value: "all", label: "All" },
+  { value: "debug", label: "Debug" },
   { value: "info", label: "Info" },
   { value: "warning", label: "Warning" },
   { value: "error", label: "Error" },
@@ -32,7 +33,7 @@ export function ExecutionLogView({ logs }: ExecutionLogViewProps) {
   const filteredLogs = filterLogs(logs, logLevel, searchTerm);
 
   return (
-    <div className="space-y-4 over">
+    <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -57,28 +58,28 @@ export function ExecutionLogView({ logs }: ExecutionLogViewProps) {
         </div>
       </div>
 
-      <div className="">
-        <ScrollArea className="h-[1200px] rounded-md border bg-muted p-4">
-          <pre className="font-mono text-xs">
-            {filteredLogs.map((log, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: The message might not have a unique identifier,
-              <div key={index} className="mb-1 flex">
-                <span className="mr-2 text-muted-foreground">
-                  {log.timestamp}
-                </span>
+      <ScrollArea className="h-[1200px] rounded-md border bg-muted p-4">
+        <pre className="font-mono text-xs">
+          {filteredLogs.map((log, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: The message might not have a unique identifier,
+            <div key={index} className="mb-1 flex">
+              <span className="mr-2 text-muted-foreground">
+                {log.timestamp}
+              </span>
+              {log.level && (
                 <Badge
                   variant="outline"
                   className={`mr-2 items-start ${levelClass(log.level)}`}
                 >
-                  {log.level?.toUpperCase()}
+                  {log.level.toUpperCase()}
                 </Badge>
-                <span>{log.message}</span>
-              </div>
-            ))}
-          </pre>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+              )}
+              <span>{log.message}</span>
+            </div>
+          ))}
+        </pre>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       <div className="text-xs text-muted-foreground">
         Showing {filteredLogs.length} of {logs.length} log entries
