@@ -21,6 +21,24 @@ export function isIntegerAxis(indexName: string): boolean {
 }
 
 /**
+ * The x and y of series `seriesIndex` in `row`, or null when the row has no point to draw
+ *
+ * A row has no point when its index or the series' value is missing, or the value is not finite.
+ */
+export function plottablePoint(
+  row: ChartDataPoint,
+  indexName: string,
+  seriesIndex: number,
+): { x: number; y: number } | null {
+  const x = row[indexName];
+  const y = row[`series_${seriesIndex}`];
+  if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(y)) {
+    return null;
+  }
+  return { x, y };
+}
+
+/**
  * Check if a value looks like an ISO 8601 datetime string
  */
 function isDatetimeString(value: unknown): value is string {

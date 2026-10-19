@@ -6,6 +6,7 @@ import {
   type ChartDataPoint,
   createScaledTickFormatter,
   isIntegerAxis,
+  plottablePoint,
 } from "./utils";
 
 const Y_TICK_COUNT = 8;
@@ -119,7 +120,6 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     for (const meta of sortedMeta) {
       const isHidden = hiddenLabels.has(meta.label);
       const isHovered = meta.label === hoveredLabel;
-      const key = `series_${meta.seriesIndex}`;
 
       if (isHidden) {
         ctx.strokeStyle = isDark ? "#4B5563" : "#D1D5DB";
@@ -137,19 +137,14 @@ export const SeriesCanvas = memo(function SeriesCanvas({
 
       ctx.beginPath();
       let started = false;
-      for (let i = 0; i < chartData.length; i++) {
-        const xVal = chartData[i][indexName];
-        const yVal = chartData[i][key];
-        if (
-          typeof xVal !== "number" ||
-          typeof yVal !== "number" ||
-          !Number.isFinite(yVal)
-        ) {
+      for (const row of chartData) {
+        const value = plottablePoint(row, indexName, meta.seriesIndex);
+        if (!value) {
           started = false;
           continue;
         }
-        const px = xScale(xVal);
-        const py = yScale(yVal);
+        const px = xScale(value.x);
+        const py = yScale(value.y);
         if (!started) {
           ctx.moveTo(px, py);
           started = true;

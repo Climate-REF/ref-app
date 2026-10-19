@@ -5,6 +5,7 @@ import {
   createChartData,
   createScaledTickFormatter,
   getDimensionKeys,
+  plottablePoint,
   withLabelsHidden,
 } from "./utils";
 
@@ -128,6 +129,23 @@ describe("createScaledTickFormatter", () => {
     expect(createScaledTickFormatter([1.0, 1.8])(1.25)).toBe("1.25");
     expect(createScaledTickFormatter([0, 500])(250.789)).toBe("251");
     expect(createScaledTickFormatter([1e6, 3e6])(1234567)).toBe("1.235e+6");
+  });
+});
+
+describe("plottablePoint", () => {
+  it("returns the index and value of the series", () => {
+    const row = { year: 2020, series_0: 1.5, series_1: 2 };
+    expect(plottablePoint(row, "year", 1)).toEqual({ x: 2020, y: 2 });
+  });
+
+  it.each([
+    ["a missing value", { year: 2020 }],
+    ["a null value", { year: 2020, series_0: null }],
+    ["a non-finite value", { year: 2020, series_0: Number.NaN }],
+    ["a missing index", { series_0: 1 }],
+    ["a string index", { year: "2020", series_0: 1 }],
+  ])("returns null for %s", (_, row) => {
+    expect(plottablePoint(row, "year", 0)).toBeNull();
   });
 });
 
