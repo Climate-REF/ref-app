@@ -30,7 +30,9 @@ export function ExplorerCardDropdown({
     include_unverified: String(includeUnverified),
   };
 
-  const uri = contentItem.type === "box-whisker-chart" ? "scalars" : "series";
+  const valueType =
+    contentItem.type === "box-whisker-chart" ? "scalar" : "series";
+  const uri = valueType === "scalar" ? "scalars" : "series";
 
   return (
     <DropdownMenu>
@@ -64,7 +66,7 @@ export function ExplorerCardDropdown({
                   ...(contentItem.otherFilters ?? {}),
                   detect_outliers: "iqr",
                   include_unverified: includeUnverified ?? false,
-                  value_type: "scalar",
+                  value_type: valueType,
                   format: "csv",
                 },
                 parseAs: "blob",
