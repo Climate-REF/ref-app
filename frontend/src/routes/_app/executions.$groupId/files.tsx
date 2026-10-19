@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
-import { ExecutionNotRun } from "@/components/execution/executionNotRun";
+import { ExecutionNotRun } from "@/components/execution/executionTabCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLatestExecution } from "@/hooks/useLatestExecution";
 
