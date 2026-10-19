@@ -1,6 +1,6 @@
 """Tests for the Settings CORS parsing."""
 
-from ref_backend.core.config import parse_cors
+from ref_backend.core.config import Settings, parse_cors
 
 
 class TestParseCors:
@@ -15,3 +15,9 @@ class TestParseCors:
         """A list value passes through unchanged."""
         result = parse_cors(["http://a.example", "http://b.example"])
         assert result == ["http://a.example", "http://b.example"]
+
+
+def test_preview_environment_is_accepted(monkeypatch):
+    """Pull request previews deploy with ENVIRONMENT=preview."""
+    monkeypatch.setenv("ENVIRONMENT", "preview")
+    assert Settings().ENVIRONMENT == "preview"
