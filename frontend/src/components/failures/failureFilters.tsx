@@ -9,7 +9,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -19,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FailureCount } from "@/lib/failures";
 import { MIP_ERAS, type MipEra } from "@/lib/mipEras";
 import { cn } from "@/lib/utils";
+import { type DayRange, DayRangePicker } from "./dayRangePicker";
 
 const countText = ({ groups, diagnostics }: FailureCount) =>
   `${groups} failed in ${diagnostics} ${diagnostics === 1 ? "diagnostic" : "diagnostics"}`;
@@ -124,11 +124,6 @@ function FilterCombobox({
   );
 }
 
-export interface DayRange {
-  from: string;
-  to: string;
-}
-
 /**
  * The filters of the failures page, which narrow everything below them
  *
@@ -147,6 +142,7 @@ export function FailureFilterBar({
   onModel,
   days,
   allDays,
+  failureDays,
   onDays,
   onClear,
   summary,
@@ -162,11 +158,13 @@ export function FailureFilterBar({
   modelCounts: FailureCount[];
   model?: string;
   onModel: (model: string | undefined) => void;
-  /** The selected days, or the full range when none were picked */
-  days?: DayRange;
+  /** The days picked, either end open when not filtering by it */
+  days: DayRange;
   /** The days from the oldest to the newest failure */
-  allDays?: DayRange;
-  onDays: (days: Partial<DayRange>) => void;
+  allDays?: { from: string; to: string };
+  /** Days with failures matching the other filters, marked in the calendar */
+  failureDays?: Set<string>;
+  onDays: (days: DayRange) => void;
   onClear?: () => void;
   summary?: string;
   disabled?: boolean;
@@ -201,34 +199,13 @@ export function FailureFilterBar({
           onSelect={onModel}
           disabled={disabled}
         />
-        <div className="flex flex-wrap items-center gap-1 text-sm">
-          <span className="text-muted-foreground">Failed between</span>
-          <Input
-            type="date"
-            aria-label="Failed on or after"
-            className="h-8 w-auto"
-            value={days?.from ?? ""}
-            min={allDays?.from}
-            max={days?.to ?? allDays?.to}
-            disabled={disabled || !allDays}
-            onChange={(event) =>
-              onDays({ from: event.target.value || undefined })
-            }
-          />
-          <span className="text-muted-foreground">and</span>
-          <Input
-            type="date"
-            aria-label="Failed on or before"
-            className="h-8 w-auto"
-            value={days?.to ?? ""}
-            min={days?.from ?? allDays?.from}
-            max={allDays?.to}
-            disabled={disabled || !allDays}
-            onChange={(event) =>
-              onDays({ to: event.target.value || undefined })
-            }
-          />
-        </div>
+        <DayRangePicker
+          value={days}
+          allDays={allDays}
+          markedDays={failureDays}
+          onChange={onDays}
+          disabled={disabled || !allDays}
+        />
         {onClear && (
           <Button variant="ghost" size="sm" onClick={onClear}>
             <X className="size-4" />

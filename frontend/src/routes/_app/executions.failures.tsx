@@ -3,14 +3,12 @@ import { AlertTriangle } from "lucide-react";
 import { useMemo } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/app/pageHeader";
+import type { DayRange } from "@/components/failures/dayRangePicker";
 import {
   DiagnosticFailuresCard,
   DiagnosticFailuresCardSkeleton,
 } from "@/components/failures/diagnosticFailuresCard";
-import {
-  type DayRange,
-  FailureFilterBar,
-} from "@/components/failures/failureFilters";
+import { FailureFilterBar } from "@/components/failures/failureFilters";
 import {
   ProviderHealthOverview,
   ProviderHealthOverviewSkeleton,
@@ -88,30 +86,39 @@ function FailuresPage() {
     () => (unsuccessful ? failureDays(unsuccessful) : undefined),
     [unsuccessful],
   );
-  // A day picked at the edge of the full range is the same as not filtering by it
-  const selectDays = (days: Partial<DayRange>) => {
-    const next = { from, to, ...days };
-    updateSearch({
-      from: next.from === allDays?.from ? undefined : next.from,
-      to: next.to === allDays?.to ? undefined : next.to,
-    });
-  };
+  const selectDays = (days: DayRange) =>
+    updateSearch({ from: days.from, to: days.to });
 
-  const { diagnostics, reasonCounts, modelCounts } = useMemo(() => {
-    if (!catalog || !unsuccessful) {
-      return { diagnostics: undefined, reasonCounts: [], modelCounts: [] };
-    }
-    const summarise = (narrowed: FailureFilters) =>
-      summariseFailures(catalog, unsuccessful, narrowed);
-    return {
-      diagnostics: summarise(filters),
-      // Each dropdown counts what selecting a value would show, given the other filters
-      reasonCounts: failuresByReason(
-        summarise({ ...filters, reason: undefined }),
-      ),
-      modelCounts: failuresByModel(summarise({ ...filters, model: undefined })),
-    };
-  }, [catalog, unsuccessful, filters]);
+  const { diagnostics, reasonCounts, modelCounts, failureDaySet } =
+    useMemo(() => {
+      if (!catalog || !unsuccessful) {
+        return {
+          diagnostics: undefined,
+          reasonCounts: [],
+          modelCounts: [],
+          failureDaySet: new Set<string>(),
+        };
+      }
+      const summarise = (narrowed: FailureFilters) =>
+        summariseFailures(catalog, unsuccessful, narrowed);
+      return {
+        diagnostics: summarise(filters),
+        // Each dropdown counts what selecting a value would show, given the other filters
+        reasonCounts: failuresByReason(
+          summarise({ ...filters, reason: undefined }),
+        ),
+        modelCounts: failuresByModel(
+          summarise({ ...filters, model: undefined }),
+        ),
+        // The calendar marks the days with failures matching the other filters
+        failureDaySet: new Set(
+          summarise({ ...filters, from: undefined, to: undefined })
+            .flatMap((failures) => failures.failedGroups)
+            .map((group) => group.executions.at(-1)?.updated_at.slice(0, 10))
+            .filter((day) => day !== undefined),
+        ),
+      };
+    }, [catalog, unsuccessful, filters]);
 
   const failing = (diagnostics ?? []).filter(
     (failures) => failures.failedGroups.length > 0,
@@ -143,8 +150,9 @@ function FailuresPage() {
         modelCounts={modelCounts}
         model={model}
         onModel={(selected) => updateSearch({ model: selected })}
-        days={allDays && { from: from ?? allDays.from, to: to ?? allDays.to }}
+        days={{ from, to }}
         allDays={allDays}
+        failureDays={failureDaySet}
         onDays={selectDays}
         onClear={
           filtered
