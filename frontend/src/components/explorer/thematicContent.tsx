@@ -48,14 +48,6 @@ export function PlainLanguageToggle({
   );
 }
 
-/** True when at least one collection carries a plain language summary worth toggling to. */
-export function hasPlainLanguageContent(theme: ThemeDetail): boolean {
-  return theme.collections.some((c) => {
-    const pl = c.content?.plain_language;
-    return pl?.description || pl?.why_it_matters || pl?.takeaway;
-  });
-}
-
 function ThemeContent({
   theme,
   plainLanguage,

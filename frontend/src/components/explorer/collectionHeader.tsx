@@ -1,55 +1,31 @@
 import { Link } from "@tanstack/react-router";
-import type {
-  AftCollectionContent,
-  AftCollectionDetail,
-} from "@/client/types.gen";
+import type { AftCollectionDetail } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
+import { collectionText } from "./collectionText";
 
 interface CollectionHeaderProps {
   collection: AftCollectionDetail;
   plainLanguage: boolean;
 }
 
-function getDescription(
-  content: AftCollectionContent | null | undefined,
-  plainLanguage: boolean,
-): string | null | undefined {
-  if (!content) return null;
-  if (plainLanguage && content.plain_language?.description) {
-    return content.plain_language.description;
-  }
-  return content.description;
-}
-
-function getWhyItMatters(
-  content: AftCollectionContent | null | undefined,
-  plainLanguage: boolean,
-): string | null | undefined {
-  if (!content) return null;
-  if (plainLanguage && content.plain_language?.why_it_matters) {
-    return content.plain_language.why_it_matters;
-  }
-  return content.why_it_matters;
-}
-
-function getTakeaway(
-  content: AftCollectionContent | null | undefined,
-  plainLanguage: boolean,
-): string | null | undefined {
-  if (!content) return null;
-  if (plainLanguage && content.plain_language?.takeaway) {
-    return content.plain_language.takeaway;
-  }
-  return content.takeaway;
+/** A titled text set off from the description by a rule on its left. */
+function Callout({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="border-l-2 border-primary/30 pl-4 py-1">
+      <p className="text-sm font-medium text-foreground mb-1">{title}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+    </div>
+  );
 }
 
 export function CollectionHeader({
   collection,
   plainLanguage,
 }: CollectionHeaderProps) {
-  const description = getDescription(collection.content, plainLanguage);
-  const whyItMatters = getWhyItMatters(collection.content, plainLanguage);
-  const takeaway = getTakeaway(collection.content, plainLanguage);
+  const { content } = collection;
+  const description = collectionText(content, "description", plainLanguage);
+  const whyItMatters = collectionText(content, "why_it_matters", plainLanguage);
+  const takeaway = collectionText(content, "takeaway", plainLanguage);
 
   return (
     <div className="max-w-prose space-y-4 pb-2">
@@ -70,25 +46,9 @@ export function CollectionHeader({
         </p>
       )}
 
-      {whyItMatters && (
-        <div className="border-l-2 border-primary/30 pl-4 py-1">
-          <p className="text-sm font-medium text-foreground mb-1">
-            Why it matters
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {whyItMatters}
-          </p>
-        </div>
-      )}
+      {whyItMatters && <Callout title="Why it matters" text={whyItMatters} />}
 
-      {takeaway && (
-        <div className="border-l-2 border-primary/30 pl-4 py-1">
-          <p className="text-sm font-medium text-foreground mb-1">Takeaway</p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {takeaway}
-          </p>
-        </div>
-      )}
+      {takeaway && <Callout title="Takeaway" text={takeaway} />}
 
       <div className="flex items-center gap-2 flex-wrap">
         {collection.reference_dataset && (
