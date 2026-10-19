@@ -433,6 +433,79 @@ export function getDimensionKeys(seriesMetadata: SeriesMetadata[]): string[] {
   return Array.from(keys).sort();
 }
 
+/** A label in the legend, standing for every series that shares it */
+export interface LegendItem {
+  label: string;
+  color: string;
+  count: number;
+  isReference: boolean;
+}
+
+/**
+ * One legend item per label, references first and the rest by label
+ *
+ * A label takes its colour from the first series with that label.
+ */
+export function legendItems(seriesMetadata: SeriesMetadata[]): LegendItem[] {
+  const items = new Map<string, LegendItem>();
+  for (const meta of seriesMetadata) {
+    const existing = items.get(meta.label);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      items.set(meta.label, {
+        label: meta.label,
+        color: meta.color,
+        count: 1,
+        isReference: meta.isReference,
+      });
+    }
+  }
+  return Array.from(items.values()).sort(
+    (a, b) =>
+      Number(b.isReference) - Number(a.isReference) ||
+      a.label.localeCompare(b.label),
+  );
+}
+
+/** Each label's dimensions, taken from the first series with that label */
+export function labelDimensions(
+  seriesMetadata: SeriesMetadata[],
+): Map<string, Record<string, string>> {
+  const map = new Map<string, Record<string, string>>();
+  for (const meta of seriesMetadata) {
+    if (!map.has(meta.label)) {
+      map.set(meta.label, meta.dimensions);
+    }
+  }
+  return map;
+}
+
+/** The labels hidden from the chart: all but the soloed label and references while soloing, otherwise `hiddenLabels` */
+export function hiddenLabelsWithSolo(
+  hiddenLabels: Set<string>,
+  soloedLabel: string | null,
+  items: LegendItem[],
+): Set<string> {
+  if (!soloedLabel) return hiddenLabels;
+  return new Set(
+    items
+      .filter((item) => item.label !== soloedLabel && !item.isReference)
+      .map((item) => item.label),
+  );
+}
+
+/** A copy of `set` with `value` removed when it is in the set, and added otherwise */
+export function toggleInSet<T>(set: ReadonlySet<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(value)) {
+    next.delete(value);
+  } else {
+    next.add(value);
+  }
+  return next;
+}
+
 /** A copy of `hiddenLabels` with every one of `labels` hidden, or shown when `hidden` is false */
 export function withLabelsHidden(
   hiddenLabels: ReadonlySet<string>,

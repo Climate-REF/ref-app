@@ -7,13 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-export interface LegendItem {
-  label: string;
-  color: string;
-  count: number;
-  isReference: boolean;
-}
+import type { LegendItem } from "./utils";
 
 interface SeriesLegendProps {
   uniqueLabels: LegendItem[];

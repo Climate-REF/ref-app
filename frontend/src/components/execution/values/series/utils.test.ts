@@ -7,7 +7,12 @@ import {
   formatIndexValue,
   formatTimeTick,
   getDimensionKeys,
+  hiddenLabelsWithSolo,
+  type LegendItem,
+  labelDimensions,
+  legendItems,
   plottablePoint,
+  toggleInSet,
   withLabelsHidden,
 } from "./utils";
 
@@ -886,5 +891,89 @@ describe("getDimensionKeys", () => {
       },
     ];
     expect(getDimensionKeys(metadata)).toEqual(["source_id"]);
+  });
+});
+
+/** Series metadata for `label`, with any fields overridden */
+function meta(
+  seriesIndex: number,
+  label: string,
+  options: Partial<SeriesMetadata> = {},
+): SeriesMetadata {
+  return {
+    seriesIndex,
+    label,
+    color: `#00000${seriesIndex}`,
+    isReference: false,
+    dimensions: {},
+    ...options,
+  };
+}
+
+/** A legend item for `label` */
+function item(label: string, isReference = false): LegendItem {
+  return { label, color: "#000000", count: 1, isReference };
+}
+
+describe("legendItems", () => {
+  it("counts the series sharing a label and keeps the first colour", () => {
+    const items = legendItems([meta(0, "A"), meta(1, "B"), meta(2, "A")]);
+    expect(items).toEqual([
+      { label: "A", color: "#000000", count: 2, isReference: false },
+      { label: "B", color: "#000001", count: 1, isReference: false },
+    ]);
+  });
+
+  it("puts references first and orders the rest by label", () => {
+    const items = legendItems([
+      meta(0, "b"),
+      meta(1, "Ref", { isReference: true }),
+      meta(2, "a"),
+    ]);
+    expect(items.map((i) => i.label)).toEqual(["Ref", "a", "b"]);
+  });
+});
+
+describe("labelDimensions", () => {
+  it("maps each label to the dimensions of its first series", () => {
+    const map = labelDimensions([
+      meta(0, "A", { dimensions: { source_id: "first" } }),
+      meta(1, "A", { dimensions: { source_id: "second" } }),
+      meta(2, "B", { dimensions: { source_id: "other" } }),
+    ]);
+    expect(map).toEqual(
+      new Map([
+        ["A", { source_id: "first" }],
+        ["B", { source_id: "other" }],
+      ]),
+    );
+  });
+});
+
+describe("hiddenLabelsWithSolo", () => {
+  const items = [item("Ref", true), item("A"), item("B"), item("C")];
+
+  it("keeps the hidden labels when not soloing", () => {
+    const hidden = new Set(["A"]);
+    expect(hiddenLabelsWithSolo(hidden, null, items)).toBe(hidden);
+  });
+
+  it("hides all but the soloed label and references while soloing", () => {
+    expect(hiddenLabelsWithSolo(new Set(["B"]), "B", items)).toEqual(
+      new Set(["A", "C"]),
+    );
+  });
+});
+
+describe("toggleInSet", () => {
+  it("adds a missing value and removes a present one", () => {
+    expect(toggleInSet(new Set(["a"]), "b")).toEqual(new Set(["a", "b"]));
+    expect(toggleInSet(new Set(["a", "b"]), "a")).toEqual(new Set(["b"]));
+  });
+
+  it("does not change the given set", () => {
+    const set = new Set(["a"]);
+    toggleInSet(set, "a");
+    expect(set).toEqual(new Set(["a"]));
   });
 });

@@ -15,7 +15,15 @@ import { SeriesLegend } from "./seriesLegend";
 import { useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
 import { findTooltipPoints, useSpatialIndex } from "./useSpatialIndex";
-import { createChartData, getDimensionKeys, withLabelsHidden } from "./utils";
+import {
+  createChartData,
+  getDimensionKeys,
+  hiddenLabelsWithSolo,
+  labelDimensions,
+  legendItems,
+  toggleInSet,
+  withLabelsHidden,
+} from "./utils";
 
 const REFERENCE_MISMATCH_ISSUE =
   "https://github.com/Climate-REF/climate-ref/issues/927";
@@ -113,65 +121,26 @@ export function SeriesVisualization({
     [seriesMetadata],
   );
 
-  // Map from label to its dimensions
-  const labelDimensionMap = useMemo(() => {
-    const map = new Map<string, Record<string, string>>();
-    for (const meta of seriesMetadata) {
-      if (!map.has(meta.label)) {
-        map.set(meta.label, meta.dimensions);
-      }
-    }
-    return map;
-  }, [seriesMetadata]);
+  const labelDimensionMap = useMemo(
+    () => labelDimensions(seriesMetadata),
+    [seriesMetadata],
+  );
 
   // State for hidden labels
   const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(
     () => new Set<string>(),
   );
 
-  // Get unique labels with their colors and counts
-  const uniqueLabels = useMemo(() => {
-    const labelMap = new Map<
-      string,
-      { color: string; count: number; isReference: boolean }
-    >();
-    for (const meta of seriesMetadata) {
-      const existing = labelMap.get(meta.label);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        labelMap.set(meta.label, {
-          color: meta.color,
-          count: 1,
-          isReference: meta.isReference,
-        });
-      }
-    }
-    return Array.from(labelMap.entries())
-      .map(([label, { color, count, isReference }]) => ({
-        label,
-        color,
-        count,
-        isReference,
-      }))
-      .sort((a, b) => {
-        if (a.isReference && !b.isReference) return -1;
-        if (!a.isReference && b.isReference) return 1;
-        return a.label.localeCompare(b.label);
-      });
-  }, [seriesMetadata]);
+  const uniqueLabels = useMemo(
+    () => legendItems(seriesMetadata),
+    [seriesMetadata],
+  );
 
   // Effective hidden labels accounting for solo mode
-  const effectiveHiddenLabels = useMemo(() => {
-    if (!soloedLabel) return hiddenLabels;
-    const hidden = new Set<string>();
-    for (const item of uniqueLabels) {
-      if (item.label !== soloedLabel && !item.isReference) {
-        hidden.add(item.label);
-      }
-    }
-    return hidden;
-  }, [soloedLabel, hiddenLabels, uniqueLabels]);
+  const effectiveHiddenLabels = useMemo(
+    () => hiddenLabelsWithSolo(hiddenLabels, soloedLabel, uniqueLabels),
+    [soloedLabel, hiddenLabels, uniqueLabels],
+  );
 
   // Compute scales
   const { xScale, yScale, innerWidth, innerHeight, margins } = useChartScales(
@@ -201,15 +170,7 @@ export function SeriesVisualization({
         setSoloedLabel(null);
         return;
       }
-      setHiddenLabels((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(label)) {
-          newSet.delete(label);
-        } else {
-          newSet.add(label);
-        }
-        return newSet;
-      });
+      setHiddenLabels((prev) => toggleInSet(prev, label));
     },
     [soloedLabel],
   );
