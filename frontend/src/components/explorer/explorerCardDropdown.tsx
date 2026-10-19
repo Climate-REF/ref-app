@@ -13,26 +13,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { downloadBlob } from "@/lib/downloadUtils";
+import { chartValuesSearch } from "./chartValues";
+import type { MetricValuesQuery } from "./content/useExplorerMetricValues";
 
 interface ExplorerCardDropdownProps {
   contentItem: BoxWhiskerChartContent | SeriesChartContent;
-  includeUnverified?: boolean;
+  /** The query of the values the chart shows, so the menu acts on the same values */
+  query: MetricValuesQuery;
 }
 
 export function ExplorerCardDropdown({
   contentItem,
-  includeUnverified,
+  query,
 }: ExplorerCardDropdownProps) {
   const navigate = useNavigate();
-  const searchParams: Record<string, string> = {
-    ...(contentItem?.otherFilters ?? {}),
-    detect_outliers: "iqr",
-    include_unverified: String(includeUnverified),
-  };
-
-  const valueType =
-    contentItem.type === "box-whisker-chart" ? "scalar" : "series";
-  const uri = valueType === "scalar" ? "scalars" : "series";
+  const uri = contentItem.type === "box-whisker-chart" ? "scalars" : "series";
 
   return (
     <DropdownMenu>
@@ -47,7 +42,7 @@ export function ExplorerCardDropdown({
           onClick={() =>
             navigate({
               to: `/diagnostics/${contentItem.provider}/${contentItem.diagnostic}/${uri}`,
-              search: searchParams,
+              search: chartValuesSearch(query),
             })
           }
         >
@@ -62,13 +57,7 @@ export function ExplorerCardDropdown({
                   provider_slug: contentItem.provider,
                   diagnostic_slug: contentItem.diagnostic,
                 },
-                query: {
-                  ...(contentItem.otherFilters ?? {}),
-                  detect_outliers: "iqr",
-                  include_unverified: includeUnverified ?? false,
-                  value_type: valueType,
-                  format: "csv",
-                },
+                query: { ...query, format: "csv" },
                 parseAs: "blob",
               });
 

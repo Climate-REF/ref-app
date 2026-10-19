@@ -7,8 +7,10 @@ import type {
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { type FilterableCard, useFilterControls } from "./filterControls";
 
-/** The query parameters of the metric values a chart card shows. */
-export type MetricValuesQuery = DiagnosticsListMetricValuesData["query"];
+/** The query parameters of the metric values a chart card shows, with its dimension filters. */
+export type MetricValuesQuery = DiagnosticsListMetricValuesData["query"] & {
+  [dimension: string]: string | number | boolean | null | undefined;
+};
 
 /** Query parameters a chart adds on top of the card's filters, such as outlier handling. */
 export type ExtraMetricValuesQuery = Pick<
@@ -17,7 +19,7 @@ export type ExtraMetricValuesQuery = Pick<
 >;
 
 /**
- * The metric values a chart card shows, with the bar of its filter controls
+ * The metric values a chart card shows, with the bar of its filter controls and the query
  *
  * The card's filters and the filter controls are applied first, so they cannot override
  * the value type, the limit or the selected MIP era.
@@ -50,5 +52,5 @@ export function useExplorerMetricValues(
     }),
   );
 
-  return { filterBar, collection: data as MetricValueCollection };
+  return { filterBar, collection: data as MetricValueCollection, query };
 }

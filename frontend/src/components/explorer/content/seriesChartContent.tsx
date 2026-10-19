@@ -3,6 +3,8 @@ import { MipEraSections } from "@/components/charts/mipEraSections";
 import { SeriesVisualization } from "@/components/execution/values/series";
 import type { SeriesValue } from "@/components/execution/values/types";
 import { isSeriesValue } from "@/components/execution/values/types";
+import { ExplorerCardDropdown } from "../explorerCardDropdown";
+import { ExplorerCardFrame } from "../explorerCardFrame";
 import type { SeriesChartContent as SeriesChartContentType } from "../types";
 import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
@@ -11,7 +13,7 @@ interface SeriesChartContentProps {
 }
 
 export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
-  const { filterBar, collection } = useExplorerMetricValues(
+  const { filterBar, collection, query } = useExplorerMetricValues(
     contentItem,
     "series",
   );
@@ -26,21 +28,24 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
       referenceSeries: all.filter((series) => series.kind === "reference"),
     };
   }, [collection?.data]);
+  const menu = <ExplorerCardDropdown contentItem={contentItem} query={query} />;
 
   if (allSeriesValues.length === 0) {
     return (
-      <div className="space-y-3">
-        {filterBar}
-        <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-          <div className="text-center text-sm text-gray-500">
-            <p>No series data available</p>
-            <p className="text-xs mt-1">
-              This diagnostic may not have series data or filters may be too
-              restrictive
-            </p>
+      <ExplorerCardFrame contentItem={contentItem} menu={menu}>
+        <div className="space-y-3">
+          {filterBar}
+          <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
+            <div className="text-center text-sm text-gray-500">
+              <p>No series data available</p>
+              <p className="text-xs mt-1">
+                This diagnostic may not have series data or filters may be too
+                restrictive
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </ExplorerCardFrame>
     );
   }
 
@@ -58,14 +63,16 @@ export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
   );
 
   return (
-    <div className="space-y-3">
-      {filterBar}
-      {regularSeries.length === 0 ? (
-        // Nothing to split on, so show the references rather than an empty panel.
-        renderSeries(regularSeries)
-      ) : (
-        <MipEraSections values={regularSeries}>{renderSeries}</MipEraSections>
-      )}
-    </div>
+    <ExplorerCardFrame contentItem={contentItem} menu={menu}>
+      <div className="space-y-3">
+        {filterBar}
+        {regularSeries.length === 0 ? (
+          // Nothing to split on, so show the references rather than an empty panel.
+          renderSeries(regularSeries)
+        ) : (
+          <MipEraSections values={regularSeries}>{renderSeries}</MipEraSections>
+        )}
+      </div>
+    </ExplorerCardFrame>
   );
 }
