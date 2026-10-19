@@ -1,3 +1,4 @@
+import { seriesLineColor } from "./seriesCanvas";
 import type { NearestResult } from "./useSpatialIndex";
 import { formatIndexValue } from "./utils";
 
@@ -12,6 +13,7 @@ interface CanvasTooltipProps {
   containerWidth: number;
   indexName: string;
   isTimeAxis: boolean;
+  isDark: boolean;
   units?: string;
 }
 
@@ -136,6 +138,7 @@ export function CanvasTooltip({
   containerWidth,
   indexName,
   isTimeAxis,
+  isDark,
   units,
 }: CanvasTooltipProps) {
   if (!visible || !nearest || allAtX.length === 0) {
@@ -173,7 +176,7 @@ export function CanvasTooltip({
           <div
             className="w-3 h-3 rounded-full flex-shrink-0"
             style={{
-              backgroundColor: nearest.metadata.color,
+              backgroundColor: seriesLineColor(nearest.metadata, isDark),
             }}
           />
           <span className="font-semibold text-foreground truncate flex-1">
@@ -232,7 +235,7 @@ export function CanvasTooltip({
               <div
                 className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{
-                  backgroundColor: metadata.color,
+                  backgroundColor: seriesLineColor(metadata, isDark),
                 }}
               />
               <span className="text-muted-foreground truncate flex-1 max-w-36">

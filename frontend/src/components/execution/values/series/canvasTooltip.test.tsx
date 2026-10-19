@@ -1,6 +1,8 @@
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   buildTooltipModel,
+  CanvasTooltip,
   formatDelta,
   formatXValue,
   formatYValue,
@@ -122,6 +124,53 @@ describe("buildTooltipModel", () => {
     const model = buildTooltipModel(allAtX[0], allAtX);
     expect(model.others).toHaveLength(7);
     expect(model.remaining).toBe(2);
+  });
+});
+
+describe("CanvasTooltip", () => {
+  /** The background colours of the tooltip's series dots, nearest first */
+  function dotColors(
+    nearest: NearestResult,
+    allAtX: NearestResult[],
+    isDark: boolean,
+  ) {
+    const { container } = render(
+      <CanvasTooltip
+        visible
+        x={0}
+        y={0}
+        nearest={nearest}
+        allAtX={allAtX}
+        containerWidth={800}
+        indexName="year"
+        isTimeAxis={false}
+        isDark={isDark}
+      />,
+    );
+    return Array.from(
+      container.querySelectorAll<HTMLElement>(".rounded-full"),
+      (dot) => dot.style.backgroundColor,
+    );
+  }
+
+  const reference: NearestResult = {
+    ...entry(1),
+    metadata: { ...entry(1).metadata, color: "#000000", isReference: true },
+  };
+
+  it("colours reference dots to contrast the dark background", () => {
+    expect(dotColors(reference, [reference, entry(0)], true)).toEqual([
+      "rgb(255, 255, 255)",
+      "rgb(78, 121, 167)",
+    ]);
+    expect(dotColors(entry(0), [entry(0), reference], true)).toEqual([
+      "rgb(78, 121, 167)",
+      "rgb(255, 255, 255)",
+    ]);
+  });
+
+  it("colours reference dots black on the light background", () => {
+    expect(dotColors(reference, [reference], false)).toEqual(["rgb(0, 0, 0)"]);
   });
 });
 

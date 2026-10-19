@@ -414,6 +414,7 @@ export function SeriesVisualization({
               containerWidth={containerWidth}
               indexName={indexName}
               isTimeAxis={isTimeAxis}
+              isDark={isDark}
               units={effectiveUnits}
             />
           </div>
