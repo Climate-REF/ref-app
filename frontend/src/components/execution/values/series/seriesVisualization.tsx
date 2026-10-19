@@ -6,12 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/hooks/useTheme";
 import type { SeriesValue } from "../types";
 import { CanvasTooltip } from "./canvasTooltip";
-import { type CrosshairPosition, SeriesCanvas } from "./seriesCanvas";
+import {
+  type CrosshairPosition,
+  SeriesCanvas,
+  seriesLineColor,
+} from "./seriesCanvas";
 import { SeriesLegend } from "./seriesLegend";
 import { useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
-import { useSpatialIndex } from "./useSpatialIndex";
-import { createChartData, getDimensionKeys } from "./utils";
+import { findTooltipPoints, useSpatialIndex } from "./useSpatialIndex";
+import { createChartData, getDimensionKeys, withLabelsHidden } from "./utils";
 
 const REFERENCE_MISMATCH_ISSUE =
   "https://github.com/Climate-REF/climate-ref/issues/927";
@@ -210,6 +214,22 @@ export function SeriesVisualization({
     [soloedLabel],
   );
 
+  // Hide or show several labels at once. Leaving solo mode keeps what it was
+  // showing, so only these labels change.
+  const setLabelsHidden = useCallback(
+    (labels: string[], hidden: boolean) => {
+      setSoloedLabel(null);
+      setHiddenLabels((prev) =>
+        withLabelsHidden(
+          soloedLabel ? effectiveHiddenLabels : prev,
+          labels,
+          hidden,
+        ),
+      );
+    },
+    [soloedLabel, effectiveHiddenLabels],
+  );
+
   // Solo mode
   const handleSolo = useCallback((label: string) => {
     setSoloedLabel((prev) => (prev === label ? null : label));
@@ -257,18 +277,15 @@ export function SeriesVisualization({
 
       cancelAnimationFrame(tooltipRafRef.current);
       tooltipRafRef.current = requestAnimationFrame(() => {
-        const nearest = spatialIndex.findNearest(
+        const found = findTooltipPoints(
+          spatialIndex,
           mouseX,
           mouseY,
           effectiveHiddenLabels,
         );
 
-        if (nearest) {
-          const allAtX = spatialIndex.findNearestAtX(
-            mouseX,
-            mouseY,
-            effectiveHiddenLabels,
-          );
+        if (found) {
+          const { nearest, allAtX } = found;
 
           hoveredLabelRef.current = nearest.metadata.label;
 
@@ -277,9 +294,7 @@ export function SeriesVisualization({
             dataPixelX: nearest.point.pixelX,
             nearestPixelX: nearest.point.pixelX,
             nearestPixelY: nearest.point.pixelY,
-            nearestColor: nearest.metadata.isReference
-              ? "#000000"
-              : nearest.metadata.color,
+            nearestColor: seriesLineColor(nearest.metadata, isDark),
           };
 
           canvas.redraw?.();
@@ -305,7 +320,7 @@ export function SeriesVisualization({
         }
       });
     },
-    [spatialIndex, effectiveHiddenLabels, margins],
+    [spatialIndex, effectiveHiddenLabels, margins, isDark],
   );
 
   const handleCanvasMouseLeave = useCallback(() => {
@@ -451,6 +466,7 @@ export function SeriesVisualization({
             hoveredLabel={hoveredLabel}
             soloedLabel={soloedLabel}
             onToggleLabel={toggleLabel}
+            onSetLabelsHidden={setLabelsHidden}
             onHoverLabel={handleLabelHover}
             onSoloLabel={handleSolo}
             onShowAll={showAll}

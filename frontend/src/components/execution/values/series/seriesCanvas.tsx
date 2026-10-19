@@ -2,7 +2,19 @@ import * as d3 from "d3";
 import { memo, useCallback, useEffect, useRef } from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartMargins, XScaleType } from "./useChartScales";
-import { type ChartDataPoint, isIntegerAxis } from "./utils";
+import {
+  type ChartDataPoint,
+  createScaledTickFormatter,
+  isIntegerAxis,
+} from "./utils";
+
+const Y_TICK_COUNT = 8;
+
+/** The colour a series' line is drawn in, with reference lines contrasting the background */
+export function seriesLineColor(meta: SeriesMetadata, isDark: boolean): string {
+  if (!meta.isReference) return meta.color;
+  return isDark ? "#FFFFFF" : "#000000";
+}
 
 export interface CrosshairPosition {
   dataPixelX: number;
@@ -109,17 +121,16 @@ export const SeriesCanvas = memo(function SeriesCanvas({
       const isHovered = meta.label === hoveredLabel;
       const key = `series_${meta.seriesIndex}`;
 
-      const refColor = isDark ? "#FFFFFF" : "#000000";
       if (isHidden) {
         ctx.strokeStyle = isDark ? "#4B5563" : "#D1D5DB";
         ctx.lineWidth = 0.5;
         ctx.globalAlpha = 0.15;
       } else if (isHovered) {
-        ctx.strokeStyle = meta.isReference ? refColor : meta.color;
+        ctx.strokeStyle = seriesLineColor(meta, isDark);
         ctx.lineWidth = meta.isReference ? 5 : 3.5;
         ctx.globalAlpha = 1;
       } else {
-        ctx.strokeStyle = meta.isReference ? refColor : meta.color;
+        ctx.strokeStyle = seriesLineColor(meta, isDark);
         ctx.lineWidth = meta.isReference ? 3 : 1.5;
         ctx.globalAlpha = meta.isReference ? 1 : 0.8;
       }
@@ -262,7 +273,7 @@ function drawGrid(
   ctx.setLineDash([3, 3]);
 
   // Horizontal grid lines
-  const yTicks = yScale.ticks(8);
+  const yTicks = yScale.ticks(Y_TICK_COUNT);
   for (const tick of yTicks) {
     const y = yScale(tick);
     ctx.beginPath();
@@ -282,20 +293,6 @@ function drawGrid(
   }
 
   ctx.setLineDash([]);
-}
-
-function formatTickValue(value: number, range: number): string {
-  if (Math.abs(value) >= 1e6 || (range > 0 && Math.abs(value) >= 1e4)) {
-    return value.toExponential(1);
-  }
-  if (Math.abs(value) < 1e-3 && value !== 0) {
-    return value.toExponential(1);
-  }
-  if (range < 0.1) return value.toFixed(3);
-  if (range < 1) return value.toFixed(2);
-  if (range < 10) return value.toFixed(2);
-  if (range < 100) return value.toFixed(1);
-  return value.toFixed(0);
 }
 
 function formatXTickValue(value: number, indexName: string): string {
@@ -350,8 +347,7 @@ function drawAxes(
 ) {
   ctx.save();
 
-  const yDomain = yScale.domain();
-  const yRange = yDomain[1] - yDomain[0];
+  const formatYTick = createScaledTickFormatter(yScale.domain(), Y_TICK_COUNT);
 
   // Y axis
   ctx.strokeStyle = isDark ? "#374151" : "#E5E7EB";
@@ -366,10 +362,10 @@ function drawAxes(
   ctx.lineTo(margins.left, margins.top + innerHeight);
   ctx.stroke();
 
-  const yTicks = yScale.ticks(8);
+  const yTicks = yScale.ticks(Y_TICK_COUNT);
   for (const tick of yTicks) {
     const y = margins.top + yScale(tick);
-    ctx.fillText(formatTickValue(tick, yRange), margins.left - 8, y);
+    ctx.fillText(formatYTick(tick), margins.left - 8, y);
   }
 
   // Y axis label

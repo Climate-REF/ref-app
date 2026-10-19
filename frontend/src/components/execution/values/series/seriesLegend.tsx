@@ -21,6 +21,8 @@ interface SeriesLegendProps {
   hoveredLabel: string | null;
   soloedLabel: string | null;
   onToggleLabel: (label: string) => void;
+  /** Hide or show several labels at once, leaving solo mode */
+  onSetLabelsHidden: (labels: string[], hidden: boolean) => void;
   onHoverLabel: (label: string | null) => void;
   onSoloLabel: (label: string) => void;
   onShowAll: () => void;
@@ -37,6 +39,7 @@ export const SeriesLegend = memo(function SeriesLegend({
   hoveredLabel,
   soloedLabel,
   onToggleLabel,
+  onSetLabelsHidden,
   onHoverLabel,
   onSoloLabel,
   onShowAll,
@@ -94,18 +97,14 @@ export const SeriesLegend = memo(function SeriesLegend({
 
   const toggleGroupVisibility = useCallback(
     (items: LegendItem[]) => {
+      // If all are hidden, show all; otherwise hide all
       const allHidden = items.every((item) => hiddenLabels.has(item.label));
-      for (const item of items) {
-        const isHidden = hiddenLabels.has(item.label);
-        // If all are hidden, show all; otherwise hide all
-        if (allHidden && isHidden) {
-          onToggleLabel(item.label);
-        } else if (!allHidden && !isHidden) {
-          onToggleLabel(item.label);
-        }
-      }
+      onSetLabelsHidden(
+        items.map((item) => item.label),
+        !allHidden,
+      );
     },
-    [hiddenLabels, onToggleLabel],
+    [hiddenLabels, onSetLabelsHidden],
   );
 
   const visibleCount = uniqueLabels.filter(

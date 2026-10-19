@@ -75,6 +75,23 @@ export function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+/**
+ * The series listed under the nearest one, and how many are left out
+ *
+ * The nearest series has its own block, so it is never listed again
+ * and the entries shown add up to at most `MAX_TOOLTIP_ENTRIES`.
+ */
+export function otherTooltipEntries(
+  allAtX: NearestResult[],
+  nearest: NearestResult,
+): { others: NearestResult[]; remaining: number } {
+  const candidates = allAtX.filter(
+    (r) => r.metadata.seriesIndex !== nearest.metadata.seriesIndex,
+  );
+  const others = candidates.slice(0, MAX_TOOLTIP_ENTRIES - 1);
+  return { others, remaining: candidates.length - others.length };
+}
+
 export function CanvasTooltip({
   visible,
   x,
@@ -90,8 +107,7 @@ export function CanvasTooltip({
     return null;
   }
 
-  const displayed = allAtX.slice(0, MAX_TOOLTIP_ENTRIES);
-  const remaining = allAtX.length - displayed.length;
+  const { others, remaining } = otherTooltipEntries(allAtX, nearest);
 
   // Find reference value at this X for delta computation
   const referenceEntry = allAtX.find((r) => r.metadata.isReference);
@@ -182,49 +198,44 @@ export function CanvasTooltip({
       </div>
 
       {/* Other series at this X position */}
-      {displayed.length > 1 && (
+      {others.length > 0 && (
         <div className="space-y-0.5">
-          {displayed
-            .filter(
-              (r) => r.metadata.seriesIndex !== nearest.metadata.seriesIndex,
-            )
-            .slice(0, MAX_TOOLTIP_ENTRIES - 1)
-            .map(({ point, metadata }) => {
-              const delta =
-                referenceValue !== null && !metadata.isReference
-                  ? point.y - referenceValue
-                  : null;
-              return (
+          {others.map(({ point, metadata }) => {
+            const delta =
+              referenceValue !== null && !metadata.isReference
+                ? point.y - referenceValue
+                : null;
+            return (
+              <div
+                key={metadata.seriesIndex}
+                className="flex items-center gap-2 opacity-70"
+              >
                 <div
-                  key={metadata.seriesIndex}
-                  className="flex items-center gap-2 opacity-70"
-                >
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{
-                      backgroundColor: metadata.color,
-                    }}
-                  />
-                  <span className="text-muted-foreground truncate flex-1 max-w-36">
-                    {metadata.label}
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    backgroundColor: metadata.color,
+                  }}
+                />
+                <span className="text-muted-foreground truncate flex-1 max-w-36">
+                  {metadata.label}
+                </span>
+                <span className="font-mono text-foreground tabular-nums">
+                  {formatYValue(point.y)}
+                </span>
+                {delta !== null && (
+                  <span
+                    className={`font-mono tabular-nums ${
+                      delta >= 0
+                        ? "text-red-600/60 dark:text-red-400/60"
+                        : "text-blue-600/60 dark:text-blue-400/60"
+                    }`}
+                  >
+                    {formatDelta(delta)}
                   </span>
-                  <span className="font-mono text-foreground tabular-nums">
-                    {formatYValue(point.y)}
-                  </span>
-                  {delta !== null && (
-                    <span
-                      className={`font-mono tabular-nums ${
-                        delta >= 0
-                          ? "text-red-600/60 dark:text-red-400/60"
-                          : "text-blue-600/60 dark:text-blue-400/60"
-                      }`}
-                    >
-                      {formatDelta(delta)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import {
   getFixedDimensionColor,
   unreservedPalette,
@@ -50,43 +51,55 @@ function parseDatetimeToTimestamp(value: string): number | null {
   return Number.isFinite(ts) ? ts : null;
 }
 
+/** Drop trailing zeros after the decimal point, keeping any exponent */
+function trimTrailingZeros(text: string): string {
+  const [mantissa, exponent] = text.split("e");
+  const trimmed = mantissa.includes(".")
+    ? mantissa.replace(/\.?0+$/, "")
+    : mantissa;
+  return exponent === undefined ? trimmed : `${trimmed}e${exponent}`;
+}
+
+/**
+ * Build a formatter for value-axis ticks spanning `values`
+ *
+ * Ticks get just enough digits to tell neighbouring ticks apart,
+ * using `tickCount` to estimate the tick step d3 will pick.
+ * Values between ticks, such as tooltip statistics, get up to two more digits.
+ * Exponent notation is only used for magnitudes of at least 1e6 or below 1e-3.
+ */
 export function createScaledTickFormatter(
   values: number[],
+  tickCount = 5,
 ): (value: number | string) => string {
   if (values.length === 0) return (value: string | number) => String(value);
 
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const range = max - min;
+  const magnitude = Math.max(Math.abs(min), Math.abs(max));
+  // A zero range has no tick step, so space ticks as if the range were the magnitude
+  const step = d3.tickStep(0, max - min || magnitude || 1, tickCount);
+  const useExponent = magnitude >= 1e6 || (magnitude > 0 && magnitude < 1e-3);
 
-  // Determine appropriate formatting based on range and magnitude
   return (value: string | number): string => {
-    const numValue = Number(value);
+    let numValue = Number(value);
+    if (!Number.isFinite(numValue)) return String(value);
+    // Snap rounding noise around zero, which would otherwise print as "-0.0" or "1e-17"
+    if (Math.abs(numValue) < step * 1e-6) numValue = 0;
 
-    // Handle very large numbers (scientific notation)
-    if (Math.abs(numValue) >= 1e6 || (range > 0 && Math.abs(numValue) >= 1e4)) {
-      return numValue.toExponential(1);
-    }
+    const onTick =
+      Math.abs(numValue / step - Math.round(numValue / step)) < 1e-6;
+    const resolution = onTick ? step : step / 100;
 
-    // Handle very small numbers (scientific notation)
-    if (Math.abs(numValue) < 1e-3 && numValue !== 0) {
-      return numValue.toExponential(1);
+    if (useExponent) {
+      if (numValue === 0) return "0";
+      const text = numValue.toExponential(
+        d3.precisionRound(resolution, magnitude) - 1,
+      );
+      return onTick ? text : trimTrailingZeros(text);
     }
-
-    // Handle decimal precision based on range
-    if (range < 0.1) {
-      return numValue.toFixed(3);
-    }
-    if (range < 1) {
-      return numValue.toFixed(2);
-    }
-    if (range < 10) {
-      return numValue.toFixed(2);
-    }
-    if (range < 100) {
-      return numValue.toFixed(1);
-    }
-    return numValue.toFixed(0);
+    const text = numValue.toFixed(d3.precisionFixed(resolution));
+    return onTick ? text : trimTrailingZeros(text);
   };
 }
 
@@ -368,4 +381,21 @@ export function getDimensionKeys(seriesMetadata: SeriesMetadata[]): string[] {
     }
   }
   return Array.from(keys).sort();
+}
+
+/** A copy of `hiddenLabels` with every one of `labels` hidden, or shown when `hidden` is false */
+export function withLabelsHidden(
+  hiddenLabels: ReadonlySet<string>,
+  labels: Iterable<string>,
+  hidden: boolean,
+): Set<string> {
+  const next = new Set(hiddenLabels);
+  for (const label of labels) {
+    if (hidden) {
+      next.add(label);
+    } else {
+      next.delete(label);
+    }
+  }
+  return next;
 }

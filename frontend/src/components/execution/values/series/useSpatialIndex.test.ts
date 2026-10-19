@@ -1,6 +1,8 @@
+import { renderHook } from "@testing-library/react";
 import * as d3 from "d3";
 import { describe, expect, it } from "vitest";
 import type { SeriesMetadata } from "../types";
+import { findTooltipPoints, useSpatialIndex } from "./useSpatialIndex";
 
 // Test spatial index logic directly (extracted from the hook)
 
@@ -289,5 +291,42 @@ describe("buildSpatialIndex", () => {
     expect(result).not.toBeNull();
     // NaN and Infinity points should be excluded
     expect(Number.isFinite(result!.point.y)).toBe(true);
+  });
+});
+
+describe("findTooltipPoints", () => {
+  // Two close x positions, so the cursor can be nearer one x while the
+  // nearest point sits at the other
+  const closeData: ChartDataPoint[] = [
+    { year: 2020, series_0: 7.5, series_1: 2.5 },
+    { year: 2021, series_0: 2.5, series_1: 2.5 },
+  ];
+  const closeXScale = d3.scaleLinear().domain([2020, 2021]).range([0, 40]);
+  const closeYScale = d3.scaleLinear().domain([0, 10]).range([400, 0]);
+
+  function renderIndex() {
+    return renderHook(() =>
+      useSpatialIndex(
+        closeData,
+        meta.slice(0, 2),
+        "year",
+        closeXScale,
+        closeYScale,
+      ),
+    ).result.current;
+  }
+
+  it("collects the other series at the nearest point's x, not the cursor's", () => {
+    // The cursor is nearer 2021 in x, but ModelA at 2020 is the nearest point
+    const found = findTooltipPoints(renderIndex(), 25, 100, new Set());
+    expect(found).not.toBeNull();
+    expect(found!.nearest.metadata.label).toBe("ModelA");
+    expect(found!.nearest.point.x).toBe(2020);
+    expect(found!.allAtX.map((r) => r.point.x)).toEqual([2020, 2020]);
+    expect(found!.allAtX[0].metadata.label).toBe("ModelA");
+  });
+
+  it("returns null when no point is near the cursor", () => {
+    expect(findTooltipPoints(renderIndex(), 500, 0, new Set())).toBeNull();
   });
 });

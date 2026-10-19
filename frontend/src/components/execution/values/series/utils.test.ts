@@ -1,9 +1,11 @@
+import * as d3 from "d3";
 import { describe, expect, it } from "vitest";
 import type { SeriesMetadata, SeriesValue } from "../types";
 import {
   createChartData,
   createScaledTickFormatter,
   getDimensionKeys,
+  withLabelsHidden,
 } from "./utils";
 
 const mockSeriesValue: SeriesValue = {
@@ -34,49 +36,120 @@ describe("createScaledTickFormatter", () => {
     expect(formatter("test")).toBe("test");
   });
 
-  it("formats large numbers with scientific notation", () => {
-    const formatter = createScaledTickFormatter([1e6, 2e6, 3e6]);
-    expect(formatter(1500000)).toBe("1.5e+6");
+  /** Format the ticks d3 draws for `[min, max]` */
+  function tickLabels(min: number, max: number, count = 5): string[] {
+    const formatter = createScaledTickFormatter([min, max], count);
+    return d3.ticks(min, max, count).map(formatter);
+  }
+
+  it.each([
+    [101300, 101350, 8],
+    [0.0001, 0.0003, 5],
+    [1e6, 3e6, 5],
+    [1.0, 1.08, 5],
+    [-0.5, 0.5, 5],
+    [-273.15, 5000, 8],
+    [1234567, 1234568, 5],
+  ])("gives every tick of [%d, %d] a distinct label", (min, max, count) => {
+    const labels = tickLabels(min, max, count);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
-  it("formats very small numbers with scientific notation", () => {
-    const formatter = createScaledTickFormatter([0.0001, 0.0002, 0.0003]);
-    expect(formatter(0.00015)).toBe("1.5e-4");
+  it("keeps large values with a small range in fixed notation", () => {
+    expect(tickLabels(101300, 101350, 8)).toEqual([
+      "101300",
+      "101305",
+      "101310",
+      "101315",
+      "101320",
+      "101325",
+      "101330",
+      "101335",
+      "101340",
+      "101345",
+      "101350",
+    ]);
   });
 
-  it("does not use scientific notation for zero", () => {
+  it("keeps values below 1e6 in fixed notation", () => {
+    const formatter = createScaledTickFormatter([10000, 100000]);
+    expect(formatter(20000)).toBe("20000");
+    expect(formatter(25000)).toBe("25000");
+  });
+
+  it("uses exponent notation for values of at least 1e6", () => {
+    expect(tickLabels(1e6, 3e6)).toEqual([
+      "1.0e+6",
+      "1.5e+6",
+      "2.0e+6",
+      "2.5e+6",
+      "3.0e+6",
+    ]);
+  });
+
+  it("uses exponent notation for small values", () => {
+    expect(tickLabels(0.0001, 0.0003)).toEqual([
+      "1.0e-4",
+      "1.5e-4",
+      "2.0e-4",
+      "2.5e-4",
+      "3.0e-4",
+    ]);
+  });
+
+  it("does not use exponent notation for zero", () => {
     const formatter = createScaledTickFormatter([0, 0.0001, 0.0002]);
-    expect(formatter(0)).toBe("0.000");
+    expect(formatter(0)).toBe("0");
   });
 
-  it("formats range < 0.1 with 3 decimal places", () => {
-    const formatter = createScaledTickFormatter([1.0, 1.05, 1.08]);
-    expect(formatter(1.025)).toBe("1.025");
+  it("formats mixed signs with the same precision", () => {
+    expect(tickLabels(-0.5, 0.5)).toEqual([
+      "-0.4",
+      "-0.2",
+      "0.0",
+      "0.2",
+      "0.4",
+    ]);
   });
 
-  it("formats range < 1 with 2 decimal places", () => {
-    const formatter = createScaledTickFormatter([1.0, 1.5, 1.8]);
-    expect(formatter(1.25)).toBe("1.25");
+  it("does not print rounding noise around zero as negative", () => {
+    const formatter = createScaledTickFormatter([-0.5, 0.5]);
+    expect(formatter(-1e-17)).toBe("0.0");
   });
 
-  it("formats range < 10 with 2 decimal places", () => {
-    const formatter = createScaledTickFormatter([10, 15, 18]);
-    expect(formatter(12.5)).toBe("12.50");
+  it("formats a zero range by the magnitude of the value", () => {
+    expect(createScaledTickFormatter([101300, 101300])(101300)).toBe("101300");
+    expect(createScaledTickFormatter([0.5, 0.5])(0.5)).toBe("0.5");
+    expect(createScaledTickFormatter([0, 0])(0)).toBe("0.0");
   });
 
-  it("formats range < 100 with 1 decimal place", () => {
-    const formatter = createScaledTickFormatter([10, 50, 90]);
-    expect(formatter(42.567)).toBe("42.6");
+  it("gives values between ticks up to two more digits", () => {
+    expect(createScaledTickFormatter([10, 90])(42.567)).toBe("42.6");
+    expect(createScaledTickFormatter([1.0, 1.8])(1.25)).toBe("1.25");
+    expect(createScaledTickFormatter([0, 500])(250.789)).toBe("251");
+    expect(createScaledTickFormatter([1e6, 3e6])(1234567)).toBe("1.235e+6");
+  });
+});
+
+describe("withLabelsHidden", () => {
+  it("hides every label", () => {
+    const result = withLabelsHidden(new Set(["a"]), ["b", "c"], true);
+    expect(result).toEqual(new Set(["a", "b", "c"]));
   });
 
-  it("formats range >= 100 with 0 decimal places", () => {
-    const formatter = createScaledTickFormatter([0, 100, 500]);
-    expect(formatter(250.789)).toBe("251");
+  it("shows every label", () => {
+    const result = withLabelsHidden(
+      new Set(["a", "b", "c"]),
+      ["a", "b"],
+      false,
+    );
+    expect(result).toEqual(new Set(["c"]));
   });
 
-  it("uses scientific notation for large numbers with large range", () => {
-    const formatter = createScaledTickFormatter([10000, 50000, 100000]);
-    expect(formatter(25000)).toBe("2.5e+4");
+  it("does not change the given set", () => {
+    const hidden = new Set(["a"]);
+    withLabelsHidden(hidden, ["b"], true);
+    expect(hidden).toEqual(new Set(["a"]));
   });
 });
 

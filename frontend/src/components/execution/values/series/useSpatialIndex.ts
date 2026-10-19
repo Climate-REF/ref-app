@@ -92,6 +92,28 @@ export interface SpatialIndex {
   ) => NearestResult[];
 }
 
+/**
+ * The point nearest the cursor and every visible point sharing its x
+ *
+ * The nearest point can sit at a different x than the cursor,
+ * so the other series are looked up at the nearest point's x rather than the cursor's.
+ */
+export function findTooltipPoints(
+  index: SpatialIndex,
+  pixelX: number,
+  pixelY: number,
+  hiddenLabels: Set<string>,
+): { nearest: NearestResult; allAtX: NearestResult[] } | null {
+  const nearest = index.findNearest(pixelX, pixelY, hiddenLabels);
+  if (!nearest) return null;
+  const allAtX = index.findNearestAtX(
+    nearest.point.pixelX,
+    pixelY,
+    hiddenLabels,
+  );
+  return { nearest, allAtX };
+}
+
 export function useSpatialIndex(
   chartData: ChartDataPoint[],
   seriesMetadata: SeriesMetadata[],

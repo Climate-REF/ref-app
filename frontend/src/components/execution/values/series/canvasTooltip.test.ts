@@ -4,7 +4,68 @@ import {
   formatXValue,
   formatYValue,
   ordinal,
+  otherTooltipEntries,
 } from "./canvasTooltip";
+import type { NearestResult } from "./useSpatialIndex";
+
+/** A point of series `seriesIndex` at x = 0 */
+function entry(seriesIndex: number): NearestResult {
+  return {
+    point: {
+      seriesIndex,
+      dataIndex: 0,
+      x: 0,
+      y: seriesIndex,
+      pixelX: 0,
+      pixelY: seriesIndex,
+    },
+    metadata: {
+      seriesIndex,
+      label: `Series ${seriesIndex}`,
+      color: "#4e79a7",
+      isReference: false,
+      dimensions: {},
+    },
+    distance: seriesIndex,
+  };
+}
+
+/** `count` entries for series 0, 1, 2, ... */
+function entries(count: number): NearestResult[] {
+  return Array.from({ length: count }, (_, i) => entry(i));
+}
+
+describe("otherTooltipEntries", () => {
+  it("lists every other series when they fit", () => {
+    const allAtX = entries(5);
+    const { others, remaining } = otherTooltipEntries(allAtX, allAtX[0]);
+    expect(others.map((r) => r.metadata.seriesIndex)).toEqual([1, 2, 3, 4]);
+    expect(remaining).toBe(0);
+  });
+
+  it("counts the series left out when the nearest is shown first", () => {
+    const allAtX = entries(12);
+    const { others, remaining } = otherTooltipEntries(allAtX, allAtX[0]);
+    expect(others).toHaveLength(7);
+    // 1 nearest + 7 others shown, 4 left out
+    expect(remaining).toBe(4);
+  });
+
+  it("counts the series left out when the nearest is not among the first 8", () => {
+    const allAtX = entries(12);
+    const { others, remaining } = otherTooltipEntries(allAtX, allAtX[10]);
+    expect(others.map((r) => r.metadata.seriesIndex)).toEqual([
+      0, 1, 2, 3, 4, 5, 6,
+    ]);
+    expect(remaining).toBe(4);
+  });
+
+  it("counts every listed series as left out when the nearest is not in the list", () => {
+    const { others, remaining } = otherTooltipEntries(entries(12), entry(20));
+    expect(others).toHaveLength(7);
+    expect(remaining).toBe(5);
+  });
+});
 
 describe("formatXValue", () => {
   it("shows integer years without decimals", () => {
