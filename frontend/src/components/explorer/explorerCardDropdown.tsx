@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 import { MoreHorizontal } from "lucide-react";
-import { diagnosticsListMetricValues } from "@/client/sdk.gen";
 import type {
   BoxWhiskerChartContent,
   SeriesChartContent,
@@ -12,8 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { downloadBlob } from "@/lib/downloadUtils";
-import { chartValuesSearch } from "./chartValues";
+import { chartValuesSearch, downloadChartValues } from "./chartValues";
 import type { MetricValuesQuery } from "./content/useExplorerMetricValues";
 
 interface ExplorerCardDropdownProps {
@@ -49,26 +47,12 @@ export function ExplorerCardDropdown({
           View chart values
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={async () => {
-            // TODO: replace with generic fetchDownload from useMetricValues when available
-            try {
-              const { data, error } = await diagnosticsListMetricValues({
-                path: {
-                  provider_slug: contentItem.provider,
-                  diagnostic_slug: contentItem.diagnostic,
-                },
-                query: { ...query, format: "csv" },
-                parseAs: "blob",
-              });
-
-              if (error) throw error;
-              const filename = `${contentItem.provider}-${contentItem.diagnostic}-values.csv`;
-              downloadBlob(data as unknown as Blob, filename);
-            } catch (err) {
+          onClick={() =>
+            downloadChartValues(contentItem, query).catch((err) => {
               console.error("Download failed:", err);
               alert("Failed to download data. Please try again.");
-            }
-          }}
+            })
+          }
         >
           Download values (CSV)
         </DropdownMenuItem>
