@@ -19,6 +19,44 @@ export function seriesLineColor(meta: SeriesMetadata, isDark: boolean): string {
   return isDark ? "#FFFFFF" : "#000000";
 }
 
+/**
+ * The series in the order their lines are drawn, so later lines sit on top
+ *
+ * Hidden series go first and the hovered series last,
+ * with reference series above regular ones within each group.
+ */
+export function orderSeriesForDraw(
+  seriesMetadata: SeriesMetadata[],
+  hiddenLabels: ReadonlySet<string>,
+  hoveredLabel: string | null,
+): SeriesMetadata[] {
+  const layer = (meta: SeriesMetadata) =>
+    (hiddenLabels.has(meta.label) ? 0 : 4) +
+    (meta.label === hoveredLabel ? 2 : 0) +
+    (meta.isReference ? 1 : 0);
+  return [...seriesMetadata].sort((a, b) => layer(a) - layer(b));
+}
+
+/** How a series' line is stroked: faint grey when hidden, thicker when hovered, references bolder */
+export function seriesStroke(
+  meta: SeriesMetadata,
+  state: { hidden: boolean; hovered: boolean },
+  isDark: boolean,
+): { color: string; width: number; alpha: number } {
+  if (state.hidden) {
+    return { color: isDark ? "#4B5563" : "#D1D5DB", width: 0.5, alpha: 0.15 };
+  }
+  const color = seriesLineColor(meta, isDark);
+  if (state.hovered) {
+    return { color, width: meta.isReference ? 5 : 3.5, alpha: 1 };
+  }
+  return {
+    color,
+    width: meta.isReference ? 3 : 1.5,
+    alpha: meta.isReference ? 1 : 0.8,
+  };
+}
+
 export interface CrosshairPosition {
   dataPixelX: number;
   nearestPixelX: number;
@@ -102,40 +140,23 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     // Draw grid
     drawGrid(ctx, xScale, yScale, innerWidth, innerHeight, isDark);
 
-    // Draw lines: hidden first, then visible, hovered last
     const hoveredLabel = hoveredLabelRef.current;
-    const sortedMeta = [...seriesMetadata].sort((a, b) => {
-      const aHidden = hiddenLabels.has(a.label);
-      const bHidden = hiddenLabels.has(b.label);
-      if (aHidden && !bHidden) return -1;
-      if (!aHidden && bHidden) return 1;
-      const aHovered = a.label === hoveredLabel;
-      const bHovered = b.label === hoveredLabel;
-      if (aHovered && !bHovered) return 1;
-      if (!aHovered && bHovered) return -1;
-      // Reference series on top of regular
-      if (a.isReference && !b.isReference) return 1;
-      if (!a.isReference && b.isReference) return -1;
-      return 0;
-    });
-
-    for (const meta of sortedMeta) {
-      const isHidden = hiddenLabels.has(meta.label);
-      const isHovered = meta.label === hoveredLabel;
-
-      if (isHidden) {
-        ctx.strokeStyle = isDark ? "#4B5563" : "#D1D5DB";
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = 0.15;
-      } else if (isHovered) {
-        ctx.strokeStyle = seriesLineColor(meta, isDark);
-        ctx.lineWidth = meta.isReference ? 5 : 3.5;
-        ctx.globalAlpha = 1;
-      } else {
-        ctx.strokeStyle = seriesLineColor(meta, isDark);
-        ctx.lineWidth = meta.isReference ? 3 : 1.5;
-        ctx.globalAlpha = meta.isReference ? 1 : 0.8;
-      }
+    for (const meta of orderSeriesForDraw(
+      seriesMetadata,
+      hiddenLabels,
+      hoveredLabel,
+    )) {
+      const stroke = seriesStroke(
+        meta,
+        {
+          hidden: hiddenLabels.has(meta.label),
+          hovered: meta.label === hoveredLabel,
+        },
+        isDark,
+      );
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.width;
+      ctx.globalAlpha = stroke.alpha;
 
       ctx.beginPath();
       let started = false;
@@ -292,6 +313,31 @@ function drawGrid(
   ctx.setLineDash([]);
 }
 
+/** The x axis ticks as pixel positions and labels, leaving out fractional ticks on an integer axis */
+export function xAxisTicks(
+  xScale: XScaleType,
+  indexName: string,
+  isTimeAxis: boolean,
+): { position: number; label: string }[] {
+  if (isTimeAxis) {
+    return (xScale as d3.ScaleTime<number, number>)
+      .ticks(10)
+      .map((tick) => ({ position: xScale(tick), label: formatTimeTick(tick) }));
+  }
+  const ticks = (xScale as d3.ScaleLinear<number, number>).ticks(10);
+  return (
+    isIntegerAxis(indexName) ? ticks.filter((t) => Number.isInteger(t)) : ticks
+  ).map((tick) => ({
+    position: xScale(tick),
+    label: formatIndexValue(tick, indexName),
+  }));
+}
+
+/** An axis title, with its units when there are any */
+function axisTitle(name: string, units?: string): string {
+  return units ? `${name} (${units})` : name;
+}
+
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   xScale: XScaleType,
@@ -335,10 +381,11 @@ function drawAxes(
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = "center";
   ctx.font = "14px system-ui, sans-serif";
-  const baseName = metricName || "Value";
-  const yLabel =
-    units && units !== "unitless" ? `${baseName} (${units})` : baseName;
-  ctx.fillText(yLabel, 0, 0);
+  ctx.fillText(
+    axisTitle(metricName || "Value", units === "unitless" ? undefined : units),
+    0,
+    0,
+  );
   ctx.restore();
 
   // X axis
@@ -351,35 +398,16 @@ function drawAxes(
   ctx.lineTo(margins.left + innerWidth, margins.top + innerHeight);
   ctx.stroke();
 
-  if (isTimeAxis) {
-    const timeTicks = (xScale as d3.ScaleTime<number, number>).ticks(10);
-    for (const tick of timeTicks) {
-      const x = margins.left + xScale(tick);
-      ctx.fillText(formatTimeTick(tick), x, margins.top + innerHeight + 8);
-    }
-  } else {
-    const xTicksRaw = (xScale as d3.ScaleLinear<number, number>).ticks(10);
-    const xTicks = isIntegerAxis(indexName)
-      ? xTicksRaw.filter((t) => Number.isInteger(t))
-      : xTicksRaw;
-    for (const tick of xTicks) {
-      const x = margins.left + xScale(tick);
-      ctx.fillText(
-        formatIndexValue(tick, indexName),
-        x,
-        margins.top + innerHeight + 8,
-      );
-    }
+  for (const { position, label } of xAxisTicks(xScale, indexName, isTimeAxis)) {
+    ctx.fillText(label, margins.left + position, margins.top + innerHeight + 8);
   }
 
   // X axis label. Units don't apply to time axes (already rendered as dates).
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = "14px system-ui, sans-serif";
-  const xLabel =
-    !isTimeAxis && indexUnits ? `${indexName} (${indexUnits})` : indexName;
   ctx.fillText(
-    xLabel,
+    axisTitle(indexName, isTimeAxis ? undefined : indexUnits),
     margins.left + innerWidth / 2,
     margins.top + innerHeight + 30,
   );
