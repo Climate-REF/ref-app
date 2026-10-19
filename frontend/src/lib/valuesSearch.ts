@@ -5,6 +5,17 @@ import { mipEraSearchFields } from "./mipEras";
 
 export const DEFAULT_PAGE_SIZE = 50;
 
+/**
+ * A facet filter param, as a string
+ *
+ * The router parses search values that look like numbers or booleans, such as `?member=1`,
+ * so those are turned back into the string the facet value is.
+ */
+const facetParam = z
+  .union([z.string(), z.number(), z.boolean()])
+  .transform(String)
+  .optional();
+
 // Outlier and pagination params every values tab shares
 const valuesSearchFields = {
   detect_outliers: z.enum(["off", "iqr"]).default("iqr"),
@@ -19,7 +30,7 @@ const valuesSearchFields = {
 /** Search params of an execution group's values tabs. Any other param is a facet filter. */
 export const executionValuesSearchSchema = z
   .object(valuesSearchFields)
-  .catchall(z.string().optional());
+  .catchall(facetParam);
 
 /** Search params of a diagnostic's values tabs, which also pick the series grouping and MIP era. */
 export const diagnosticValuesSearchSchema = z
@@ -30,7 +41,7 @@ export const diagnosticValuesSearchSchema = z
     ...valuesSearchFields,
     ...mipEraSearchFields,
   })
-  .catchall(z.string().optional());
+  .catchall(facetParam);
 
 export type ExecutionValuesSearch = z.output<
   typeof executionValuesSearchSchema

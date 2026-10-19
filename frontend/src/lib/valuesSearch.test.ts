@@ -54,6 +54,12 @@ describe.each([
       source_id: "CESM2,GFDL",
     });
   });
+
+  it("keeps facet params the router parsed as numbers or booleans as strings", () => {
+    expect(
+      schema.parse({ member: 1, isolate_ids: 42, flag: true }),
+    ).toMatchObject({ member: "1", isolate_ids: "42", flag: "true" });
+  });
 });
 
 describe("diagnosticValuesSearchSchema", () => {
