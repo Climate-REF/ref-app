@@ -10,7 +10,7 @@ export interface ChartMargins {
   left: number;
 }
 
-export const DEFAULT_MARGINS: ChartMargins = {
+const DEFAULT_MARGINS: ChartMargins = {
   top: 10,
   right: 30,
   bottom: 50,

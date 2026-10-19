@@ -31,7 +31,7 @@ function isDatetimeString(value: unknown): value is string {
 /**
  * Detect if the index values in a series are datetime strings
  */
-export function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
+function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
   if (indexValues.length === 0) return false;
   // Check the first non-null value
   for (const v of indexValues) {
@@ -45,7 +45,7 @@ export function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
  * Parse a datetime string to a millisecond timestamp.
  * Returns null if the string is not a valid date.
  */
-export function parseDatetimeToTimestamp(value: string): number | null {
+function parseDatetimeToTimestamp(value: string): number | null {
   const ts = new Date(value).getTime();
   return Number.isFinite(ts) ? ts : null;
 }

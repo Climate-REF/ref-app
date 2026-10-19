@@ -26,7 +26,7 @@ export const mipEraSearchFields = {
 
 export const mipEraSearchSchema = z.object(mipEraSearchFields);
 
-export function isMipEra(value: unknown): value is MipEra {
+function isMipEra(value: unknown): value is MipEra {
   return MIP_ERAS.some((era) => era === value);
 }
 
@@ -58,7 +58,7 @@ export function storeMipEra(era: MipEra) {
 export const MIN_MODELS_FOR_CHART = 3;
 
 /** A chart drawn from fewer than this many distinct models carries a sparse-sample warning. */
-export const MIN_MODELS_FOR_CONFIDENCE = 10;
+const MIN_MODELS_FOR_CONFIDENCE = 10;
 
 /**
  * The MIP era a value belongs to, from the `mip_era` dimension the API stamps on each model value.

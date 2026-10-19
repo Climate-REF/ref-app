@@ -5,7 +5,7 @@ import type { DiagnosticRuns } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable";
 import { RunOutcomeBar } from "@/components/models/runOutcomeBar";
 
-export const columns: ColumnDef<DiagnosticRuns>[] = [
+const columns: ColumnDef<DiagnosticRuns>[] = [
   {
     accessorKey: "diagnostic_name",
     header: "Diagnostic",

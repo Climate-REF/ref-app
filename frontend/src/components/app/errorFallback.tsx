@@ -99,19 +99,6 @@ export function ErrorFallback({
   );
 }
 
-// Specialized error fallbacks for different contexts
-export function PageErrorFallback({ error }: { error?: Error }) {
-  return (
-    <ErrorFallback
-      error={error}
-      title="Page Error"
-      description="This page encountered an error. You can try refreshing or navigate to another page."
-      showHomeButton={true}
-      showRefreshButton={true}
-    />
-  );
-}
-
 export function ComponentErrorFallback({
   error,
   resetError,
@@ -125,18 +112,6 @@ export function ComponentErrorFallback({
       resetError={resetError}
       title="Component Error"
       description="A component on this page failed to load. Try refreshing to fix the issue."
-      showHomeButton={false}
-      showRefreshButton={true}
-    />
-  );
-}
-
-export function ApiErrorFallback({ error }: { error?: Error }) {
-  return (
-    <ErrorFallback
-      error={error}
-      title="Connection Error"
-      description="Unable to connect to the server. Please check your connection and try again."
       showHomeButton={false}
       showRefreshButton={true}
     />

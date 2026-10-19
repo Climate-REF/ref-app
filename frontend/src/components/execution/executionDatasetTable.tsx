@@ -9,7 +9,7 @@ import { DataTable } from "@/components/dataTable/dataTable.tsx";
 
 const columnHelper = createColumnHelper<Dataset>();
 
-export const columns: ColumnDef<Dataset>[] = [
+const columns: ColumnDef<Dataset>[] = [
   columnHelper.accessor("slug", {
     header: "Slug",
     cell: (cellContext) => {

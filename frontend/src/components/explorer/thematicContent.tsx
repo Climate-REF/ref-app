@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { BookOpen, FlaskConical } from "lucide-react";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
 import type {
@@ -13,10 +13,12 @@ import type {
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Route } from "@/routes/_app/explorer/themes.tsx";
 import { ExplorerThemeLayout } from "./explorerThemeLayout";
 import type { ChartGroupingConfig } from "./grouping/types";
 import type { ExplorerCard, ExplorerCardContent, FilterControl } from "./types";
+
+// Looked up by id rather than imported, as the route's module imports this one
+const themesRoute = getRouteApi("/_app/explorer/themes");
 
 const themes = [
   { name: "atmosphere", title: "Atmosphere" },
@@ -70,7 +72,7 @@ export function filterExplorerContentForDiagnostic(
     .map(toExplorerCardContent);
 }
 
-export function toExplorerCardContent(
+function toExplorerCardContent(
   apiContent: AftCollectionCardContent,
 ): ExplorerCardContent {
   const base = {
@@ -208,8 +210,8 @@ function ThemeContent({
 }
 
 export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
-  const { theme } = Route.useSearch();
-  const navigate = useNavigate();
+  const { theme } = themesRoute.useSearch();
+  const navigate = themesRoute.useNavigate();
   const themeObj = themes.find((t) => t.name === theme);
   const selectedMipEra = useSelectedMipEra();
 
@@ -225,7 +227,7 @@ export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
           value={theme}
           onValueChange={(value) => {
             navigate({
-              to: Route.fullPath,
+              to: ".",
               search: (prev) => ({ ...prev, theme: value }),
             });
           }}

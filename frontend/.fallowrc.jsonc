@@ -4,7 +4,16 @@
   // module graph so imports resolve, but its findings are hidden.
   // Globs start with ** so they match whether Fallow runs from frontend/ (CLI)
   // or from the repo root (VS Code extension, via fallow.configPath).
-  "ignoreFindings": ["**/src/client/**", "**/*.gen.ts"],
+  "ignoreFindings": [
+    "**/src/client/**",
+    "**/*.gen.ts",
+    // shadcn/ui components copied into the repo, which keep their full API
+    "**/src/components/ui/**"
+  ],
+  // Run by scripts/generate-client-sdk.sh, which is outside the project root
+  "entry": ["openapi-ts.config.ts"],
+  // Types used in an exported signature in the same file stay exported, so callers can name them
+  "ignoreExportsUsedInFile": { "type": true, "interface": true },
   "duplicates": {
     "ignore": ["**/src/client/**", "**/*.gen.ts"]
   },
