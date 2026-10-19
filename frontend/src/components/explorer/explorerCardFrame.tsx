@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { ReferenceDatasetLink } from "@/client/types.gen";
+import { TextWithLinks } from "@/components/app/textWithLinks";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import {
@@ -37,7 +38,9 @@ export function ExplorerCardFrame({
             <CardTitle>{contentItem.title}</CardTitle>
             <div className="min-h-8">
               {contentItem.description && (
-                <CardDescription>{contentItem.description}</CardDescription>
+                <CardDescription>
+                  <TextWithLinks text={contentItem.description} />
+                </CardDescription>
               )}
             </div>
           </div>

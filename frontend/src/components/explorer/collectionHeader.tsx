@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { AftCollectionDetail } from "@/client/types.gen";
+import { TextWithLinks } from "@/components/app/textWithLinks";
 import { Badge } from "@/components/ui/badge";
 import { collectionText } from "./collectionText";
 
@@ -13,7 +14,9 @@ function Callout({ title, text }: { title: string; text: string }) {
   return (
     <div className="border-l-2 border-primary/30 pl-4 py-1">
       <p className="text-sm font-medium text-foreground mb-1">{title}</p>
-      <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        <TextWithLinks text={text} />
+      </p>
     </div>
   );
 }
@@ -42,7 +45,7 @@ export function CollectionHeader({
 
       {description && (
         <p className="text-base text-muted-foreground leading-relaxed">
-          {description}
+          <TextWithLinks text={description} />
         </p>
       )}
 
