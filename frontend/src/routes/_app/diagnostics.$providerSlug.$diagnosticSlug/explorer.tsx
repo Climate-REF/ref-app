@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen";
-import { ErrorBoundary, ErrorFallback } from "@/components/app";
+import { ErrorBoundary } from "@/components/app";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import {
   ExplorerCardContent,
@@ -62,7 +62,7 @@ function ExplorerPanels({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {matchingContentItems.map((contentItem, index) => (
-        <ErrorBoundary key={keys[index]} fallback={<ErrorFallback />}>
+        <ErrorBoundary key={keys[index]}>
           <Suspense fallback={<ExplorerCardContentSkeleton />}>
             <ExplorerCardContent contentItem={contentItem} />
           </Suspense>
