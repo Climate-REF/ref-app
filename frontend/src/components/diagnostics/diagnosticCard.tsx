@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MessageCircleWarning } from "lucide-react";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,16 @@ interface DiagnosticCardProps {
   note?: string;
   noteURL?: string;
   valueFlagsFailed?: boolean;
+}
+
+/** A label with its value on the right */
+function StatRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="text-foreground">{children}</span>
+    </div>
+  );
 }
 
 export function DiagnosticCard({
@@ -53,61 +64,47 @@ export function DiagnosticCard({
         </div>
 
         <div className="space-y-3">
-          {/* AFT Information */}
           {diagnostic.aft_link && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">CMIP7 AFT ID:</span>
-              <span className="text-foreground font-medium">
-                {diagnostic.aft_link.id}
-              </span>
-            </div>
+            <StatRow label="CMIP7 AFT ID">
+              <span className="font-medium">{diagnostic.aft_link.id}</span>
+            </StatRow>
           )}
-
-          {/* Metric Values Status */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Scalar Values:</span>
+          <StatRow label="Scalar Values">
             <ValueStatus
               available={diagnostic.has_scalar_values}
               failed={valueFlagsFailed}
             />
-          </div>
-
-          {/* Metric Values Status */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Series Values:</span>
+          </StatRow>
+          <StatRow label="Series Values">
             <ValueStatus
               available={diagnostic.has_series_values}
               failed={valueFlagsFailed}
             />
-          </div>
-          {/* Total Executions */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Executions:</span>
-            <span className="text-foreground">
-              {diagnostic.successful_execution_group_count}/
-              {diagnostic.execution_group_count}
-              {note && (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <MessageCircleWarning className="ml-2 h-4 w-4 text-red-500" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{note}</p>
-                    {noteURL && (
-                      <a
-                        href={noteURL}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        Read the note about this diagnostic
-                      </a>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </span>
-          </div>
+          </StatRow>
+          <StatRow label="Executions">
+            {diagnostic.successful_execution_group_count}/
+            {diagnostic.execution_group_count}
+            {note && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <MessageCircleWarning className="ml-2 h-4 w-4 text-red-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{note}</p>
+                  {noteURL && (
+                    <a
+                      href={noteURL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Read the note about this diagnostic
+                    </a>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </StatRow>
 
           {/* Reference Datasets */}
           {diagnostic.reference_datasets &&
