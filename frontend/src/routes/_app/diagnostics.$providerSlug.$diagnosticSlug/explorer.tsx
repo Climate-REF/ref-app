@@ -9,9 +9,21 @@ import {
   ExplorerCardContentSkeleton,
 } from "@/components/explorer/explorerCardContent";
 import { filterExplorerContentForDiagnostic } from "@/components/explorer/mapping";
+import type { ExplorerCardContent as ExplorerCardContentItem } from "@/components/explorer/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchSchema } from "@/lib/mipEras";
+
+/** A key per content item, numbering an item that more than one card shows */
+function contentKeys(items: ExplorerCardContentItem[]): string[] {
+  const seen = new Map<string, number>();
+  return items.map((item) => {
+    const key = `${item.type}:${item.provider}:${item.diagnostic}:${item.title}`;
+    const count = (seen.get(key) ?? 0) + 1;
+    seen.set(key, count);
+    return count === 1 ? key : `${key}:${count}`;
+  });
+}
 
 const parentRoute = getRouteApi(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug",
@@ -46,13 +58,11 @@ function ExplorerPanels({
     );
   }
 
+  const keys = contentKeys(matchingContentItems);
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {matchingContentItems.map((contentItem, index) => (
-        <ErrorBoundary
-          key={`${contentItem.type}:${contentItem.provider}:${contentItem.diagnostic}:${contentItem.title}:${index}`}
-          fallback={<ErrorFallback />}
-        >
+        <ErrorBoundary key={keys[index]} fallback={<ErrorFallback />}>
           <Suspense fallback={<ExplorerCardContentSkeleton />}>
             <ExplorerCardContent contentItem={contentItem} />
           </Suspense>
