@@ -5,12 +5,10 @@ import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
 
 const FilesTab = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
 
   const { data: execution } = useSuspenseQuery(
     executionsExecutionOptions({
       path: { group_id: groupId },
-      // query: { execution_id: executionId },
     }),
   );
 

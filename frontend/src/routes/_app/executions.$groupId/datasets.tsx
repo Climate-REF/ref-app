@@ -10,7 +10,6 @@ import {
 
 const DatasetsTab = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
 
   return (
     <Card>
@@ -22,7 +21,7 @@ const DatasetsTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ExecutionDatasetTable groupId={groupId} executionId={undefined} />
+        <ExecutionDatasetTable groupId={groupId} />
       </CardContent>
     </Card>
   );

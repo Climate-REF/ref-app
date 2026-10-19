@@ -20,11 +20,39 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { executionStatus } from "@/lib/executionStatus";
 import { formatBytes, formatDuration } from "@/lib/format";
 
+/**
+ * A tab that only some groups have
+ *
+ * It navigates on click rather than being a link, as a disabled link could still be followed.
+ */
+const NavTab = ({
+  value,
+  label,
+  disabled,
+}: {
+  value: "scalar" | "series";
+  label: string;
+  disabled: boolean;
+}) => {
+  const { groupId } = Route.useParams();
+  const navigate = useNavigate();
+  return (
+    <TabsTrigger
+      value={value}
+      disabled={disabled}
+      data-disabled={disabled ? "true" : undefined}
+      onClick={() =>
+        navigate({ to: `/executions/$groupId/${value}`, params: { groupId } })
+      }
+    >
+      {label}
+    </TabsTrigger>
+  );
+};
+
 const ExecutionInfoLayout = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
   const location = useLocation();
-  const navigate = useNavigate();
 
   const { data } = useSuspenseQuery(
     executionsGetOptions({
@@ -35,7 +63,6 @@ const ExecutionInfoLayout = () => {
   const { data: execution } = useSuspenseQuery(
     executionsExecutionOptions({
       path: { group_id: groupId },
-      // query: { execution_id: executionId },
     }),
   );
 
@@ -48,17 +75,12 @@ const ExecutionInfoLayout = () => {
     }),
   );
 
-  const executionId = undefined;
-
-  const hasScalar = diagnostic.has_scalar_values;
-  const hasSeries = diagnostic.has_series_values;
-
   // Determine the active tab based on the current URL pathname
   const activeTab = location.pathname.split("/").pop() || "datasets";
 
   return (
     <>
-      <title>{`${diagnostic.name} - ${data?.key} - Climate-REF`}</title>
+      <title>{`${diagnostic.name} - ${data.key} - Climate-REF`}</title>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <DetailsPanel
@@ -81,18 +103,14 @@ const ExecutionInfoLayout = () => {
             action={
               <DownloadOutputs
                 executionGroup={groupId}
-                executionId={(
-                  executionId ??
-                  data.executions.at(-1)?.id ??
-                  ""
-                ).toString()}
+                executionId={String(data.executions.at(-1)?.id ?? "")}
               />
             }
             items={[
               {
                 label: "Date",
                 value: format(
-                  new Date(execution.updated_at as string),
+                  new Date(execution.updated_at),
                   "yyyy-MM-dd HH:mm",
                 ),
               },
@@ -100,7 +118,7 @@ const ExecutionInfoLayout = () => {
                 label: "Execution Group Key",
                 value: (
                   <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">
-                    {data?.key}
+                    {data.key}
                   </span>
                 ),
                 className: "col-span-2",
@@ -164,32 +182,16 @@ const ExecutionInfoLayout = () => {
                   Files
                 </Link>
               </TabsTrigger>
-              <TabsTrigger
+              <NavTab
                 value="scalar"
-                disabled={!hasScalar}
-                data-disabled={!hasScalar ? "true" : undefined}
-                onClick={() =>
-                  navigate({
-                    to: "/executions/$groupId/scalar",
-                    params: { groupId },
-                  })
-                }
-              >
-                Scalar Values
-              </TabsTrigger>
-              <TabsTrigger
+                label="Scalar Values"
+                disabled={!diagnostic.has_scalar_values}
+              />
+              <NavTab
                 value="series"
-                disabled={!hasSeries}
-                data-disabled={!hasSeries ? "true" : undefined}
-                onClick={() =>
-                  navigate({
-                    to: "/executions/$groupId/series",
-                    params: { groupId },
-                  })
-                }
-              >
-                Series Values
-              </TabsTrigger>
+                label="Series Values"
+                disabled={!diagnostic.has_series_values}
+              />
               <TabsTrigger value="logs" asChild>
                 <Link to="/executions/$groupId/logs" params={{ groupId }}>
                   Logs

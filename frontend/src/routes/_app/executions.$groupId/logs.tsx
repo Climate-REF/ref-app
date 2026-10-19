@@ -10,7 +10,6 @@ import {
 
 const LogsTab = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
 
   return (
     <Card>
@@ -22,7 +21,7 @@ const LogsTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ExecutionLogContainer groupId={groupId} executionId={undefined} />
+        <ExecutionLogContainer groupId={groupId} />
       </CardContent>
     </Card>
   );
