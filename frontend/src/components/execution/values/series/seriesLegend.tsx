@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { seriesLineColor } from "./seriesCanvas";
 import { groupLegendItems, type LegendItem, toggleInSet } from "./utils";
 
 interface SeriesLegendProps {
@@ -25,6 +26,8 @@ interface SeriesLegendProps {
   onGroupByDimensionChange: (dimension: string | null) => void;
   availableDimensions: string[];
   labelDimensionMap: Map<string, Record<string, string>>;
+  /** Reference series are drawn in the theme's foreground colour */
+  isDark: boolean;
 }
 
 export const SeriesLegend = memo(function SeriesLegend({
@@ -42,6 +45,7 @@ export const SeriesLegend = memo(function SeriesLegend({
   onGroupByDimensionChange,
   availableDimensions,
   labelDimensionMap,
+  isDark,
 }: SeriesLegendProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
@@ -91,6 +95,7 @@ export const SeriesLegend = memo(function SeriesLegend({
       isHidden={hiddenLabels.has(item.label)}
       isHovered={hoveredLabel === item.label}
       isSoloed={soloedLabel === item.label}
+      isDark={isDark}
       onToggle={() => onToggleLabel(item.label)}
       onHover={onHoverLabel}
       onSolo={() => onSoloLabel(item.label)}
@@ -235,6 +240,7 @@ function LegendEntry({
   isHidden,
   isHovered,
   isSoloed,
+  isDark,
   onToggle,
   onHover,
   onSolo,
@@ -243,6 +249,7 @@ function LegendEntry({
   isHidden: boolean;
   isHovered: boolean;
   isSoloed: boolean;
+  isDark: boolean;
   onToggle: () => void;
   onHover: (label: string | null) => void;
   onSolo: () => void;
@@ -269,7 +276,7 @@ function LegendEntry({
       <div
         className="w-3 h-3 rounded-sm flex-shrink-0"
         style={{
-          backgroundColor: isHidden ? "#9CA3AF" : item.color,
+          backgroundColor: isHidden ? "#9CA3AF" : seriesLineColor(item, isDark),
           opacity: isHidden ? 0.4 : 1,
         }}
       />

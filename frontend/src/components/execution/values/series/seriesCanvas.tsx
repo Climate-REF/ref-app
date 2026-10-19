@@ -14,7 +14,10 @@ import {
 const Y_TICK_COUNT = 8;
 
 /** The colour a series' line is drawn in, with reference lines contrasting the background */
-export function seriesLineColor(meta: SeriesMetadata, isDark: boolean): string {
+export function seriesLineColor(
+  meta: Pick<SeriesMetadata, "color" | "isReference">,
+  isDark: boolean,
+): string {
   if (!meta.isReference) return meta.color;
   return isDark ? "#FFFFFF" : "#000000";
 }

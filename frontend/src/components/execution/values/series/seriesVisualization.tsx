@@ -437,6 +437,7 @@ export function SeriesVisualization({
             onGroupByDimensionChange={setGroupByDimension}
             availableDimensions={availableDimensions}
             labelDimensionMap={labelDimensionMap}
+            isDark={isDark}
           />
         )}
       </div>
