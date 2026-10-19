@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { utilsAboutOptions } from "@/client/@tanstack/react-query.gen";
+import { LinkExternal } from "../ui/link";
 
 const Item = ({ label, value }: { label: string; value: string }) => (
   <span className="inline-flex items-baseline gap-1.5">
@@ -25,6 +26,17 @@ export const VersionInfo = () => {
       {data ? (
         <>
           <Item label="API" value={data.app_version} />
+          {data.commit ? (
+            <span className="inline-flex items-baseline gap-1.5">
+              Commit
+              <LinkExternal
+                href={`https://github.com/Climate-REF/ref-app/commit/${data.commit}`}
+                className="font-mono"
+              >
+                {data.commit.slice(0, 7)}
+              </LinkExternal>
+            </span>
+          ) : null}
           <Item label="Climate REF" value={data.ref_version} />
         </>
       ) : null}

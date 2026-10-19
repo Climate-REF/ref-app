@@ -386,6 +386,10 @@ export type About = {
      */
     app_version: string;
     /**
+     * Commit
+     */
+    commit: string | null;
+    /**
      * Ref Version
      */
     ref_version: string;
