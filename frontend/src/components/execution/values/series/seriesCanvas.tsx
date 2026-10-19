@@ -1,10 +1,12 @@
-import * as d3 from "d3";
+import type * as d3 from "d3";
 import { memo, useCallback, useEffect, useRef } from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartMargins, XScaleType } from "./useChartScales";
 import {
   type ChartDataPoint,
   createScaledTickFormatter,
+  formatIndexValue,
+  formatTimeTick,
   isIntegerAxis,
   plottablePoint,
 } from "./utils";
@@ -290,42 +292,6 @@ function drawGrid(
   ctx.setLineDash([]);
 }
 
-function formatXTickValue(value: number, indexName: string): string {
-  if (isIntegerAxis(indexName) && Number.isInteger(value)) {
-    return value.toString();
-  }
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-  // For non-integer values on an integer axis, still show as integer if close
-  if (isIntegerAxis(indexName) && Math.abs(value - Math.round(value)) < 1e-9) {
-    return Math.round(value).toString();
-  }
-  return value.toPrecision(6);
-}
-
-function formatTimeTick(date: Date): string {
-  if (
-    date.getMonth() === 0 &&
-    date.getDate() === 1 &&
-    date.getHours() === 0 &&
-    date.getMinutes() === 0
-  ) {
-    return d3.timeFormat("%Y")(date);
-  }
-  if (
-    date.getDate() === 1 &&
-    date.getHours() === 0 &&
-    date.getMinutes() === 0
-  ) {
-    return d3.timeFormat("%b %Y")(date);
-  }
-  if (date.getHours() === 0 && date.getMinutes() === 0) {
-    return d3.timeFormat("%b %d")(date);
-  }
-  return d3.timeFormat("%b %d %H:%M")(date);
-}
-
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   xScale: XScaleType,
@@ -399,7 +365,7 @@ function drawAxes(
     for (const tick of xTicks) {
       const x = margins.left + xScale(tick);
       ctx.fillText(
-        formatXTickValue(tick, indexName),
+        formatIndexValue(tick, indexName),
         x,
         margins.top + innerHeight + 8,
       );

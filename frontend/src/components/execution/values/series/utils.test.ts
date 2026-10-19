@@ -4,6 +4,8 @@ import type { SeriesMetadata, SeriesValue } from "../types";
 import {
   createChartData,
   createScaledTickFormatter,
+  formatIndexValue,
+  formatTimeTick,
   getDimensionKeys,
   plottablePoint,
   withLabelsHidden,
@@ -129,6 +131,43 @@ describe("createScaledTickFormatter", () => {
     expect(createScaledTickFormatter([1.0, 1.8])(1.25)).toBe("1.25");
     expect(createScaledTickFormatter([0, 500])(250.789)).toBe("251");
     expect(createScaledTickFormatter([1e6, 3e6])(1234567)).toBe("1.235e+6");
+  });
+});
+
+describe("formatIndexValue", () => {
+  it("shows integers whole on any axis", () => {
+    expect(formatIndexValue(2021, "year")).toBe("2021");
+    expect(formatIndexValue(850, "pressure")).toBe("850");
+  });
+
+  it("rounds rounding noise on an integer axis", () => {
+    expect(formatIndexValue(2021 + 1e-12, "year")).toBe("2021");
+  });
+
+  it("keeps six significant digits otherwise", () => {
+    expect(formatIndexValue(0.1 + 0.2, "latitude")).toBe("0.300000");
+    expect(formatIndexValue(2021.5, "year")).toBe("2021.50");
+  });
+});
+
+describe("formatTimeTick", () => {
+  // Built in local time, which the ticks are formatted in
+  it("shows the year on new year", () => {
+    expect(formatTimeTick(new Date(2020, 0, 1))).toBe("2020");
+  });
+
+  it("shows the month and year on other month starts", () => {
+    expect(formatTimeTick(new Date(2020, 5, 1))).toBe("Jun 2020");
+  });
+
+  it("shows the month and day on other midnights", () => {
+    expect(formatTimeTick(new Date(2020, 0, 15))).toBe("Jan 15");
+    expect(formatTimeTick(new Date(2020, 5, 5))).toBe("Jun 05");
+  });
+
+  it("shows the time of day when not at midnight", () => {
+    expect(formatTimeTick(new Date(2020, 0, 1, 6))).toBe("Jan 01 06:00");
+    expect(formatTimeTick(new Date(2020, 0, 1, 0, 30))).toBe("Jan 01 00:30");
   });
 });
 

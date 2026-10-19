@@ -1,5 +1,5 @@
 import type { NearestResult } from "./useSpatialIndex";
-import { isIntegerAxis } from "./utils";
+import { formatIndexValue } from "./utils";
 
 const MAX_TOOLTIP_ENTRIES = 8;
 
@@ -42,16 +42,7 @@ export function formatXValue(
       minute: "2-digit",
     });
   }
-  if (Number.isInteger(value) && isIntegerAxis(indexName)) {
-    return value.toString();
-  }
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-  if (isIntegerAxis(indexName) && Math.abs(value - Math.round(value)) < 1e-9) {
-    return Math.round(value).toString();
-  }
-  return value.toPrecision(6);
+  return formatIndexValue(value, indexName);
 }
 
 export function formatYValue(value: number): string {

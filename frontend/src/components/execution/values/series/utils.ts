@@ -21,6 +21,38 @@ export function isIntegerAxis(indexName: string): boolean {
 }
 
 /**
+ * Format a numeric index value, such as an x axis tick
+ *
+ * Integers are shown whole, as are values within rounding noise of one on an integer axis.
+ * Other values get six significant digits.
+ */
+export function formatIndexValue(value: number, indexName: string): string {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+  if (isIntegerAxis(indexName) && Math.abs(value - Math.round(value)) < 1e-9) {
+    return Math.round(value).toString();
+  }
+  return value.toPrecision(6);
+}
+
+/**
+ * Format a time axis tick by the coarsest unit it falls on, in local time
+ *
+ * New years show the year, other month starts the month and year,
+ * other midnights the day and anything else the time of day too.
+ */
+export function formatTimeTick(date: Date): string {
+  if (date.getHours() !== 0 || date.getMinutes() !== 0) {
+    return d3.timeFormat("%b %d %H:%M")(date);
+  }
+  if (date.getDate() !== 1) {
+    return d3.timeFormat("%b %d")(date);
+  }
+  return d3.timeFormat(date.getMonth() === 0 ? "%Y" : "%b %Y")(date);
+}
+
+/**
  * The x and y of series `seriesIndex` in `row`, or null when the row has no point to draw
  *
  * A row has no point when its index or the series' value is missing, or the value is not finite.
