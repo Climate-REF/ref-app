@@ -20,7 +20,7 @@ const four = (era: string | undefined) =>
 const renderChart = (
   values: ReturnType<typeof model>[],
   mipEra?: "CMIP6" | "CMIP7",
-  environment: "production" | "staging" = "production",
+  environment: "production" | "staging" | "preview" = "production",
 ) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -108,6 +108,14 @@ describe("MipEraSections with a page selection", () => {
 
   it("plots a chart with too few models on a staging site", () => {
     renderChart([model("CMIP6", "A"), model("CMIP6", "B")], "CMIP6", "staging");
+    expect(screen.getByTestId("chart")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Not enough models to plot"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("plots a chart with too few models on a preview site", () => {
+    renderChart([model("CMIP6", "A"), model("CMIP6", "B")], "CMIP6", "preview");
     expect(screen.getByTestId("chart")).toBeInTheDocument();
     expect(
       screen.queryByText("Not enough models to plot"),
