@@ -1,5 +1,5 @@
 import type { RowSelectionState } from "@tanstack/react-table";
-import { type SetStateAction, useMemo, useState } from "react";
+import { type SetStateAction, useMemo, useRef, useState } from "react";
 import type {
   ScalarValue,
   SeriesValue,
@@ -54,13 +54,19 @@ export function useValuesProcessor<
   );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
+  // Latest filters, so updaters called in the same tick build on each other
+  const filtersRef = useRef(filters);
+
+  // Run an updater once, so the parent and internal state get the same
+  // filters even when the updater generates ids.
   const setFilters = (newFilters: SetStateAction<MetricFilter[]>) => {
-    setInternalFilters(newFilters);
-    if (onFiltersChange) {
-      const resolvedFilters =
-        typeof newFilters === "function" ? newFilters(filters) : newFilters;
-      onFiltersChange(resolvedFilters);
-    }
+    const resolvedFilters =
+      typeof newFilters === "function"
+        ? newFilters(filtersRef.current)
+        : newFilters;
+    filtersRef.current = resolvedFilters;
+    setInternalFilters(resolvedFilters);
+    onFiltersChange?.(resolvedFilters);
   };
 
   const handleExcludeRowIds = (excluded: SetStateAction<Set<string>>) => {

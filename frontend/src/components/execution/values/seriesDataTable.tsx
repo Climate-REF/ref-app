@@ -115,8 +115,7 @@ function SeriesDataTable({
                     groupId: cell.row.original.execution_group_id.toString(),
                   }}
                   search={{
-                    executionId:
-                      cell.row.original.execution_group_id.toString(),
+                    executionId: cell.row.original.execution_id.toString(),
                   }}
                 >
                   <Eye className="mr-2 h-4 w-4" />
