@@ -4,6 +4,7 @@
     "makefile.configureOnOpen": false,
     "biome.configurationPath": "frontend/biome.json",
     "biome.lsp.bin": "frontend/node_modules/.bin/biome",
+    "fallow.configPath": "frontend/.fallowrc.jsonc",
     "editor.codeActionsOnSave": {
         "source.fixAll.biome": "explicit",
         "source.organizeImports.biome": "explicit"

@@ -52,6 +52,8 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
               execution.provider_slug,
               execution.diagnostic_slug,
             );
+            // Its successful is null while it runs, which the badge shows
+            const latest = execution.executions.at(-1);
             return (
               <div
                 key={execution.id}
@@ -69,9 +71,7 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
                   </div>
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <ExecutionStatusBadge
-                      successful={
-                        execution.executions.at(-1)?.successful ?? false
-                      }
+                      successful={latest ? latest.successful : false}
                     />
                     <Badge className="h-6">
                       {diagnostic?.provider.name ?? execution.provider_slug}

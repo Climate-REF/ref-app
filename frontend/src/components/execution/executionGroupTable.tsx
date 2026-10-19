@@ -51,7 +51,7 @@ function DiagnosticCell({
   );
 }
 
-export const columns: ColumnDef<ExecutionGroup>[] = [
+const columns: ColumnDef<ExecutionGroup>[] = [
   {
     id: "selectors",
     header: "Selectors",

@@ -28,9 +28,10 @@ import { apiErrorMessage } from "@/lib/apiError";
 import { describeFailureReason } from "@/lib/failureReasons";
 import {
   type FailureFilters,
+  type FilterOptions,
+  failedGroupsSummary,
   failureDays,
-  failuresByModel,
-  failuresByReason,
+  filterOptions,
   summariseFailures,
 } from "@/lib/failures";
 import { type MipEra, mipEraSearchFields } from "@/lib/mipEras";
@@ -56,6 +57,9 @@ export const Route = createFileRoute("/_app/executions/failures")({
 const reasonLabel = (key: string) => describeFailureReason(key).label;
 const reasonDescription = (key: string) =>
   describeFailureReason(key).description;
+
+/** Nothing to choose from while the failures load */
+const NO_OPTIONS: FilterOptions = { reasons: [], models: [], days: new Set() };
 
 function FailuresPage() {
   const search = Route.useSearch();
@@ -89,43 +93,19 @@ function FailuresPage() {
   const selectDays = (days: DayRange) =>
     updateSearch({ from: days.from, to: days.to });
 
-  const { diagnostics, reasonCounts, modelCounts, failureDaySet } =
-    useMemo(() => {
-      if (!catalog || !unsuccessful) {
-        return {
-          diagnostics: undefined,
-          reasonCounts: [],
-          modelCounts: [],
-          failureDaySet: new Set<string>(),
-        };
-      }
-      const summarise = (narrowed: FailureFilters) =>
-        summariseFailures(catalog, unsuccessful, narrowed);
-      return {
-        diagnostics: summarise(filters),
-        // Each dropdown counts what selecting a value would show, given the other filters
-        reasonCounts: failuresByReason(
-          summarise({ ...filters, reason: undefined }),
-        ),
-        modelCounts: failuresByModel(
-          summarise({ ...filters, model: undefined }),
-        ),
-        // The calendar marks the days with failures matching the other filters
-        failureDaySet: new Set(
-          summarise({ ...filters, from: undefined, to: undefined })
-            .flatMap((failures) => failures.failedGroups)
-            .map((group) => group.executions.at(-1)?.updated_at.slice(0, 10))
-            .filter((day) => day !== undefined),
-        ),
-      };
-    }, [catalog, unsuccessful, filters]);
+  const { diagnostics, options } = useMemo(
+    () =>
+      catalog && unsuccessful
+        ? {
+            diagnostics: summariseFailures(catalog, unsuccessful, filters),
+            options: filterOptions(catalog, unsuccessful, filters),
+          }
+        : { diagnostics: undefined, options: NO_OPTIONS },
+    [catalog, unsuccessful, filters],
+  );
 
   const failing = (diagnostics ?? []).filter(
     (failures) => failures.failedGroups.length > 0,
-  );
-  const failedGroups = failing.reduce(
-    (sum, failures) => sum + failures.failedGroups.length,
-    0,
   );
   const filtered = [model, reason, from, to].some(
     (value) => value !== undefined,
@@ -142,17 +122,17 @@ function FailuresPage() {
       <FailureFilterBar
         mipEra={mipEra}
         onMipEra={selectMipEra}
-        reasonCounts={reasonCounts}
+        reasonCounts={options.reasons}
         reason={reason}
         onReason={(selected) => updateSearch({ reason: selected })}
         reasonLabel={reasonLabel}
         reasonDescription={reasonDescription}
-        modelCounts={modelCounts}
+        modelCounts={options.models}
         model={model}
         onModel={(selected) => updateSearch({ model: selected })}
         days={{ from, to }}
         allDays={allDays}
-        failureDays={failureDaySet}
+        failureDays={options.days}
         onDays={selectDays}
         onClear={
           filtered
@@ -165,10 +145,7 @@ function FailuresPage() {
                 })
             : undefined
         }
-        summary={
-          diagnostics &&
-          `${failedGroups} failed execution ${failedGroups === 1 ? "group" : "groups"} in ${failing.length} ${failing.length === 1 ? "diagnostic" : "diagnostics"}`
-        }
+        summary={diagnostics && failedGroupsSummary(diagnostics)}
         disabled={!diagnostics}
       />
 

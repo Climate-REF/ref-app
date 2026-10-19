@@ -6,11 +6,13 @@ import type {
 } from "@/client";
 import {
   diagnosticHealth,
+  failedGroupsSummary,
   failedRunRange,
   failureDays,
   failureSummary,
   failuresByModel,
   failuresByReason,
+  filterOptions,
   groupFacets,
   lastSucceededAt,
   reasonBreakdown,
@@ -323,6 +325,67 @@ describe("failureDays", () => {
 
   it("is undefined when nothing failed", () => {
     expect(failureDays([])).toBeUndefined();
+  });
+});
+
+describe("filterOptions", () => {
+  const groups = [
+    modelGroup("A", [[false, "2026-09-04T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-09-20T10:00:00", "system_error"]]),
+    modelGroup("B", [[false, "2026-10-12T10:00:00", "diagnostic_error"]]),
+    modelGroup("B", [[null, "2026-10-13T10:00:00"]]),
+  ];
+  const options = (filters: Parameters<typeof filterOptions>[2]) =>
+    filterOptions([diagnostic("pmp", "enso", 10, 6)], groups, filters);
+
+  it("counts each filter's values given the other filters", () => {
+    const { reasons, models, days } = options({ model: "B" });
+    expect(reasons).toEqual([
+      { key: "diagnostic_error", groups: 1, diagnostics: 1 },
+      { key: "system_error", groups: 1, diagnostics: 1 },
+    ]);
+    // The selected model does not narrow the models to choose from
+    expect(models).toEqual([
+      { key: "B", groups: 2, diagnostics: 1 },
+      { key: "A", groups: 1, diagnostics: 1 },
+    ]);
+    expect(days).toEqual(new Set(["2026-09-20", "2026-10-12"]));
+  });
+
+  it("marks the days outside the time range picked", () => {
+    const { reasons, models, days } = options({
+      reason: "system_error",
+      from: "2026-09-10",
+    });
+    expect(reasons.map(({ key }) => key)).toEqual([
+      "diagnostic_error",
+      "system_error",
+    ]);
+    expect(models).toEqual([{ key: "B", groups: 1, diagnostics: 1 }]);
+    expect(days).toEqual(new Set(["2026-09-04", "2026-09-20"]));
+  });
+});
+
+describe("failedGroupsSummary", () => {
+  const catalog = [
+    diagnostic("pmp", "enso", 10, 6),
+    diagnostic("pmp", "other", 2, 2),
+  ];
+  const groups = [
+    modelGroup("A", [[false, "2026-09-04T10:00:00"]]),
+    modelGroup("B", [[false, "2026-09-20T10:00:00"]]),
+  ];
+
+  it("counts the failed groups and the diagnostics they are in", () => {
+    expect(failedGroupsSummary(summariseFailures(catalog, groups))).toBe(
+      "2 failed execution groups in 1 diagnostic",
+    );
+    expect(
+      failedGroupsSummary(summariseFailures(catalog, groups, { model: "A" })),
+    ).toBe("1 failed execution group in 1 diagnostic");
+    expect(failedGroupsSummary(summariseFailures(catalog, []))).toBe(
+      "0 failed execution groups in 0 diagnostics",
+    );
   });
 });
 

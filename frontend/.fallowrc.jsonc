@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  // Generated code (@hey-api/openapi-ts client, TanStack route tree) stays in the
+  // module graph so imports resolve, but its findings are hidden.
+  // Globs start with ** so they match whether Fallow runs from frontend/ (CLI)
+  // or from the repo root (VS Code extension, via fallow.configPath).
+  "ignoreFindings": ["**/src/client/**", "**/*.gen.ts"],
+  "duplicates": {
+    "ignore": ["**/src/client/**", "**/*.gen.ts"]
+  },
+  "health": {
+    "ignore": ["**/src/client/**", "**/*.gen.ts"],
+    "coverage": "coverage/coverage-final.json"
+  }
+}

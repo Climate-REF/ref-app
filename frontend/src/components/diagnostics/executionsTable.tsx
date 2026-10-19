@@ -58,7 +58,7 @@ function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
   return null;
 }
 
-export const columns: ColumnDef<Execution>[] = [
+const columns: ColumnDef<Execution>[] = [
   {
     accessorKey: "dataset_hash",
     header: () => (
