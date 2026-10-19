@@ -1,22 +1,14 @@
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useMemo } from "react";
 import type { ExecutionGroup } from "@/client";
+import { CheckboxCommandList } from "@/components/app/checkboxCommandList";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command.tsx";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover.tsx";
-import { cn } from "@/lib/utils";
 
 interface SelectorFacet {
   key: string;
@@ -29,7 +21,10 @@ interface SelectorFilterPanelProps {
   onFiltersChange: (filters: Record<string, string[]>) => void;
 }
 
-function extractSelectorFacets(groups: ExecutionGroup[]): SelectorFacet[] {
+/** The selector keys of `groups`, each with its distinct values, both sorted. */
+export function extractSelectorFacets(
+  groups: ExecutionGroup[],
+): SelectorFacet[] {
   const facetMap = new Map<string, Set<string>>();
   for (const group of groups) {
     for (const pairs of Object.values(group.selectors)) {
@@ -87,42 +82,12 @@ function MultiSelectFacet({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder={`Search ${facet.key}...`} />
-          <CommandList>
-            <CommandEmpty>No values found.</CommandEmpty>
-            <CommandGroup>
-              {facet.values.map((value) => {
-                const isSelected = selected.includes(value);
-                return (
-                  <CommandItem
-                    key={value}
-                    value={value}
-                    onSelect={() => {
-                      onSelectionChange(
-                        isSelected
-                          ? selected.filter((v) => v !== value)
-                          : [...selected, value],
-                      );
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible",
-                      )}
-                    >
-                      <Check className="h-4 w-4" />
-                    </div>
-                    <span>{value}</span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+        <CheckboxCommandList
+          values={facet.values}
+          selected={selected}
+          onSelectedChange={onSelectionChange}
+          placeholder={`Search ${facet.key}...`}
+        />
       </PopoverContent>
     </Popover>
   );
