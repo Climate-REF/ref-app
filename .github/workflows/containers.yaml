@@ -48,7 +48,7 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
-            GIT_COMMIT=${{ github.event.pull_request.head.sha || github.sha }}
+            GIT_COMMIT=${{ github.sha }}
       - name: Attest to climate-ref-frontend image
         uses: actions/attest-build-provenance@v4
         if: ${{ ! github.event.pull_request.head.repo.fork }}
