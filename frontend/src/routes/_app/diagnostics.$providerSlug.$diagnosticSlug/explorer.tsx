@@ -8,7 +8,7 @@ import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
 } from "@/components/explorer/explorerCardContent";
-import { filterExplorerContentForDiagnostic } from "@/components/explorer/thematicContent";
+import { filterExplorerContentForDiagnostic } from "@/components/explorer/mapping";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
 import { mipEraSearchSchema } from "@/lib/mipEras";
