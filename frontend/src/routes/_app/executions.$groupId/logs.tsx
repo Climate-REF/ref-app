@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutionLogContainer } from "@/components/execution/executionLogs";
+import { ExecutionNotRun } from "@/components/execution/executionNotRun";
 import {
   Card,
   CardContent,
@@ -7,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useLatestExecution } from "@/hooks/useLatestExecution";
 
 const LogsTab = () => {
   const { groupId } = Route.useParams();
+  const hasRun = useLatestExecution(groupId) !== undefined;
 
   return (
     <Card>
@@ -21,7 +24,11 @@ const LogsTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ExecutionLogContainer groupId={groupId} />
+        {hasRun ? (
+          <ExecutionLogContainer groupId={groupId} />
+        ) : (
+          <ExecutionNotRun what="logs" />
+        )}
       </CardContent>
     </Card>
   );

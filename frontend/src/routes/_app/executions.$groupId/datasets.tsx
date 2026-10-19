@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutionDatasetTable } from "@/components/execution/executionDatasetTable";
+import { ExecutionNotRun } from "@/components/execution/executionNotRun";
 import {
   Card,
   CardContent,
@@ -7,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useLatestExecution } from "@/hooks/useLatestExecution";
 
 const DatasetsTab = () => {
   const { groupId } = Route.useParams();
+  const hasRun = useLatestExecution(groupId) !== undefined;
 
   return (
     <Card>
@@ -21,7 +24,11 @@ const DatasetsTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ExecutionDatasetTable groupId={groupId} />
+        {hasRun ? (
+          <ExecutionDatasetTable groupId={groupId} />
+        ) : (
+          <ExecutionNotRun what="datasets" />
+        )}
       </CardContent>
     </Card>
   );

@@ -9,7 +9,6 @@ import {
 import { format } from "date-fns";
 import {
   diagnosticsGetOptions,
-  executionsExecutionOptions,
   executionsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
@@ -60,11 +59,8 @@ const ExecutionInfoLayout = () => {
     }),
   );
 
-  const { data: execution } = useSuspenseQuery(
-    executionsExecutionOptions({
-      path: { group_id: groupId },
-    }),
-  );
+  // Executions are oldest first, and a group that has never run has none
+  const execution = data.executions.at(-1);
 
   const { data: diagnostic } = useSuspenseQuery(
     diagnosticsGetOptions({
@@ -101,18 +97,19 @@ const ExecutionInfoLayout = () => {
               </>
             }
             action={
-              <DownloadOutputs
-                executionGroup={groupId}
-                executionId={String(data.executions.at(-1)?.id ?? "")}
-              />
+              execution && (
+                <DownloadOutputs
+                  executionGroup={groupId}
+                  executionId={String(execution.id)}
+                />
+              )
             }
             items={[
               {
                 label: "Date",
-                value: format(
-                  new Date(execution.updated_at),
-                  "yyyy-MM-dd HH:mm",
-                ),
+                value: execution
+                  ? format(new Date(execution.updated_at), "yyyy-MM-dd HH:mm")
+                  : "—",
               },
               {
                 label: "Execution Group Key",
@@ -136,7 +133,7 @@ const ExecutionInfoLayout = () => {
                 label: "Wall time",
                 value: (
                   <span title="Wall clock time taken by the selected execution.">
-                    {formatDuration(execution.wall_seconds)}
+                    {formatDuration(execution?.wall_seconds)}
                   </span>
                 ),
               },
@@ -144,7 +141,7 @@ const ExecutionInfoLayout = () => {
                 label: "CPU time",
                 value: (
                   <span title="CPU time used by the selected execution and its child processes.">
-                    {formatDuration(execution.cpu_seconds)}
+                    {formatDuration(execution?.cpu_seconds)}
                   </span>
                 ),
               },
@@ -152,13 +149,13 @@ const ExecutionInfoLayout = () => {
                 label: "Peak memory",
                 value: (
                   <span title="Peak resident memory observed during the selected execution.">
-                    {formatBytes(execution.peak_memory_bytes)}
+                    {formatBytes(execution?.peak_memory_bytes)}
                   </span>
                 ),
               },
               {
                 label: "Number of outputs",
-                value: execution.outputs?.length ?? 0,
+                value: execution?.outputs?.length ?? 0,
               },
             ]}
           />
@@ -185,12 +182,12 @@ const ExecutionInfoLayout = () => {
               <NavTab
                 value="scalar"
                 label="Scalar Values"
-                disabled={!diagnostic.has_scalar_values}
+                disabled={!execution || !diagnostic.has_scalar_values}
               />
               <NavTab
                 value="series"
                 label="Series Values"
-                disabled={!diagnostic.has_series_values}
+                disabled={!execution || !diagnostic.has_series_values}
               />
               <TabsTrigger value="logs" asChild>
                 <Link to="/executions/$groupId/logs" params={{ groupId }}>
