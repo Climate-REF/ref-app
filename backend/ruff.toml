@@ -13,6 +13,8 @@ select = [
     "RUF",
     "UP",
     "S",
+    "C90",
+    "C4",
 ]
 unfixable = [
     "PD002",
@@ -26,7 +28,12 @@ ignore = [
     "D200",
     "D400",
     "UP007",
+    "C408", # dict(key=value) calls read as well as literals
 ]
+
+[lint.mccabe]
+# Flags functions with more independent paths than a reader can comfortably follow
+max-complexity = 10
 
 [lint.per-file-ignores]
 "test*.py" = [

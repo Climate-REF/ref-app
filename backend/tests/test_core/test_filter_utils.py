@@ -58,6 +58,16 @@ class TestNormalizeListFromValue:
         result = _normalize_list_from_value(["  ", "  "])
         assert result is None
 
+    def test_string_of_only_commas_returns_none(self):
+        """Test that a string of commas and whitespace returns None."""
+        result = _normalize_list_from_value(" , ,")
+        assert result is None
+
+    def test_non_string_scalar_returns_none(self):
+        """Test that a scalar other than a string returns None."""
+        result = _normalize_list_from_value(42)
+        assert result is None
+
 
 class TestBuildFilterClause:
     """Test the build_filter_clause function."""
@@ -114,6 +124,12 @@ class TestBuildFilterClause:
         clause = build_filter_clause(self.column, 42)
         sql = self._compile_clause(clause)
         assert "test.name = 42" in sql
+
+    def test_comma_separated_string_with_one_item_returns_equality(self):
+        """Test that a comma-separated string with one non-empty item returns equality."""
+        clause = build_filter_clause(self.column, "a, ")
+        sql = self._compile_clause(clause)
+        assert "test.name = 'a'" in sql
 
     def test_none_value_returns_equality(self):
         """Test that None value returns equality expression."""

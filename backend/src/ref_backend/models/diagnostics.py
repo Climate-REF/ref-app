@@ -123,8 +123,8 @@ class DiagnosticCatalogEntry(BaseModel):
             )
             return []
         data_requirements = sorted(
-            list(concrete_diagnostic.data_requirements),
-            key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,  # type: ignore
+            concrete_diagnostic.data_requirements,
+            key=lambda dr: dr[0].source_type.value if isinstance(dr, tuple) else dr.source_type.value,
         )
 
         # A diagnostic often declares one data requirement per variable, all grouping the same way,
