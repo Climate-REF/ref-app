@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import ColumnElement, Integer, func, select
@@ -92,6 +92,18 @@ def _group_scope(
     return group_scope
 
 
+def _scoped_diagnostics(
+    app_context: AppContextDep, mip_era: str | None, source_id: str | None
+) -> tuple[list[models.Diagnostic], list[ColumnElement[bool]]]:
+    """
+    Get the listed diagnostics, with the scope that counts their groups for `mip_era` and `source_id`
+
+    Without any listed diagnostic the scope matches no group, so the counts come out empty.
+    """
+    diagnostics = _listed_diagnostics(app_context)
+    return diagnostics, _group_scope([d.id for d in diagnostics], mip_era, source_id)
+
+
 def _diagnostics_with_values(
     app_context: AppContextDep, value_class: type[models.MetricValue], group_scope: list[ColumnElement[bool]]
 ) -> set[int]:
@@ -103,6 +115,20 @@ def _diagnostics_with_values(
         .distinct()
     )
     return {row[0] for row in rows}
+
+
+class _ValueTypes(NamedTuple):
+    """The ids of the diagnostics with scalar values and of those with series values"""
+
+    scalar: set[int]
+    series: set[int]
+
+
+def _value_types(app_context: AppContextDep, group_scope: list[ColumnElement[bool]]) -> _ValueTypes:
+    return _ValueTypes(
+        scalar=_diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope),
+        series=_diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope),
+    )
 
 
 def _catalog_entries(
@@ -188,19 +214,14 @@ async def _list(
     Pass `mip_era` to count only the execution groups that ran against that era,
     and `source_id` to count only those that ran against that model.
     """
-    diagnostics = _listed_diagnostics(app_context)
-    if not diagnostics:
-        return Collection(data=[])
-
-    group_scope = _group_scope([d.id for d in diagnostics], mip_era, source_id)
-    scalar_ids = _diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope)
-    series_ids = _diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope)
+    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, group_scope)
     return Collection(
         data=[
             DiagnosticSummary.from_catalog_entry(
                 entry,
-                has_scalar_values=entry.id in scalar_ids,
-                has_series_values=entry.id in series_ids,
+                has_scalar_values=entry.id in value_types.scalar,
+                has_series_values=entry.id in value_types.series,
             )
             for entry in _catalog_entries(app_context, diagnostics, group_scope)
         ]
@@ -219,11 +240,7 @@ async def catalog(
 
     Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
     """
-    diagnostics = _listed_diagnostics(app_context)
-    if not diagnostics:
-        return Collection(data=[])
-
-    group_scope = _group_scope([d.id for d in diagnostics], mip_era, source_id)
+    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
     return Collection(data=_catalog_entries(app_context, diagnostics, group_scope))
 
 
@@ -236,20 +253,15 @@ async def value_flags(
 
     These are the flags `/diagnostics/catalog` leaves out.
     """
-    diagnostics = _listed_diagnostics(app_context)
-    if not diagnostics:
-        return Collection(data=[])
-
-    group_scope = _group_scope([d.id for d in diagnostics], mip_era, source_id)
-    scalar_ids = _diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope)
-    series_ids = _diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope)
+    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, group_scope)
     return Collection(
         data=[
             DiagnosticValueFlags(
                 id=d.id,
-                has_metric_values=d.id in scalar_ids or d.id in series_ids,
-                has_scalar_values=d.id in scalar_ids,
-                has_series_values=d.id in series_ids,
+                has_metric_values=d.id in value_types.scalar or d.id in value_types.series,
+                has_scalar_values=d.id in value_types.scalar,
+                has_series_values=d.id in value_types.series,
             )
             for d in diagnostics
         ]

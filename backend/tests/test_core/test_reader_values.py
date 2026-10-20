@@ -129,11 +129,18 @@ class TestGenerateCsvResponseScalar:
         assert response.headers["X-REF-Had-Outliers"] == "true"
         assert response.headers["X-REF-Outlier-Count"] == "3"
 
-    def test_empty_collection_yields_empty_body(self):
-        """An empty collection produces an empty body."""
+    def test_empty_collection_yields_fixed_header(self):
+        """An empty collection produces just the header of the columns that do not depend on the values."""
         collection = _scalar_collection([])
         response = generate_csv_response_scalar(collection, detection_ran=False, filename="out.csv")
-        assert _read_body(response) == ""
+        assert _read_body(response).splitlines() == ["value,type"]
+
+    def test_empty_collection_with_detection_includes_outlier_columns(self):
+        """An empty collection keeps the outlier columns when detection ran."""
+        collection = _scalar_collection([])
+        response = generate_csv_response_scalar(collection, detection_ran=True, filename="out.csv")
+        assert _read_body(response).splitlines() == ["value,type,is_outlier,verification_status"]
+        assert response.headers["X-REF-Outlier-Count"] == "0"
 
     def test_nan_value_is_sanitized_to_empty_cell(self):
         """A NaN value renders as an empty CSV cell rather than the literal 'nan'."""
@@ -174,8 +181,8 @@ class TestGenerateCsvResponseSeries:
         assert lines[1] == "A,10.0,0,index,series"
         assert lines[2] == "A,20.0,1,index,series"
 
-    def test_empty_collection_yields_empty_body(self):
-        """An empty collection produces an empty body."""
+    def test_empty_collection_yields_fixed_header(self):
+        """An empty collection produces just the header of the columns that do not depend on the values."""
         collection = _series_collection([])
         response = generate_csv_response_series(collection, filename="out.csv")
-        assert _read_body(response) == ""
+        assert _read_body(response).splitlines() == ["value,index,index_name,type"]
