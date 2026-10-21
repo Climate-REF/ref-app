@@ -3,13 +3,12 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, and_, distinct, false, func, or_, select
+from sqlalchemy import ColumnElement, distinct, false, func, or_, select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import ColumnCollection
 
 from climate_ref import models
+from climate_ref.results import InputDatasetFilter
 from climate_ref_core.datasets import SourceDatasetType
-from ref_backend.core.filter_utils import build_filter_clause
 
 #: The MIP eras the app presents. Data from the two is never combined on a chart.
 CMIP_ERAS: tuple[SourceDatasetType, ...] = (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
@@ -36,54 +35,52 @@ def mip_era_for(source_type: SourceDatasetType) -> str | None:
     return dataset_type_label(source_type).upper()
 
 
-def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any]:
-    """Return the columns an era's dataset table actually carries."""
-    return dataset_model_for(source_type).__mapper__.columns
-
-
 def cv_column(mapped: Any, name: str) -> Any:
     """Read a column the CV registers at runtime, which the mapped class does not declare."""
     return getattr(mapped, name)
 
 
-def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
+def _carries(source_type: SourceDatasetType, facet: str) -> bool:
+    return facet in dataset_model_for(source_type).__mapper__.columns
+
+
+def _facet_values(value: str) -> tuple[str, ...]:
+    if "," not in value:
+        return (value,)
+    return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
+def cmip_input_filter(facets: Mapping[str, str]) -> InputDatasetFilter | None:
     """
     Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.
 
     A facet no CMIP era carries is ignored, which keeps unknown query parameters harmless.
     A facet only one era carries excludes the other, so a CMIP7-only facet does not pull in
-    all of CMIP6.
+    all of CMIP6. Returns `None` when nothing can satisfy the request.
     """
     requested_era = facets.get("mip_era")
-    columns_by_era = {era: _mapped_columns(era) for era in CMIP_ERAS}
+    eras = tuple(era for era in CMIP_ERAS if not requested_era or requested_era.upper() == mip_era_for(era))
     known = {
-        key: value
+        key: _facet_values(value)
         for key, value in facets.items()
-        if key != "mip_era" and any(key in columns for columns in columns_by_era.values())
+        if key != "mip_era" and any(_carries(era, key) for era in CMIP_ERAS)
     }
+    if not eras or any(not any(_carries(era, key) for era in eras) for key in known):
+        return None
+    # The attrs converter leaves mypy with an unbound Iterable[_T_co] for source_types.
+    return InputDatasetFilter(source_types=eras, facets=known or None)  # type: ignore[arg-type]
 
-    branches = []
-    for source_type in CMIP_ERAS:
-        if requested_era and requested_era.upper() != mip_era_for(source_type):
-            continue
 
-        dataset_model = dataset_model_for(source_type)
-        if any(key not in columns_by_era[source_type] for key in known):
-            continue
-
-        conditions = [build_filter_clause(getattr(dataset_model, key), value) for key, value in known.items()]
-        datasets = models.Execution.datasets.of_type(dataset_model)
-        branches.append(datasets.any(and_(*conditions)) if conditions else datasets.any())
-
-    if not branches:
-        # Nothing can satisfy the request, so match no rows rather than every row.
-        return false()
-    return or_(*branches)
+def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
+    """Match executions as `cmip_input_filter` does, or no execution when nothing can match."""
+    input_filter = cmip_input_filter(facets)
+    return input_filter.execution_clause() if input_filter else false()
 
 
 def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
-    return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
+    input_filter = cmip_input_filter(facets)
+    return input_filter.execution_group_clause() if input_filter else false()
 
 
 def execution_groups_per_era(session: Session) -> dict[str, int]:
