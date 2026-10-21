@@ -8,12 +8,12 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.responses import Response, StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import DatasetFile
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, ResourceFilter
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
@@ -22,7 +22,7 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import execution_group_filter, execution_groups_per_era
+from ref_backend.core.mip_eras import cmip_input_filter, execution_groups_per_era
 from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
@@ -138,29 +138,30 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     """
     session = app_context.session
 
+    # Selectors do not record source_id, so match on the datasets used.
+    facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
+    input_datasets = cmip_input_filter(facets) if facets else None
+    try:
+        failure_reasons = [ExecutionFailureReason(failure_reason)] if failure_reason is not None else None
+    except ValueError:
+        return Collection(total_count=0, data=[])
+    if facets and input_datasets is None:
+        return Collection(total_count=0, data=[])
+
     filters = ExecutionGroupFilter(
         diagnostic_contains=[diagnostic_name_contains] if diagnostic_name_contains else None,
         provider_contains=[provider_name_contains] if provider_name_contains else None,
         dirty=dirty,
         successful=successful,
+        failure_reasons=failure_reasons,
+        input_datasets=input_datasets,
     )
     # The reader orders by id, so sort here to keep the most recently updated groups first.
     groups = sorted(
-        app_context.reader.executions.groups(filters),
+        app_context.reader.executions.groups(filters, with_count=False),
         key=lambda group: (group.updated_at, group.id),
         reverse=True,
     )
-
-    if failure_reason is not None:
-        groups = [group for group in groups if group.failure_reason == failure_reason]
-
-    # Selectors do not record source_id, so match on the datasets used.
-    if source_id or mip_era:
-        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
-        matching_ids = set(
-            session.scalars(select(models.ExecutionGroup.id).where(execution_group_filter(facets)))
-        )
-        groups = [group for group in groups if group.id in matching_ids]
 
     total_count = len(groups)
     page_ids = [group.id for group in groups[offset : offset + limit]]

@@ -591,3 +591,26 @@ def test_execution_list_filters_by_failure_reason(client: TestClient, settings) 
     assert unknown["total_count"] == 1
     assert unknown["data"][0]["executions"][-1]["failure_reason"] == "unknown"
     assert other["total_count"] == 0
+
+
+def test_execution_list_with_an_unknown_failure_reason_is_empty(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?failure_reason=not-a-reason")
+    assert r.status_code == 200
+    assert r.json()["total_count"] == 0
+    assert r.json()["data"] == []
+
+
+def test_execution_list_with_an_unknown_mip_era_is_empty(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?mip_era=CMIP5")
+    assert r.status_code == 200
+    assert r.json()["total_count"] == 0
+    assert r.json()["data"] == []
+
+
+def test_execution_list_filters_by_source_id(client: TestClient, settings) -> None:
+    everything = client.get(f"{settings.API_V1_STR}/executions/?limit=500&include_outputs=false").json()
+    by_era = client.get(f"{settings.API_V1_STR}/executions/?limit=500&mip_era=CMIP6").json()
+    assert 0 < by_era["total_count"] <= everything["total_count"]
+
+    nothing = client.get(f"{settings.API_V1_STR}/executions/?source_id=not-a-model").json()
+    assert nothing["total_count"] == 0
