@@ -35,6 +35,17 @@ def mip_era_for(source_type: SourceDatasetType) -> str | None:
     return dataset_type_label(source_type).upper()
 
 
+def eras_in_scope(mip_era: str | None) -> tuple[SourceDatasetType, ...]:
+    """
+    Resolve a `mip_era` query value, in any case, into the eras it selects.
+
+    No value selects every era and an unknown era selects none.
+    """
+    if not mip_era:
+        return CMIP_ERAS
+    return tuple(era for era in CMIP_ERAS if dataset_type_label(era) == mip_era.lower())
+
+
 def cv_column(mapped: Any, name: str) -> Any:
     """Read a column the CV registers at runtime, which the mapped class does not declare."""
     return getattr(mapped, name)
@@ -58,8 +69,7 @@ def cmip_input_filter(facets: Mapping[str, str]) -> InputDatasetFilter | None:
     A facet only one era carries excludes the other, so a CMIP7-only facet does not pull in
     all of CMIP6. Returns `None` when nothing can satisfy the request.
     """
-    requested_era = facets.get("mip_era")
-    eras = tuple(era for era in CMIP_ERAS if not requested_era or requested_era.upper() == mip_era_for(era))
+    eras = eras_in_scope(facets.get("mip_era"))
     known = {
         key: _facet_values(value)
         for key, value in facets.items()

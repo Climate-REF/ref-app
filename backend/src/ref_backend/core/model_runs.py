@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
 from climate_ref.models.execution import select_latest_executions
-from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
+from ref_backend.core.mip_eras import cv_column, dataset_model_for, eras_in_scope, mip_era_for
 from ref_backend.models.model_runs import RunCounts
 
 
@@ -30,12 +30,6 @@ class ModelFacets(NamedTuple):
     dataset_count: int
 
 
-def _eras_in_scope(mip_era: str | None) -> tuple[Any, ...]:
-    if mip_era is None:
-        return CMIP_ERAS
-    return tuple(era for era in CMIP_ERAS if mip_era_for(era) == mip_era.upper())
-
-
 def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
     """
     Select every (execution group, model) pairing at the promoted version of each diagnostic.
@@ -51,7 +45,7 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
     """
     latest = select_latest_executions().subquery()
     statements = []
-    for era in _eras_in_scope(mip_era):
+    for era in eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
         model_source_id = cv_column(dataset_model, "source_id")
         statement = (
@@ -120,7 +114,7 @@ def model_facets(
     institutions: dict[str, set[str]] = defaultdict(set)
     counts: dict[str, int] = defaultdict(int)
 
-    for era in _eras_in_scope(mip_era):
+    for era in eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
         model_source_id = cv_column(dataset_model, "source_id")
         institution_id = cv_column(dataset_model, "institution_id")
