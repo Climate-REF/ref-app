@@ -2,11 +2,12 @@
 
 from typing import Any
 
+import attrs
 from pydantic import BaseModel
 from sqlalchemy import Row, func
-from sqlalchemy.orm import Session
 
 from climate_ref import models
+from climate_ref.results import Reader, ResourceFilter
 
 
 class ExecutionResourceSummary(BaseModel):
@@ -77,18 +78,9 @@ def summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
     return ExecutionResourceSummary.model_validate(dict(values))
 
 
-def resource_usage_for_diagnostic(session: Session, diagnostic_id: int) -> ExecutionResourceSummary | None:
-    """Roll up the resource usage of every execution of one diagnostic."""
-    row = (
-        session.query(*RESOURCE_AGGREGATES)
-        .select_from(models.Execution)
-        .join(models.ExecutionGroup)
-        .filter(models.ExecutionGroup.diagnostic_id == diagnostic_id)
-        .one()
-    )
-    return summary_from_row(row)
-
-
-def resource_usage_overall(session: Session) -> ExecutionResourceSummary | None:
-    """Roll up the resource usage of every execution in the database."""
-    return summary_from_row(session.query(*RESOURCE_AGGREGATES).one())
+def resource_usage(reader: Reader, filters: ResourceFilter) -> ExecutionResourceSummary | None:
+    """Roll up the resource usage of the executions matching ``filters``."""
+    summary = reader.resources.summary(filters)
+    if summary is None:
+        return None
+    return ExecutionResourceSummary.model_validate(attrs.asdict(summary))

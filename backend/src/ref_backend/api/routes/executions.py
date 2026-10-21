@@ -14,7 +14,7 @@ from starlette.responses import Response, StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import DatasetFile
-from climate_ref.results import ExecutionGroupFilter, MetricValueFilter
+from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, ResourceFilter
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
 from ref_backend.core.file_handling import file_iterator, resolve_artifact, tail_lines
@@ -27,7 +27,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.resource_usage import resource_usage_overall
+from ref_backend.core.resource_usage import resource_usage
 from ref_backend.models import (
     Collection,
     Dataset,
@@ -98,7 +98,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
         series_value_count=session.query(models.SeriesMetricValue).count(),
         total_datasets=session.query(models.Dataset).count(),
         total_files=session.query(DatasetFile).count(),
-        resource_usage=resource_usage_overall(session),
+        resource_usage=resource_usage(app_context.reader, ResourceFilter(include_retracted=True)),
     )
 
 

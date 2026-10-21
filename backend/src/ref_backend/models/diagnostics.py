@@ -9,13 +9,14 @@ from sqlalchemy import func, select
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.results import ResourceFilter
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
 from ref_backend.core.metric_values import metric_value_type_is
-from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
+from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
 
@@ -327,7 +328,14 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
         concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
         description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
 
-        resource_usage = resource_usage_for_diagnostic(app_context.session, diagnostic.id)
+        diagnostic_resource_usage = resource_usage(
+            app_context.reader,
+            ResourceFilter(
+                provider_slug=diagnostic.provider.slug,
+                diagnostic_slug=diagnostic.slug,
+                include_retracted=True,
+            ),
+        )
 
         # Build the base diagnostic summary
         summary = DiagnosticSummary(
@@ -347,7 +355,7 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
             promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
-            resource_usage=resource_usage,
+            resource_usage=diagnostic_resource_usage,
         )
 
         # Apply metadata overrides from YAML if available
