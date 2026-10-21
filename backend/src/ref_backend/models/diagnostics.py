@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
@@ -296,34 +296,19 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
             .count()
         )
 
-        # Execution group counts for this diagnostic
-        execution_group_count = (
-            app_context.session.query(models.ExecutionGroup).filter(*promoted_scope).count()
+        # The reader only matches slugs as substrings, so pick the exact one out.
+        group_stats = next(
+            (
+                stats
+                for stats in app_context.reader.diagnostics.stats(
+                    provider_contains=[diagnostic.provider.slug], diagnostic_contains=[diagnostic.slug]
+                )
+                if (stats.provider, stats.diagnostic) == (diagnostic.provider.slug, diagnostic.slug)
+            ),
+            None,
         )
-
-        # Count execution groups whose latest execution is successful
-        ExecutionGroup = models.ExecutionGroup
-        Execution = models.Execution
-
-        # Subquery: latest execution id per group
-        latest_exec_per_group = (
-            app_context.session.query(
-                Execution.execution_group_id.label("egid"),
-                func.max(Execution.id).label("latest_exec_id"),
-            )
-            .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-            .filter(*promoted_scope)
-            .group_by(Execution.execution_group_id)
-            .subquery()
-        )
-
-        # Join back to executions to check success of latest
-        successful_execution_group_count = (
-            app_context.session.query(latest_exec_per_group.c.egid)
-            .join(Execution, Execution.id == latest_exec_per_group.c.latest_exec_id)
-            .filter(Execution.successful.is_(True))
-            .count()
-        )
+        execution_group_count = group_stats.total if group_stats else 0
+        successful_execution_group_count = group_stats.successful if group_stats else 0
 
         concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
         description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""

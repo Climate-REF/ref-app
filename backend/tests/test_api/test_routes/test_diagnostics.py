@@ -1,10 +1,12 @@
 import copy
 import shutil
 from collections.abc import Generator
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from climate_ref import models
 from climate_ref.database import Database
@@ -950,6 +952,51 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
     assert relisted["execution_group_count"] == 0
+
+
+def test_a_backfilled_failure_does_not_decide_a_group(writable_client: TestClient) -> None:
+    """The latest execution is the newest by created_at, not the highest id."""
+    listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
+    diagnostic = next(d for d in listing if d["successful_execution_group_count"] > 0)
+    detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+    before = writable_client.get(detail_url).json()
+
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        group = database.session.scalars(
+            select(models.ExecutionGroup).where(
+                models.ExecutionGroup.diagnostic_id == diagnostic["id"],
+                models.ExecutionGroup.diagnostic_version == diagnostic["promoted_version"],
+                models.ExecutionGroup.executions.any(models.Execution.successful.is_(True)),
+            )
+        ).first()
+        assert group is not None
+        newest = max(group.executions, key=lambda e: (e.created_at, e.id))
+        assert newest.successful
+        database.session.add(
+            models.Execution(
+                execution_group_id=group.id,
+                dataset_hash="backfill",
+                output_fragment=newest.output_fragment,
+                successful=False,
+                created_at=newest.created_at - timedelta(days=1),
+            )
+        )
+
+    after = writable_client.get(detail_url).json()
+    assert after["successful_execution_group_count"] == before["successful_execution_group_count"]
+    relisted = next(
+        d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
+    )
+    assert relisted["successful_execution_group_count"] == before["successful_execution_group_count"]
+
+
+def test_diagnostics_catalog_with_an_unknown_era_counts_nothing(client: TestClient, settings) -> None:
+    catalog = client.get(f"{settings.API_V1_STR}/diagnostics/catalog", params={"mip_era": "CMIP5"}).json()
+    assert catalog["data"]
+    assert all(d["execution_group_count"] == 0 for d in catalog["data"])
+    assert all(d["successful_execution_group_count"] == 0 for d in catalog["data"])
+    assert all(d["execution_count"] == 0 for d in catalog["data"])
 
 
 FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")

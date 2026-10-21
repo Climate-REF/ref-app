@@ -1,11 +1,11 @@
 from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import ColumnElement, Integer, func, select
+from sqlalchemy import ColumnElement, Integer, false, func, select
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.results import MetricValueFilter
+from climate_ref.results import InputDatasetFilter, MetricValueFilter
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.metric_values import (
     MetricValueType,
@@ -13,6 +13,7 @@ from ref_backend.core.metric_values import (
 )
 from ref_backend.core.mip_eras import (
     cmip_dataset_filter,
+    cmip_input_filter,
     execution_group_filter,
     executions_in_mip_era,
 )
@@ -72,36 +73,41 @@ def _listed_diagnostics(app_context: AppContextDep) -> list[models.Diagnostic]:
     return query.all()
 
 
-def _group_scope(
-    diagnostic_ids: list[int], mip_era: str | None, source_id: str | None = None
-) -> list[ColumnElement[bool]]:
-    promoted_version = (
-        select(models.Diagnostic.promoted_version)
-        .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
-        .scalar_subquery()
-    )
-    group_scope: list[ColumnElement[bool]] = [
-        models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
-        models.ExecutionGroup.diagnostic_version == promoted_version,
-    ]
-    # Selectors do not record source_id, so match on the datasets used, as the executions list does.
-    facets = {key: value for key, value in {"mip_era": mip_era, "source_id": source_id}.items() if value}
-    if facets:
-        matching_groups = select(models.ExecutionGroup.id).where(execution_group_filter(facets))
-        group_scope.append(models.ExecutionGroup.id.in_(matching_groups))
-    return group_scope
+class _Scope(NamedTuple):
+    """The listed diagnostics, and which of their execution groups count towards them"""
+
+    diagnostics: list[models.Diagnostic]
+    input_datasets: InputDatasetFilter | None
+    matches_nothing: bool
+    group_scope: list[ColumnElement[bool]]
 
 
-def _scoped_diagnostics(
-    app_context: AppContextDep, mip_era: str | None, source_id: str | None
-) -> tuple[list[models.Diagnostic], list[ColumnElement[bool]]]:
+def _scoped_diagnostics(app_context: AppContextDep, mip_era: str | None, source_id: str | None) -> _Scope:
     """
     Get the listed diagnostics, with the scope that counts their groups for `mip_era` and `source_id`
 
     Without any listed diagnostic the scope matches no group, so the counts come out empty.
     """
     diagnostics = _listed_diagnostics(app_context)
-    return diagnostics, _group_scope([d.id for d in diagnostics], mip_era, source_id)
+    # Selectors do not record source_id, so match on the datasets used, as the executions list does.
+    facets = {key: value for key, value in {"mip_era": mip_era, "source_id": source_id}.items() if value}
+    input_datasets = cmip_input_filter(facets) if facets else None
+    matches_nothing = not diagnostics or (bool(facets) and input_datasets is None)
+
+    promoted_version = (
+        select(models.Diagnostic.promoted_version)
+        .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
+        .scalar_subquery()
+    )
+    group_scope: list[ColumnElement[bool]] = [
+        models.ExecutionGroup.diagnostic_id.in_([d.id for d in diagnostics]),
+        models.ExecutionGroup.diagnostic_version == promoted_version,
+    ]
+    if input_datasets:
+        group_scope.append(input_datasets.execution_group_clause())
+    if matches_nothing:
+        group_scope.append(false())
+    return _Scope(diagnostics, input_datasets, matches_nothing, group_scope)
 
 
 def _diagnostics_with_values(
@@ -131,9 +137,8 @@ def _value_types(app_context: AppContextDep, group_scope: list[ColumnElement[boo
     )
 
 
-def _catalog_entries(
-    app_context: AppContextDep, diagnostics: list[models.Diagnostic], group_scope: list[ColumnElement[bool]]
-) -> list[DiagnosticCatalogEntry]:
+def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[DiagnosticCatalogEntry]:
+    group_scope = scope.group_scope
     # Count executions and roll up their resource usage per diagnostic
     execution_counts = (
         app_context.session.query(
@@ -153,55 +158,29 @@ def _catalog_entries(
     }
     resource_usage = {row.diagnostic_id: summary_from_row(row) for row in execution_counts}
 
-    # Count execution groups per diagnostic
-    execution_group_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id, func.count(models.ExecutionGroup.id).label("group_count")
-        )
-        .filter(*group_scope)
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
-    )
-    group_counts = {row[0]: row[1] for row in execution_group_counts}
-
-    # Count successful execution groups (latest execution successful)
-    # Subquery: latest execution id per group
-    latest_exec_per_group = (
-        app_context.session.query(
-            models.Execution.execution_group_id.label("egid"),
-            func.max(models.Execution.id).label("latest_exec_id"),
-        )
-        .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
-        .filter(*group_scope)
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
+    group_stats = (
+        {}
+        if scope.matches_nothing
+        else {
+            (stats.provider, stats.diagnostic): stats
+            for stats in app_context.reader.diagnostics.stats(input_datasets=scope.input_datasets)
+        }
     )
 
-    # Join back to executions to check success of latest
-    successful_group_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id,
-            func.count(latest_exec_per_group.c.egid).label("successful_count"),
+    entries = []
+    for m in scope.diagnostics:
+        stats = group_stats.get((m.provider.slug, m.slug))
+        entries.append(
+            DiagnosticCatalogEntry.build_with_stats(
+                m,
+                app_context,
+                execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
+                execution_group_count=stats.total if stats else 0,
+                successful_execution_group_count=stats.successful if stats else 0,
+                resource_usage=resource_usage.get(m.id),
+            )
         )
-        .join(models.Execution, models.Execution.id == latest_exec_per_group.c.latest_exec_id)
-        .join(models.ExecutionGroup, models.ExecutionGroup.id == latest_exec_per_group.c.egid)
-        .filter(models.Execution.successful.is_(True))
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
-    )
-    successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
-
-    return [
-        DiagnosticCatalogEntry.build_with_stats(
-            m,
-            app_context,
-            execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
-            execution_group_count=group_counts.get(m.id, 0),
-            successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
-            resource_usage=resource_usage.get(m.id),
-        )
-        for m in diagnostics
-    ]
+    return entries
 
 
 @router.get("/", name="list")
@@ -214,8 +193,8 @@ async def _list(
     Pass `mip_era` to count only the execution groups that ran against that era,
     and `source_id` to count only those that ran against that model.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, group_scope)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, scope.group_scope)
     return Collection(
         data=[
             DiagnosticSummary.from_catalog_entry(
@@ -223,7 +202,7 @@ async def _list(
                 has_scalar_values=entry.id in value_types.scalar,
                 has_series_values=entry.id in value_types.series,
             )
-            for entry in _catalog_entries(app_context, diagnostics, group_scope)
+            for entry in _catalog_entries(app_context, scope)
         ]
     )
 
@@ -240,8 +219,8 @@ async def catalog(
 
     Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    return Collection(data=_catalog_entries(app_context, diagnostics, group_scope))
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    return Collection(data=_catalog_entries(app_context, scope))
 
 
 @router.get("/value-flags", name="value_flags")
@@ -253,8 +232,8 @@ async def value_flags(
 
     These are the flags `/diagnostics/catalog` leaves out.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, group_scope)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, scope.group_scope)
     return Collection(
         data=[
             DiagnosticValueFlags(
@@ -263,7 +242,7 @@ async def value_flags(
                 has_scalar_values=d.id in value_types.scalar,
                 has_series_values=d.id in value_types.series,
             )
-            for d in diagnostics
+            for d in scope.diagnostics
         ]
     )
 
