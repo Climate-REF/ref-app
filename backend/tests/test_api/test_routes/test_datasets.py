@@ -130,3 +130,24 @@ def test_dataset_carries_its_mip_era(client: TestClient, settings) -> None:
 
     assert r.status_code == 200
     assert r.json()["data"][0]["mip_era"] == "CMIP6"
+
+
+def test_dataset_list_is_ordered_by_slug_and_pages_without_overlap(client: TestClient, settings):
+    everything = client.get(f"{settings.API_V1_STR}/datasets/?limit=100").json()
+    slugs = [d["slug"] for d in everything["data"]]
+    assert len(slugs) > 2
+    assert slugs == sorted(slugs)
+
+    first = client.get(f"{settings.API_V1_STR}/datasets/?limit=2&offset=0").json()
+    second = client.get(f"{settings.API_V1_STR}/datasets/?limit=2&offset=2").json()
+    assert [d["slug"] for d in first["data"] + second["data"]] == slugs[:4]
+    assert first["total_count"] == second["total_count"] == everything["total_count"]
+
+
+def test_dataset_list_name_contains_ignores_case_and_counts_matches(client: TestClient, settings):
+    slug = client.get(f"{settings.API_V1_STR}/datasets/?limit=1").json()["data"][0]["slug"]
+    part = slug.split(".")[1].upper()
+    r = client.get(f"{settings.API_V1_STR}/datasets/?limit=100&name_contains={part}").json()
+    assert r["data"]
+    assert all(part.lower() in d["slug"].lower() for d in r["data"])
+    assert r["total_count"] == len(r["data"])
