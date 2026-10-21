@@ -3,11 +3,11 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, distinct, false, func, or_, select
+from sqlalchemy import ColumnElement, false, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from climate_ref.results import InputDatasetFilter
+from climate_ref.results import InputDatasetFilter, Reader
 from climate_ref_core.datasets import SourceDatasetType
 
 #: The MIP eras the app presents. Data from the two is never combined on a chart.
@@ -67,8 +67,14 @@ def cmip_input_filter(facets: Mapping[str, str]) -> InputDatasetFilter | None:
     }
     if not eras or any(not any(_carries(era, key) for era in eras) for key in known):
         return None
+    return _input_filter(eras, known or None)
+
+
+def _input_filter(
+    eras: tuple[SourceDatasetType, ...], facets: Mapping[str, tuple[str, ...]] | None = None
+) -> InputDatasetFilter:
     # The attrs converter leaves mypy with an unbound Iterable[_T_co] for source_types.
-    return InputDatasetFilter(source_types=eras, facets=known or None)  # type: ignore[arg-type]
+    return InputDatasetFilter(source_types=eras, facets=facets)  # type: ignore[arg-type]
 
 
 def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
@@ -83,27 +89,19 @@ def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
     return input_filter.execution_group_clause() if input_filter else false()
 
 
-def execution_groups_per_era(session: Session) -> dict[str, int]:
+def execution_groups_per_era(reader: Reader) -> dict[str, int]:
     """
     Count the execution groups that ran against each MIP era, keyed by era label.
 
     A group holding both eras counts once for each, so the counts do not partition the total.
     Groups are counted at the promoted version of each diagnostic, matching the overall statistics.
     """
-    rows = session.execute(
-        select(models.Dataset.dataset_type, func.count(distinct(models.ExecutionGroup.id)))
-        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-        .join(models.ExecutionGroup.executions)
-        .join(models.Execution.datasets)
-        .where(
-            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-            models.Dataset.dataset_type.in_(CMIP_ERAS),
-        )
-        .group_by(models.Dataset.dataset_type)
-    ).all()
-
-    counts = {mip_era_for(source_type): count for source_type, count in rows}
-    return {label: counts.get(label, 0) for era in CMIP_ERAS if (label := mip_era_for(era))}
+    counts = {}
+    for era in CMIP_ERAS:
+        if label := mip_era_for(era):
+            stats = reader.executions.statistics(input_datasets=_input_filter((era,)))
+            counts[label] = sum(s.total for s in stats)
+    return counts
 
 
 def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:

@@ -614,3 +614,13 @@ def test_execution_list_filters_by_source_id(client: TestClient, settings) -> No
 
     nothing = client.get(f"{settings.API_V1_STR}/executions/?source_id=not-a-model").json()
     assert nothing["total_count"] == 0
+
+
+def test_execution_statistics_count_groups_per_era(client: TestClient, settings) -> None:
+    stats = client.get(f"{settings.API_V1_STR}/executions/statistics").json()
+    by_era = stats["execution_groups_by_mip_era"]
+    assert set(by_era) == {"CMIP6", "CMIP7"}
+    assert all(0 <= count <= stats["total_execution_groups"] for count in by_era.values())
+
+    listed = client.get(f"{settings.API_V1_STR}/executions/?mip_era=CMIP6").json()
+    assert by_era["CMIP6"] == listed["total_count"] > 0
