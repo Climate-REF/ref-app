@@ -5,17 +5,15 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import select
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
-from climate_ref.results import ResourceFilter
+from climate_ref.results import DiagnosticFilter, ResourceFilter
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
-from ref_backend.core.metric_values import metric_value_type_is
 from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage
 from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
@@ -256,15 +254,11 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
         group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
         aft = DiagnosticSummary._get_aft_link(diagnostic)
 
+        key = (diagnostic.provider.slug, diagnostic.slug)
+        slug_filter = DiagnosticFilter(provider_contains=[key[0]], diagnostic_contains=[key[1]])
+
         def has_values(value_type: StoredMetricValueType) -> bool:
-            query = (
-                select(models.MetricValue.id)
-                .join(models.Execution)
-                .join(models.ExecutionGroup)
-                .where(models.ExecutionGroup.diagnostic_id == diagnostic.id, metric_value_type_is(value_type))
-                .limit(1)
-            )
-            return app_context.session.scalar(query) is not None
+            return key in app_context.reader.diagnostics.with_values(value_type, slug_filter)
 
         has_scalar_values = has_values(StoredMetricValueType.SCALAR)
         has_series_values = has_values(StoredMetricValueType.SERIES)

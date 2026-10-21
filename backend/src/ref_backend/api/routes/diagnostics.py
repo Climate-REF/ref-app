@@ -5,7 +5,8 @@ from sqlalchemy import ColumnElement, Integer, false, func, select
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.results import InputDatasetFilter, MetricValueFilter
+from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.results import DiagnosticFilter, InputDatasetFilter, MetricValueFilter
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.metric_values import (
     MetricValueType,
@@ -111,16 +112,14 @@ def _scoped_diagnostics(app_context: AppContextDep, mip_era: str | None, source_
 
 
 def _diagnostics_with_values(
-    app_context: AppContextDep, value_class: type[models.MetricValue], group_scope: list[ColumnElement[bool]]
+    app_context: AppContextDep, value_type: StoredMetricValueType, scope: _Scope
 ) -> set[int]:
-    rows = (
-        app_context.session.query(models.ExecutionGroup.diagnostic_id)
-        .join(models.Execution)
-        .join(value_class)
-        .filter(*group_scope)
-        .distinct()
+    if scope.matches_nothing:
+        return set()
+    pairs = app_context.reader.diagnostics.with_values(
+        value_type, DiagnosticFilter(input_datasets=scope.input_datasets)
     )
-    return {row[0] for row in rows}
+    return {d.id for d in scope.diagnostics if (d.provider.slug, d.slug) in pairs}
 
 
 class _ValueTypes(NamedTuple):
@@ -130,10 +129,10 @@ class _ValueTypes(NamedTuple):
     series: set[int]
 
 
-def _value_types(app_context: AppContextDep, group_scope: list[ColumnElement[bool]]) -> _ValueTypes:
+def _value_types(app_context: AppContextDep, scope: _Scope) -> _ValueTypes:
     return _ValueTypes(
-        scalar=_diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope),
-        series=_diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope),
+        scalar=_diagnostics_with_values(app_context, StoredMetricValueType.SCALAR, scope),
+        series=_diagnostics_with_values(app_context, StoredMetricValueType.SERIES, scope),
     )
 
 
@@ -194,7 +193,7 @@ async def _list(
     and `source_id` to count only those that ran against that model.
     """
     scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, scope.group_scope)
+    value_types = _value_types(app_context, scope)
     return Collection(
         data=[
             DiagnosticSummary.from_catalog_entry(
@@ -233,7 +232,7 @@ async def value_flags(
     These are the flags `/diagnostics/catalog` leaves out.
     """
     scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, scope.group_scope)
+    value_types = _value_types(app_context, scope)
     return Collection(
         data=[
             DiagnosticValueFlags(
@@ -375,7 +374,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
 
     # Scope to this diagnostic/provider via exact-match slugs. The filter keeps only the
     # promoted diagnostic version, so values from superseded versions are hidden. Exposing
-    # previous versions needs a separate design (TODO). Retracted executions are still included.
+    # previous versions needs a separate design (TODO). Retracted executions are hidden.
     metric_filter = MetricValueFilter(
         diagnostic_slug=diagnostic_slug,
         provider_slug=provider_slug,
@@ -383,7 +382,6 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        include_retracted=True,
     )
 
     return fetch_metric_values(

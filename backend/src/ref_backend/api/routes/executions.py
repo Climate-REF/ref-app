@@ -331,13 +331,12 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     # Restrict to the selected execution's values; ``_get_execution`` already resolves the
     # latest execution when no ``execution_id`` is supplied. The filter keeps only the
     # promoted diagnostic version, so values from superseded versions are hidden. Exposing
-    # previous versions needs a separate design (TODO). Retracted executions are still included.
+    # previous versions needs a separate design (TODO). Retracted executions are hidden.
     metric_filter = MetricValueFilter(
         execution_ids=[execution.id],
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        include_retracted=True,
     )
 
     return fetch_metric_values(

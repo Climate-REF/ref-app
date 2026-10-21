@@ -613,15 +613,17 @@ def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) 
     assert data["count"] >= 0
 
 
-def _diagnostics_with_values(session, value_class, *, promoted_only: bool) -> set[int]:
+def _diagnostics_with_values(session, value_class) -> set[int]:
     query = (
         session.query(models.ExecutionGroup.diagnostic_id)
         .join(models.Execution)
         .join(value_class)
         .join(models.Diagnostic, models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
+        .filter(
+            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+            models.Execution.retracted.is_(False),
+        )
     )
-    if promoted_only:
-        query = query.filter(models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version)
     return {row[0] for row in query.distinct()}
 
 
@@ -629,20 +631,46 @@ def test_diagnostics_has_values_flags_match_each_value_type(client: TestClient, 
     """The list and detail flags agree with a query against each metric value subclass."""
     session = Database.from_config(test_ref_config(), run_migrations=False, read_only=True).session
     listing = client.get(f"{settings.API_V1_STR}/diagnostics/").json()["data"]
+    listed = {d["id"] for d in listing}
 
     for value_class, flag in [
         (models.ScalarMetricValue, "has_scalar_values"),
         (models.SeriesMetricValue, "has_series_values"),
     ]:
-        promoted = _diagnostics_with_values(session, value_class, promoted_only=True)
-        assert promoted, flag
-        assert {d["id"] for d in listing if d[flag]} == promoted
+        expected = _diagnostics_with_values(session, value_class) & listed
+        assert expected, flag
+        assert {d["id"] for d in listing if d[flag]} == expected
 
-        any_version = _diagnostics_with_values(session, value_class, promoted_only=False)
         for diagnostic in listing:
             url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
-            expected = diagnostic["id"] in any_version
-            assert client.get(url).json()[flag] == expected, (flag, diagnostic["slug"])
+            assert client.get(url).json()[flag] == (diagnostic["id"] in expected), (flag, diagnostic["slug"])
+
+
+def test_retracted_values_are_hidden(writable_client: TestClient) -> None:
+    """Retracting every execution behind a diagnostic's values clears its flags and its values."""
+    listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
+    diagnostic = next(d for d in listing if d["has_scalar_values"])
+    detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+    scalars = {"value_type": "scalar", "detect_outliers": "off"}
+    assert writable_client.get(f"{detail_url}/values", params=scalars).json()["data"]
+
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        executions = database.session.scalars(
+            select(models.Execution)
+            .join(models.ExecutionGroup)
+            .where(models.ExecutionGroup.diagnostic_id == diagnostic["id"])
+        ).all()
+        for execution in executions:
+            execution.retracted = True
+
+    relisted = next(
+        d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
+    )
+    assert not relisted["has_metric_values"]
+    assert not writable_client.get(detail_url).json()["has_metric_values"]
+    values = writable_client.get(f"{detail_url}/values", params=scalars).json()
+    assert values["data"] == []
 
 
 def test_diagnostics_facets_cover_scalar_and_series_values(client: TestClient, settings) -> None:
