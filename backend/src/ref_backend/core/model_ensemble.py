@@ -9,8 +9,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
+from climate_ref.models.execution import select_latest_executions
 from ref_backend.core.mip_eras import cmip_dataset_filter, cv_column
-from ref_backend.core.model_runs import latest_executions
 from ref_backend.models.model_runs import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
@@ -91,7 +91,7 @@ def _scalar_rows(
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
     # A retried group holds a value per attempt, so only the execution that decided it counts.
-    latest = latest_executions()
+    latest = select_latest_executions().subquery()
 
     statement = (
         select(

@@ -8,6 +8,7 @@ from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, uni
 from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
+from climate_ref.models.execution import select_latest_executions
 from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
 from ref_backend.models.model_runs import RunCounts
 
@@ -48,7 +49,7 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
     Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
-    latest = latest_executions()
+    latest = select_latest_executions().subquery()
     statements = []
     for era in _eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
@@ -61,7 +62,7 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
                 models.Execution.id.label("execution_id"),
             )
             .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-            .join(latest, latest.c.group_id == models.ExecutionGroup.id)
+            .join(latest, latest.c.execution_group_id == models.ExecutionGroup.id)
             .join(models.Execution, models.Execution.id == latest.c.execution_id)
             .join(models.Execution.datasets.of_type(dataset_model))
             .where(
@@ -75,37 +76,6 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
         statements.append(statement)
 
     return union(*statements) if statements else None
-
-
-def latest_executions() -> Any:
-    """
-    Select the execution that decides each group, the way `climate_ref` picks the latest.
-
-    That is newest `created_at`, with the highest id breaking a tie. Ranking on id alone parts
-    company with `created_at` whenever rows land out of order, and these counts would then
-    disagree with the statistics endpoint and the CLI for the same group.
-    """
-    newest = (
-        select(
-            models.Execution.execution_group_id.label("group_id"),
-            func.max(models.Execution.created_at).label("created_at"),
-        )
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
-    return (
-        select(
-            models.Execution.execution_group_id.label("group_id"),
-            func.max(models.Execution.id).label("execution_id"),
-        )
-        .join(
-            newest,
-            (models.Execution.execution_group_id == newest.c.group_id)
-            & (models.Execution.created_at == newest.c.created_at),
-        )
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
 
 
 def _outcome(execution: Any) -> Any:
