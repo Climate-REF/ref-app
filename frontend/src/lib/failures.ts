@@ -232,7 +232,7 @@ const failedOn = (group: ExecutionGroup) =>
  * The model applies to every group. The reason and time range describe failures,
  * so a running or not started group, which has neither, is kept.
  */
-export function matchesFilters(
+function matchesFilters(
   group: ExecutionGroup,
   { model, reason, from, to }: FailureFilters,
 ): boolean {
@@ -250,6 +250,46 @@ export function matchesFilters(
   }
   const day = failedOn(group) ?? "";
   return (from === undefined || day >= from) && (to === undefined || day <= to);
+}
+
+/** What the filters of the failures page can be set to, given the filters already set */
+export interface FilterOptions {
+  /** Each dropdown counts what selecting a value would show, given the other filters */
+  reasons: FailureCount[];
+  models: FailureCount[];
+  /** The days with failures matching the other filters, as YYYY-MM-DD */
+  days: Set<string>;
+}
+
+export function filterOptions(
+  catalog: DiagnosticCatalogEntry[],
+  unsuccessful: ExecutionGroup[],
+  filters: FailureFilters,
+): FilterOptions {
+  const summarise = (narrowed: FailureFilters) =>
+    summariseFailures(catalog, unsuccessful, narrowed);
+  return {
+    reasons: failuresByReason(summarise({ ...filters, reason: undefined })),
+    models: failuresByModel(summarise({ ...filters, model: undefined })),
+    days: new Set(
+      summarise({ ...filters, from: undefined, to: undefined })
+        .flatMap((failures) => failures.failedGroups)
+        .map(failedOn)
+        .filter((day) => day !== undefined),
+    ),
+  };
+}
+
+/** How many groups failed across the diagnostics, e.g. "3 failed execution groups in 2 diagnostics" */
+export function failedGroupsSummary(diagnostics: DiagnosticFailures[]): string {
+  const failing = diagnostics.filter(
+    (failures) => failures.failedGroups.length > 0,
+  );
+  const groups = failing.reduce(
+    (sum, failures) => sum + failures.failedGroups.length,
+    0,
+  );
+  return `${groups} failed execution ${groups === 1 ? "group" : "groups"} in ${failing.length} ${failing.length === 1 ? "diagnostic" : "diagnostics"}`;
 }
 
 /** The first and last day any of these groups failed, as YYYY-MM-DD, or undefined if none did */

@@ -1,5 +1,5 @@
 import { Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PaginationControls } from "@/components/dataTable/paginationControls.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -30,14 +30,6 @@ type ValuesProps = {
   onDownload?: () => void;
   initialFilters?: Filter[];
   onFiltersChange?: (filters: Filter[]) => void;
-  // Callback to expose current grouping configuration
-  onCurrentGroupingChange?: (config: {
-    groupBy?: string;
-    hue?: string;
-    style?: string;
-  }) => void;
-  // Callback to expose filtered data
-  onFilteredDataChange?: (filteredData: (ScalarValue | SeriesValue)[]) => void;
   // Outlier detection parameters
   hadOutliers?: boolean;
   outlierCount?: number;
@@ -72,38 +64,24 @@ export function Values({ valueType, ...props }: ValuesProps) {
   const {
     filters,
     setFilters,
-    finalDisplayedValues,
+    displayedValues,
     setRowSelection,
     rowSelection,
-    excludedRowIds,
-    setExcludedRowIds,
   } = useValuesProcessor<Value>({
     initialValues: filteredValues,
-    loading: props.loading,
     initialFilters: props.initialFilters,
     onFiltersChange: props.onFiltersChange,
   });
 
-  // Notify parent component when filtered data changes
-  useEffect(() => {
-    if (props.onFilteredDataChange) {
-      props.onFilteredDataChange(finalDisplayedValues);
-    }
-  }, [finalDisplayedValues, props.onFilteredDataChange]);
-
   // Handle outlier control changes
   const handleDetectOutliersChange = (value: "off" | "iqr") => {
     setDetectOutliers(value);
-    if (props.onDetectOutliersChange) {
-      props.onDetectOutliersChange(value);
-    }
+    props.onDetectOutliersChange?.(value);
   };
 
   const handleIncludeUnverifiedChange = (value: boolean) => {
     setIncludeUnverified(value);
-    if (props.onIncludeUnverifiedChange) {
-      props.onIncludeUnverifiedChange(value);
-    }
+    props.onIncludeUnverifiedChange?.(value);
   };
 
   // Outlier banner
@@ -158,8 +136,6 @@ export function Values({ valueType, ...props }: ValuesProps) {
                 filters={filters}
                 setFilters={setFilters}
                 rowSelection={rowSelection}
-                excludedRowIds={excludedRowIds}
-                setExcludedRowIds={setExcludedRowIds}
               />
             </div>
             <Button variant="outline" size="sm" onClick={props.onDownload}>
@@ -170,7 +146,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
 
           {valueType === "scalars" ? (
             <ScalarDataTable
-              values={finalDisplayedValues as ProcessedScalarValue[]}
+              values={displayedValues as ProcessedScalarValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}
@@ -178,7 +154,7 @@ export function Values({ valueType, ...props }: ValuesProps) {
             />
           ) : (
             <SeriesDataTable
-              values={finalDisplayedValues as ProcessedSeriesValue[]}
+              values={displayedValues as ProcessedSeriesValue[]}
               facets={props.facets}
               loading={props.loading}
               rowSelection={rowSelection}

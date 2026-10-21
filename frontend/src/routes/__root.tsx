@@ -2,7 +2,11 @@ import { init } from "@plausible-analytics/tracker";
 import * as Sentry from "@sentry/react";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ApiEndpointWarning } from "@/components/app/apiEndpointWarning";
 import { ErrorBoundary } from "@/components/app/errorBoundary";
@@ -27,23 +31,22 @@ init({
 function AppLayout() {
   const { isUsingOverride } = useApiEndpoint();
   const title = useDocumentTitle();
+  // A page that failed is shown again once the visitor navigates elsewhere
+  const pathname = useLocation({ select: (location) => location.pathname });
   return (
     <ErrorBoundary
-      fallback={
+      fallback={({ error, reset }) => (
         <div className="min-h-screen">
           <Navbar />
           <ErrorFallback
+            error={error}
+            resetError={reset}
             title="Application Error"
-            description="The application encountered an unexpected error. Please refresh the page to continue."
+            description="The application encountered an unexpected error. Try again, or refresh the page to continue."
           />
         </div>
-      }
+      )}
       onError={(error, errorInfo) => {
-        // Log to console in development
-        if (import.meta.env.DEV) {
-          console.error("Root ErrorBoundary caught error:", error, errorInfo);
-        }
-
         Sentry.captureException(error, {
           contexts: {
             errorInfo: {
@@ -57,7 +60,15 @@ function AppLayout() {
       <StagingBanner />
       <Navbar />
       <ErrorBoundary
-        fallback={<ErrorFallback title="Page Error" showHomeButton={true} />}
+        resetKeys={[pathname]}
+        fallback={({ error, reset }) => (
+          <ErrorFallback
+            error={error}
+            resetError={reset}
+            title="Page Error"
+            showHomeButton={true}
+          />
+        )}
       >
         <div className="min-h-screen flex flex-1 flex-col">
           {isUsingOverride && (

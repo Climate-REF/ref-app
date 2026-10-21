@@ -1,22 +1,16 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { BookOpen, FlaskConical } from "lucide-react";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
-import type {
-  AftCollectionCard,
-  AftCollectionCardContent,
-  AftCollectionDetail,
-  AftCollectionFilterControl,
-  AftCollectionGroupingConfig,
-  ThemeDetail,
-} from "@/client/types.gen";
+import type { ThemeDetail } from "@/client/types.gen";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Route } from "@/routes/_app/explorer/themes.tsx";
 import { ExplorerThemeLayout } from "./explorerThemeLayout";
-import type { ChartGroupingConfig } from "./grouping/types";
-import type { ExplorerCard, ExplorerCardContent, FilterControl } from "./types";
+import { buildCollectionGroups } from "./mapping";
+
+// Looked up by id rather than imported, as the route's module imports this one
+const themesRoute = getRouteApi("/_app/explorer/themes");
 
 const themes = [
   { name: "atmosphere", title: "Atmosphere" },
@@ -27,135 +21,6 @@ const themes = [
 ] as const;
 
 type ThemeName = (typeof themes)[number]["name"];
-
-function toChartGroupingConfig(
-  apiConfig: AftCollectionGroupingConfig,
-): ChartGroupingConfig {
-  return {
-    groupBy: apiConfig.group_by,
-    hue: apiConfig.hue,
-    style: apiConfig.style ?? undefined,
-  };
-}
-
-function toFilterControl(
-  apiControl: AftCollectionFilterControl,
-): FilterControl {
-  return {
-    filterKey: apiControl.filter_key,
-    label: apiControl.label ?? undefined,
-    defaultValue: apiControl.default_value ?? undefined,
-    excludeValues: apiControl.exclude_values ?? undefined,
-  };
-}
-
-/**
- * Filter explorer cards to only content items matching a specific diagnostic,
- * then convert to frontend types.
- */
-export function filterExplorerContentForDiagnostic(
-  cards: AftCollectionCard[],
-  providerSlug: string,
-  diagnosticSlug: string,
-) {
-  return cards
-    .filter((card: AftCollectionCard) => !card.placeholder)
-    .flatMap((card) => card.content)
-    .filter(
-      (c: AftCollectionCardContent) =>
-        c.provider === providerSlug &&
-        c.diagnostic === diagnosticSlug &&
-        !c.placeholder,
-    )
-    .map(toExplorerCardContent);
-}
-
-export function toExplorerCardContent(
-  apiContent: AftCollectionCardContent,
-): ExplorerCardContent {
-  const base = {
-    provider: apiContent.provider,
-    diagnostic: apiContent.diagnostic,
-    title: apiContent.title,
-    description: apiContent.description ?? undefined,
-    interpretation: apiContent.interpretation ?? undefined,
-    span: apiContent.span ?? undefined,
-    placeholder: apiContent.placeholder ?? undefined,
-    referenceDatasets: apiContent.reference_datasets ?? undefined,
-  };
-  switch (apiContent.type) {
-    case "box-whisker-chart":
-      return {
-        ...base,
-        type: "box-whisker-chart",
-        metricUnits: apiContent.metric_units ?? undefined,
-        otherFilters: apiContent.other_filters ?? undefined,
-        clipMin: apiContent.clip_min ?? undefined,
-        clipMax: apiContent.clip_max ?? undefined,
-        yMin: apiContent.y_min ?? undefined,
-        yMax: apiContent.y_max ?? undefined,
-        showZeroLine: apiContent.show_zero_line ?? undefined,
-        symmetricalAxes: apiContent.symmetrical_axes ?? undefined,
-        groupingConfig: apiContent.grouping_config
-          ? toChartGroupingConfig(apiContent.grouping_config)
-          : undefined,
-        filterControls: apiContent.filter_controls
-          ? apiContent.filter_controls.map(toFilterControl)
-          : undefined,
-      };
-    case "series-chart":
-      return {
-        ...base,
-        type: "series-chart",
-        metricUnits: apiContent.metric_units ?? undefined,
-        otherFilters: apiContent.other_filters ?? undefined,
-        symmetricalAxes: apiContent.symmetrical_axes ?? undefined,
-        groupingConfig: apiContent.grouping_config
-          ? toChartGroupingConfig(apiContent.grouping_config)
-          : undefined,
-        filterControls: apiContent.filter_controls
-          ? apiContent.filter_controls.map(toFilterControl)
-          : undefined,
-        labelTemplate: apiContent.label_template ?? undefined,
-      };
-    case "taylor-diagram":
-      return {
-        ...base,
-        type: "taylor-diagram",
-        otherFilters: apiContent.other_filters ?? undefined,
-        referenceStddev: apiContent.reference_stddev ?? undefined,
-      };
-    case "figure-gallery":
-      return {
-        ...base,
-        type: "figure-gallery",
-        filenameFilter: apiContent.filename_filter ?? undefined,
-      };
-  }
-}
-
-function collectionToExplorerCards(
-  collection: AftCollectionDetail,
-): ExplorerCard[] {
-  return collection.explorer_cards
-    .filter((card: AftCollectionCard) => !card.placeholder)
-    .map((card: AftCollectionCard) => ({
-      title: card.title,
-      description: card.description ?? undefined,
-      content: card.content
-        .filter((c: AftCollectionCardContent) => !c.placeholder)
-        .map(toExplorerCardContent),
-    }));
-}
-
-function buildCollectionGroups(theme: ThemeDetail) {
-  return theme.collections
-    .map((collection) => ({
-      collection,
-      cards: collectionToExplorerCards(collection),
-    }))
-    .filter((group) => group.cards.length > 0);
-}
 
 /** Swap the collection descriptions between the technical wording and the plain language one. */
 export function PlainLanguageToggle({
@@ -183,14 +48,6 @@ export function PlainLanguageToggle({
   );
 }
 
-/** True when at least one collection carries a plain language summary worth toggling to. */
-export function hasPlainLanguageContent(theme: ThemeDetail): boolean {
-  return theme.collections.some((c) => {
-    const pl = c.content?.plain_language;
-    return pl?.description || pl?.why_it_matters || pl?.takeaway;
-  });
-}
-
 function ThemeContent({
   theme,
   plainLanguage,
@@ -208,8 +65,8 @@ function ThemeContent({
 }
 
 export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
-  const { theme } = Route.useSearch();
-  const navigate = useNavigate();
+  const { theme } = themesRoute.useSearch();
+  const navigate = themesRoute.useNavigate();
   const themeObj = themes.find((t) => t.name === theme);
   const selectedMipEra = useSelectedMipEra();
 
@@ -225,7 +82,7 @@ export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
           value={theme}
           onValueChange={(value) => {
             navigate({
-              to: Route.fullPath,
+              to: ".",
               search: (prev) => ({ ...prev, theme: value }),
             });
           }}

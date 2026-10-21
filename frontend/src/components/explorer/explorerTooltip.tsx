@@ -25,10 +25,10 @@ export const ExplorerTooltip = ({
           {
             "opacity-0 group-hover:opacity-100 transition-opacity": showOnHover,
           },
-          "top-2 right-2 p-1 bg-white/80 hover:bg-white rounded shadow-sm",
+          "top-2 right-2 p-1 bg-background/80 hover:bg-background rounded shadow-sm",
         )}
       >
-        <Info className="h-3 w-3 text-gray-600" />
+        <Info className="h-3 w-3 text-muted-foreground" />
       </Button>
     </TooltipTrigger>
     <TooltipContent side="left" className="max-w-md">

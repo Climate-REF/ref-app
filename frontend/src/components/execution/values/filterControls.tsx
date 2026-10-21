@@ -1,18 +1,18 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 import { PlusCircle, X } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import { FilterAddPopover } from "@/components/execution/values/filterAddPopover.tsx";
 import type { Facet } from "@/components/execution/values/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Filter } from "@/hooks/useValuesProcessor";
+import { mergeIdFilter } from "@/lib/metricFilters";
+import { cn } from "@/lib/utils";
 
 interface FilterControlsProps {
   facets: Facet[];
   filters: Filter[];
   setFilters: Dispatch<SetStateAction<Filter[]>>;
-  excludedRowIds: Set<string>;
-  setExcludedRowIds: Dispatch<SetStateAction<Set<string>>>;
   rowSelection: RowSelectionState;
 }
 
@@ -21,273 +21,65 @@ export function FilterControls({
   filters,
   setFilters,
   rowSelection,
-  excludedRowIds,
-  setExcludedRowIds,
 }: FilterControlsProps) {
   const availableFacets = facets
     .filter(
       (facet) =>
         !filters.some(
-          (filter) =>
-            (filter as any).type === "facet" &&
-            (filter as any).facetKey === facet.key,
+          (filter) => filter.type === "facet" && filter.facetKey === facet.key,
         ),
     )
     .sort((a, b) => a.key.localeCompare(b.key));
 
   // If there are active isolate/exclude filters, prefill the ID popover with the first occurrence.
-  const firstIsolate = filters.find((f) => (f as any).type === "isolate") as
-    | any
-    | undefined;
-  const firstExclude = filters.find((f) => (f as any).type === "exclude") as
-    | any
-    | undefined;
-  const initialIdMode = firstIsolate
-    ? "isolate"
-    : firstExclude
-      ? "exclude"
-      : undefined;
-  const initialIds = (
-    firstIsolate
-      ? firstIsolate.ids
-      : firstExclude
-        ? firstExclude.ids
-        : undefined
-  ) as Set<string> | undefined;
+  const idFilter =
+    filters.find((filter) => filter.type === "isolate") ??
+    filters.find((filter) => filter.type === "exclude");
+
+  const addSelected = (mode: "isolate" | "exclude") =>
+    setFilters((existing) =>
+      mergeIdFilter(existing, mode, Object.keys(rowSelection)),
+    );
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 flex-wrap mb-2">
-        {filters.map((filter) => {
-          if ((filter as any).type === "facet") {
-            const f = filter as any;
-            return (
-              <Badge
-                key={f.id}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                <span>
-                  {facets.find((ff) => ff.key === f.facetKey)?.key ||
-                    f.facetKey}
-                  : {f.values.length > 1 ? f.values.join(", ") : f.values[0]}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setFilters((existing) =>
-                      existing.filter((x) => (x as any).id !== f.id),
-                    )
-                  }
-                  className="ml-1 h-5 w-5"
-                  aria-label="Remove filter"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            );
-          }
-
-          if ((filter as any).type === "isolate") {
-            const f = filter as any;
-            return (
-              <Badge
-                key={f.id}
-                variant="outline"
-                className="flex items-center gap-1 border-emerald-400 text-emerald-600"
-              >
-                <span>Isolating {f.ids ? f.ids.size : 0} rows</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setFilters((existing) =>
-                      existing.filter((x) => (x as any).id !== f.id),
-                    )
-                  }
-                  className="ml-1 h-5 w-5"
-                  aria-label="Remove isolate filter"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            );
-          }
-
-          if ((filter as any).type === "exclude") {
-            const f = filter as any;
-            return (
-              <Badge
-                key={f.id}
-                variant="destructive"
-                className="flex items-center gap-1"
-              >
-                <span>Excluding {f.ids ? f.ids.size : 0} rows</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setFilters((existing) =>
-                      existing.filter((x) => (x as any).id !== f.id),
-                    )
-                  }
-                  className="ml-1 h-5 w-5"
-                  aria-label="Remove exclude filter"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            );
-          }
-
-          return null;
-        })}
-
-        {/* Legacy excludedRowIds badge (kept for compatibility, but server now handles excludes) */}
-        {excludedRowIds.size > 0 ? (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <span>Filtered Rows: {excludedRowIds.size}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setExcludedRowIds(new Set())}
-              className="ml-1 h-5 w-5"
-              aria-label="Remove filter"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ) : null}
+        {filters.map((filter) => (
+          <FilterBadge
+            key={filter.id}
+            filter={filter}
+            onRemove={() =>
+              setFilters((existing) =>
+                existing.filter((x) => x.id !== filter.id),
+              )
+            }
+          />
+        ))}
 
         <FilterAddPopover
           facets={availableFacets}
-          initialIdMode={initialIdMode}
-          initialIds={initialIds}
+          initialIdMode={idFilter?.type}
+          initialIds={idFilter?.ids}
           onAdd={(facetKey, values) => {
             setFilters((existing) => [
               ...existing,
-              {
-                type: "facet",
-                id: crypto.randomUUID(),
-                facetKey,
-                values,
-              } as any,
+              { type: "facet", id: crypto.randomUUID(), facetKey, values },
             ]);
           }}
-          onAddIds={(mode, ids) => {
-            setFilters((existing) => {
-              const idx = existing.findIndex((f) => (f as any).type === mode);
-              if (idx >= 0) {
-                const existingFilter = existing[idx] as any;
-                const existingIds: string[] = existingFilter.ids
-                  ? Array.from(existingFilter.ids)
-                  : [];
-                const mergedIds = new Set<string>([
-                  ...existingIds,
-                  ...Array.from(ids),
-                ]);
-                const updatedFilter = {
-                  ...existingFilter,
-                  ids: mergedIds,
-                } as any;
-                const newFilters = [...existing];
-                newFilters[idx] = updatedFilter;
-                return newFilters;
-              }
-              return [
-                ...existing,
-                {
-                  type: mode,
-                  id: crypto.randomUUID(),
-                  ids,
-                } as any,
-              ];
-            });
-          }}
+          onAddIds={(mode, ids) =>
+            setFilters((existing) => mergeIdFilter(existing, mode, ids))
+          }
           disabled={availableFacets.length === 0 && facets.length > 0}
         />
 
         {Object.keys(rowSelection).length ? (
           <>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const selectedRowIds = new Set(Object.keys(rowSelection));
-                setFilters((existing) => {
-                  const mode = "isolate";
-                  const idx = existing.findIndex(
-                    (f) => (f as any).type === mode,
-                  );
-                  if (idx >= 0) {
-                    const existingFilter = existing[idx] as any;
-                    const existingIds: string[] = existingFilter.ids
-                      ? Array.from(existingFilter.ids)
-                      : [];
-                    const mergedIds = new Set<string>([
-                      ...existingIds,
-                      ...Array.from(selectedRowIds),
-                    ]);
-                    const updatedFilter = {
-                      ...existingFilter,
-                      ids: mergedIds,
-                    } as any;
-                    const newFilters = [...existing];
-                    newFilters[idx] = updatedFilter;
-                    return newFilters;
-                  }
-                  return [
-                    ...existing,
-                    {
-                      type: "isolate",
-                      id: crypto.randomUUID(),
-                      ids: selectedRowIds,
-                    } as any,
-                  ];
-                });
-              }}
-            >
+            <Button variant="outline" onClick={() => addSelected("isolate")}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Isolate Selected
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                const selectedRowIds = new Set(Object.keys(rowSelection));
-                setFilters((existing) => {
-                  const mode = "exclude";
-                  const idx = existing.findIndex(
-                    (f) => (f as any).type === mode,
-                  );
-                  if (idx >= 0) {
-                    const existingFilter = existing[idx] as any;
-                    const existingIds: string[] = existingFilter.ids
-                      ? Array.from(existingFilter.ids)
-                      : [];
-                    const mergedIds = new Set<string>([
-                      ...existingIds,
-                      ...Array.from(selectedRowIds),
-                    ]);
-                    const updatedFilter = {
-                      ...existingFilter,
-                      ids: mergedIds,
-                    } as any;
-                    const newFilters = [...existing];
-                    newFilters[idx] = updatedFilter;
-                    return newFilters;
-                  }
-                  return [
-                    ...existing,
-                    {
-                      type: "exclude",
-                      id: crypto.randomUUID(),
-                      ids: selectedRowIds,
-                    } as any,
-                  ];
-                });
-              }}
-            >
+            <Button variant="outline" onClick={() => addSelected("exclude")}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Exclude Selected
             </Button>
@@ -295,5 +87,63 @@ export function FilterControls({
         ) : null}
       </div>
     </div>
+  );
+}
+
+interface FilterBadgeLook {
+  label: string;
+  variant: ComponentProps<typeof Badge>["variant"];
+  className?: string;
+  removeLabel: string;
+}
+
+function filterBadgeLook(filter: Filter): FilterBadgeLook {
+  switch (filter.type) {
+    case "facet":
+      return {
+        label: `${filter.facetKey}: ${filter.values.join(", ")}`,
+        variant: "secondary",
+        removeLabel: "Remove filter",
+      };
+    case "isolate":
+      return {
+        label: `Isolating ${filter.ids.size} rows`,
+        variant: "outline",
+        className: "border-emerald-400 text-emerald-600",
+        removeLabel: "Remove isolate filter",
+      };
+    case "exclude":
+      return {
+        label: `Excluding ${filter.ids.size} rows`,
+        variant: "destructive",
+        removeLabel: "Remove exclude filter",
+      };
+  }
+}
+
+function FilterBadge({
+  filter,
+  onRemove,
+}: {
+  filter: Filter;
+  onRemove: () => void;
+}) {
+  const { label, variant, className, removeLabel } = filterBadgeLook(filter);
+  return (
+    <Badge
+      variant={variant}
+      className={cn("flex items-center gap-1", className)}
+    >
+      <span>{label}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="ml-1 h-5 w-5"
+        aria-label={removeLabel}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </Badge>
   );
 }

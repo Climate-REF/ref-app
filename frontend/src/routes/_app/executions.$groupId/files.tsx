@@ -1,19 +1,25 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { executionsExecutionOptions } from "@/client/@tanstack/react-query.gen";
 import { ExecutionFilesContainer } from "@/components/execution/executionFiles";
+import { ExecutionNotRun } from "@/components/execution/executionTabCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLatestExecution } from "@/hooks/useLatestExecution";
 
 const FilesTab = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
+  const execution = useLatestExecution(groupId);
 
-  const { data: execution } = useSuspenseQuery(
-    executionsExecutionOptions({
-      path: { group_id: groupId },
-      // query: { execution_id: executionId },
-    }),
-  );
-
+  if (!execution) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ExecutionNotRun what="files" />
+        </CardContent>
+      </Card>
+    );
+  }
   return <ExecutionFilesContainer outputs={execution.outputs ?? []} />;
 };
 

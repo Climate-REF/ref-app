@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
-import type { ExecutionGroup, ExecutionOutput } from "@/client";
 import { Figure } from "@/components/diagnostics/figure";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -9,48 +8,48 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-
-interface FigureWithGroup {
-  figure: ExecutionOutput;
-  executionGroup: ExecutionGroup;
-}
+import type { FigureWithGroup } from "./figureGalleryData";
 
 interface FigureGalleryModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
   figures: FigureWithGroup[];
+  /** The index of the figure shown, or null when the modal is closed */
   selectedIndex: number | null;
-  onPrevious: () => void;
-  onNext: () => void;
+  /** Show the figure at an index, or close the modal with null */
+  onSelect: (index: number | null) => void;
 }
 
+/** The index `by` figures on from `index`, wrapping around past either end */
+const stepped = (index: number, by: number, count: number) =>
+  (index + by + count) % count;
+
 export function FigureGalleryModal({
-  isOpen,
-  onOpenChange,
   figures,
   selectedIndex,
-  onPrevious,
-  onNext,
+  onSelect,
 }: FigureGalleryModalProps) {
+  const count = figures.length;
   useEffect(() => {
-    if (!isOpen) return;
+    if (selectedIndex === null) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") {
-        onPrevious();
+        onSelect(stepped(selectedIndex, -1, count));
       } else if (event.key === "ArrowRight") {
-        onNext();
+        onSelect(stepped(selectedIndex, 1, count));
       } else if (event.key === "Escape") {
-        onOpenChange(false);
+        onSelect(null);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onPrevious, onNext, onOpenChange]);
+  }, [selectedIndex, count, onSelect]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={selectedIndex !== null}
+      onOpenChange={(open) => !open && onSelect(null)}
+    >
       <DialogContent className="w-3/4 max-h-full sm:max-w-full">
         {selectedIndex !== null && figures[selectedIndex] && (
           <>
@@ -62,19 +61,19 @@ export function FigureGalleryModal({
             <div className="flex items-center justify-between mb-4">
               <Button
                 variant="outline"
-                onClick={onPrevious}
-                disabled={figures.length <= 1}
+                onClick={() => onSelect(stepped(selectedIndex, -1, count))}
+                disabled={count <= 1}
               >
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous
               </Button>
               <span className="text-sm text-muted-foreground">
-                {selectedIndex + 1} of {figures.length}
+                {selectedIndex + 1} of {count}
               </span>
               <Button
                 variant="outline"
-                onClick={onNext}
-                disabled={figures.length <= 1}
+                onClick={() => onSelect(stepped(selectedIndex, 1, count))}
+                disabled={count <= 1}
               >
                 Next
                 <ChevronRight className="h-4 w-4 mr-2" />

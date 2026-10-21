@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ErrorBoundary, ErrorFallback } from "../app";
+import { ErrorBoundary } from "../app";
 import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
@@ -16,7 +16,6 @@ export function ExplorerCardGroup({ card }: ExplorerCardGroupProps) {
       {card.content.map((contentItem) => (
         <ErrorBoundary
           key={`${card.title}:${contentItem.diagnostic}:${contentItem.title}`}
-          fallback={<ErrorFallback />}
         >
           <Suspense fallback={<ExplorerCardContentSkeleton />}>
             <ExplorerCardContent contentItem={contentItem} />

@@ -6,12 +6,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/hooks/useTheme";
 import type { SeriesValue } from "../types";
 import { CanvasTooltip } from "./canvasTooltip";
-import { type CrosshairPosition, SeriesCanvas } from "./seriesCanvas";
+import {
+  type CrosshairPosition,
+  SeriesCanvas,
+  type SeriesCanvasHandle,
+  seriesLineColor,
+} from "./seriesCanvas";
 import { SeriesLegend } from "./seriesLegend";
-import { useChartScales } from "./useChartScales";
+import { type ChartMargins, useChartScales } from "./useChartScales";
 import type { NearestResult } from "./useSpatialIndex";
-import { useSpatialIndex } from "./useSpatialIndex";
-import { createChartData, getDimensionKeys } from "./utils";
+import { findTooltipPoints, useSpatialIndex } from "./useSpatialIndex";
+import {
+  createChartData,
+  getDimensionKeys,
+  hiddenLabelsWithSolo,
+  labelDimensions,
+  legendItems,
+  toggleInSet,
+  withLabelsHidden,
+} from "./utils";
 
 const REFERENCE_MISMATCH_ISSUE =
   "https://github.com/Climate-REF/climate-ref/issues/927";
@@ -29,6 +42,34 @@ interface SimpleSeriesVisualizationProps {
 }
 
 const CHART_HEIGHT = 700;
+
+interface TooltipState {
+  visible: boolean;
+  x: number;
+  y: number;
+  nearest: NearestResult | null;
+  allAtX: NearestResult[];
+}
+
+const HIDDEN_TOOLTIP: TooltipState = {
+  visible: false,
+  x: 0,
+  y: 0,
+  nearest: null,
+  allAtX: [],
+};
+
+/** Where a mouse event is within the plot area, which starts inside the margins */
+function plotPosition(
+  e: React.MouseEvent<HTMLCanvasElement>,
+  margins: ChartMargins,
+) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left - margins.left,
+    y: e.clientY - rect.top - margins.top,
+  };
+}
 
 export function SeriesVisualization({
   seriesValues,
@@ -49,16 +90,12 @@ export function SeriesVisualization({
   const [groupByDimension, setGroupByDimension] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<CrosshairPosition | null>(null);
+  const canvasRef = useRef<SeriesCanvasHandle>(null);
   const [containerWidth, setContainerWidth] = useState(800);
 
   // Tooltip state
-  const [tooltipState, setTooltipState] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    nearest: NearestResult | null;
-    allAtX: NearestResult[];
-  }>({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
+  const [tooltipState, setTooltipState] =
+    useState<TooltipState>(HIDDEN_TOOLTIP);
   const tooltipRafRef = useRef<number>(0);
 
   // Observe container width for responsive sizing
@@ -109,65 +146,26 @@ export function SeriesVisualization({
     [seriesMetadata],
   );
 
-  // Map from label to its dimensions
-  const labelDimensionMap = useMemo(() => {
-    const map = new Map<string, Record<string, string>>();
-    for (const meta of seriesMetadata) {
-      if (!map.has(meta.label)) {
-        map.set(meta.label, meta.dimensions);
-      }
-    }
-    return map;
-  }, [seriesMetadata]);
+  const labelDimensionMap = useMemo(
+    () => labelDimensions(seriesMetadata),
+    [seriesMetadata],
+  );
 
   // State for hidden labels
   const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(
     () => new Set<string>(),
   );
 
-  // Get unique labels with their colors and counts
-  const uniqueLabels = useMemo(() => {
-    const labelMap = new Map<
-      string,
-      { color: string; count: number; isReference: boolean }
-    >();
-    for (const meta of seriesMetadata) {
-      const existing = labelMap.get(meta.label);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        labelMap.set(meta.label, {
-          color: meta.color,
-          count: 1,
-          isReference: meta.isReference,
-        });
-      }
-    }
-    return Array.from(labelMap.entries())
-      .map(([label, { color, count, isReference }]) => ({
-        label,
-        color,
-        count,
-        isReference,
-      }))
-      .sort((a, b) => {
-        if (a.isReference && !b.isReference) return -1;
-        if (!a.isReference && b.isReference) return 1;
-        return a.label.localeCompare(b.label);
-      });
-  }, [seriesMetadata]);
+  const uniqueLabels = useMemo(
+    () => legendItems(seriesMetadata),
+    [seriesMetadata],
+  );
 
   // Effective hidden labels accounting for solo mode
-  const effectiveHiddenLabels = useMemo(() => {
-    if (!soloedLabel) return hiddenLabels;
-    const hidden = new Set<string>();
-    for (const item of uniqueLabels) {
-      if (item.label !== soloedLabel && !item.isReference) {
-        hidden.add(item.label);
-      }
-    }
-    return hidden;
-  }, [soloedLabel, hiddenLabels, uniqueLabels]);
+  const effectiveHiddenLabels = useMemo(
+    () => hiddenLabelsWithSolo(hiddenLabels, soloedLabel, uniqueLabels),
+    [soloedLabel, hiddenLabels, uniqueLabels],
+  );
 
   // Compute scales
   const { xScale, yScale, innerWidth, innerHeight, margins } = useChartScales(
@@ -197,17 +195,25 @@ export function SeriesVisualization({
         setSoloedLabel(null);
         return;
       }
-      setHiddenLabels((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(label)) {
-          newSet.delete(label);
-        } else {
-          newSet.add(label);
-        }
-        return newSet;
-      });
+      setHiddenLabels((prev) => toggleInSet(prev, label));
     },
     [soloedLabel],
+  );
+
+  // Hide or show several labels at once. Leaving solo mode keeps what it was
+  // showing, so only these labels change.
+  const setLabelsHidden = useCallback(
+    (labels: string[], hidden: boolean) => {
+      setSoloedLabel(null);
+      setHiddenLabels((prev) =>
+        withLabelsHidden(
+          soloedLabel ? effectiveHiddenLabels : prev,
+          labels,
+          hidden,
+        ),
+      );
+    },
+    [soloedLabel, effectiveHiddenLabels],
   );
 
   // Solo mode
@@ -237,10 +243,7 @@ export function SeriesVisualization({
     hoveredLabelRef.current = label;
     setHoveredLabel(label);
     // Trigger canvas redraw without React re-render
-    const canvas = containerRef.current?.querySelector("canvas") as
-      | (HTMLCanvasElement & { redraw?: () => void })
-      | null;
-    canvas?.redraw?.();
+    canvasRef.current?.redraw();
   }, []);
 
   // Canvas mouse handlers
@@ -248,27 +251,19 @@ export function SeriesVisualization({
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       // Capture values synchronously — React pools events, so currentTarget
       // and coordinates become null inside requestAnimationFrame.
-      const canvas = e.currentTarget as HTMLCanvasElement & {
-        redraw?: () => void;
-      };
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left - margins.left;
-      const mouseY = e.clientY - rect.top - margins.top;
+      const { x: mouseX, y: mouseY } = plotPosition(e, margins);
 
       cancelAnimationFrame(tooltipRafRef.current);
       tooltipRafRef.current = requestAnimationFrame(() => {
-        const nearest = spatialIndex.findNearest(
+        const found = findTooltipPoints(
+          spatialIndex,
           mouseX,
           mouseY,
           effectiveHiddenLabels,
         );
 
-        if (nearest) {
-          const allAtX = spatialIndex.findNearestAtX(
-            mouseX,
-            mouseY,
-            effectiveHiddenLabels,
-          );
+        if (found) {
+          const { nearest, allAtX } = found;
 
           hoveredLabelRef.current = nearest.metadata.label;
 
@@ -277,12 +272,10 @@ export function SeriesVisualization({
             dataPixelX: nearest.point.pixelX,
             nearestPixelX: nearest.point.pixelX,
             nearestPixelY: nearest.point.pixelY,
-            nearestColor: nearest.metadata.isReference
-              ? "#000000"
-              : nearest.metadata.color,
+            nearestColor: seriesLineColor(nearest.metadata, isDark),
           };
 
-          canvas.redraw?.();
+          canvasRef.current?.redraw();
 
           setTooltipState({
             visible: true,
@@ -296,34 +289,25 @@ export function SeriesVisualization({
           if (hoveredLabelRef.current !== null) {
             hoveredLabelRef.current = null;
           }
-          canvas.redraw?.();
-          setTooltipState((prev) =>
-            prev.visible
-              ? { visible: false, x: 0, y: 0, nearest: null, allAtX: [] }
-              : prev,
-          );
+          canvasRef.current?.redraw();
+          setTooltipState((prev) => (prev.visible ? HIDDEN_TOOLTIP : prev));
         }
       });
     },
-    [spatialIndex, effectiveHiddenLabels, margins],
+    [spatialIndex, effectiveHiddenLabels, margins, isDark],
   );
 
   const handleCanvasMouseLeave = useCallback(() => {
     cancelAnimationFrame(tooltipRafRef.current);
     hoveredLabelRef.current = null;
     crosshairRef.current = null;
-    setTooltipState({ visible: false, x: 0, y: 0, nearest: null, allAtX: [] });
-    const canvas = containerRef.current?.querySelector("canvas") as
-      | (HTMLCanvasElement & { redraw?: () => void })
-      | null;
-    canvas?.redraw?.();
+    setTooltipState(HIDDEN_TOOLTIP);
+    canvasRef.current?.redraw();
   }, []);
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left - margins.left;
-      const mouseY = e.clientY - rect.top - margins.top;
+      const { x: mouseX, y: mouseY } = plotPosition(e, margins);
 
       const nearest = spatialIndex.findNearest(
         mouseX,
@@ -347,11 +331,11 @@ export function SeriesVisualization({
             <div className="text-lg font-medium text-amber-600">
               Too Many Series to Display
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Found {totalSeries} series values, but only up to {maxSeriesLimit}{" "}
               can be displayed for performance reasons.
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               Please use the filtering options above to reduce the number of
               series, or download the data as CSV for analysis.
             </div>
@@ -363,7 +347,7 @@ export function SeriesVisualization({
 
   if (totalSeries === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-muted-foreground py-8">
         No series data available
       </div>
     );
@@ -407,6 +391,7 @@ export function SeriesVisualization({
           </div>
           <div className="relative">
             <SeriesCanvas
+              ref={canvasRef}
               chartData={chartData}
               seriesMetadata={seriesMetadata}
               indexName={indexName}
@@ -438,6 +423,7 @@ export function SeriesVisualization({
               containerWidth={containerWidth}
               indexName={indexName}
               isTimeAxis={isTimeAxis}
+              isDark={isDark}
               units={effectiveUnits}
             />
           </div>
@@ -451,6 +437,7 @@ export function SeriesVisualization({
             hoveredLabel={hoveredLabel}
             soloedLabel={soloedLabel}
             onToggleLabel={toggleLabel}
+            onSetLabelsHidden={setLabelsHidden}
             onHoverLabel={handleLabelHover}
             onSoloLabel={handleSolo}
             onShowAll={showAll}
@@ -459,6 +446,7 @@ export function SeriesVisualization({
             onGroupByDimensionChange={setGroupByDimension}
             availableDimensions={availableDimensions}
             labelDimensionMap={labelDimensionMap}
+            isDark={isDark}
           />
         )}
       </div>

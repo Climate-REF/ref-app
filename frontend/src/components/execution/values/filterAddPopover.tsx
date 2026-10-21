@@ -1,15 +1,8 @@
-import { Check, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { type ComponentProps, useEffect, useState } from "react";
+import { CheckboxCommandList } from "@/components/app/checkboxCommandList";
 import type { Facet } from "@/components/execution/values/types";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
   Popover,
@@ -23,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { cn } from "@/lib/utils";
+import { parseCommaList } from "@/lib/metricFilters";
 
 interface FilterAddPopoverProps extends ComponentProps<typeof Button> {
   facets: Facet[];
@@ -162,42 +155,12 @@ export function FilterAddPopover({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search values..." />
-                        <CommandList>
-                          <CommandEmpty>No values found.</CommandEmpty>
-                          <CommandGroup>
-                            {facetValues.map((value) => {
-                              const isSelected = selectedValues.includes(value);
-                              return (
-                                <CommandItem
-                                  key={value}
-                                  value={value}
-                                  onSelect={() => {
-                                    setSelectedValues((prev) =>
-                                      isSelected
-                                        ? prev.filter((v) => v !== value)
-                                        : [...prev, value],
-                                    );
-                                  }}
-                                >
-                                  <div
-                                    className={cn(
-                                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                      isSelected
-                                        ? "bg-primary text-primary-foreground"
-                                        : "opacity-50 [&_svg]:invisible",
-                                    )}
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </div>
-                                  <span>{value}</span>
-                                </CommandItem>
-                              );
-                            })}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
+                      <CheckboxCommandList
+                        values={facetValues}
+                        selected={selectedValues}
+                        onSelectedChange={setSelectedValues}
+                        placeholder="Search values..."
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -245,10 +208,7 @@ export function FilterAddPopover({
                   variant="outline"
                   disabled={idText.trim().length === 0 || !onAddIds}
                   onClick={() => {
-                    const ids = idText
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean);
+                    const ids = parseCommaList(idText);
                     if (onAddIds && ids.length > 0) {
                       onAddIds(idMode, new Set(ids));
                       setIdText("");

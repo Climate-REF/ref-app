@@ -5,7 +5,7 @@ import { EnsemblePositionBar } from "@/components/models/ensemblePositionBar";
 import { Badge } from "@/components/ui/badge";
 import { formatValue } from "@/lib/format";
 
-export const columns: ColumnDef<EnsembleComparison>[] = [
+const columns: ColumnDef<EnsembleComparison>[] = [
   {
     accessorKey: "diagnostic_name",
     header: "Diagnostic",

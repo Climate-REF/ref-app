@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 
-export const columns: ColumnDef<ExecutionOutput>[] = [
+const columns: ColumnDef<ExecutionOutput>[] = [
   // {
   //   accessorKey: "short_name",
   //   header: "Short Name",

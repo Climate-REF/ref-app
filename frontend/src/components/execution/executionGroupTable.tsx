@@ -8,7 +8,8 @@ import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-
 import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { DataTable } from "@/components/dataTable/dataTable.tsx";
-import { Badge, SourceTypeBadge } from "@/components/ui/badge.tsx";
+import { ExecutionStatusBadge } from "@/components/execution/executionStatusBadge";
+import { SourceTypeBadge } from "@/components/ui/badge.tsx";
 import {
   Card,
   CardContent,
@@ -22,6 +23,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { useDiagnosticLookup } from "@/hooks/useDiagnosticLookup";
+import {
+  type ExecutionStatus,
+  latestExecutionStatus,
+} from "@/lib/executionStatus";
 import { formatDuration } from "@/lib/format";
 
 const columnHelper = createColumnHelper<ExecutionGroup>();
@@ -51,7 +56,7 @@ function DiagnosticCell({
   );
 }
 
-export const columns: ColumnDef<ExecutionGroup>[] = [
+const columns: ColumnDef<ExecutionGroup>[] = [
   {
     id: "selectors",
     header: "Selectors",
@@ -152,26 +157,15 @@ export const columns: ColumnDef<ExecutionGroup>[] = [
   },
   {
     header: () => (
-      <span title="Whether the latest execution completed without errors.">
-        Successful
+      <span title="How the latest execution in this group turned out.">
+        Status
       </span>
     ),
     id: "successful",
-    accessorFn: (row) => row.executions.at(-1)?.successful,
-    cell: (cell) =>
-      cell.getValue() ? (
-        <Badge variant="outline" title="Latest execution succeeded.">
-          Yes
-        </Badge>
-      ) : cell.getValue() === null ? (
-        <Badge variant="secondary" title="Latest execution is still running.">
-          Running
-        </Badge>
-      ) : (
-        <Badge variant="destructive" title="Latest execution failed.">
-          No
-        </Badge>
-      ),
+    accessorFn: (row) => latestExecutionStatus(row),
+    cell: (cell) => (
+      <ExecutionStatusBadge status={cell.getValue<ExecutionStatus>()} />
+    ),
   },
   {
     id: "wall_seconds",

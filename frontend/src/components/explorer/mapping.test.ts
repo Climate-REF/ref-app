@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { AftCollectionCard } from "@/client/types.gen";
-import { filterExplorerContentForDiagnostic } from "./thematicContent";
+import type {
+  AftCollectionCard,
+  AftCollectionCardContent,
+  AftCollectionDetail,
+} from "@/client/types.gen";
+import {
+  buildCollectionGroups,
+  filterExplorerContentForDiagnostic,
+  toExplorerCardContent,
+} from "./mapping";
 
 function makeCard(
   title: string,
@@ -297,6 +305,209 @@ describe("filterExplorerContentForDiagnostic", () => {
       "figure-gallery",
       "series-chart",
       "taylor-diagram",
+    ]);
+  });
+});
+
+function makeContent(
+  overrides: Partial<AftCollectionCardContent>,
+): AftCollectionCardContent {
+  return {
+    type: "box-whisker-chart",
+    provider: "ilamb",
+    diagnostic: "amoc",
+    title: "Content",
+    ...overrides,
+  };
+}
+
+describe("toExplorerCardContent", () => {
+  it("maps the clip and y bounds and the zero line of a box-whisker chart", () => {
+    const item = toExplorerCardContent(
+      makeContent({
+        clip_min: -1,
+        clip_max: 2,
+        y_min: -5,
+        y_max: 5,
+        show_zero_line: false,
+        symmetrical_axes: true,
+      }),
+    );
+
+    expect(item).toMatchObject({
+      type: "box-whisker-chart",
+      clipMin: -1,
+      clipMax: 2,
+      yMin: -5,
+      yMax: 5,
+      showZeroLine: false,
+      symmetricalAxes: true,
+    });
+  });
+
+  it("maps the label template and chart fields of a series chart", () => {
+    const item = toExplorerCardContent(
+      makeContent({
+        type: "series-chart",
+        label_template: "{source_id} ({experiment_id})",
+        metric_units: "K",
+        other_filters: { statistic: "mean" },
+        grouping_config: { group_by: "source_id", hue: "experiment_id" },
+      }),
+    );
+
+    expect(item).toMatchObject({
+      type: "series-chart",
+      labelTemplate: "{source_id} ({experiment_id})",
+      metricUnits: "K",
+      otherFilters: { statistic: "mean" },
+      groupingConfig: { groupBy: "source_id", hue: "experiment_id" },
+    });
+    // Box-whisker only fields are not carried over to a series chart
+    expect(item).not.toHaveProperty("clipMin");
+  });
+
+  it("maps the filters and reference standard deviation of a Taylor diagram", () => {
+    const item = toExplorerCardContent(
+      makeContent({
+        type: "taylor-diagram",
+        other_filters: { region: "global" },
+        reference_stddev: 1.5,
+        metric_units: "ignored",
+      }),
+    );
+
+    expect(item).toEqual({
+      provider: "ilamb",
+      diagnostic: "amoc",
+      title: "Content",
+      type: "taylor-diagram",
+      otherFilters: { region: "global" },
+      referenceStddev: 1.5,
+    });
+  });
+
+  it("maps the filename filter of a figure gallery", () => {
+    const item = toExplorerCardContent(
+      makeContent({ type: "figure-gallery", filename_filter: "bias" }),
+    );
+
+    expect(item).toEqual({
+      provider: "ilamb",
+      diagnostic: "amoc",
+      title: "Content",
+      type: "figure-gallery",
+      filenameFilter: "bias",
+    });
+  });
+
+  it("leaves null fields undefined", () => {
+    const item = toExplorerCardContent(
+      makeContent({
+        type: "series-chart",
+        description: null,
+        interpretation: null,
+        span: null,
+        reference_datasets: null,
+        metric_units: null,
+        other_filters: null,
+        symmetrical_axes: null,
+        grouping_config: null,
+        filter_controls: null,
+        label_template: null,
+      }),
+    );
+
+    for (const [key, value] of Object.entries(item)) {
+      if (!["provider", "diagnostic", "title", "type"].includes(key)) {
+        expect(value, key).toBeUndefined();
+      }
+    }
+  });
+
+  it("leaves null fields of a grouping config and filter control undefined", () => {
+    const item = toExplorerCardContent(
+      makeContent({
+        grouping_config: {
+          group_by: "source_id",
+          hue: "source_id",
+          style: null,
+        },
+        filter_controls: [
+          {
+            filter_key: "region",
+            label: null,
+            default_value: null,
+            exclude_values: null,
+          },
+        ],
+      }),
+    );
+
+    expect(item).toMatchObject({
+      groupingConfig: {
+        groupBy: "source_id",
+        hue: "source_id",
+        style: undefined,
+      },
+      filterControls: [
+        {
+          filterKey: "region",
+          label: undefined,
+          defaultValue: undefined,
+          excludeValues: undefined,
+        },
+      ],
+    });
+  });
+});
+
+describe("buildCollectionGroups", () => {
+  function makeCollection(
+    id: string,
+    explorerCards: AftCollectionCard[],
+  ): AftCollectionDetail {
+    return {
+      id,
+      name: `Collection ${id}`,
+      diagnostics: [],
+      explorer_cards: explorerCards,
+    };
+  }
+
+  it("leaves out placeholder cards and content, and collections without cards", () => {
+    const shown = makeCollection("1", [
+      makeCard(
+        "Card",
+        { provider: "ilamb", diagnostic: "amoc", title: "Shown" },
+        {
+          provider: "ilamb",
+          diagnostic: "amoc",
+          title: "Hidden",
+          placeholder: true,
+        },
+      ),
+      { ...makeCard("Placeholder card"), placeholder: true },
+    ]);
+    const empty = makeCollection("2", [
+      { ...makeCard("Placeholder card"), placeholder: true },
+    ]);
+
+    const groups = buildCollectionGroups({
+      slug: "ocean",
+      title: "Ocean",
+      collections: [shown, empty],
+      explorer_cards: [],
+    });
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].collection).toBe(shown);
+    expect(groups[0].cards).toEqual([
+      {
+        title: "Card",
+        description: undefined,
+        content: [expect.objectContaining({ title: "Shown" })],
+      },
     ]);
   });
 });

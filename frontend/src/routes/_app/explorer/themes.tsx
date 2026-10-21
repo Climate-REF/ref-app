@@ -4,8 +4,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { explorerGetThemeOptions } from "@/client/@tanstack/react-query.gen";
 import { MipEraScope } from "@/components/charts/mipEraBar";
+import { hasPlainLanguageContent } from "@/components/explorer/collectionText";
 import {
-  hasPlainLanguageContent,
   PlainLanguageToggle,
   ThematicContent,
 } from "@/components/explorer/thematicContent.tsx";

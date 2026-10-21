@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { z } from "zod";
 import {
   diagnosticsCatalogOptions,
@@ -17,11 +17,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LinkExternal } from "@/components/ui/link";
+import AboutDiagnostics from "@/content/about-diagnostics.mdx";
 import { useMipEra } from "@/hooks/useMipEra";
 import {
   type CatalogDiagnostic,
   withValueFlags,
 } from "@/lib/diagnosticCatalog";
+import {
+  type DiagnosticFilterState,
+  filterDiagnostics,
+  parseDiagnosticFilters,
+  serialiseDiagnosticFilters,
+} from "@/lib/diagnosticFilters";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
 const diagnosticNotes: { slug: string; note: string; noteUrl?: string }[] = [
@@ -73,6 +80,25 @@ const CATALOG_HEADER = {
   ),
 };
 
+/** Styles for the "About Diagnostics" prose, which sits in a card rather than a prose block */
+const ABOUT_COMPONENTS = {
+  h3: (props: ComponentProps<"h3">) => (
+    <h3 className="font-semibold text-foreground pt-2 first:pt-0" {...props} />
+  ),
+  ul: (props: ComponentProps<"ul">) => (
+    <ul className="list-disc pl-5 space-y-1" {...props} />
+  ),
+  hr: (props: ComponentProps<"hr">) => <hr className="my-4" {...props} />,
+  a: (props: ComponentProps<"a">) => (
+    <a
+      {...props}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary hover:underline font-medium"
+    />
+  ),
+};
+
 const ErrorComponent = ({ message }: { message: string }) => {
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -91,6 +117,53 @@ const ErrorComponent = ({ message }: { message: string }) => {
   );
 };
 
+/** The filtered diagnostics as cards or a table */
+function DiagnosticResults({
+  diagnostics,
+  view,
+  valueFlagsFailed,
+}: {
+  diagnostics: CatalogDiagnostic[];
+  view: "cards" | "table";
+  valueFlagsFailed: boolean;
+}) {
+  return (
+    <>
+      {view === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {diagnostics.map((diagnostic) => {
+            const note = diagnosticNotes.find(
+              (n) => n.slug === diagnostic.slug,
+            );
+            return (
+              <DiagnosticCard
+                key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
+                diagnostic={diagnostic}
+                valueFlagsFailed={valueFlagsFailed}
+                note={note?.note}
+                noteURL={note?.noteUrl}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <DiagnosticSummaryTable
+          summaries={diagnostics}
+          valueFlagsFailed={valueFlagsFailed}
+        />
+      )}
+
+      {diagnostics.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            No diagnostics found matching your filters.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
 const Diagnostics = () => {
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
@@ -106,9 +179,14 @@ const Diagnostics = () => {
     () => withValueFlags(data?.data ?? [], valueFlags.data?.data),
     [data, valueFlags.data],
   );
-  const [filteredDiagnostics, setFilteredDiagnostics] = useState<
-    CatalogDiagnostic[]
-  >([]);
+  const filters = useMemo(
+    () => parseDiagnosticFilters(searchParams),
+    [searchParams],
+  );
+  const filteredDiagnostics = useMemo(
+    () => filterDiagnostics(diagnostics, filters),
+    [diagnostics, filters],
+  );
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -117,24 +195,10 @@ const Diagnostics = () => {
     });
   };
 
-  // Update URL when filters change
-  const handleFilterChange = (
-    search: string,
-    providers: string[],
-    aftIds: string[],
-    themes: string[],
-    metricValues: boolean | null,
-  ) => {
+  const handleFilterChange = (next: DiagnosticFilterState) => {
     navigate({
-      search: (prev) => ({
-        ...prev,
-        search: search || undefined,
-        providers: providers.length > 0 ? providers.join(",") : undefined,
-        aftIds: aftIds.length > 0 ? aftIds.join(",") : undefined,
-        themes: themes.length > 0 ? themes.join(",") : undefined,
-        metricValues:
-          metricValues === null ? undefined : metricValues ? "true" : "false",
-      }),
+      search: (prev) => ({ ...prev, ...serialiseDiagnosticFilters(next) }),
+      replace: true,
     });
   };
 
@@ -163,84 +227,8 @@ const Diagnostics = () => {
       </div>
 
       <Card>
-        <CardContent className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            <h3 className="font-semibold text-foreground mb-2">
-              About Diagnostics
-            </h3>
-            <p className="mb-3">
-              This catalog provides detailed information about the diagnostic
-              tools used to evaluate climate model performance against
-              observational data and established benchmarks. Each diagnostic
-              implements specific methodologies for assessing model fidelity
-              across different Earth system components.
-            </p>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            <h3 className="font-semibold text-foreground mb-2">
-              Diagnostic Providers
-            </h3>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                <strong>PMP (PCMDI Metrics Package)</strong>
-              </li>
-              <li>
-                <strong>ESMValTool</strong>
-              </li>
-              <li>
-                <strong>ILAMB/IOMB</strong>
-              </li>
-            </ul>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            <h3 className="font-semibold text-foreground mb-2">
-              What You'll Find
-            </h3>
-            <p className="mb-2">
-              Each diagnostic provides information about the methodology,
-              reference datasets used, and the data requirements. The REF
-              performs multiple executions for each diagnostic across different
-              models and datasets, with each execution producing useful outputs:
-            </p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                <strong>Metric Values:</strong> Scalar statistics or time series
-                quantifying model performance
-              </li>
-              <li>
-                <strong>Figures:</strong> Pre-generated visualizations (spatial
-                plots, time series, comparisons)
-              </li>
-              <li>
-                <strong>Data Files:</strong> Downloadable data for custom
-                analysis and offline visualization
-              </li>
-            </ul>
-          </div>
-
-          <div className="text-sm text-muted-foreground pt-4">
-            <p>
-              Use the filters below to explore diagnostics by provider,
-              variable, realm, or search for specific analyses. Click on any
-              diagnostic to view detailed results and documentation.
-            </p>
-          </div>
-
-          <div className="text-sm text-muted-foreground border-t pt-4">
-            <p>
-              Found an error, issue with a diagnostic or have an idea?{" "}
-              <a
-                href="https://github.com/Climate-REF/ref-app/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium"
-              >
-                Report it on GitHub →
-              </a>
-            </p>
-          </div>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <AboutDiagnostics components={ABOUT_COMPONENTS} />
         </CardContent>
       </Card>
 
@@ -272,19 +260,8 @@ const Diagnostics = () => {
           ) : (
             <DiagnosticsFilter
               diagnostics={diagnostics}
-              onFilterChange={setFilteredDiagnostics}
-              onFilterParamsChange={handleFilterChange}
-              initialSearch={searchParams.search}
-              initialProviders={searchParams.providers?.split(",") ?? []}
-              initialAftIds={searchParams.aftIds?.split(",") ?? []}
-              initialThemes={searchParams.themes?.split(",") ?? []}
-              initialMetricValues={
-                searchParams.metricValues === "true"
-                  ? true
-                  : searchParams.metricValues === "false"
-                    ? false
-                    : null
-              }
+              value={filters}
+              onChange={handleFilterChange}
             />
           )}
         </MipEraScope>
@@ -294,7 +271,8 @@ const Diagnostics = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, index) => (
             <Card
-              key={`diagnostic-skeleton-${Date.now()}-${index}`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: Placeholders have no identity
+              key={`diagnostic-skeleton-${index}`}
               className="animate-pulse"
             >
               <CardContent className="p-6">
@@ -306,39 +284,11 @@ const Diagnostics = () => {
           ))}
         </div>
       ) : (
-        <>
-          {searchParams.view === "cards" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDiagnostics.map((diagnostic) => {
-                const note = diagnosticNotes.find(
-                  (n) => n.slug === diagnostic.slug,
-                );
-                return (
-                  <DiagnosticCard
-                    key={`${diagnostic.provider.slug}-${diagnostic.slug}`}
-                    diagnostic={diagnostic}
-                    valueFlagsFailed={valueFlags.isError}
-                    note={note?.note}
-                    noteURL={note?.noteUrl}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <DiagnosticSummaryTable
-              summaries={filteredDiagnostics}
-              valueFlagsFailed={valueFlags.isError}
-            />
-          )}
-
-          {filteredDiagnostics.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No diagnostics found matching your filters.
-              </p>
-            </div>
-          )}
-        </>
+        <DiagnosticResults
+          diagnostics={filteredDiagnostics}
+          view={searchParams.view}
+          valueFlagsFailed={valueFlags.isError}
+        />
       )}
     </div>
   );

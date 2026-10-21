@@ -1,9 +1,9 @@
 import { Filter, Search, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useMemo } from "react";
+import { DebouncedInput } from "@/components/app/debouncedInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -11,472 +11,236 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
+import {
+  type DiagnosticFilterState,
+  diagnosticFilterOptions,
+  hasActiveFilters,
+  hasSelections,
+  NO_DIAGNOSTIC_FILTERS,
+} from "@/lib/diagnosticFilters";
+
+interface CheckboxFilterPopoverProps {
+  label: string;
+  title: string;
+  /** Prefix of the checkbox ids, which must be unique on the page */
+  idPrefix: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  className?: string;
+}
+
+/** A button opening a list of checkboxes, showing how many are checked. */
+function CheckboxFilterPopover({
+  label,
+  title,
+  idPrefix,
+  options,
+  selected,
+  onToggle,
+  className = "w-80",
+}: CheckboxFilterPopoverProps) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Filter className="h-4 w-4 mr-2" />
+          {label}
+          {selected.length > 0 && (
+            <Badge variant="secondary" className="ml-2">
+              {selected.length}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className={className}>
+        <div className="space-y-2">
+          <h4 className="font-medium">{title}</h4>
+          <div className="max-h-60 overflow-y-auto space-y-2">
+            {options.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${idPrefix}-${option.value}`}
+                  checked={selected.includes(option.value)}
+                  onCheckedChange={() => onToggle(option.value)}
+                />
+                <Label
+                  htmlFor={`${idPrefix}-${option.value}`}
+                  className="text-sm"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ActiveFilterBadge({
+  children,
+  onRemove,
+}: {
+  children: ReactNode;
+  onRemove: () => void;
+}) {
+  return (
+    <Badge variant="secondary" className="cursor-pointer">
+      {children}
+      <X className="h-3 w-3 ml-1" onClick={onRemove} />
+    </Badge>
+  );
+}
+
+const toggled = (values: string[], value: string) =>
+  values.includes(value)
+    ? values.filter((v) => v !== value)
+    : [...values, value];
+
+const METRIC_VALUE_OPTIONS = [
+  { value: "true", label: "Has metric values" },
+  { value: "false", label: "No metric values" },
+];
 
 interface DiagnosticsFilterProps {
+  /** The diagnostics to offer filter options from */
   diagnostics: CatalogDiagnostic[];
-  onFilterChange: (filteredDiagnostics: CatalogDiagnostic[]) => void;
-  onFilterParamsChange?: (
-    search: string,
-    providers: string[],
-    aftIds: string[],
-    themes: string[],
-    metricValues: boolean | null,
-  ) => void;
-  initialSearch?: string;
-  initialProviders?: string[];
-  initialAftIds?: string[];
-  initialThemes?: string[];
-  initialMetricValues?: boolean | null;
+  value: DiagnosticFilterState;
+  onChange: (value: DiagnosticFilterState) => void;
 }
 
 export function DiagnosticsFilter({
   diagnostics,
-  onFilterChange,
-  onFilterParamsChange,
-  initialSearch = "",
-  initialProviders = [],
-  initialAftIds = [],
-  initialThemes = [],
-  initialMetricValues = null,
+  value,
+  onChange,
 }: DiagnosticsFilterProps) {
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [selectedProviders, setSelectedProviders] =
-    useState<string[]>(initialProviders);
-  const [selectedAftIds, setSelectedAftIds] = useState<string[]>(initialAftIds);
-  const [selectedThemes, setSelectedThemes] = useState<string[]>(initialThemes);
-  const [showWithMetricValues, setShowWithMetricValues] = useState<
-    boolean | null
-  >(initialMetricValues);
-
-  // Extract unique providers from diagnostics
-  const allProviders = Array.from(
-    new Set(diagnostics.map((d) => d.provider.slug)),
-  ).sort();
-
-  // Extract unique AFT diagnostics from diagnostics
-  const allAftIds = Array.from(
-    new Map(
-      diagnostics
-        .filter((d) => d.aft_link)
-        .map((d) => [
-          d.aft_link!.id,
-          { id: d.aft_link!.id, name: d.aft_link!.name },
-        ]),
-    ).values(),
-  ).sort((a, b) => a.id.localeCompare(b.id));
-
-  // Extract unique themes from diagnostics
-  const allThemes = Array.from(
-    new Set(
-      diagnostics
-        .filter((d) => d.aft_link?.theme)
-        .map((d) => d.aft_link!.theme!),
-    ),
-  ).sort();
-
-  // Apply filters (only updates the filtered diagnostics list)
-  const applyFilters = useCallback(
-    (
-      search: string,
-      providers: string[],
-      aftIds: string[],
-      themes: string[],
-      metricValuesFilter: boolean | null,
-      updateUrl = false,
-    ) => {
-      let filtered = diagnostics;
-
-      // Search filter
-      if (search.trim()) {
-        const searchLower = search.toLowerCase();
-        filtered = filtered.filter(
-          (diagnostic) =>
-            diagnostic.name.toLowerCase().includes(searchLower) ||
-            diagnostic.description?.toLowerCase().includes(searchLower) ||
-            diagnostic.provider.name.toLowerCase().includes(searchLower) ||
-            diagnostic.provider.slug.toLowerCase().includes(searchLower),
-        );
-      }
-
-      // Provider filter
-      if (providers.length > 0) {
-        filtered = filtered.filter((diagnostic) =>
-          providers.includes(diagnostic.provider.slug),
-        );
-      }
-
-      // AFT ID filter
-      if (aftIds.length > 0) {
-        filtered = filtered.filter(
-          (diagnostic) =>
-            diagnostic.aft_link && aftIds.includes(diagnostic.aft_link.id),
-        );
-      }
-
-      // Theme filter
-      if (themes.length > 0) {
-        filtered = filtered.filter(
-          (diagnostic) =>
-            diagnostic.aft_link?.theme &&
-            themes.includes(diagnostic.aft_link.theme),
-        );
-      }
-
-      // Metric values filter, keeping diagnostics whose flags have not loaded yet
-      if (metricValuesFilter !== null) {
-        filtered = filtered.filter(
-          (diagnostic) =>
-            diagnostic.has_metric_values === null ||
-            diagnostic.has_metric_values === metricValuesFilter,
-        );
-      }
-
-      onFilterChange(filtered);
-
-      // Update URL only when explicitly requested (user interaction)
-      if (updateUrl && onFilterParamsChange) {
-        onFilterParamsChange(
-          search,
-          providers,
-          aftIds,
-          themes,
-          metricValuesFilter,
-        );
-      }
-    },
-    [diagnostics, onFilterChange, onFilterParamsChange],
+  const options = useMemo(
+    () => diagnosticFilterOptions(diagnostics),
+    [diagnostics],
   );
-
-  // Reapply the current filters whenever the diagnostics change, including when late value flags arrive.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: filter changes already apply themselves
-  useEffect(() => {
-    applyFilters(
-      searchTerm,
-      selectedProviders,
-      selectedAftIds,
-      selectedThemes,
-      showWithMetricValues,
-      false,
-    );
-  }, [diagnostics]);
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    applyFilters(
-      value,
-      selectedProviders,
-      selectedAftIds,
-      selectedThemes,
-      showWithMetricValues,
-      true, // Update URL on user interaction
-    );
-  };
-
-  const handleProviderToggle = (provider: string) => {
-    const newProviders = selectedProviders.includes(provider)
-      ? selectedProviders.filter((p) => p !== provider)
-      : [...selectedProviders, provider];
-    setSelectedProviders(newProviders);
-    applyFilters(
-      searchTerm,
-      newProviders,
-      selectedAftIds,
-      selectedThemes,
-      showWithMetricValues,
-      true, // Update URL on user interaction
-    );
-  };
-
-  const handleAftIdToggle = (aftId: string) => {
-    const newAftIds = selectedAftIds.includes(aftId)
-      ? selectedAftIds.filter((id) => id !== aftId)
-      : [...selectedAftIds, aftId];
-    setSelectedAftIds(newAftIds);
-    applyFilters(
-      searchTerm,
-      selectedProviders,
-      newAftIds,
-      selectedThemes,
-      showWithMetricValues,
-      true, // Update URL on user interaction
-    );
-  };
-
-  const handleThemeToggle = (theme: string) => {
-    const newThemes = selectedThemes.includes(theme)
-      ? selectedThemes.filter((t) => t !== theme)
-      : [...selectedThemes, theme];
-    setSelectedThemes(newThemes);
-    applyFilters(
-      searchTerm,
-      selectedProviders,
-      selectedAftIds,
-      newThemes,
-      showWithMetricValues,
-      true, // Update URL on user interaction
-    );
-  };
-
-  const handleMetricValuesFilter = (value: boolean | null) => {
-    setShowWithMetricValues(value);
-    applyFilters(
-      searchTerm,
-      selectedProviders,
-      selectedAftIds,
-      selectedThemes,
-      value,
-      true, // Update URL on user interaction
-    );
-  };
-
-  const clearAllFilters = () => {
-    setSearchTerm("");
-    setSelectedProviders([]);
-    setSelectedAftIds([]);
-    setSelectedThemes([]);
-    setShowWithMetricValues(null);
-    applyFilters("", [], [], [], null, true);
-  };
-
-  const hasActiveFilters =
-    searchTerm ||
-    selectedProviders.length > 0 ||
-    selectedAftIds.length > 0 ||
-    selectedThemes.length > 0 ||
-    showWithMetricValues !== null;
+  const update = (changes: Partial<DiagnosticFilterState>) =>
+    onChange({ ...value, ...changes });
+  const toggleProvider = (provider: string) =>
+    update({ providers: toggled(value.providers, provider) });
+  const toggleAftId = (aftId: string) =>
+    update({ aftIds: toggled(value.aftIds, aftId) });
+  const toggleTheme = (theme: string) =>
+    update({ themes: toggled(value.themes, theme) });
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
+        <DebouncedInput
           placeholder="Search diagnostics by name, description, or provider..."
-          value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          value={value.search}
+          onValueChange={(search) => update({ search })}
           className="pl-10"
         />
       </div>
 
-      {/* Filter Controls */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Providers
-              {selectedProviders.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {selectedProviders.length}
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-2">
-              <h4 className="font-medium">Filter by Providers</h4>
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {allProviders.map((provider) => (
-                  <div key={provider} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`provider-${provider}`}
-                      checked={selectedProviders.includes(provider)}
-                      onCheckedChange={() => handleProviderToggle(provider)}
-                    />
-                    <Label htmlFor={`provider-${provider}`} className="text-sm">
-                      {provider}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <CheckboxFilterPopover
+          label="Providers"
+          title="Filter by Providers"
+          idPrefix="provider"
+          options={options.providers.map((p) => ({ value: p, label: p }))}
+          selected={value.providers}
+          onToggle={toggleProvider}
+        />
 
-        {allAftIds.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                CMIP7 AFT Diagnostics
-                {selectedAftIds.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {selectedAftIds.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-120">
-              <div className="space-y-2">
-                <h4 className="font-medium">Filter by AFT Diagnostics</h4>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {allAftIds.map((aft) => (
-                    <div key={aft.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`aft-${aft.id}`}
-                        checked={selectedAftIds.includes(aft.id)}
-                        onCheckedChange={() => handleAftIdToggle(aft.id)}
-                      />
-                      <Label htmlFor={`aft-${aft.id}`} className="text-sm">
-                        {aft.id} - {aft.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+        {options.aftLinks.length > 0 && (
+          <CheckboxFilterPopover
+            label="CMIP7 AFT Diagnostics"
+            title="Filter by AFT Diagnostics"
+            idPrefix="aft"
+            options={options.aftLinks.map((aft) => ({
+              value: aft.id,
+              label: `${aft.id} - ${aft.name}`,
+            }))}
+            selected={value.aftIds}
+            onToggle={toggleAftId}
+            className="w-120"
+          />
         )}
 
-        {allThemes.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Themes
-                {selectedThemes.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {selectedThemes.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-2">
-                <h4 className="font-medium">Filter by Themes</h4>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {allThemes.map((theme) => (
-                    <div key={theme} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`theme-${theme}`}
-                        checked={selectedThemes.includes(theme)}
-                        onCheckedChange={() => handleThemeToggle(theme)}
-                      />
-                      <Label htmlFor={`theme-${theme}`} className="text-sm">
-                        {theme}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+        {options.themes.length > 0 && (
+          <CheckboxFilterPopover
+            label="Themes"
+            title="Filter by Themes"
+            idPrefix="theme"
+            options={options.themes.map((t) => ({ value: t, label: t }))}
+            selected={value.themes}
+            onToggle={toggleTheme}
+          />
         )}
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Metric Values
-              {showWithMetricValues !== null && (
-                <Badge variant="secondary" className="ml-2">
-                  1
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-60">
-            <div className="space-y-2">
-              <h4 className="font-medium">Filter by Metric Values</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="has-values"
-                    checked={showWithMetricValues === true}
-                    onCheckedChange={() =>
-                      handleMetricValuesFilter(
-                        showWithMetricValues === true ? null : true,
-                      )
-                    }
-                  />
-                  <Label htmlFor="has-values" className="text-sm">
-                    Has metric values
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="no-values"
-                    checked={showWithMetricValues === false}
-                    onCheckedChange={() =>
-                      handleMetricValuesFilter(
-                        showWithMetricValues === false ? null : false,
-                      )
-                    }
-                  />
-                  <Label htmlFor="no-values" className="text-sm">
-                    No metric values
-                  </Label>
-                </div>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <CheckboxFilterPopover
+          label="Metric Values"
+          title="Filter by Metric Values"
+          idPrefix="metric-values"
+          options={METRIC_VALUE_OPTIONS}
+          selected={
+            value.metricValues === null ? [] : [`${value.metricValues}`]
+          }
+          // Checking one unchecks the other, and unchecking it shows all
+          onToggle={(checked) =>
+            update({
+              metricValues:
+                `${value.metricValues}` === checked ? null : checked === "true",
+            })
+          }
+          className="w-60"
+        />
 
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+        {hasActiveFilters(value) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onChange(NO_DIAGNOSTIC_FILTERS)}
+          >
             <X className="h-4 w-4 mr-2" />
             Clear Filters
           </Button>
         )}
       </div>
 
-      {/* Active Filters Display */}
-      {(selectedProviders.length > 0 ||
-        selectedAftIds.length > 0 ||
-        selectedThemes.length > 0 ||
-        showWithMetricValues !== null) && (
+      {hasSelections(value) && (
         <div className="flex flex-wrap gap-2">
-          {selectedProviders.map((provider) => (
-            <Badge
+          {value.providers.map((provider) => (
+            <ActiveFilterBadge
               key={`provider-${provider}`}
-              variant="secondary"
-              className="cursor-pointer"
+              onRemove={() => toggleProvider(provider)}
             >
               Provider: {provider}
-              <X
-                className="h-3 w-3 ml-1"
-                onClick={() => handleProviderToggle(provider)}
-              />
-            </Badge>
+            </ActiveFilterBadge>
           ))}
-          {selectedAftIds.map((aftId) => {
-            const aft = allAftIds.find((a) => a.id === aftId);
+          {value.aftIds.map((aftId) => {
+            const aft = options.aftLinks.find((a) => a.id === aftId);
             return (
-              <Badge
+              <ActiveFilterBadge
                 key={`aft-${aftId}`}
-                variant="secondary"
-                className="cursor-pointer"
+                onRemove={() => toggleAftId(aftId)}
               >
                 CMIP7 AFT: {aftId}
                 {aft ? ` - ${aft.name}` : ""}
-                <X
-                  className="h-3 w-3 ml-1"
-                  onClick={() => handleAftIdToggle(aftId)}
-                />
-              </Badge>
+              </ActiveFilterBadge>
             );
           })}
-          {selectedThemes.map((theme) => (
-            <Badge
+          {value.themes.map((theme) => (
+            <ActiveFilterBadge
               key={`theme-${theme}`}
-              variant="secondary"
-              className="cursor-pointer"
+              onRemove={() => toggleTheme(theme)}
             >
               Theme: {theme}
-              <X
-                className="h-3 w-3 ml-1"
-                onClick={() => handleThemeToggle(theme)}
-              />
-            </Badge>
+            </ActiveFilterBadge>
           ))}
-          {showWithMetricValues !== null && (
-            <Badge variant="secondary" className="cursor-pointer">
-              {showWithMetricValues ? "Has values" : "No values"}
-              <X
-                className="h-3 w-3 ml-1"
-                onClick={() => handleMetricValuesFilter(null)}
-              />
-            </Badge>
+          {value.metricValues !== null && (
+            <ActiveFilterBadge onRemove={() => update({ metricValues: null })}>
+              {value.metricValues ? "Has values" : "No values"}
+            </ActiveFilterBadge>
           )}
         </div>
       )}

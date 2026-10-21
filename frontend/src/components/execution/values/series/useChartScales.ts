@@ -10,7 +10,7 @@ export interface ChartMargins {
   left: number;
 }
 
-export const DEFAULT_MARGINS: ChartMargins = {
+const DEFAULT_MARGINS: ChartMargins = {
   top: 10,
   right: 30,
   bottom: 50,
@@ -36,6 +36,88 @@ export interface ChartScales {
   isTimeAxis: boolean;
 }
 
+/**
+ * The x and y scales of a chart `width` by `height` pixels
+ *
+ * The x domain spans every index value, the y domain only the series not in `hiddenLabels`.
+ * Without values to span, a domain falls back to [0, 1].
+ */
+export function computeChartScales(
+  chartData: ChartDataPoint[],
+  seriesMetadata: SeriesMetadata[],
+  hiddenLabels: Set<string>,
+  indexName: string,
+  width: number,
+  height: number,
+  symmetricalAxes: boolean,
+  isTimeAxis: boolean,
+  margins: ChartMargins = DEFAULT_MARGINS,
+): ChartScales {
+  const innerWidth = Math.max(0, width - margins.left - margins.right);
+  const innerHeight = Math.max(0, height - margins.top - margins.bottom);
+
+  // X domain from index values (already numeric — timestamps for datetime axes)
+  const xValues = chartData
+    .map((d) => d[indexName])
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+
+  const xDomain: [number, number] =
+    xValues.length > 0
+      ? [d3.min(xValues) as number, d3.max(xValues) as number]
+      : [0, 1];
+
+  // Y domain from visible series only
+  const visibleKeys = new Set<string>();
+  for (const meta of seriesMetadata) {
+    if (!hiddenLabels.has(meta.label)) {
+      visibleKeys.add(`series_${meta.seriesIndex}`);
+    }
+  }
+
+  const yValues: number[] = [];
+  for (const d of chartData) {
+    for (const key of visibleKeys) {
+      const v = d[key];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        yValues.push(v);
+      }
+    }
+  }
+
+  let yDomain: [number, number];
+  if (yValues.length === 0) {
+    yDomain = [0, 1];
+  } else if (symmetricalAxes) {
+    const maxAbs = d3.max(yValues.map(Math.abs)) as number;
+    yDomain = [-maxAbs, maxAbs];
+  } else {
+    const yMin = d3.min(yValues) as number;
+    const yMax = d3.max(yValues) as number;
+    const padding = (yMax - yMin) * 0.05 || 0.1;
+    yDomain = [yMin - padding, yMax + padding];
+  }
+
+  const xScale: XScaleType = isTimeAxis
+    ? d3
+        .scaleTime()
+        .domain([new Date(xDomain[0]), new Date(xDomain[1])])
+        .range([0, innerWidth])
+    : d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+
+  const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
+
+  return {
+    xScale,
+    yScale,
+    xDomain,
+    yDomain,
+    innerWidth,
+    innerHeight,
+    margins,
+    isTimeAxis,
+  };
+}
+
 export function useChartScales(
   chartData: ChartDataPoint[],
   seriesMetadata: SeriesMetadata[],
@@ -47,79 +129,29 @@ export function useChartScales(
   isTimeAxis: boolean,
   margins: ChartMargins = DEFAULT_MARGINS,
 ): ChartScales {
-  return useMemo(() => {
-    const innerWidth = Math.max(0, width - margins.left - margins.right);
-    const innerHeight = Math.max(0, height - margins.top - margins.bottom);
-
-    // X domain from index values (already numeric — timestamps for datetime axes)
-    const xValues = chartData
-      .map((d) => d[indexName])
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-
-    const xDomain: [number, number] =
-      xValues.length > 0
-        ? [d3.min(xValues) as number, d3.max(xValues) as number]
-        : [0, 1];
-
-    // Y domain from visible series only
-    const visibleKeys = new Set<string>();
-    for (const meta of seriesMetadata) {
-      if (!hiddenLabels.has(meta.label)) {
-        visibleKeys.add(`series_${meta.seriesIndex}`);
-      }
-    }
-
-    const yValues: number[] = [];
-    for (const d of chartData) {
-      for (const key of visibleKeys) {
-        const v = d[key];
-        if (typeof v === "number" && Number.isFinite(v)) {
-          yValues.push(v);
-        }
-      }
-    }
-
-    let yDomain: [number, number];
-    if (yValues.length === 0) {
-      yDomain = [0, 1];
-    } else if (symmetricalAxes) {
-      const maxAbs = d3.max(yValues.map(Math.abs)) as number;
-      yDomain = [-maxAbs, maxAbs];
-    } else {
-      const yMin = d3.min(yValues) as number;
-      const yMax = d3.max(yValues) as number;
-      const padding = (yMax - yMin) * 0.05 || 0.1;
-      yDomain = [yMin - padding, yMax + padding];
-    }
-
-    const xScale: XScaleType = isTimeAxis
-      ? d3
-          .scaleTime()
-          .domain([new Date(xDomain[0]), new Date(xDomain[1])])
-          .range([0, innerWidth])
-      : d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
-
-    const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
-
-    return {
-      xScale,
-      yScale,
-      xDomain,
-      yDomain,
-      innerWidth,
-      innerHeight,
-      margins,
+  return useMemo(
+    () =>
+      computeChartScales(
+        chartData,
+        seriesMetadata,
+        hiddenLabels,
+        indexName,
+        width,
+        height,
+        symmetricalAxes,
+        isTimeAxis,
+        margins,
+      ),
+    [
+      chartData,
+      seriesMetadata,
+      hiddenLabels,
+      indexName,
+      width,
+      height,
+      symmetricalAxes,
       isTimeAxis,
-    };
-  }, [
-    chartData,
-    seriesMetadata,
-    hiddenLabels,
-    indexName,
-    width,
-    height,
-    symmetricalAxes,
-    isTimeAxis,
-    margins,
-  ]);
+      margins,
+    ],
+  );
 }

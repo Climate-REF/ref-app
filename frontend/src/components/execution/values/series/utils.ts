@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import {
   getFixedDimensionColor,
   unreservedPalette,
@@ -20,6 +21,56 @@ export function isIntegerAxis(indexName: string): boolean {
 }
 
 /**
+ * Format a numeric index value, such as an x axis tick
+ *
+ * Integers are shown whole, as are values within rounding noise of one on an integer axis.
+ * Other values get six significant digits.
+ */
+export function formatIndexValue(value: number, indexName: string): string {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+  if (isIntegerAxis(indexName) && Math.abs(value - Math.round(value)) < 1e-9) {
+    return Math.round(value).toString();
+  }
+  return value.toPrecision(6);
+}
+
+/**
+ * Format a time axis tick by the coarsest unit it falls on, in local time
+ *
+ * New years show the year, other month starts the month and year,
+ * other midnights the day and anything else the time of day too.
+ */
+export function formatTimeTick(date: Date): string {
+  if (date.getHours() !== 0 || date.getMinutes() !== 0) {
+    return d3.timeFormat("%b %d %H:%M")(date);
+  }
+  if (date.getDate() !== 1) {
+    return d3.timeFormat("%b %d")(date);
+  }
+  return d3.timeFormat(date.getMonth() === 0 ? "%Y" : "%b %Y")(date);
+}
+
+/**
+ * The x and y of series `seriesIndex` in `row`, or null when the row has no point to draw
+ *
+ * A row has no point when its index or the series' value is missing, or the value is not finite.
+ */
+export function plottablePoint(
+  row: ChartDataPoint,
+  indexName: string,
+  seriesIndex: number,
+): { x: number; y: number } | null {
+  const x = row[indexName];
+  const y = row[`series_${seriesIndex}`];
+  if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(y)) {
+    return null;
+  }
+  return { x, y };
+}
+
+/**
  * Check if a value looks like an ISO 8601 datetime string
  */
 function isDatetimeString(value: unknown): value is string {
@@ -31,7 +82,7 @@ function isDatetimeString(value: unknown): value is string {
 /**
  * Detect if the index values in a series are datetime strings
  */
-export function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
+function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
   if (indexValues.length === 0) return false;
   // Check the first non-null value
   for (const v of indexValues) {
@@ -45,48 +96,60 @@ export function detectTimeAxis(indexValues: ReadonlyArray<unknown>): boolean {
  * Parse a datetime string to a millisecond timestamp.
  * Returns null if the string is not a valid date.
  */
-export function parseDatetimeToTimestamp(value: string): number | null {
+function parseDatetimeToTimestamp(value: string): number | null {
   const ts = new Date(value).getTime();
   return Number.isFinite(ts) ? ts : null;
 }
 
+/** Drop trailing zeros after the decimal point, keeping any exponent */
+function trimTrailingZeros(text: string): string {
+  const [mantissa, exponent] = text.split("e");
+  const trimmed = mantissa.includes(".")
+    ? mantissa.replace(/\.?0+$/, "")
+    : mantissa;
+  return exponent === undefined ? trimmed : `${trimmed}e${exponent}`;
+}
+
+/**
+ * Build a formatter for value-axis ticks spanning `values`
+ *
+ * Ticks get just enough digits to tell neighbouring ticks apart,
+ * using `tickCount` to estimate the tick step d3 will pick.
+ * Values between ticks, such as tooltip statistics, get up to two more digits.
+ * Exponent notation is only used for magnitudes of at least 1e6 or below 1e-3.
+ */
 export function createScaledTickFormatter(
   values: number[],
+  tickCount = 5,
 ): (value: number | string) => string {
   if (values.length === 0) return (value: string | number) => String(value);
 
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const range = max - min;
+  const magnitude = Math.max(Math.abs(min), Math.abs(max));
+  // A zero range has no tick step, so space ticks as if the range were the magnitude
+  const step = d3.tickStep(0, max - min || magnitude || 1, tickCount);
+  const useExponent = magnitude >= 1e6 || (magnitude > 0 && magnitude < 1e-3);
 
-  // Determine appropriate formatting based on range and magnitude
   return (value: string | number): string => {
-    const numValue = Number(value);
+    let numValue = Number(value);
+    if (!Number.isFinite(numValue)) return String(value);
+    // Snap rounding noise around zero, which would otherwise print as "-0.0" or "1e-17"
+    if (Math.abs(numValue) < step * 1e-6) numValue = 0;
 
-    // Handle very large numbers (scientific notation)
-    if (Math.abs(numValue) >= 1e6 || (range > 0 && Math.abs(numValue) >= 1e4)) {
-      return numValue.toExponential(1);
-    }
+    const onTick =
+      Math.abs(numValue / step - Math.round(numValue / step)) < 1e-6;
+    const resolution = onTick ? step : step / 100;
 
-    // Handle very small numbers (scientific notation)
-    if (Math.abs(numValue) < 1e-3 && numValue !== 0) {
-      return numValue.toExponential(1);
+    if (useExponent) {
+      if (numValue === 0) return "0";
+      const text = numValue.toExponential(
+        d3.precisionRound(resolution, magnitude) - 1,
+      );
+      return onTick ? text : trimTrailingZeros(text);
     }
-
-    // Handle decimal precision based on range
-    if (range < 0.1) {
-      return numValue.toFixed(3);
-    }
-    if (range < 1) {
-      return numValue.toFixed(2);
-    }
-    if (range < 10) {
-      return numValue.toFixed(2);
-    }
-    if (range < 100) {
-      return numValue.toFixed(1);
-    }
-    return numValue.toFixed(0);
+    const text = numValue.toFixed(d3.precisionFixed(resolution));
+    return onTick ? text : trimTrailingZeros(text);
   };
 }
 
@@ -368,4 +431,118 @@ export function getDimensionKeys(seriesMetadata: SeriesMetadata[]): string[] {
     }
   }
   return Array.from(keys).sort();
+}
+
+/** A label in the legend, standing for every series that shares it */
+export interface LegendItem {
+  label: string;
+  color: string;
+  count: number;
+  isReference: boolean;
+}
+
+/**
+ * One legend item per label, references first and the rest by label
+ *
+ * A label takes its colour from the first series with that label.
+ */
+export function legendItems(seriesMetadata: SeriesMetadata[]): LegendItem[] {
+  const items = new Map<string, LegendItem>();
+  for (const meta of seriesMetadata) {
+    const existing = items.get(meta.label);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      items.set(meta.label, {
+        label: meta.label,
+        color: meta.color,
+        count: 1,
+        isReference: meta.isReference,
+      });
+    }
+  }
+  return Array.from(items.values()).sort(
+    (a, b) =>
+      Number(b.isReference) - Number(a.isReference) ||
+      a.label.localeCompare(b.label),
+  );
+}
+
+/** Each label's dimensions, taken from the first series with that label */
+export function labelDimensions(
+  seriesMetadata: SeriesMetadata[],
+): Map<string, Record<string, string>> {
+  const map = new Map<string, Record<string, string>>();
+  for (const meta of seriesMetadata) {
+    if (!map.has(meta.label)) {
+      map.set(meta.label, meta.dimensions);
+    }
+  }
+  return map;
+}
+
+/**
+ * Group legend items by their label's value of `dimension`, ordered by that value
+ *
+ * Items whose label has no value for the dimension are grouped under "Unknown".
+ */
+export function groupLegendItems(
+  items: LegendItem[],
+  dimension: string,
+  labelDimensionMap: Map<string, Record<string, string>>,
+): [string, LegendItem[]][] {
+  const groups = new Map<string, LegendItem[]>();
+  for (const item of items) {
+    const groupKey =
+      labelDimensionMap.get(item.label)?.[dimension] ?? "Unknown";
+    const group = groups.get(groupKey);
+    if (group) {
+      group.push(item);
+    } else {
+      groups.set(groupKey, [item]);
+    }
+  }
+  return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
+/** The labels hidden from the chart: all but the soloed label and references while soloing, otherwise `hiddenLabels` */
+export function hiddenLabelsWithSolo(
+  hiddenLabels: Set<string>,
+  soloedLabel: string | null,
+  items: LegendItem[],
+): Set<string> {
+  if (!soloedLabel) return hiddenLabels;
+  return new Set(
+    items
+      .filter((item) => item.label !== soloedLabel && !item.isReference)
+      .map((item) => item.label),
+  );
+}
+
+/** A copy of `set` with `value` removed when it is in the set, and added otherwise */
+export function toggleInSet<T>(set: ReadonlySet<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(value)) {
+    next.delete(value);
+  } else {
+    next.add(value);
+  }
+  return next;
+}
+
+/** A copy of `hiddenLabels` with every one of `labels` hidden, or shown when `hidden` is false */
+export function withLabelsHidden(
+  hiddenLabels: ReadonlySet<string>,
+  labels: Iterable<string>,
+  hidden: boolean,
+): Set<string> {
+  const next = new Set(hiddenLabels);
+  for (const label of labels) {
+    if (hidden) {
+      next.add(label);
+    } else {
+      next.delete(label);
+    }
+  }
+  return next;
 }

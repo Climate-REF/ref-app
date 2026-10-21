@@ -1,8 +1,71 @@
-import * as d3 from "d3";
-import { memo, useCallback, useEffect, useRef } from "react";
+import type * as d3 from "d3";
+import {
+  memo,
+  type Ref,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import type { SeriesMetadata } from "../types";
 import type { ChartMargins, XScaleType } from "./useChartScales";
-import { type ChartDataPoint, isIntegerAxis } from "./utils";
+import {
+  type ChartDataPoint,
+  createScaledTickFormatter,
+  formatIndexValue,
+  formatTimeTick,
+  isIntegerAxis,
+  plottablePoint,
+} from "./utils";
+
+const Y_TICK_COUNT = 8;
+
+/** The colour a series' line is drawn in, with reference lines contrasting the background */
+export function seriesLineColor(
+  meta: Pick<SeriesMetadata, "color" | "isReference">,
+  isDark: boolean,
+): string {
+  if (!meta.isReference) return meta.color;
+  return isDark ? "#FFFFFF" : "#000000";
+}
+
+/**
+ * The series in the order their lines are drawn, so later lines sit on top
+ *
+ * Hidden series go first and the hovered series last,
+ * with reference series above regular ones within each group.
+ */
+export function orderSeriesForDraw(
+  seriesMetadata: SeriesMetadata[],
+  hiddenLabels: ReadonlySet<string>,
+  hoveredLabel: string | null,
+): SeriesMetadata[] {
+  const layer = (meta: SeriesMetadata) =>
+    (hiddenLabels.has(meta.label) ? 0 : 4) +
+    (meta.label === hoveredLabel ? 2 : 0) +
+    (meta.isReference ? 1 : 0);
+  return [...seriesMetadata].sort((a, b) => layer(a) - layer(b));
+}
+
+/** How a series' line is stroked: faint grey when hidden, thicker when hovered, references bolder */
+export function seriesStroke(
+  meta: SeriesMetadata,
+  state: { hidden: boolean; hovered: boolean },
+  isDark: boolean,
+): { color: string; width: number; alpha: number } {
+  if (state.hidden) {
+    return { color: isDark ? "#4B5563" : "#D1D5DB", width: 0.5, alpha: 0.15 };
+  }
+  const color = seriesLineColor(meta, isDark);
+  if (state.hovered) {
+    return { color, width: meta.isReference ? 5 : 3.5, alpha: 1 };
+  }
+  return {
+    color,
+    width: meta.isReference ? 3 : 1.5,
+    alpha: meta.isReference ? 1 : 0.8,
+  };
+}
 
 export interface CrosshairPosition {
   dataPixelX: number;
@@ -11,7 +74,13 @@ export interface CrosshairPosition {
   nearestColor: string;
 }
 
+/** Lets the chart redraw the canvas for hover changes without re-rendering it */
+export interface SeriesCanvasHandle {
+  redraw: () => void;
+}
+
 interface SeriesCanvasProps {
+  ref?: Ref<SeriesCanvasHandle>;
   chartData: ChartDataPoint[];
   seriesMetadata: SeriesMetadata[];
   indexName: string;
@@ -36,6 +105,7 @@ interface SeriesCanvasProps {
 }
 
 export const SeriesCanvas = memo(function SeriesCanvas({
+  ref,
   chartData,
   seriesMetadata,
   indexName,
@@ -87,104 +157,25 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     // Draw grid
     drawGrid(ctx, xScale, yScale, innerWidth, innerHeight, isDark);
 
-    // Draw lines: hidden first, then visible, hovered last
-    const hoveredLabel = hoveredLabelRef.current;
-    const sortedMeta = [...seriesMetadata].sort((a, b) => {
-      const aHidden = hiddenLabels.has(a.label);
-      const bHidden = hiddenLabels.has(b.label);
-      if (aHidden && !bHidden) return -1;
-      if (!aHidden && bHidden) return 1;
-      const aHovered = a.label === hoveredLabel;
-      const bHovered = b.label === hoveredLabel;
-      if (aHovered && !bHovered) return 1;
-      if (!aHovered && bHovered) return -1;
-      // Reference series on top of regular
-      if (a.isReference && !b.isReference) return 1;
-      if (!a.isReference && b.isReference) return -1;
-      return 0;
+    drawSeriesLines(ctx, {
+      chartData,
+      seriesMetadata,
+      indexName,
+      hiddenLabels,
+      hoveredLabel: hoveredLabelRef.current,
+      xScale,
+      yScale,
+      isDark,
     });
 
-    for (const meta of sortedMeta) {
-      const isHidden = hiddenLabels.has(meta.label);
-      const isHovered = meta.label === hoveredLabel;
-      const key = `series_${meta.seriesIndex}`;
-
-      const refColor = isDark ? "#FFFFFF" : "#000000";
-      if (isHidden) {
-        ctx.strokeStyle = isDark ? "#4B5563" : "#D1D5DB";
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = 0.15;
-      } else if (isHovered) {
-        ctx.strokeStyle = meta.isReference ? refColor : meta.color;
-        ctx.lineWidth = meta.isReference ? 5 : 3.5;
-        ctx.globalAlpha = 1;
-      } else {
-        ctx.strokeStyle = meta.isReference ? refColor : meta.color;
-        ctx.lineWidth = meta.isReference ? 3 : 1.5;
-        ctx.globalAlpha = meta.isReference ? 1 : 0.8;
-      }
-
-      ctx.beginPath();
-      let started = false;
-      for (let i = 0; i < chartData.length; i++) {
-        const xVal = chartData[i][indexName];
-        const yVal = chartData[i][key];
-        if (
-          typeof xVal !== "number" ||
-          typeof yVal !== "number" ||
-          !Number.isFinite(yVal)
-        ) {
-          started = false;
-          continue;
-        }
-        const px = xScale(xVal);
-        const py = yScale(yVal);
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-      }
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 1;
-
-    // Draw crosshair
-    const crosshair = crosshairRef.current;
-    if (crosshair) {
-      // Vertical line at snapped X position
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = "#94A3B8";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(crosshair.dataPixelX, 0);
-      ctx.lineTo(crosshair.dataPixelX, innerHeight);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Dot on nearest point
-      ctx.beginPath();
-      ctx.arc(
-        crosshair.nearestPixelX,
-        crosshair.nearestPixelY,
-        5,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fillStyle = crosshair.nearestColor;
-      ctx.fill();
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+    if (crosshairRef.current) {
+      drawCrosshair(ctx, crosshairRef.current, innerHeight);
     }
 
     ctx.restore();
 
     // Draw axes outside clip region
-    drawAxes(
-      ctx,
+    drawAxes(ctx, {
       xScale,
       yScale,
       margins,
@@ -196,7 +187,7 @@ export const SeriesCanvas = memo(function SeriesCanvas({
       metricName,
       units,
       indexUnits,
-    );
+    });
   }, [
     chartData,
     seriesMetadata,
@@ -225,16 +216,17 @@ export const SeriesCanvas = memo(function SeriesCanvas({
     return () => cancelAnimationFrame(rafRef.current);
   }, [draw]);
 
-  // Expose redraw for hover updates (called from parent via ref)
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (el) {
-      (el as HTMLCanvasElement & { redraw: () => void }).redraw = () => {
+  // Hover changes live in refs, so the chart asks for a redraw instead of re-rendering
+  useImperativeHandle(
+    ref,
+    () => ({
+      redraw: () => {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(draw);
-      };
-    }
-  }, [draw]);
+      },
+    }),
+    [draw],
+  );
 
   return (
     <div className="relative" style={{ width, height }}>
@@ -249,6 +241,96 @@ export const SeriesCanvas = memo(function SeriesCanvas({
   );
 });
 
+/** What the series lines are drawn from */
+interface SeriesLinesOptions {
+  chartData: ChartDataPoint[];
+  seriesMetadata: SeriesMetadata[];
+  indexName: string;
+  hiddenLabels: Set<string>;
+  hoveredLabel: string | null;
+  xScale: XScaleType;
+  yScale: d3.ScaleLinear<number, number>;
+  isDark: boolean;
+}
+
+/** Draw a line per series, breaking it where a value is missing */
+function drawSeriesLines(
+  ctx: CanvasRenderingContext2D,
+  {
+    chartData,
+    seriesMetadata,
+    indexName,
+    hiddenLabels,
+    hoveredLabel,
+    xScale,
+    yScale,
+    isDark,
+  }: SeriesLinesOptions,
+) {
+  for (const meta of orderSeriesForDraw(
+    seriesMetadata,
+    hiddenLabels,
+    hoveredLabel,
+  )) {
+    const stroke = seriesStroke(
+      meta,
+      {
+        hidden: hiddenLabels.has(meta.label),
+        hovered: meta.label === hoveredLabel,
+      },
+      isDark,
+    );
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.globalAlpha = stroke.alpha;
+
+    ctx.beginPath();
+    let started = false;
+    for (const row of chartData) {
+      const value = plottablePoint(row, indexName, meta.seriesIndex);
+      if (!value) {
+        started = false;
+        continue;
+      }
+      const px = xScale(value.x);
+      const py = yScale(value.y);
+      if (!started) {
+        ctx.moveTo(px, py);
+        started = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+/** Draw the hover crosshair: a vertical line at the data position and a dot on the nearest point */
+function drawCrosshair(
+  ctx: CanvasRenderingContext2D,
+  crosshair: CrosshairPosition,
+  innerHeight: number,
+) {
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = "#94A3B8";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(crosshair.dataPixelX, 0);
+  ctx.lineTo(crosshair.dataPixelX, innerHeight);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.arc(crosshair.nearestPixelX, crosshair.nearestPixelY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = crosshair.nearestColor;
+  ctx.fill();
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
 function drawGrid(
   ctx: CanvasRenderingContext2D,
   xScale: XScaleType,
@@ -262,7 +344,7 @@ function drawGrid(
   ctx.setLineDash([3, 3]);
 
   // Horizontal grid lines
-  const yTicks = yScale.ticks(8);
+  const yTicks = yScale.ticks(Y_TICK_COUNT);
   for (const tick of yTicks) {
     const y = yScale(tick);
     ctx.beginPath();
@@ -284,74 +366,65 @@ function drawGrid(
   ctx.setLineDash([]);
 }
 
-function formatTickValue(value: number, range: number): string {
-  if (Math.abs(value) >= 1e6 || (range > 0 && Math.abs(value) >= 1e4)) {
-    return value.toExponential(1);
+/** The x axis ticks as pixel positions and labels, leaving out fractional ticks on an integer axis */
+export function xAxisTicks(
+  xScale: XScaleType,
+  indexName: string,
+  isTimeAxis: boolean,
+): { position: number; label: string }[] {
+  if (isTimeAxis) {
+    return (xScale as d3.ScaleTime<number, number>)
+      .ticks(10)
+      .map((tick) => ({ position: xScale(tick), label: formatTimeTick(tick) }));
   }
-  if (Math.abs(value) < 1e-3 && value !== 0) {
-    return value.toExponential(1);
-  }
-  if (range < 0.1) return value.toFixed(3);
-  if (range < 1) return value.toFixed(2);
-  if (range < 10) return value.toFixed(2);
-  if (range < 100) return value.toFixed(1);
-  return value.toFixed(0);
+  const ticks = (xScale as d3.ScaleLinear<number, number>).ticks(10);
+  return (
+    isIntegerAxis(indexName) ? ticks.filter((t) => Number.isInteger(t)) : ticks
+  ).map((tick) => ({
+    position: xScale(tick),
+    label: formatIndexValue(tick, indexName),
+  }));
 }
 
-function formatXTickValue(value: number, indexName: string): string {
-  if (isIntegerAxis(indexName) && Number.isInteger(value)) {
-    return value.toString();
-  }
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-  // For non-integer values on an integer axis, still show as integer if close
-  if (isIntegerAxis(indexName) && Math.abs(value - Math.round(value)) < 1e-9) {
-    return Math.round(value).toString();
-  }
-  return value.toPrecision(6);
+/** An axis title, with its units when there are any */
+function axisTitle(name: string, units?: string): string {
+  return units ? `${name} (${units})` : name;
 }
 
-function formatTimeTick(date: Date): string {
-  if (
-    date.getMonth() === 0 &&
-    date.getDate() === 1 &&
-    date.getHours() === 0 &&
-    date.getMinutes() === 0
-  ) {
-    return d3.timeFormat("%Y")(date);
-  }
-  if (
-    date.getDate() === 1 &&
-    date.getHours() === 0 &&
-    date.getMinutes() === 0
-  ) {
-    return d3.timeFormat("%b %Y")(date);
-  }
-  if (date.getHours() === 0 && date.getMinutes() === 0) {
-    return d3.timeFormat("%b %d")(date);
-  }
-  return d3.timeFormat("%b %d %H:%M")(date);
+/** What the axes are drawn from */
+interface AxesOptions {
+  xScale: XScaleType;
+  yScale: d3.ScaleLinear<number, number>;
+  margins: ChartMargins;
+  innerWidth: number;
+  innerHeight: number;
+  indexName: string;
+  isDark: boolean;
+  isTimeAxis: boolean;
+  metricName?: string;
+  units?: string;
+  indexUnits?: string;
 }
 
 function drawAxes(
   ctx: CanvasRenderingContext2D,
-  xScale: XScaleType,
-  yScale: d3.ScaleLinear<number, number>,
-  margins: ChartMargins,
-  innerWidth: number,
-  innerHeight: number,
-  indexName: string,
-  isDark: boolean,
-  isTimeAxis: boolean,
-  metricName?: string,
-  units?: string,
-  indexUnits?: string,
+  {
+    xScale,
+    yScale,
+    margins,
+    innerWidth,
+    innerHeight,
+    indexName,
+    isDark,
+    isTimeAxis,
+    metricName,
+    units,
+    indexUnits,
+  }: AxesOptions,
 ) {
   ctx.save();
 
-  const yDomain = yScale.domain();
-  const yRange = yDomain[1] - yDomain[0];
+  const formatYTick = createScaledTickFormatter(yScale.domain(), Y_TICK_COUNT);
 
   // Y axis
   ctx.strokeStyle = isDark ? "#374151" : "#E5E7EB";
@@ -366,10 +439,10 @@ function drawAxes(
   ctx.lineTo(margins.left, margins.top + innerHeight);
   ctx.stroke();
 
-  const yTicks = yScale.ticks(8);
+  const yTicks = yScale.ticks(Y_TICK_COUNT);
   for (const tick of yTicks) {
     const y = margins.top + yScale(tick);
-    ctx.fillText(formatTickValue(tick, yRange), margins.left - 8, y);
+    ctx.fillText(formatYTick(tick), margins.left - 8, y);
   }
 
   // Y axis label
@@ -378,10 +451,11 @@ function drawAxes(
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = "center";
   ctx.font = "14px system-ui, sans-serif";
-  const baseName = metricName || "Value";
-  const yLabel =
-    units && units !== "unitless" ? `${baseName} (${units})` : baseName;
-  ctx.fillText(yLabel, 0, 0);
+  ctx.fillText(
+    axisTitle(metricName || "Value", units === "unitless" ? undefined : units),
+    0,
+    0,
+  );
   ctx.restore();
 
   // X axis
@@ -394,35 +468,16 @@ function drawAxes(
   ctx.lineTo(margins.left + innerWidth, margins.top + innerHeight);
   ctx.stroke();
 
-  if (isTimeAxis) {
-    const timeTicks = (xScale as d3.ScaleTime<number, number>).ticks(10);
-    for (const tick of timeTicks) {
-      const x = margins.left + xScale(tick);
-      ctx.fillText(formatTimeTick(tick), x, margins.top + innerHeight + 8);
-    }
-  } else {
-    const xTicksRaw = (xScale as d3.ScaleLinear<number, number>).ticks(10);
-    const xTicks = isIntegerAxis(indexName)
-      ? xTicksRaw.filter((t) => Number.isInteger(t))
-      : xTicksRaw;
-    for (const tick of xTicks) {
-      const x = margins.left + xScale(tick);
-      ctx.fillText(
-        formatXTickValue(tick, indexName),
-        x,
-        margins.top + innerHeight + 8,
-      );
-    }
+  for (const { position, label } of xAxisTicks(xScale, indexName, isTimeAxis)) {
+    ctx.fillText(label, margins.left + position, margins.top + innerHeight + 8);
   }
 
   // X axis label. Units don't apply to time axes (already rendered as dates).
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = "14px system-ui, sans-serif";
-  const xLabel =
-    !isTimeAxis && indexUnits ? `${indexName} (${indexUnits})` : indexName;
   ctx.fillText(
-    xLabel,
+    axisTitle(indexName, isTimeAxis ? undefined : indexUnits),
     margins.left + innerWidth / 2,
     margins.top + innerHeight + 30,
   );

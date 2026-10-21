@@ -1,9 +1,20 @@
+import * as d3 from "d3";
 import { describe, expect, it } from "vitest";
 import type { SeriesMetadata, SeriesValue } from "../types";
 import {
   createChartData,
   createScaledTickFormatter,
+  formatIndexValue,
+  formatTimeTick,
   getDimensionKeys,
+  groupLegendItems,
+  hiddenLabelsWithSolo,
+  type LegendItem,
+  labelDimensions,
+  legendItems,
+  plottablePoint,
+  toggleInSet,
+  withLabelsHidden,
 } from "./utils";
 
 const mockSeriesValue: SeriesValue = {
@@ -34,49 +45,174 @@ describe("createScaledTickFormatter", () => {
     expect(formatter("test")).toBe("test");
   });
 
-  it("formats large numbers with scientific notation", () => {
-    const formatter = createScaledTickFormatter([1e6, 2e6, 3e6]);
-    expect(formatter(1500000)).toBe("1.5e+6");
+  /** Format the ticks d3 draws for `[min, max]` */
+  function tickLabels(min: number, max: number, count = 5): string[] {
+    const formatter = createScaledTickFormatter([min, max], count);
+    return d3.ticks(min, max, count).map(formatter);
+  }
+
+  it.each([
+    [101300, 101350, 8],
+    [0.0001, 0.0003, 5],
+    [1e6, 3e6, 5],
+    [1.0, 1.08, 5],
+    [-0.5, 0.5, 5],
+    [-273.15, 5000, 8],
+    [1234567, 1234568, 5],
+  ])("gives every tick of [%d, %d] a distinct label", (min, max, count) => {
+    const labels = tickLabels(min, max, count);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
-  it("formats very small numbers with scientific notation", () => {
-    const formatter = createScaledTickFormatter([0.0001, 0.0002, 0.0003]);
-    expect(formatter(0.00015)).toBe("1.5e-4");
+  it("keeps large values with a small range in fixed notation", () => {
+    expect(tickLabels(101300, 101350, 8)).toEqual([
+      "101300",
+      "101305",
+      "101310",
+      "101315",
+      "101320",
+      "101325",
+      "101330",
+      "101335",
+      "101340",
+      "101345",
+      "101350",
+    ]);
   });
 
-  it("does not use scientific notation for zero", () => {
+  it("keeps values below 1e6 in fixed notation", () => {
+    const formatter = createScaledTickFormatter([10000, 100000]);
+    expect(formatter(20000)).toBe("20000");
+    expect(formatter(25000)).toBe("25000");
+  });
+
+  it("uses exponent notation for values of at least 1e6", () => {
+    expect(tickLabels(1e6, 3e6)).toEqual([
+      "1.0e+6",
+      "1.5e+6",
+      "2.0e+6",
+      "2.5e+6",
+      "3.0e+6",
+    ]);
+  });
+
+  it("uses exponent notation for small values", () => {
+    expect(tickLabels(0.0001, 0.0003)).toEqual([
+      "1.0e-4",
+      "1.5e-4",
+      "2.0e-4",
+      "2.5e-4",
+      "3.0e-4",
+    ]);
+  });
+
+  it("does not use exponent notation for zero", () => {
     const formatter = createScaledTickFormatter([0, 0.0001, 0.0002]);
-    expect(formatter(0)).toBe("0.000");
+    expect(formatter(0)).toBe("0");
   });
 
-  it("formats range < 0.1 with 3 decimal places", () => {
-    const formatter = createScaledTickFormatter([1.0, 1.05, 1.08]);
-    expect(formatter(1.025)).toBe("1.025");
+  it("formats mixed signs with the same precision", () => {
+    expect(tickLabels(-0.5, 0.5)).toEqual([
+      "-0.4",
+      "-0.2",
+      "0.0",
+      "0.2",
+      "0.4",
+    ]);
   });
 
-  it("formats range < 1 with 2 decimal places", () => {
-    const formatter = createScaledTickFormatter([1.0, 1.5, 1.8]);
-    expect(formatter(1.25)).toBe("1.25");
+  it("does not print rounding noise around zero as negative", () => {
+    const formatter = createScaledTickFormatter([-0.5, 0.5]);
+    expect(formatter(-1e-17)).toBe("0.0");
   });
 
-  it("formats range < 10 with 2 decimal places", () => {
-    const formatter = createScaledTickFormatter([10, 15, 18]);
-    expect(formatter(12.5)).toBe("12.50");
+  it("formats a zero range by the magnitude of the value", () => {
+    expect(createScaledTickFormatter([101300, 101300])(101300)).toBe("101300");
+    expect(createScaledTickFormatter([0.5, 0.5])(0.5)).toBe("0.5");
+    expect(createScaledTickFormatter([0, 0])(0)).toBe("0.0");
   });
 
-  it("formats range < 100 with 1 decimal place", () => {
-    const formatter = createScaledTickFormatter([10, 50, 90]);
-    expect(formatter(42.567)).toBe("42.6");
+  it("gives values between ticks up to two more digits", () => {
+    expect(createScaledTickFormatter([10, 90])(42.567)).toBe("42.6");
+    expect(createScaledTickFormatter([1.0, 1.8])(1.25)).toBe("1.25");
+    expect(createScaledTickFormatter([0, 500])(250.789)).toBe("251");
+    expect(createScaledTickFormatter([1e6, 3e6])(1234567)).toBe("1.235e+6");
+  });
+});
+
+describe("formatIndexValue", () => {
+  it("shows integers whole on any axis", () => {
+    expect(formatIndexValue(2021, "year")).toBe("2021");
+    expect(formatIndexValue(850, "pressure")).toBe("850");
   });
 
-  it("formats range >= 100 with 0 decimal places", () => {
-    const formatter = createScaledTickFormatter([0, 100, 500]);
-    expect(formatter(250.789)).toBe("251");
+  it("rounds rounding noise on an integer axis", () => {
+    expect(formatIndexValue(2021 + 1e-12, "year")).toBe("2021");
   });
 
-  it("uses scientific notation for large numbers with large range", () => {
-    const formatter = createScaledTickFormatter([10000, 50000, 100000]);
-    expect(formatter(25000)).toBe("2.5e+4");
+  it("keeps six significant digits otherwise", () => {
+    expect(formatIndexValue(0.1 + 0.2, "latitude")).toBe("0.300000");
+    expect(formatIndexValue(2021.5, "year")).toBe("2021.50");
+  });
+});
+
+describe("formatTimeTick", () => {
+  // Built in local time, which the ticks are formatted in
+  it("shows the year on new year", () => {
+    expect(formatTimeTick(new Date(2020, 0, 1))).toBe("2020");
+  });
+
+  it("shows the month and year on other month starts", () => {
+    expect(formatTimeTick(new Date(2020, 5, 1))).toBe("Jun 2020");
+  });
+
+  it("shows the month and day on other midnights", () => {
+    expect(formatTimeTick(new Date(2020, 0, 15))).toBe("Jan 15");
+    expect(formatTimeTick(new Date(2020, 5, 5))).toBe("Jun 05");
+  });
+
+  it("shows the time of day when not at midnight", () => {
+    expect(formatTimeTick(new Date(2020, 0, 1, 6))).toBe("Jan 01 06:00");
+    expect(formatTimeTick(new Date(2020, 0, 1, 0, 30))).toBe("Jan 01 00:30");
+  });
+});
+
+describe("plottablePoint", () => {
+  it("returns the index and value of the series", () => {
+    const row = { year: 2020, series_0: 1.5, series_1: 2 };
+    expect(plottablePoint(row, "year", 1)).toEqual({ x: 2020, y: 2 });
+  });
+
+  it.each([
+    ["a missing value", { year: 2020 }],
+    ["a null value", { year: 2020, series_0: null }],
+    ["a non-finite value", { year: 2020, series_0: Number.NaN }],
+    ["a missing index", { series_0: 1 }],
+    ["a string index", { year: "2020", series_0: 1 }],
+  ])("returns null for %s", (_, row) => {
+    expect(plottablePoint(row, "year", 0)).toBeNull();
+  });
+});
+
+describe("withLabelsHidden", () => {
+  it("hides every label", () => {
+    const result = withLabelsHidden(new Set(["a"]), ["b", "c"], true);
+    expect(result).toEqual(new Set(["a", "b", "c"]));
+  });
+
+  it("shows every label", () => {
+    const result = withLabelsHidden(
+      new Set(["a", "b", "c"]),
+      ["a", "b"],
+      false,
+    );
+    expect(result).toEqual(new Set(["c"]));
+  });
+
+  it("does not change the given set", () => {
+    const hidden = new Set(["a"]);
+    withLabelsHidden(hidden, ["b"], true);
+    expect(hidden).toEqual(new Set(["a"]));
   });
 });
 
@@ -756,5 +892,123 @@ describe("getDimensionKeys", () => {
       },
     ];
     expect(getDimensionKeys(metadata)).toEqual(["source_id"]);
+  });
+});
+
+/** Series metadata for `label`, with any fields overridden */
+function meta(
+  seriesIndex: number,
+  label: string,
+  options: Partial<SeriesMetadata> = {},
+): SeriesMetadata {
+  return {
+    seriesIndex,
+    label,
+    color: `#00000${seriesIndex}`,
+    isReference: false,
+    dimensions: {},
+    ...options,
+  };
+}
+
+/** A legend item for `label` */
+function item(label: string, isReference = false): LegendItem {
+  return { label, color: "#000000", count: 1, isReference };
+}
+
+describe("legendItems", () => {
+  it("counts the series sharing a label and keeps the first colour", () => {
+    const items = legendItems([meta(0, "A"), meta(1, "B"), meta(2, "A")]);
+    expect(items).toEqual([
+      { label: "A", color: "#000000", count: 2, isReference: false },
+      { label: "B", color: "#000001", count: 1, isReference: false },
+    ]);
+  });
+
+  it("puts references first and orders the rest by label", () => {
+    const items = legendItems([
+      meta(0, "b"),
+      meta(1, "Ref", { isReference: true }),
+      meta(2, "a"),
+    ]);
+    expect(items.map((i) => i.label)).toEqual(["Ref", "a", "b"]);
+  });
+});
+
+describe("labelDimensions", () => {
+  it("maps each label to the dimensions of its first series", () => {
+    const map = labelDimensions([
+      meta(0, "A", { dimensions: { source_id: "first" } }),
+      meta(1, "A", { dimensions: { source_id: "second" } }),
+      meta(2, "B", { dimensions: { source_id: "other" } }),
+    ]);
+    expect(map).toEqual(
+      new Map([
+        ["A", { source_id: "first" }],
+        ["B", { source_id: "other" }],
+      ]),
+    );
+  });
+});
+
+describe("groupLegendItems", () => {
+  const dims = new Map<string, Record<string, string>>([
+    ["A", { experiment_id: "ssp585" }],
+    ["B", { experiment_id: "historical" }],
+    ["C", { experiment_id: "ssp585" }],
+    ["D", {}],
+  ]);
+
+  it("groups items by their label's dimension value, ordered by value", () => {
+    const groups = groupLegendItems(
+      [item("A"), item("B"), item("C")],
+      "experiment_id",
+      dims,
+    );
+    expect(
+      groups.map(([key, items]) => [key, items.map((i) => i.label)]),
+    ).toEqual([
+      ["historical", ["B"]],
+      ["ssp585", ["A", "C"]],
+    ]);
+  });
+
+  it("groups items without the dimension under Unknown", () => {
+    const groups = groupLegendItems(
+      [item("D"), item("E")],
+      "experiment_id",
+      dims,
+    );
+    expect(
+      groups.map(([key, items]) => [key, items.map((i) => i.label)]),
+    ).toEqual([["Unknown", ["D", "E"]]]);
+  });
+});
+
+describe("hiddenLabelsWithSolo", () => {
+  const items = [item("Ref", true), item("A"), item("B"), item("C")];
+
+  it("keeps the hidden labels when not soloing", () => {
+    const hidden = new Set(["A"]);
+    expect(hiddenLabelsWithSolo(hidden, null, items)).toBe(hidden);
+  });
+
+  it("hides all but the soloed label and references while soloing", () => {
+    expect(hiddenLabelsWithSolo(new Set(["B"]), "B", items)).toEqual(
+      new Set(["A", "C"]),
+    );
+  });
+});
+
+describe("toggleInSet", () => {
+  it("adds a missing value and removes a present one", () => {
+    expect(toggleInSet(new Set(["a"]), "b")).toEqual(new Set(["a", "b"]));
+    expect(toggleInSet(new Set(["a", "b"]), "a")).toEqual(new Set(["b"]));
+  });
+
+  it("does not change the given set", () => {
+    const set = new Set(["a"]);
+    toggleInSet(set, "a");
+    expect(set).toEqual(new Set(["a"]));
   });
 });

@@ -9,21 +9,49 @@ import {
 import { format } from "date-fns";
 import {
   diagnosticsGetOptions,
-  executionsExecutionOptions,
   executionsGetOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
-import { Badge } from "@/components/ui/badge";
+import { ExecutionStatusBadge } from "@/components/execution/executionStatusBadge";
 
 import { DetailsPanel } from "@/components/ui/detailsPanel.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { executionStatus } from "@/lib/executionStatus";
 import { formatBytes, formatDuration } from "@/lib/format";
+
+/**
+ * A tab that only some groups have
+ *
+ * It navigates on click rather than being a link, as a disabled link could still be followed.
+ */
+const NavTab = ({
+  value,
+  label,
+  disabled,
+}: {
+  value: "scalar" | "series";
+  label: string;
+  disabled: boolean;
+}) => {
+  const { groupId } = Route.useParams();
+  const navigate = useNavigate();
+  return (
+    <TabsTrigger
+      value={value}
+      disabled={disabled}
+      data-disabled={disabled ? "true" : undefined}
+      onClick={() =>
+        navigate({ to: `/executions/$groupId/${value}`, params: { groupId } })
+      }
+    >
+      {label}
+    </TabsTrigger>
+  );
+};
 
 const ExecutionInfoLayout = () => {
   const { groupId } = Route.useParams();
-  // const { executionId } = Route.useSearch();
   const location = useLocation();
-  const navigate = useNavigate();
 
   const { data } = useSuspenseQuery(
     executionsGetOptions({
@@ -31,12 +59,8 @@ const ExecutionInfoLayout = () => {
     }),
   );
 
-  const { data: execution } = useSuspenseQuery(
-    executionsExecutionOptions({
-      path: { group_id: groupId },
-      // query: { execution_id: executionId },
-    }),
-  );
+  // Executions are oldest first, and a group that has never run has none
+  const execution = data.executions.at(-1);
 
   const { data: diagnostic } = useSuspenseQuery(
     diagnosticsGetOptions({
@@ -47,17 +71,12 @@ const ExecutionInfoLayout = () => {
     }),
   );
 
-  const executionId = undefined;
-
-  const hasScalar = diagnostic.has_scalar_values;
-  const hasSeries = diagnostic.has_series_values;
-
   // Determine the active tab based on the current URL pathname
   const activeTab = location.pathname.split("/").pop() || "datasets";
 
   return (
     <>
-      <title>{`${diagnostic.name} - ${data?.key} - Climate-REF`}</title>
+      <title>{`${diagnostic.name} - ${data.key} - Climate-REF`}</title>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <DetailsPanel
@@ -78,28 +97,25 @@ const ExecutionInfoLayout = () => {
               </>
             }
             action={
-              <DownloadOutputs
-                executionGroup={groupId}
-                executionId={(
-                  executionId ??
-                  data.executions.at(-1)?.id ??
-                  ""
-                ).toString()}
-              />
+              execution && (
+                <DownloadOutputs
+                  executionGroup={groupId}
+                  executionId={String(execution.id)}
+                />
+              )
             }
             items={[
               {
                 label: "Date",
-                value: format(
-                  new Date(execution.updated_at as string),
-                  "yyyy-MM-dd HH:mm",
-                ),
+                value: execution
+                  ? format(new Date(execution.updated_at), "yyyy-MM-dd HH:mm")
+                  : "—",
               },
               {
                 label: "Execution Group Key",
                 value: (
                   <span title="A canonical identifier summarizing the selected datasets and parameters for this execution group.">
-                    {data?.key}
+                    {data.key}
                   </span>
                 ),
                 className: "col-span-2",
@@ -107,23 +123,17 @@ const ExecutionInfoLayout = () => {
               {
                 label: "Status",
                 value: (
-                  <Badge
+                  <ExecutionStatusBadge
                     className="mt-1"
-                    title="Whether the selected execution completed without errors."
-                  >
-                    {execution.successful === null
-                      ? "Running"
-                      : execution.successful
-                        ? "Success"
-                        : "Failed"}
-                  </Badge>
+                    status={executionStatus(execution)}
+                  />
                 ),
               },
               {
                 label: "Wall time",
                 value: (
                   <span title="Wall clock time taken by the selected execution.">
-                    {formatDuration(execution.wall_seconds)}
+                    {formatDuration(execution?.wall_seconds)}
                   </span>
                 ),
               },
@@ -131,7 +141,7 @@ const ExecutionInfoLayout = () => {
                 label: "CPU time",
                 value: (
                   <span title="CPU time used by the selected execution and its child processes.">
-                    {formatDuration(execution.cpu_seconds)}
+                    {formatDuration(execution?.cpu_seconds)}
                   </span>
                 ),
               },
@@ -139,13 +149,13 @@ const ExecutionInfoLayout = () => {
                 label: "Peak memory",
                 value: (
                   <span title="Peak resident memory observed during the selected execution.">
-                    {formatBytes(execution.peak_memory_bytes)}
+                    {formatBytes(execution?.peak_memory_bytes)}
                   </span>
                 ),
               },
               {
                 label: "Number of outputs",
-                value: execution.outputs?.length ?? 0,
+                value: execution?.outputs?.length ?? 0,
               },
             ]}
           />
@@ -169,32 +179,16 @@ const ExecutionInfoLayout = () => {
                   Files
                 </Link>
               </TabsTrigger>
-              <TabsTrigger
+              <NavTab
                 value="scalar"
-                disabled={!hasScalar}
-                data-disabled={!hasScalar ? "true" : undefined}
-                onClick={() =>
-                  navigate({
-                    to: "/executions/$groupId/scalar",
-                    params: { groupId },
-                  })
-                }
-              >
-                Scalar Values
-              </TabsTrigger>
-              <TabsTrigger
+                label="Scalar Values"
+                disabled={!execution || !diagnostic.has_scalar_values}
+              />
+              <NavTab
                 value="series"
-                disabled={!hasSeries}
-                data-disabled={!hasSeries ? "true" : undefined}
-                onClick={() =>
-                  navigate({
-                    to: "/executions/$groupId/series",
-                    params: { groupId },
-                  })
-                }
-              >
-                Series Values
-              </TabsTrigger>
+                label="Series Values"
+                disabled={!execution || !diagnostic.has_series_values}
+              />
               <TabsTrigger value="logs" asChild>
                 <Link to="/executions/$groupId/logs" params={{ groupId }}>
                   Logs

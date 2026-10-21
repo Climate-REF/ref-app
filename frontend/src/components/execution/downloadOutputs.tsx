@@ -34,11 +34,10 @@ export function DownloadOutputs({
       });
 
       if (error) {
-        console.error(`Error downloading ${type}:`, error);
-        throw new Error(`Failed to download ${type}`);
+        throw new Error(`Failed to download ${type}`, { cause: error });
       }
 
-      // Get filename from Content-Disposition header
+      // Named here, as the bundle comes without a file name and the archive's names only the execution
       const filename = `execution-${executionGroup}-${executionId}-${type}.${type === "bundle" ? "json" : "tar.gz"}`;
 
       // @ts-expect-error Can't type correctly

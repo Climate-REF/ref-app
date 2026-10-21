@@ -116,143 +116,189 @@ const clip = (line: string) =>
 /** Lines continuing an error message that ends with ":", such as the dataset ESMValTool could not find */
 const CONTINUATION_LINES = 6;
 
-export function summariseLog(text: string, maxLines = 30): LogSummary {
-  const lines = text.split("\n").map((line) => line.trimEnd());
-  const recorded: string[] = [];
-  let recordedSystemError = false;
-  const system: string[] = [];
-  const errors: string[] = [];
-  const warnings: string[] = [];
+/**
+ * Where a line belongs in the summary: climate-ref's record of the failure,
+ * an error from the system, an error from the diagnostic, or a warning
+ */
+type Kind = "recorded" | "system" | "errors" | "warnings";
+type Classified = { kind: Kind; lines: string[] } | undefined;
 
-  /** An ESMValTool error, with the lines continuing it when it ends with ":" */
-  const addProviderError = (message: string, index: number) => {
-    const trimmed = message.trim();
-    if (isBoilerplate(trimmed)) {
-      return;
-    }
-    errors.push(trimmed);
-    if (!trimmed.endsWith(":")) {
-      return;
-    }
-    for (
-      let k = index + 1;
-      k <= index + CONTINUATION_LINES && k < lines.length;
-      k++
+const classified = (kind: Kind, ...lines: string[]): Classified => ({
+  kind,
+  lines,
+});
+
+const byLevel = (level: string, line: string): Classified => {
+  if (isErrorLevel(level)) {
+    return classified("errors", line);
+  }
+  return level === "WARNING" ? classified("warnings", line) : undefined;
+};
+
+/** An ESMValTool error, with the lines continuing it when it ends with ":" */
+function providerError(
+  message: string,
+  lines: string[],
+  index: number,
+): Classified {
+  const trimmed = message.trim();
+  if (isBoilerplate(trimmed)) {
+    return undefined;
+  }
+  const found = [trimmed];
+  if (!trimmed.endsWith(":")) {
+    return classified("errors", ...found);
+  }
+  for (
+    let k = index + 1;
+    k <= index + CONTINUATION_LINES && k < lines.length;
+    k++
+  ) {
+    const next = lines[k];
+    // A dict or list printed after the message is too verbose to be useful here
+    if (
+      !next.trim() ||
+      REF_LINE.test(next) ||
+      ESMVALTOOL_LINE.test(next) ||
+      /^\s*[{[]/.test(next)
     ) {
-      const next = lines[k];
-      // A dict or list printed after the message is too verbose to be useful here
-      if (
-        !next.trim() ||
-        REF_LINE.test(next) ||
-        ESMVALTOOL_LINE.test(next) ||
-        /^\s*[{[]/.test(next)
-      ) {
-        break;
-      }
-      errors.push(next.trim());
+      break;
     }
-  };
+    found.push(next.trim());
+  }
+  return classified("errors", ...found);
+}
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim() || ANNOTATION.test(line)) {
-      continue;
+/** A message climate-ref logged, either its own or the provider's captured output */
+function classifyRefMessage(
+  level: string,
+  raw: string,
+  message: string,
+  lines: string[],
+  index: number,
+): Classified {
+  if (CAPTURED_OUTPUT.test(raw)) {
+    const esmvaltool = ESMVALTOOL_LINE.exec(message);
+    if (esmvaltool && isErrorLevel(esmvaltool[1])) {
+      return providerError(esmvaltool[2], lines, index);
     }
+    return PROVIDER_ERROR.test(message)
+      ? classified("errors", message)
+      : undefined;
+  }
+  if (isErrorLevel(level)) {
+    return isBoilerplate(raw) ? undefined : classified("errors", raw);
+  }
+  return level === "WARNING" ? classified("warnings", raw) : undefined;
+}
 
-    const failure = REF_FAILURE.exec(line);
-    if (failure) {
-      recorded.push(line.trim());
-      recordedSystemError ||= failure[1] === "system_error";
-      continue;
-    }
+/** A line printed outside climate-ref's log format */
+function classifyOtherLine(
+  line: string,
+  message: string,
+  lines: string[],
+  index: number,
+): Classified {
+  const esmvaltool = ESMVALTOOL_LINE.exec(line);
+  if (esmvaltool) {
+    return isErrorLevel(esmvaltool[1])
+      ? providerError(esmvaltool[2], lines, index)
+      : undefined;
+  }
+  if (EXCEPTION.test(message) || PROVIDER_ERROR.test(message)) {
+    return classified("errors", message);
+  }
+  return PROVIDER_WARNING.test(message)
+    ? classified("warnings", message)
+    : undefined;
+}
 
-    const ref = REF_LINE.exec(line);
-    // What the line says, without climate-ref's prefix or the label of captured output
-    const message = (ref ? ref[2] : line).replace(CAPTURED_OUTPUT, "").trim();
-    if (isSystemError(message)) {
-      system.push(message);
-      continue;
-    }
-
-    // Kept whole, as its timestamp places it relative to the failure
-    const standard = STANDARD_LINE.exec(line);
-    if (standard) {
-      if (isErrorLevel(standard[1])) {
-        errors.push(line);
-      } else if (standard[1] === "WARNING") {
-        warnings.push(line);
-      }
-      continue;
-    }
-
-    if (ref) {
-      const [, level, raw] = ref;
-      if (CAPTURED_OUTPUT.test(raw)) {
-        const esmvaltool = ESMVALTOOL_LINE.exec(message);
-        if (esmvaltool && isErrorLevel(esmvaltool[1])) {
-          addProviderError(esmvaltool[2], i);
-        } else if (PROVIDER_ERROR.test(message)) {
-          errors.push(message);
-        }
-      } else if (isErrorLevel(level) && !isBoilerplate(raw)) {
-        errors.push(raw);
-      } else if (level === "WARNING") {
-        warnings.push(raw);
-      }
-      continue;
-    }
-
-    const esmvaltool = ESMVALTOOL_LINE.exec(line);
-    if (esmvaltool) {
-      if (isErrorLevel(esmvaltool[1])) {
-        addProviderError(esmvaltool[2], i);
-      }
-    } else if (EXCEPTION.test(message) || PROVIDER_ERROR.test(message)) {
-      errors.push(message);
-    } else if (PROVIDER_WARNING.test(message)) {
-      warnings.push(message);
-    }
+function classifyLine(lines: string[], index: number): Classified {
+  const line = lines[index];
+  if (!line.trim() || ANNOTATION.test(line)) {
+    return undefined;
+  }
+  if (REF_FAILURE.test(line)) {
+    return classified("recorded", line.trim());
   }
 
-  const unique = (found: string[]) => [...new Set(found.map(clip))];
-  /**
-   * A system error repeated with different numbers (a worker's address, a process id) is one problem,
-   * so only its most recent occurrence is kept
-   */
-  const latestOfEach = (found: string[]) => {
-    const byShape = new Map<string, string>();
-    for (const line of found) {
-      const shape = line.replace(/\d+/g, "#");
-      byShape.delete(shape);
-      byShape.set(shape, line);
-    }
-    return [...byShape.values()];
+  const ref = REF_LINE.exec(line);
+  // What the line says, without climate-ref's prefix or the label of captured output
+  const message = (ref ? ref[2] : line).replace(CAPTURED_OUTPUT, "").trim();
+  if (isSystemError(message)) {
+    return classified("system", message);
+  }
+
+  // Kept whole, as its timestamp places it relative to the failure
+  const standard = STANDARD_LINE.exec(line);
+  if (standard) {
+    return byLevel(standard[1], line);
+  }
+  if (ref) {
+    return classifyRefMessage(ref[1], ref[2], message, lines, index);
+  }
+  return classifyOtherLine(line, message, lines, index);
+}
+
+const unique = (found: string[]) => [...new Set(found.map(clip))];
+
+/**
+ * A system error repeated with different numbers (a worker's address, a process id) is one problem,
+ * so only its most recent occurrence is kept
+ */
+function latestOfEach(found: string[]) {
+  const byShape = new Map<string, string>();
+  for (const line of found) {
+    const shape = line.replace(/\d+/g, "#");
+    byShape.delete(shape);
+    byShape.set(shape, line);
+  }
+  return [...byShape.values()];
+}
+
+const shorten = (found: string[], maxLines: number) =>
+  found.length > maxLines
+    ? [...found.slice(0, maxLines - 5), "…", ...found.slice(-4)]
+    : found;
+
+export function summariseLog(text: string, maxLines = 30): LogSummary {
+  const lines = text.split("\n").map((line) => line.trimEnd());
+  const found: Record<Kind, string[]> = {
+    recorded: [],
+    system: [],
+    errors: [],
+    warnings: [],
   };
-  const shorten = (found: string[]) =>
-    found.length > maxLines
-      ? [...found.slice(0, maxLines - 5), "…", ...found.slice(-4)]
-      : found;
+  for (let i = 0; i < lines.length; i++) {
+    const result = classifyLine(lines, i);
+    if (result) {
+      found[result.kind].push(...result.lines);
+    }
+  }
+  const { recorded, system, errors, warnings } = found;
 
   // Keep the errors that only follow from another one when they are all there is
   const specific = errors.filter(
     (line) => !SECONDARY.some((pattern) => pattern.test(line)),
   );
-  const found = [
+  const all = [
     ...recorded,
     ...latestOfEach(system),
     ...(specific.length > 0 || system.length > 0 ? specific : errors),
   ];
-  if (found.length > 0) {
+  if (all.length > 0) {
     return {
       kind: "errors",
-      lines: shorten(unique(found)),
-      system: system.length > 0 || recordedSystemError,
+      lines: shorten(unique(all), maxLines),
+      system:
+        system.length > 0 ||
+        recorded.some((line) => REF_FAILURE.exec(line)?.[1] === "system_error"),
     };
   }
   if (warnings.length > 0) {
     return {
       kind: "warnings",
-      lines: shorten(unique(warnings)),
+      lines: shorten(unique(warnings), maxLines),
       system: false,
     };
   }

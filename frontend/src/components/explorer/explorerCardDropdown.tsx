@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 import { MoreHorizontal } from "lucide-react";
-import { diagnosticsListMetricValues } from "@/client/sdk.gen";
 import type {
   BoxWhiskerChartContent,
   SeriesChartContent,
@@ -12,24 +11,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { downloadBlob } from "@/lib/downloadUtils";
+import { chartValuesSearch, downloadChartValues } from "./chartValues";
+import type { MetricValuesQuery } from "./content/useExplorerMetricValues";
 
 interface ExplorerCardDropdownProps {
   contentItem: BoxWhiskerChartContent | SeriesChartContent;
-  includeUnverified?: boolean;
+  /** The query of the values the chart shows, so the menu acts on the same values */
+  query: MetricValuesQuery;
 }
 
 export function ExplorerCardDropdown({
   contentItem,
-  includeUnverified,
+  query,
 }: ExplorerCardDropdownProps) {
   const navigate = useNavigate();
-  const searchParams: Record<string, string> = {
-    ...(contentItem?.otherFilters ?? {}),
-    detect_outliers: "iqr",
-    include_unverified: String(includeUnverified),
-  };
-
   const uri = contentItem.type === "box-whisker-chart" ? "scalars" : "series";
 
   return (
@@ -45,39 +40,19 @@ export function ExplorerCardDropdown({
           onClick={() =>
             navigate({
               to: `/diagnostics/${contentItem.provider}/${contentItem.diagnostic}/${uri}`,
-              search: searchParams,
+              search: chartValuesSearch(query),
             })
           }
         >
           View chart values
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={async () => {
-            // TODO: replace with generic fetchDownload from useMetricValues when available
-            try {
-              const { data, error } = await diagnosticsListMetricValues({
-                path: {
-                  provider_slug: contentItem.provider,
-                  diagnostic_slug: contentItem.diagnostic,
-                },
-                query: {
-                  ...(contentItem.otherFilters ?? {}),
-                  detect_outliers: "iqr",
-                  include_unverified: includeUnverified ?? false,
-                  value_type: "scalar",
-                  format: "csv",
-                },
-                parseAs: "blob",
-              });
-
-              if (error) throw error;
-              const filename = `${contentItem.provider}-${contentItem.diagnostic}-values.csv`;
-              downloadBlob(data as unknown as Blob, filename);
-            } catch (err) {
+          onClick={() =>
+            downloadChartValues(contentItem, query).catch((err) => {
               console.error("Download failed:", err);
               alert("Failed to download data. Please try again.");
-            }
-          }}
+            })
+          }
         >
           Download values (CSV)
         </DropdownMenuItem>

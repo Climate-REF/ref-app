@@ -1,5 +1,5 @@
+import { DebouncedInput } from "@/components/app/debouncedInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,28 +22,20 @@ export function FilterPanel({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 flex-wrap mb-2">
-        <Input
+        <DebouncedInput
           placeholder="Filter by Provider Name..."
-          defaultValue={filters.provider_name_contains || ""}
-          onChange={(e) => {
-            const value = e.target.value;
-            const handler = setTimeout(() => {
-              onFilterChange({ provider_name_contains: value });
-            }, 200);
-            return () => clearTimeout(handler);
-          }}
+          value={filters.provider_name_contains || ""}
+          onValueChange={(value) =>
+            onFilterChange({ provider_name_contains: value })
+          }
           className="max-w-sm"
         />
-        <Input
+        <DebouncedInput
           placeholder="Filter by Diagnostic Name..."
-          defaultValue={filters.diagnostic_name_contains || ""}
-          onChange={(e) => {
-            const value = e.target.value;
-            const handler = setTimeout(() => {
-              onFilterChange({ diagnostic_name_contains: value });
-            }, 200);
-            return () => clearTimeout(handler);
-          }}
+          value={filters.diagnostic_name_contains || ""}
+          onValueChange={(value) =>
+            onFilterChange({ diagnostic_name_contains: value })
+          }
           className="max-w-sm"
         />
 

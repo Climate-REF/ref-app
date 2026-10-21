@@ -7,7 +7,7 @@ import { DataTable } from "@/components/dataTable/dataTable";
 import { outcomeFor } from "@/components/models/outcomes";
 import { Badge } from "@/components/ui/badge";
 
-export const columns: ColumnDef<FailedRun>[] = [
+const columns: ColumnDef<FailedRun>[] = [
   {
     accessorKey: "key",
     header: () => (

@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
 import type { Execution } from "@/client";
 import { DataTable } from "@/components/dataTable/dataTable";
+import { ExecutionStatusBadge } from "@/components/execution/executionStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -16,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { type ExecutionStatus, executionStatus } from "@/lib/executionStatus";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { Route } from "@/routes/_app/executions.$groupId/index";
 
@@ -58,7 +60,7 @@ function LatestSelectedCell({ row }: CellContext<Execution, unknown>) {
   return null;
 }
 
-export const columns: ColumnDef<Execution>[] = [
+const columns: ColumnDef<Execution>[] = [
   {
     accessorKey: "dataset_hash",
     header: () => (
@@ -75,21 +77,10 @@ export const columns: ColumnDef<Execution>[] = [
   {
     id: "status",
     header: "Status",
-    accessorFn: (row) => row.successful,
-    cell: (cell) =>
-      cell.getValue() ? (
-        <Badge variant="outline" title="Execution succeeded.">
-          Success
-        </Badge>
-      ) : cell.getValue() === null ? (
-        <Badge variant="secondary" title="Execution is still running.">
-          Running
-        </Badge>
-      ) : (
-        <Badge variant="destructive" title="Execution failed.">
-          Failed
-        </Badge>
-      ),
+    accessorFn: (row) => executionStatus(row),
+    cell: (cell) => (
+      <ExecutionStatusBadge status={cell.getValue<ExecutionStatus>()} />
+    ),
   },
   {
     id: "latest",

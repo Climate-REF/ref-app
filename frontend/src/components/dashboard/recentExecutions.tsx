@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle, Clock, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle,
+  CircleDashed,
+  Clock,
+  type LucideIcon,
+  XCircle,
+} from "lucide-react";
 import type { ExecutionGroup } from "@/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,24 +19,37 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useDiagnosticLookup } from "@/hooks/useDiagnosticLookup";
+import {
+  type ExecutionStatus,
+  executionStatusDisplay,
+  latestExecutionStatus,
+} from "@/lib/executionStatus";
 
 interface RecentExecutionsProps {
   executions: ExecutionGroup[];
 }
 
-/** Null while the execution is still running. */
-function ExecutionStatusBadge({ successful }: { successful: boolean | null }) {
-  if (successful === null) {
-    return (
-      <Badge variant="secondary" className="h-6" title="Running">
-        <Clock className="h-3 w-3" />
-      </Badge>
-    );
+/** The compact badge for each status, an icon named in its tooltip. */
+const statusIcons: Record<
+  ExecutionStatus,
+  {
+    icon: LucideIcon;
+    variant: "default" | "secondary" | "destructive" | "outline";
   }
+> = {
+  success: { icon: CheckCircle, variant: "default" },
+  failed: { icon: XCircle, variant: "destructive" },
+  running: { icon: Clock, variant: "secondary" },
+  not_run: { icon: CircleDashed, variant: "outline" },
+};
+
+function ExecutionStatusIcon({ status }: { status: ExecutionStatus }) {
+  const { icon: Icon, variant } = statusIcons[status];
+  const { label } = executionStatusDisplay[status];
   return (
-    <Badge variant={successful ? "default" : "destructive"} className="h-6">
-      {successful && <CheckCircle className="h-3 w-3" />}
-      {!successful && <XCircle className="h-3 w-3" />}
+    <Badge variant={variant} className="h-6" title={label}>
+      <Icon className="h-3 w-3" />
+      <span className="sr-only">{label}</span>
     </Badge>
   );
 }
@@ -68,10 +88,8 @@ export function RecentExecutions({ executions }: RecentExecutionsProps) {
                     {execution.key}
                   </div>
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <ExecutionStatusBadge
-                      successful={
-                        execution.executions.at(-1)?.successful ?? false
-                      }
+                    <ExecutionStatusIcon
+                      status={latestExecutionStatus(execution)}
                     />
                     <Badge className="h-6">
                       {diagnostic?.provider.name ?? execution.provider_slug}

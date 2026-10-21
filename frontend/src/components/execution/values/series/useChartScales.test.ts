@@ -1,87 +1,7 @@
-import * as d3 from "d3";
 import { describe, expect, it } from "vitest";
 import type { SeriesMetadata } from "../types";
-
-// Test the scale computation logic directly (extracted from the hook)
-// since hooks require a React test environment
-
-interface ChartDataPoint {
-  [key: string]: number | string | null;
-}
-
-function computeScales(
-  chartData: ChartDataPoint[],
-  seriesMetadata: SeriesMetadata[],
-  hiddenLabels: Set<string>,
-  indexName: string,
-  width: number,
-  height: number,
-  symmetricalAxes: boolean,
-  isTimeAxis = false,
-  margins = { top: 10, right: 30, bottom: 60, left: 70 },
-) {
-  const innerWidth = Math.max(0, width - margins.left - margins.right);
-  const innerHeight = Math.max(0, height - margins.top - margins.bottom);
-
-  const xValues = chartData
-    .map((d) => d[indexName])
-    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-
-  const xDomain: [number, number] =
-    xValues.length > 0
-      ? [d3.min(xValues) as number, d3.max(xValues) as number]
-      : [0, 1];
-
-  const visibleKeys = new Set<string>();
-  for (const meta of seriesMetadata) {
-    if (!hiddenLabels.has(meta.label)) {
-      visibleKeys.add(`series_${meta.seriesIndex}`);
-    }
-  }
-
-  const yValues: number[] = [];
-  for (const d of chartData) {
-    for (const key of visibleKeys) {
-      const v = d[key];
-      if (typeof v === "number" && Number.isFinite(v)) {
-        yValues.push(v);
-      }
-    }
-  }
-
-  let yDomain: [number, number];
-  if (yValues.length === 0) {
-    yDomain = [0, 1];
-  } else if (symmetricalAxes) {
-    const maxAbs = d3.max(yValues.map(Math.abs)) as number;
-    yDomain = [-maxAbs, maxAbs];
-  } else {
-    const yMin = d3.min(yValues) as number;
-    const yMax = d3.max(yValues) as number;
-    const padding = (yMax - yMin) * 0.05 || 0.1;
-    yDomain = [yMin - padding, yMax + padding];
-  }
-
-  const xScale = isTimeAxis
-    ? d3
-        .scaleTime()
-        .domain([new Date(xDomain[0]), new Date(xDomain[1])])
-        .range([0, innerWidth])
-    : d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
-
-  const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
-
-  return {
-    xScale,
-    yScale,
-    xDomain,
-    yDomain,
-    innerWidth,
-    innerHeight,
-    margins,
-    isTimeAxis,
-  };
-}
+import { computeChartScales } from "./useChartScales";
+import type { ChartDataPoint } from "./utils";
 
 const meta: SeriesMetadata[] = [
   {
@@ -106,9 +26,9 @@ const chartData: ChartDataPoint[] = [
   { year: 2022, series_0: 2.0, series_1: 0.5 },
 ];
 
-describe("computeScales", () => {
+describe("computeChartScales", () => {
   it("computes correct X domain from index values", () => {
-    const { xDomain } = computeScales(
+    const { xDomain } = computeChartScales(
       chartData,
       meta,
       new Set(),
@@ -116,19 +36,21 @@ describe("computeScales", () => {
       800,
       600,
       false,
+      false,
     );
     expect(xDomain).toEqual([2020, 2022]);
   });
 
   it("computes Y domain from visible series only", () => {
     const hidden = new Set(["ModelB"]);
-    const { yDomain } = computeScales(
+    const { yDomain } = computeChartScales(
       chartData,
       meta,
       hidden,
       "year",
       800,
       600,
+      false,
       false,
     );
     // Only ModelA values: [1, 3, 2], min=1, max=3, padding = 0.1
@@ -138,7 +60,7 @@ describe("computeScales", () => {
 
   it("returns fallback Y domain when all series hidden", () => {
     const allHidden = new Set(["ModelA", "ModelB"]);
-    const { yDomain } = computeScales(
+    const { yDomain } = computeChartScales(
       chartData,
       meta,
       allHidden,
@@ -146,12 +68,13 @@ describe("computeScales", () => {
       800,
       600,
       false,
+      false,
     );
     expect(yDomain).toEqual([0, 1]);
   });
 
   it("creates symmetrical Y domain when symmetricalAxes is true", () => {
-    const { yDomain } = computeScales(
+    const { yDomain } = computeChartScales(
       chartData,
       meta,
       new Set(),
@@ -159,6 +82,7 @@ describe("computeScales", () => {
       800,
       600,
       true,
+      false,
     );
     // Max abs value is 3.0, so domain should be [-3, 3]
     expect(yDomain[0]).toBe(-3);
@@ -167,7 +91,7 @@ describe("computeScales", () => {
 
   it("maps X values to pixel range correctly", () => {
     const margins = { top: 10, right: 30, bottom: 60, left: 70 };
-    const { xScale, innerWidth } = computeScales(
+    const { xScale, innerWidth } = computeChartScales(
       chartData,
       meta,
       new Set(),
@@ -184,7 +108,7 @@ describe("computeScales", () => {
   });
 
   it("maps Y values with inverted axis (high value = low pixel)", () => {
-    const { yScale } = computeScales(
+    const { yScale } = computeChartScales(
       chartData,
       meta,
       new Set(),
@@ -192,15 +116,16 @@ describe("computeScales", () => {
       800,
       600,
       false,
+      false,
     );
     const yDomain = yScale.domain();
     // Higher values should map to lower pixel values
     expect(yScale(yDomain[1])).toBe(0);
-    expect(yScale(yDomain[0])).toBe(530); // 600 - 10 - 60
+    expect(yScale(yDomain[0])).toBe(540); // 600 - 10 top - 50 bottom (default margins)
   });
 
   it("handles empty chart data gracefully", () => {
-    const { xDomain, yDomain } = computeScales(
+    const { xDomain, yDomain } = computeChartScales(
       [],
       meta,
       new Set(),
@@ -208,19 +133,21 @@ describe("computeScales", () => {
       800,
       600,
       false,
+      false,
     );
     expect(xDomain).toEqual([0, 1]);
     expect(yDomain).toEqual([0, 1]);
   });
 
-  it("handles zero-size dimensions without crashing", () => {
-    const result = computeScales(
+  it("clamps the inner size to zero when the margins do not fit", () => {
+    const result = computeChartScales(
       chartData,
       meta,
       new Set(),
       "year",
-      70,
-      70,
+      100,
+      50,
+      false,
       false,
     );
     expect(result.innerWidth).toBe(0);
@@ -228,7 +155,7 @@ describe("computeScales", () => {
   });
 });
 
-describe("computeScales with time axis", () => {
+describe("computeChartScales with time axis", () => {
   const ts1 = new Date("2020-01-15T00:00:00Z").getTime();
   const ts2 = new Date("2020-06-15T00:00:00Z").getTime();
   const ts3 = new Date("2021-01-15T00:00:00Z").getTime();
@@ -240,7 +167,7 @@ describe("computeScales with time axis", () => {
   ];
 
   it("computes X domain from timestamp values", () => {
-    const { xDomain } = computeScales(
+    const { xDomain } = computeChartScales(
       timeChartData,
       meta,
       new Set(),
@@ -256,7 +183,7 @@ describe("computeScales with time axis", () => {
 
   it("creates a time scale that maps timestamps to pixels", () => {
     const margins = { top: 10, right: 30, bottom: 60, left: 70 };
-    const { xScale, innerWidth } = computeScales(
+    const { xScale, innerWidth } = computeChartScales(
       timeChartData,
       meta,
       new Set(),
@@ -274,7 +201,7 @@ describe("computeScales with time axis", () => {
   });
 
   it("produces Date ticks for time scale", () => {
-    const { xScale } = computeScales(
+    const { xScale } = computeChartScales(
       timeChartData,
       meta,
       new Set(),
@@ -292,7 +219,7 @@ describe("computeScales with time axis", () => {
 
   it("maps midpoint timestamp to middle pixel range", () => {
     const margins = { top: 10, right: 30, bottom: 60, left: 70 };
-    const { xScale } = computeScales(
+    const { xScale } = computeChartScales(
       timeChartData,
       meta,
       new Set(),
@@ -308,7 +235,7 @@ describe("computeScales with time axis", () => {
   });
 
   it("Y domain is unaffected by time axis mode", () => {
-    const linearResult = computeScales(
+    const linearResult = computeChartScales(
       timeChartData,
       meta,
       new Set(),
@@ -318,7 +245,7 @@ describe("computeScales with time axis", () => {
       false,
       false,
     );
-    const timeResult = computeScales(
+    const timeResult = computeChartScales(
       timeChartData,
       meta,
       new Set(),

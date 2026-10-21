@@ -8,15 +8,7 @@ import {
   ExternalLink,
   MoreHorizontal,
 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type { ExecutionGroup, ExecutionOutput } from "@/client";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
@@ -31,12 +23,14 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import {
+  collectLatestPlotFigures,
+  type FigureWithGroup,
+  filterFigures,
+} from "./figureGalleryData";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
 import { FigureGallerySkeleton } from "./figureGallerySkeleton.tsx";
-import {
-  matchesSelectorFilters,
-  SelectorFilterPanel,
-} from "./selectorFilterPanel.tsx";
+import { SelectorFilterPanel } from "./selectorFilterPanel.tsx";
 
 interface DiagnosticFigureGalleryProps {
   providerSlug: string;
@@ -45,11 +39,6 @@ interface DiagnosticFigureGalleryProps {
   pageSize?: number;
   /** Pre-set the filename filter (e.g. from explorer card config) */
   initialFilter?: string;
-}
-
-interface FigureWithGroup {
-  figure: ExecutionOutput;
-  executionGroup: ExecutionGroup;
 }
 
 const FigureDropDown = ({ figure, executionGroup }: FigureWithGroup) => {
@@ -148,6 +137,137 @@ function PaginationControls({
   );
 }
 
+/** Grid columns at a window width, matching the grid's md and lg breakpoints */
+function columnsAt(width: number): number {
+  if (width < 768) return 1;
+  if (width < 1024) return 2;
+  return 3;
+}
+
+/** How many columns the figure grid has at the current window width */
+function useGridColumns(): number {
+  const [columns, setColumns] = useState(() => columnsAt(window.innerWidth));
+  useEffect(() => {
+    const handleResize = () => setColumns(columnsAt(window.innerWidth));
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  return columns;
+}
+
+interface FigureGridProps {
+  figures: FigureWithGroup[];
+  /** Open the figure at an index of `figures` */
+  onOpen: (index: number) => void;
+}
+
+/** One page of figures at a time, with controls to change page */
+function PaginatedFigureGrid({
+  figures,
+  onOpen,
+  pageSize,
+  page,
+  onPageChange,
+}: FigureGridProps & {
+  pageSize: number;
+  page: number;
+  onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.ceil(figures.length / pageSize);
+  const start = page * pageSize;
+  const pageFigures = figures.slice(start, start + pageSize);
+  return (
+    <>
+      <div className="text-sm text-muted-foreground">
+        Showing {start + 1}–{start + pageFigures.length} of {figures.length}{" "}
+        figures
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {pageFigures.map(({ figure, executionGroup }, index) => (
+          <FigureCard
+            key={figure.id || start + index}
+            figure={figure}
+            executionGroup={executionGroup}
+            onClick={() => onOpen(start + index)}
+          />
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <PaginationControls
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      )}
+    </>
+  );
+}
+
+/** All the figures in rows, rendering only the rows near the window's scroll position */
+function VirtualFigureGrid({
+  figures,
+  onOpen,
+  columns,
+}: FigureGridProps & { columns: number }) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: figures.length triggers re-measurement when filter changes affect layout position
+  useLayoutEffect(() => {
+    if (listRef.current) {
+      const rect = listRef.current.getBoundingClientRect();
+      setScrollMargin(rect.top + window.scrollY);
+    }
+  }, [figures.length]);
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: Math.ceil(figures.length / columns),
+    estimateSize: () => 400,
+    overscan: 9,
+    scrollMargin,
+  });
+  const rows = rowVirtualizer.getVirtualItems();
+
+  return (
+    <div
+      ref={listRef}
+      className="relative"
+      style={{ height: rowVirtualizer.getTotalSize() }}
+    >
+      <div
+        className="absolute top-0 left-0 w-full"
+        style={{
+          transform: `translateY(${(rows[0]?.start ?? 0) - rowVirtualizer.options.scrollMargin}px)`,
+        }}
+      >
+        {rows.map((virtualRow) => {
+          const start = virtualRow.index * columns;
+          return (
+            <div
+              key={virtualRow.index}
+              data-index={virtualRow.index}
+              ref={rowVirtualizer.measureElement}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+                {figures
+                  .slice(start, start + columns)
+                  .map(({ figure, executionGroup }, colIndex) => (
+                    <FigureCard
+                      key={figure.id || start + colIndex}
+                      figure={figure}
+                      executionGroup={executionGroup}
+                      onClick={() => onOpen(start + colIndex)}
+                    />
+                  ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function FigureGallery({
   providerSlug,
   diagnosticSlug,
@@ -161,17 +281,8 @@ export function FigureGallery({
   const [selectedFigureIndex, setSelectedFigureIndex] = useState<number | null>(
     null,
   );
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-
-  const getColumns = useCallback(() => {
-    const width = window.innerWidth;
-    if (width < 768) return 1;
-    if (width < 1024) return 2;
-    return 3;
-  }, []);
-
-  const [columns, setColumns] = useState(getColumns());
+  const columns = useGridColumns();
   const selectedMipEra = useSelectedMipEra();
 
   const { data: executionGroups, isLoading } = useQuery(
@@ -180,117 +291,28 @@ export function FigureGallery({
       query: { mip_era: selectedMipEra ?? undefined },
     }),
   );
-
-  useEffect(() => {
-    const handleResize = () => {
-      setColumns(getColumns());
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [getColumns]);
-
   const groups = executionGroups?.data ?? [];
 
-  const allFigures = useMemo<FigureWithGroup[]>(
-    () =>
-      groups.flatMap((group) => {
-        // Only use the latest execution to avoid showing duplicate/outdated figures
-        const latestExecution = group.executions.at(-1);
-        if (!latestExecution) return [];
-        return (latestExecution.outputs ?? [])
-          .filter((output) => output.output_type === "plot")
-          .map((figure) => ({ figure, executionGroup: group }));
-      }),
-    [groups],
+  const allFigures = useMemo(() => collectLatestPlotFigures(groups), [groups]);
+  const filteredFigures = useMemo(
+    () => filterFigures(allFigures, filter, selectorFilters),
+    [allFigures, filter, selectorFilters],
   );
-
-  const filteredFigures = useMemo(() => {
-    const filterRegex = filter
-      ? (() => {
-          try {
-            return new RegExp(filter, "i");
-          } catch {
-            return null;
-          }
-        })()
-      : null;
-
-    return allFigures.filter(({ figure, executionGroup }) => {
-      if (!matchesSelectorFilters(executionGroup.selectors, selectorFilters)) {
-        return false;
-      }
-      if (filterRegex) {
-        return (
-          filterRegex.test(figure.description) ||
-          filterRegex.test(figure.filename)
-        );
-      }
-      return true;
-    });
-  }, [allFigures, selectorFilters, filter]);
-
-  // Reset page when filters change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset page on filter change
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [filter, selectorFilters]);
-
-  const usePagination = pageSize !== undefined && pageSize > 0;
-  const totalPages = usePagination
-    ? Math.ceil(filteredFigures.length / pageSize)
-    : 1;
-
-  const visibleFigures = usePagination
-    ? filteredFigures.slice(
-        currentPage * pageSize,
-        (currentPage + 1) * pageSize,
-      )
-    : filteredFigures;
-
-  const listRef = useRef<HTMLDivElement>(null);
-  const [scrollMargin, setScrollMargin] = useState(0);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: filteredFigures.length triggers re-measurement when filter changes affect layout position
-  useLayoutEffect(() => {
-    if (!usePagination && listRef.current) {
-      const rect = listRef.current.getBoundingClientRect();
-      setScrollMargin(rect.top + window.scrollY);
-    }
-  }, [filteredFigures.length, usePagination]);
-
-  const totalRows = Math.ceil(filteredFigures.length / columns);
-  const rowVirtualizer = useWindowVirtualizer({
-    count: usePagination ? 0 : totalRows,
-    estimateSize: () => 400,
-    overscan: 9,
-    scrollMargin,
-    enabled: !usePagination,
-  });
-
-  const goToPrevious = useCallback(() => {
-    setSelectedFigureIndex((prev) =>
-      prev === null || prev === 0 ? filteredFigures.length - 1 : prev - 1,
-    );
-  }, [filteredFigures.length]);
-
-  const goToNext = useCallback(() => {
-    setSelectedFigureIndex((prev) =>
-      prev === null || prev === filteredFigures.length - 1 ? 0 : prev + 1,
-    );
-  }, [filteredFigures.length]);
 
   if (isLoading) {
     return <FigureGallerySkeleton nColumns={columns} nRows={2} />;
   }
 
-  const openFigure = (index: number) => {
-    setSelectedFigureIndex(index);
-    setIsModalOpen(true);
+  // A filter change can leave the current page past the last one
+  const changeFilter = (text: string) => {
+    setFilter(text);
+    setCurrentPage(0);
+  };
+  const changeSelectorFilters = (filters: Record<string, string[]>) => {
+    setSelectorFilters(filters);
+    setCurrentPage(0);
   };
 
-  const items = rowVirtualizer.getVirtualItems();
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -299,87 +321,17 @@ export function FigureGallery({
           id="figure-filter"
           placeholder="Filter figures by name..."
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => changeFilter(e.target.value)}
         />
       </div>
 
       <SelectorFilterPanel
         executionGroups={groups}
         filters={selectorFilters}
-        onFiltersChange={setSelectorFilters}
+        onFiltersChange={changeSelectorFilters}
       />
 
-      {filteredFigures.length > 0 ? (
-        usePagination ? (
-          <>
-            <div className="text-sm text-muted-foreground">
-              Showing {currentPage * pageSize + 1}–
-              {Math.min((currentPage + 1) * pageSize, filteredFigures.length)}{" "}
-              of {filteredFigures.length} figures
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visibleFigures.map(({ figure, executionGroup }, index) => {
-                const globalIndex = currentPage * pageSize + index;
-                return (
-                  <FigureCard
-                    key={figure.id || globalIndex}
-                    figure={figure}
-                    executionGroup={executionGroup}
-                    onClick={() => openFigure(globalIndex)}
-                  />
-                );
-              })}
-            </div>
-            {totalPages > 1 && (
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            )}
-          </>
-        ) : (
-          <div
-            ref={listRef}
-            className="relative"
-            style={{
-              height: rowVirtualizer.getTotalSize(),
-            }}
-          >
-            <div
-              className="absolute top-0 left-0 w-full"
-              style={{
-                transform: `translateY(${(items[0]?.start ?? 0) - rowVirtualizer.options.scrollMargin}px)`,
-              }}
-            >
-              {items.map((virtualRow) => (
-                <div
-                  key={virtualRow.index}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-                    {Array.from({ length: columns }, (_, colIndex) => {
-                      const globalIndex = virtualRow.index * columns + colIndex;
-                      if (globalIndex >= filteredFigures.length) return null;
-                      const { figure, executionGroup } =
-                        filteredFigures[globalIndex];
-                      return (
-                        <FigureCard
-                          key={figure.id || globalIndex}
-                          figure={figure}
-                          executionGroup={executionGroup}
-                          onClick={() => openFigure(globalIndex)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      ) : (
+      {filteredFigures.length === 0 ? (
         <div className="flex min-h-[350px] items-center justify-center text-sm text-muted-foreground">
           {groups.length === 0 ? (
             <MipEraEmptyState what="figures" />
@@ -387,15 +339,26 @@ export function FigureGallery({
             "No figures found matching your filters."
           )}
         </div>
+      ) : pageSize !== undefined && pageSize > 0 ? (
+        <PaginatedFigureGrid
+          figures={filteredFigures}
+          onOpen={setSelectedFigureIndex}
+          pageSize={pageSize}
+          page={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      ) : (
+        <VirtualFigureGrid
+          figures={filteredFigures}
+          onOpen={setSelectedFigureIndex}
+          columns={columns}
+        />
       )}
 
       <FigureGalleryModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
         figures={filteredFigures}
         selectedIndex={selectedFigureIndex}
-        onPrevious={goToPrevious}
-        onNext={goToNext}
+        onSelect={setSelectedFigureIndex}
       />
     </div>
   );

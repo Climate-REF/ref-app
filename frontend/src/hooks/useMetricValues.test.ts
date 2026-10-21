@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PAGE_SIZE, useMetricValues } from "./useMetricValues";
+import { DEFAULT_PAGE_SIZE } from "@/lib/valuesSearch";
+import { useMetricValues } from "./useMetricValues";
 
 // Mock useQuery to return controlled data without a real backend
 vi.mock("@tanstack/react-query", async () => {
@@ -230,46 +231,6 @@ describe("useMetricValues", () => {
     });
   });
 
-  describe("filter extraction", () => {
-    it("excludes pagination params from currentFilters", () => {
-      const options = createDefaultOptions({
-        offset: 50,
-        limit: 25,
-        model: "cesm2",
-      });
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      expect(result.current.currentFilters).toHaveProperty("model", "cesm2");
-      expect(result.current.currentFilters).not.toHaveProperty("offset");
-      expect(result.current.currentFilters).not.toHaveProperty("limit");
-      expect(result.current.currentFilters).not.toHaveProperty(
-        "detect_outliers",
-      );
-      expect(result.current.currentFilters).not.toHaveProperty(
-        "include_unverified",
-      );
-    });
-
-    it("excludes UI params from currentFilters", () => {
-      const options = createDefaultOptions({
-        tab: "series",
-        groupBy: "model",
-        hue: "experiment",
-        style: "variant",
-      });
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      expect(result.current.currentFilters).not.toHaveProperty("tab");
-      expect(result.current.currentFilters).not.toHaveProperty("groupBy");
-      expect(result.current.currentFilters).not.toHaveProperty("hue");
-      expect(result.current.currentFilters).not.toHaveProperty("style");
-    });
-  });
-
   describe("API query construction", () => {
     it("passes offset and limit to fetchQueryOptions", () => {
       const options = createDefaultOptions({ offset: 25, limit: 100 });
@@ -310,57 +271,24 @@ describe("useMetricValues", () => {
   });
 
   describe("initialFilters", () => {
-    it("builds facet filters from search params", () => {
-      const options = createDefaultOptions({ model: "cesm2,gfdl" });
+    it("builds the filters from the search params", () => {
+      const options = createDefaultOptions({
+        model: "cesm2,gfdl",
+        isolate_ids: "1,2",
+      });
       const { result } = renderHook(() => useMetricValues(options), {
         wrapper: createWrapper(),
       });
 
-      const facetFilter = result.current.initialFilters.find(
-        (f: any) => f.type === "facet" && f.facetKey === "model",
-      );
-      expect(facetFilter).toBeDefined();
-      expect(facetFilter.values).toEqual(["cesm2", "gfdl"]);
-    });
-
-    it("parses isolate_ids from search params", () => {
-      const options = createDefaultOptions({ isolate_ids: "1,2,3" });
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      const isolateFilter = result.current.initialFilters.find(
-        (f: any) => f.type === "isolate",
-      );
-      expect(isolateFilter).toBeDefined();
-      expect(isolateFilter.ids).toEqual(new Set(["1", "2", "3"]));
-    });
-
-    it("parses exclude_ids from search params", () => {
-      const options = createDefaultOptions({ exclude_ids: "4,5" });
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      const excludeFilter = result.current.initialFilters.find(
-        (f: any) => f.type === "exclude",
-      );
-      expect(excludeFilter).toBeDefined();
-      expect(excludeFilter.ids).toEqual(new Set(["4", "5"]));
-    });
-
-    it("does not create id filters when params are absent", () => {
-      const options = createDefaultOptions();
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      expect(
-        result.current.initialFilters.filter((f: any) => f.type === "isolate"),
-      ).toHaveLength(0);
-      expect(
-        result.current.initialFilters.filter((f: any) => f.type === "exclude"),
-      ).toHaveLength(0);
+      expect(result.current.initialFilters).toEqual([
+        {
+          type: "facet",
+          id: expect.any(String),
+          facetKey: "model",
+          values: ["cesm2", "gfdl"],
+        },
+        { type: "isolate", id: expect.any(String), ids: new Set(["1", "2"]) },
+      ]);
     });
   });
 
@@ -394,48 +322,6 @@ describe("useMetricValues", () => {
             model: "cesm2,gfdl",
             experiment: "historical",
             offset: 0,
-          }),
-        }),
-      );
-    });
-
-    it("includes isolate_ids in search params", () => {
-      const options = createDefaultOptions();
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      act(() => {
-        result.current.handlers.onFiltersChange([
-          { type: "isolate", id: "1", ids: new Set(["10", "20"]) },
-        ]);
-      });
-
-      expect(options.navigate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          search: expect.objectContaining({
-            isolate_ids: "10,20",
-          }),
-        }),
-      );
-    });
-
-    it("includes exclude_ids in search params", () => {
-      const options = createDefaultOptions();
-      const { result } = renderHook(() => useMetricValues(options), {
-        wrapper: createWrapper(),
-      });
-
-      act(() => {
-        result.current.handlers.onFiltersChange([
-          { type: "exclude", id: "1", ids: new Set(["30"]) },
-        ]);
-      });
-
-      expect(options.navigate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          search: expect.objectContaining({
-            exclude_ids: "30",
           }),
         }),
       );

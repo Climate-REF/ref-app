@@ -4,7 +4,8 @@ import { datasetColumns } from "./datasetColumns.tsx";
 
 interface DatasetTableProps {
   data: Dataset[];
-  sourceType: string;
+  /** Left out for datasets of several source types */
+  sourceType?: string;
   loading?: boolean;
 }
 

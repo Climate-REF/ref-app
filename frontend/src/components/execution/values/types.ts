@@ -31,11 +31,6 @@ export type BoxPlot = {
   points: ScalarValue[];
 };
 
-export type GroupedRawDataEntry = {
-  name: string;
-  groups: { label: string; values: number[] }[];
-};
-
 export type ProcessedGroupedDataEntry = {
   name: string;
   groups: { [key: string]: BoxPlot };

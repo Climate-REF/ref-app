@@ -7,7 +7,7 @@ import { RunOutcomeBar } from "@/components/models/runOutcomeBar";
 import { Badge } from "@/components/ui/badge";
 import { formatCount } from "@/lib/format";
 
-export const columns: ColumnDef<ModelSummary>[] = [
+const columns: ColumnDef<ModelSummary>[] = [
   {
     accessorKey: "source_id",
     header: "Model",

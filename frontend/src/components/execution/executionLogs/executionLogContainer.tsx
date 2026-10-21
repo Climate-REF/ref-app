@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { executionsExecutionLogsOptions } from "@/client/@tanstack/react-query.gen.ts";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,68 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { apiErrorMessage } from "@/lib/apiError";
 import { downloadTextFile } from "@/lib/downloadUtils.ts";
-import { ExecutionLogView, type LogMessage } from "./executionLogView.tsx";
-
-function isValidationError(
-  error: unknown,
-): error is { detail: Array<{ msg: string }> } {
-  if (typeof error !== "object" || error === null || !("detail" in error)) {
-    return false;
-  }
-  const { detail } = error as { detail: unknown };
-  return (
-    Array.isArray(detail) &&
-    detail.length > 0 &&
-    typeof detail[0]?.msg === "string"
-  );
-}
-
-function formatValidationError(error: {
-  detail: Array<{ msg: string }>;
-}): string {
-  return error.detail.map((d) => d.msg).join("; ");
-}
+import { parseLogOutput } from "@/lib/executionLog";
+import { ExecutionLogView } from "./executionLogView.tsx";
 
 interface ExecutionLogContainerProps {
   groupId: string;
   executionId?: string;
-}
-
-function parseLogOutput(logOutput: string) {
-  const splitRegex = /(?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})/g;
-  const parseRegex =
-    /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) \| (\w+) +\|(.*)/s; // 's' flag for DOTALL in TypeScript
-
-  const logMessages = logOutput.split(splitRegex);
-  const parsedLogs: LogMessage[] = [];
-
-  // Remove the first empty string if the log starts with a timestamp
-  if (logMessages[0] === "") {
-    logMessages.shift();
-  }
-
-  for (const logMessage of logMessages) {
-    const trimmedMessage = logMessage.trim();
-    if (!trimmedMessage) {
-      continue; // Skip empty strings
-    }
-
-    const match = trimmedMessage.match(parseRegex);
-    if (match) {
-      const timestamp = match[1];
-      const level = match[2].trim();
-      const message = match[3].trim();
-      parsedLogs.push({ timestamp, level, message });
-    } else {
-      parsedLogs.push({
-        timestamp: null,
-        level: null,
-        message: trimmedMessage,
-      }); // Mark as unparsed but include message
-    }
-  }
-  return parsedLogs;
 }
 
 export function ExecutionLogContainer({
@@ -137,18 +83,15 @@ export function ExecutionLogContainer({
     }
   }, [data]);
 
+  const parsedLogs = useMemo(() => parseLogOutput(logContent), [logContent]);
+
   if (error) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Error Loading Logs</CardTitle>
           <CardDescription>
-            An error occurred while loading the logs:{" "}
-            {error instanceof Error
-              ? error.message
-              : isValidationError(error)
-                ? formatValidationError(error)
-                : JSON.stringify(error)}
+            An error occurred while loading the logs: {apiErrorMessage(error)}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -156,7 +99,6 @@ export function ExecutionLogContainer({
   }
 
   const isBusy = isLoading || isStreaming;
-  const parsedLogs = parseLogOutput(logContent);
 
   return (
     <Card>
@@ -171,7 +113,13 @@ export function ExecutionLogContainer({
             disabled={isBusy}
             size="sm"
             onClick={() =>
-              downloadTextFile(logContent, `logs-${executionId}.txt`)
+              downloadTextFile(
+                logContent,
+                // Without an execution the logs are the group's latest execution's
+                executionId
+                  ? `logs-${groupId}-${executionId}.txt`
+                  : `logs-${groupId}.txt`,
+              )
             }
           >
             <Download className="mr-2 h-4 w-4" />

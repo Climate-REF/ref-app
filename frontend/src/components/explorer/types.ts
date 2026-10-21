@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { ReferenceDatasetLink } from "@/client/types.gen";
 import type { ChartGroupingConfig } from "./grouping";
 
@@ -15,10 +14,9 @@ export type BaseCardContent = {
   provider: string;
   diagnostic: string;
   title: string;
-  description?: string | ReactNode;
+  description?: string;
   interpretation?: string;
   span?: 1 | 2;
-  placeholder?: boolean;
   referenceDatasets?: ReferenceDatasetLink[];
 };
 
@@ -70,8 +68,7 @@ export type ExplorerCardContent =
 
 export type ExplorerCard = {
   title: string;
-  description?: string | ReactNode;
-  placeholder?: boolean;
+  description?: string;
   content: ExplorerCardContent[];
 };
 

@@ -1,77 +1,56 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
+import {
+  type DiagnosticFilterState,
+  NO_DIAGNOSTIC_FILTERS,
+} from "@/lib/diagnosticFilters";
 import { DiagnosticsFilter } from "./diagnosticsFilter";
 
-function diagnostic(
-  name: string,
-  hasValues: boolean | null,
-): CatalogDiagnostic {
-  return {
-    id: name.length,
-    name,
-    slug: name,
-    description: "",
-    provider: { slug: "pmp", name: "PMP" },
-    execution_groups: [],
-    has_metric_values: hasValues,
-    has_scalar_values: hasValues,
-    has_series_values: hasValues === null ? null : false,
-    execution_count: 1,
-    successful_execution_count: 1,
-    execution_group_count: 1,
-    successful_execution_group_count: 1,
-    promoted_version: 1,
-    group_by: [],
-    aft_link: null,
-  };
+const diagnostics = [
+  { name: "enso", provider: { slug: "pmp", name: "PMP" }, aft_link: null },
+  { name: "gpp", provider: { slug: "ilamb", name: "ILAMB" }, aft_link: null },
+] as unknown as CatalogDiagnostic[];
+
+function renderFilter(changes: Partial<DiagnosticFilterState>) {
+  const onChange = vi.fn();
+  const value = { ...NO_DIAGNOSTIC_FILTERS, ...changes };
+  render(
+    <DiagnosticsFilter
+      diagnostics={diagnostics}
+      value={value}
+      onChange={onChange}
+    />,
+  );
+  return { onChange, value };
 }
 
-const names = (call: CatalogDiagnostic[]) => call.map((d) => d.name);
-
 describe("DiagnosticsFilter", () => {
-  it("keeps the search applied when the value flags arrive", () => {
-    const onFilterChange = vi.fn();
-    const pending = [diagnostic("alpha", null), diagnostic("beta", null)];
-    const { rerender } = render(
-      <DiagnosticsFilter
-        diagnostics={pending}
-        onFilterChange={onFilterChange}
-        initialSearch="alpha"
-      />,
-    );
-    expect(names(onFilterChange.mock.lastCall![0])).toEqual(["alpha"]);
-
-    const loaded = [diagnostic("alpha", true), diagnostic("beta", false)];
-    rerender(
-      <DiagnosticsFilter
-        diagnostics={loaded}
-        onFilterChange={onFilterChange}
-        initialSearch="alpha"
-      />,
-    );
-    expect(onFilterChange.mock.lastCall![0]).toEqual([loaded[0]]);
+  it("adds a checked provider to the filters", () => {
+    const { onChange, value } = renderFilter({ providers: ["pmp"] });
+    fireEvent.click(screen.getByRole("button", { name: /Providers/ }));
+    fireEvent.click(screen.getByLabelText("ilamb"));
+    expect(onChange).toHaveBeenCalledWith({
+      ...value,
+      providers: ["pmp", "ilamb"],
+    });
   });
 
-  it("keeps diagnostics with unknown flags until the flags load", () => {
-    const onFilterChange = vi.fn();
-    const pending = [diagnostic("alpha", null), diagnostic("beta", null)];
-    const { rerender } = render(
-      <DiagnosticsFilter
-        diagnostics={pending}
-        onFilterChange={onFilterChange}
-        initialMetricValues={true}
-      />,
-    );
-    expect(names(onFilterChange.mock.lastCall![0])).toEqual(["alpha", "beta"]);
+  it("checks one metric values option at a time", () => {
+    const { onChange, value } = renderFilter({ metricValues: true });
+    fireEvent.click(screen.getByRole("button", { name: /Metric Values/ }));
+    fireEvent.click(screen.getByLabelText("No metric values"));
+    expect(onChange).toHaveBeenLastCalledWith({
+      ...value,
+      metricValues: false,
+    });
+    fireEvent.click(screen.getByLabelText("Has metric values"));
+    expect(onChange).toHaveBeenLastCalledWith({ ...value, metricValues: null });
+  });
 
-    rerender(
-      <DiagnosticsFilter
-        diagnostics={[diagnostic("alpha", true), diagnostic("beta", false)]}
-        onFilterChange={onFilterChange}
-        initialMetricValues={true}
-      />,
-    );
-    expect(names(onFilterChange.mock.lastCall![0])).toEqual(["alpha"]);
+  it("clears every filter", () => {
+    const { onChange } = renderFilter({ search: "enso", themes: ["Ocean"] });
+    fireEvent.click(screen.getByRole("button", { name: "Clear Filters" }));
+    expect(onChange).toHaveBeenCalledWith(NO_DIAGNOSTIC_FILTERS);
   });
 });

@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import type { useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { diagnosticsListMetricValues } from "@/client";
-import type {
-  MetricValueCollection,
-  ScalarValue,
-  SeriesValue,
-} from "@/components/execution/values/types.ts";
+import type { MetricValueCollection } from "@/components/execution/values/types.ts";
+import type { MetricFilter } from "@/components/explorer/types";
+import {
+  DEFAULT_PAGE_SIZE,
+  filtersToSearch,
+  searchToFilters,
+} from "@/lib/valuesSearch";
 
 // Define flexible API function types using any for compatibility
 type FetchQueryOptions = (options: any) => any;
 type FetchDownloadFunction = (options: any) => Promise<any>;
-
-export const DEFAULT_PAGE_SIZE = 50;
 
 interface UseValuesTabOptions<
   TPath extends Record<string, any> = Record<string, any>,
@@ -29,25 +29,18 @@ interface UseValuesTabOptions<
   getDownloadFilename: (pathParams: TPath, valueType: string) => string;
 }
 
-// Parameters that should not be treated as facet filters
-const EXCLUDED_FROM_FACET_FILTERS = [
-  "tab",
-  "groupBy",
-  "hue",
-  "style",
-  "detect_outliers",
-  "include_unverified",
-  "mip_era",
-  "isolate_ids",
-  "exclude_ids",
-  "offset",
-  "limit",
-  "execution_id",
-];
-
 // Parameters that should not be passed to the API query
 // (offset and limit ARE passed to the API, so they are not excluded here)
 const EXCLUDED_FROM_API = ["tab", "groupBy", "hue", "style"];
+
+/** The search params passed on to the API, without the view params and unset params. */
+function apiQuery(search: Record<string, any>): Record<string, any> {
+  return Object.fromEntries(
+    Object.entries(search).filter(
+      ([key, value]) => value !== undefined && !EXCLUDED_FROM_API.includes(key),
+    ),
+  );
+}
 
 /**
  * Shared hook for values tabs (series and scalars).
@@ -62,177 +55,26 @@ export function useMetricValues<TPath extends Record<string, any>>({
   fetchDownload = diagnosticsListMetricValues,
   getDownloadFilename,
 }: UseValuesTabOptions<TPath>) {
-  // Extract search values to prevent unnecessary callback recreation
-  const {
-    tab: searchTab,
-    groupBy: searchGroupBy,
-    hue: searchHue,
-    style: searchStyle,
-    detect_outliers: searchDetectOutliers,
-    include_unverified: searchIncludeUnverified,
-    mip_era: searchMipEra,
-    limit: searchLimit,
-  } = search;
+  const query = apiQuery(search);
 
   // Fetch metric values using the provided query options function
   const { data: metricValues, isLoading } = useQuery(
     fetchQueryOptions({
       path: pathParams,
-      query: {
-        ...Object.fromEntries(
-          Object.entries(search).filter(
-            ([key, value]) =>
-              value !== undefined && !EXCLUDED_FROM_API.includes(key),
-          ),
-        ),
-        value_type: valueType,
-      },
+      query: { ...query, value_type: valueType },
     }),
   );
 
-  // Extract current filters (excluding UI params and ID filters)
-  const currentFilters = useMemo(() => {
-    const filtered = Object.fromEntries(
-      Object.entries(search).filter(
-        ([key, value]) =>
-          value !== undefined && !EXCLUDED_FROM_FACET_FILTERS.includes(key),
-      ),
-    );
-    return Object.fromEntries(
-      Object.entries(filtered).filter(([, value]) => value !== undefined),
-    ) as Record<string, string>;
-  }, [search]);
+  const initialFilters = useMemo(() => searchToFilters(search), [search]);
 
-  // State for grouping configuration
-  const [currentGroupingConfig, setCurrentGroupingConfig] = useState({
-    groupBy: search.groupBy,
-    hue: search.hue,
-    style: search.style,
-  });
-
-  // State for filtered data (used by series tab)
-  const [filteredData, setFilteredData] = useState<
-    (ScalarValue | SeriesValue)[]
-  >([]);
-
-  // Build initial filters from URL search params
-  const initialFilters = useMemo(() => {
-    const facetFilters = Object.entries(search)
-      .filter(
-        ([key, value]) =>
-          value !== undefined && !EXCLUDED_FROM_FACET_FILTERS.includes(key),
-      )
-      .map(([facetKey, value]) => ({
-        type: "facet",
-        id: crypto.randomUUID(),
-        facetKey,
-        values: (value as string)
-          .split(",")
-          .map((v) => v.trim())
-          .filter(Boolean),
-      }));
-
-    const combinedFilters: any[] = [...facetFilters];
-
-    // Parse isolate/exclude id params from URL
-    if (search.isolate_ids) {
-      const isolateIds = String(search.isolate_ids)
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (isolateIds.length > 0) {
-        combinedFilters.push({
-          type: "isolate",
-          id: crypto.randomUUID(),
-          ids: new Set(isolateIds),
-        });
-      }
-    }
-
-    if (search.exclude_ids) {
-      const excludeIds = String(search.exclude_ids)
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (excludeIds.length > 0) {
-        combinedFilters.push({
-          type: "exclude",
-          id: crypto.randomUUID(),
-          ids: new Set(excludeIds),
-        });
-      }
-    }
-
-    return combinedFilters;
-  }, [search]);
-
-  // Handle filter changes
   const handleFiltersChange = useCallback(
-    (newFilters: any[]) => {
-      // Build facet filter params
-      const facetFilters = (newFilters ?? []).filter((f) => f.type === "facet");
-      const filterParams =
-        facetFilters.length > 0
-          ? Object.fromEntries(
-              facetFilters.map((filter: any) => [
-                filter.facetKey,
-                filter.values.join(","),
-              ]),
-            )
-          : {};
-
-      // Collect isolate and exclude ids
-      const isolateIds = (newFilters ?? [])
-        .filter((f) => f.type === "isolate")
-        .flatMap((f: any) => Array.from(f.ids ?? []));
-      const excludeIds = (newFilters ?? [])
-        .filter((f) => f.type === "exclude")
-        .flatMap((f: any) => Array.from(f.ids ?? []));
-
-      // Preserve tab, series visualization, and outlier parameters
-      const otherParams: Record<string, string> = {
-        ...(searchTab ? { tab: String(searchTab) } : {}),
-        ...(searchGroupBy ? { groupBy: String(searchGroupBy) } : {}),
-        ...(searchHue ? { hue: String(searchHue) } : {}),
-        ...(searchStyle ? { style: String(searchStyle) } : {}),
-        ...(searchDetectOutliers !== undefined
-          ? { detect_outliers: String(searchDetectOutliers) }
-          : {}),
-        ...(searchIncludeUnverified !== undefined
-          ? { include_unverified: String(searchIncludeUnverified) }
-          : {}),
-        ...(searchMipEra ? { mip_era: String(searchMipEra) } : {}),
-      };
-
-      // Add isolate/exclude params if present
-      if (isolateIds.length > 0) {
-        otherParams.isolate_ids = isolateIds.join(",");
-      }
-      if (excludeIds.length > 0) {
-        otherParams.exclude_ids = excludeIds.join(",");
-      }
-
+    (newFilters: MetricFilter[]) => {
       navigate({
-        search: {
-          ...filterParams,
-          ...otherParams,
-          ...(searchLimit !== undefined ? { limit: searchLimit } : {}),
-          offset: 0,
-        } as any,
+        search: filtersToSearch(newFilters, search) as any,
         replace: true,
       });
     },
-    [
-      searchTab,
-      searchGroupBy,
-      searchHue,
-      searchStyle,
-      searchDetectOutliers,
-      searchIncludeUnverified,
-      searchMipEra,
-      searchLimit,
-      navigate,
-    ],
+    [search, navigate],
   );
 
   // Handle outlier detection changes (reset offset since total_count may change)
@@ -259,26 +101,6 @@ export function useMetricValues<TPath extends Record<string, any>>({
       });
     },
     [search, navigate],
-  );
-
-  // Handle grouping config changes
-  const handleCurrentGroupingChange = useCallback(
-    (groupingConfig: { groupBy?: string; hue?: string; style?: string }) => {
-      setCurrentGroupingConfig({
-        groupBy: groupingConfig.groupBy,
-        hue: groupingConfig.hue,
-        style: groupingConfig.style,
-      });
-    },
-    [],
-  );
-
-  // Handle filtered data changes (for series tab)
-  const handleFilteredDataChange = useCallback(
-    (data: (ScalarValue | SeriesValue)[]) => {
-      setFilteredData(data);
-    },
-    [],
   );
 
   // Handle pagination offset changes
@@ -310,12 +132,7 @@ export function useMetricValues<TPath extends Record<string, any>>({
       query: {
         format: "csv",
         value_type: valueType,
-        ...Object.fromEntries(
-          Object.entries(search).filter(
-            ([key, value]) =>
-              value !== undefined && !EXCLUDED_FROM_API.includes(key),
-          ),
-        ),
+        ...query,
       },
       meta: {
         responseType: "text",
@@ -330,25 +147,12 @@ export function useMetricValues<TPath extends Record<string, any>>({
     a.download = getDownloadFilename(pathParams, valueType);
     a.click();
     window.URL.revokeObjectURL(url);
-  }, [pathParams, valueType, search, fetchDownload, getDownloadFilename]);
-
-  // Extract isolate/exclude IDs from search params
-  const isolateIds = search.isolate_ids
-    ? String(search.isolate_ids).split(",").filter(Boolean).join(",")
-    : undefined;
-  const excludeIds = search.exclude_ids
-    ? String(search.exclude_ids).split(",").filter(Boolean).join(",")
-    : undefined;
+  }, [pathParams, valueType, query, fetchDownload, getDownloadFilename]);
 
   return {
     metricValues: metricValues as MetricValueCollection | undefined,
     isLoading,
-    currentFilters,
-    currentGroupingConfig,
-    filteredData,
     initialFilters,
-    isolateIds,
-    excludeIds,
     pagination: {
       offset: Number(search.offset) || 0,
       limit: Number(search.limit) || DEFAULT_PAGE_SIZE,
@@ -361,8 +165,6 @@ export function useMetricValues<TPath extends Record<string, any>>({
       onFiltersChange: handleFiltersChange,
       onDetectOutliersChange: handleDetectOutliersChange,
       onIncludeUnverifiedChange: handleIncludeUnverifiedChange,
-      onCurrentGroupingChange: handleCurrentGroupingChange,
-      onFilteredDataChange: handleFilteredDataChange,
       onDownload: handleDownload,
     },
   };

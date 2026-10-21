@@ -7,13 +7,8 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-export interface LegendItem {
-  label: string;
-  color: string;
-  count: number;
-  isReference: boolean;
-}
+import { seriesLineColor } from "./seriesCanvas";
+import { groupLegendItems, type LegendItem, toggleInSet } from "./utils";
 
 interface SeriesLegendProps {
   uniqueLabels: LegendItem[];
@@ -21,6 +16,8 @@ interface SeriesLegendProps {
   hoveredLabel: string | null;
   soloedLabel: string | null;
   onToggleLabel: (label: string) => void;
+  /** Hide or show several labels at once, leaving solo mode */
+  onSetLabelsHidden: (labels: string[], hidden: boolean) => void;
   onHoverLabel: (label: string | null) => void;
   onSoloLabel: (label: string) => void;
   onShowAll: () => void;
@@ -29,6 +26,8 @@ interface SeriesLegendProps {
   onGroupByDimensionChange: (dimension: string | null) => void;
   availableDimensions: string[];
   labelDimensionMap: Map<string, Record<string, string>>;
+  /** Reference series are drawn in the theme's foreground colour */
+  isDark: boolean;
 }
 
 export const SeriesLegend = memo(function SeriesLegend({
@@ -37,6 +36,7 @@ export const SeriesLegend = memo(function SeriesLegend({
   hoveredLabel,
   soloedLabel,
   onToggleLabel,
+  onSetLabelsHidden,
   onHoverLabel,
   onSoloLabel,
   onShowAll,
@@ -45,6 +45,7 @@ export const SeriesLegend = memo(function SeriesLegend({
   onGroupByDimensionChange,
   availableDimensions,
   labelDimensionMap,
+  isDark,
 }: SeriesLegendProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
@@ -59,58 +60,47 @@ export const SeriesLegend = memo(function SeriesLegend({
     );
   }, [uniqueLabels, searchQuery]);
 
-  // Group labels by dimension value
-  const groupedLabels = useMemo(() => {
-    if (!groupByDimension) {
-      return null;
-    }
-
-    const groups = new Map<string, LegendItem[]>();
-    for (const item of filteredLabels) {
-      const dims = labelDimensionMap.get(item.label);
-      const groupKey = dims?.[groupByDimension] ?? "Unknown";
-      const group = groups.get(groupKey);
-      if (group) {
-        group.push(item);
-      } else {
-        groups.set(groupKey, [item]);
-      }
-    }
-
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredLabels, groupByDimension, labelDimensionMap]);
+  const groupedLabels = useMemo(
+    () =>
+      groupByDimension
+        ? groupLegendItems(filteredLabels, groupByDimension, labelDimensionMap)
+        : null,
+    [filteredLabels, groupByDimension, labelDimensionMap],
+  );
 
   const toggleGroupCollapse = useCallback((groupKey: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
+    setCollapsedGroups((prev) => toggleInSet(prev, groupKey));
   }, []);
 
   const toggleGroupVisibility = useCallback(
     (items: LegendItem[]) => {
+      // If all are hidden, show all; otherwise hide all
       const allHidden = items.every((item) => hiddenLabels.has(item.label));
-      for (const item of items) {
-        const isHidden = hiddenLabels.has(item.label);
-        // If all are hidden, show all; otherwise hide all
-        if (allHidden && isHidden) {
-          onToggleLabel(item.label);
-        } else if (!allHidden && !isHidden) {
-          onToggleLabel(item.label);
-        }
-      }
+      onSetLabelsHidden(
+        items.map((item) => item.label),
+        !allHidden,
+      );
     },
-    [hiddenLabels, onToggleLabel],
+    [hiddenLabels, onSetLabelsHidden],
   );
 
   const visibleCount = uniqueLabels.filter(
     (item) => !hiddenLabels.has(item.label),
   ).length;
+
+  const renderEntry = (item: LegendItem) => (
+    <LegendEntry
+      key={item.label}
+      item={item}
+      isHidden={hiddenLabels.has(item.label)}
+      isHovered={hoveredLabel === item.label}
+      isSoloed={soloedLabel === item.label}
+      isDark={isDark}
+      onToggle={() => onToggleLabel(item.label)}
+      onHover={onHoverLabel}
+      onSolo={() => onSoloLabel(item.label)}
+    />
+  );
 
   return (
     <div className="w-72 flex-shrink-0 flex flex-col gap-2">
@@ -228,18 +218,7 @@ export const SeriesLegend = memo(function SeriesLegend({
                   </div>
                   <CollapsibleContent>
                     <div className="ml-3 space-y-0.5">
-                      {items.map((item) => (
-                        <LegendEntry
-                          key={item.label}
-                          item={item}
-                          isHidden={hiddenLabels.has(item.label)}
-                          isHovered={hoveredLabel === item.label}
-                          isSoloed={soloedLabel === item.label}
-                          onToggle={() => onToggleLabel(item.label)}
-                          onHover={onHoverLabel}
-                          onSolo={() => onSoloLabel(item.label)}
-                        />
-                      ))}
+                      {items.map(renderEntry)}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -248,18 +227,7 @@ export const SeriesLegend = memo(function SeriesLegend({
           </div>
         ) : (
           <div className="space-y-0.5 pr-3">
-            {filteredLabels.map((item) => (
-              <LegendEntry
-                key={item.label}
-                item={item}
-                isHidden={hiddenLabels.has(item.label)}
-                isHovered={hoveredLabel === item.label}
-                isSoloed={soloedLabel === item.label}
-                onToggle={() => onToggleLabel(item.label)}
-                onHover={onHoverLabel}
-                onSolo={() => onSoloLabel(item.label)}
-              />
-            ))}
+            {filteredLabels.map(renderEntry)}
           </div>
         )}
       </ScrollArea>
@@ -272,6 +240,7 @@ function LegendEntry({
   isHidden,
   isHovered,
   isSoloed,
+  isDark,
   onToggle,
   onHover,
   onSolo,
@@ -280,6 +249,7 @@ function LegendEntry({
   isHidden: boolean;
   isHovered: boolean;
   isSoloed: boolean;
+  isDark: boolean;
   onToggle: () => void;
   onHover: (label: string | null) => void;
   onSolo: () => void;
@@ -306,7 +276,7 @@ function LegendEntry({
       <div
         className="w-3 h-3 rounded-sm flex-shrink-0"
         style={{
-          backgroundColor: isHidden ? "#9CA3AF" : item.color,
+          backgroundColor: isHidden ? "#9CA3AF" : seriesLineColor(item, isDark),
           opacity: isHidden ? 0.4 : 1,
         }}
       />

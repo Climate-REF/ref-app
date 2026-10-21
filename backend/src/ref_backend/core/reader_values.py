@@ -2,8 +2,8 @@
 
 import csv
 import io
-from collections.abc import Generator, Mapping
-from typing import TYPE_CHECKING, Literal
+from collections.abc import Generator, Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import HTTPException
 from starlette.responses import StreamingResponse
@@ -31,6 +31,46 @@ def parse_dimension_filters(query_params: Mapping[str, str]) -> dict[str, str]:
     return {key: value for key, value in query_params.items() if key in cv_dimensions}
 
 
+def _csv_response(
+    rows: Iterable[Sequence[Any]], filename: str, headers: Mapping[str, str] | None = None
+) -> StreamingResponse:
+    """Stream `rows` as a CSV download, writing each row as it is produced."""
+
+    def generate_csv() -> Generator[str]:
+        output = io.StringIO()
+        writer = csv.writer(output)
+        for row in rows:
+            writer.writerow(row)
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate()
+
+    return StreamingResponse(
+        generate_csv(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}", **(headers or {})},
+    )
+
+
+def _scalar_csv_rows(collection: ScalarValueCollection, detection_ran: bool) -> Generator[list[Any]]:
+    items = collection.items
+    # Dimension columns come from the values, so an empty collection only has the fixed ones
+    dimensions = sorted(items[0].dimensions.keys()) if items else []
+    header = [*dimensions, "value", "type"]
+    if detection_ran:
+        header.extend(["is_outlier", "verification_status"])
+    yield header
+
+    for item in items:
+        row = [item.dimensions.get(d) for d in dimensions] + [
+            sanitize_float_value(item.value),
+            "scalar",
+        ]
+        if detection_ran:
+            row.extend([item.is_outlier, item.verification_status])
+        yield row
+
+
 def generate_csv_response_scalar(
     collection: ScalarValueCollection,
     detection_ran: bool,
@@ -41,45 +81,35 @@ def generate_csv_response_scalar(
 
     Preserves the historical column layout: sorted dimension columns, then ``value`` and
     ``type``, and (when detection ran) ``is_outlier`` and ``verification_status``.
+    An empty collection gets a header of the columns that do not depend on the values.
     """
-
-    def generate_csv() -> Generator[str]:
-        output = io.StringIO()
-        writer = csv.writer(output)
-
-        items = collection.items
-        if not items:
-            yield ""
-            return
-
-        dimensions = sorted(items[0].dimensions.keys())
-        header = [*dimensions, "value", "type"]
-        if detection_ran:
-            header.extend(["is_outlier", "verification_status"])
-        writer.writerow(header)
-
-        for item in items:
-            row = [item.dimensions.get(d) for d in dimensions] + [
-                sanitize_float_value(item.value),
-                "scalar",
-            ]
-            if detection_ran:
-                row.extend([item.is_outlier, item.verification_status])
-            writer.writerow(row)
-
-        output.seek(0)
-        yield output.read()
-
-    headers = {"Content-Disposition": f"attachment; filename={filename}"}
+    headers = {}
     if detection_ran:
         headers["X-REF-Had-Outliers"] = "true" if collection.had_outliers else "false"
         headers["X-REF-Outlier-Count"] = str(collection.outlier_count)
+    return _csv_response(_scalar_csv_rows(collection, detection_ran), filename, headers)
 
-    return StreamingResponse(
-        generate_csv(),
-        media_type="text/csv",
-        headers=headers,
-    )
+
+_SERIES_COLUMNS = ["value", "index", "index_name", "type"]
+
+
+def _series_csv_rows(collection: SeriesValueCollection) -> Generator[list[Any]]:
+    if not collection.items:
+        yield list(_SERIES_COLUMNS)
+        return
+
+    for sv in collection.items:
+        dimensions = sorted(sv.dimensions.keys())
+        yield [*dimensions, *_SERIES_COLUMNS]
+
+        for i, value in enumerate(sv.values):
+            index_value = sv.index[i] if sv.index and i < len(sv.index) else i
+            yield [sv.dimensions.get(d) for d in dimensions] + [
+                sanitize_float_value(value),
+                index_value,
+                sv.index_name or "index",
+                "series",
+            ]
 
 
 def generate_csv_response_series(
@@ -90,41 +120,10 @@ def generate_csv_response_series(
     Generate a CSV streaming response from a reader series collection.
 
     Preserves the historical flattened layout: one header/data block per series, with a
-    row per index point.
+    row per index point. An empty collection gets a header of the columns that do not
+    depend on the values.
     """
-
-    def generate_csv() -> Generator[str]:
-        output = io.StringIO()
-        writer = csv.writer(output)
-
-        items = collection.items
-        if not items:
-            yield ""
-            return
-
-        for sv in items:
-            dimensions = sorted(sv.dimensions.keys())
-            header = [*dimensions, "value", "index", "index_name", "type"]
-            writer.writerow(header)
-
-            for i, value in enumerate(sv.values):
-                index_value = sv.index[i] if sv.index and i < len(sv.index) else i
-                row = [sv.dimensions.get(d) for d in dimensions] + [
-                    sanitize_float_value(value),
-                    index_value,
-                    sv.index_name or "index",
-                    "series",
-                ]
-                writer.writerow(row)
-
-        output.seek(0)
-        yield output.read()
-
-    return StreamingResponse(
-        generate_csv(),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
-    )
+    return _csv_response(_series_csv_rows(collection), filename)
 
 
 def annotate_mip_eras(app_context: "AppContext", collection: MetricValueCollection) -> MetricValueCollection:

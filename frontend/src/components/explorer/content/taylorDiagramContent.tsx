@@ -1,6 +1,16 @@
 import { flip, offset, shift, useFloating } from "@floating-ui/react";
 import * as d3 from "d3";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ChartEmptyState } from "./chartEmptyState";
+import {
+  CORRELATION_TICKS,
+  RMSE_CONTOURS,
+  STDDEV_ARCS,
+  STDDEV_MAX,
+  STDDEV_TICKS,
+  type TaylorGeometry,
+  taylorGeometry,
+} from "./taylorGeometry";
 
 /**
  * Represents a model's performance metrics for the Taylor diagram
@@ -23,6 +33,225 @@ interface TaylorDiagramProps {
   marginRight?: number; // defaults to 50
 }
 
+type Svg = d3.Selection<SVGSVGElement, unknown, null, undefined>;
+
+/** A quarter circle around the origin at a standard deviation */
+const quarterArc = (geometry: TaylorGeometry, stddev: number) =>
+  d3
+    .arc<number>()
+    .innerRadius(geometry.radius)
+    .outerRadius(geometry.radius)
+    .startAngle(0)
+    .endAngle(Math.PI / 2)(stddev);
+
+/** The standard deviation arcs, and the reference with its dashed arc */
+function drawStddevGrid(
+  svg: Svg,
+  geometry: TaylorGeometry,
+  referenceStddev: number,
+) {
+  const { center } = geometry;
+  const transform = `translate(${center.x},${center.y})`;
+  for (const sd of STDDEV_ARCS) {
+    svg
+      .append("path")
+      .attr("d", quarterArc(geometry, sd))
+      .attr("transform", transform)
+      .attr("fill", "none")
+      .attr("stroke", "#aaa");
+  }
+
+  svg
+    .append("rect")
+    .attr("x", center.x + geometry.radius(referenceStddev) - 5)
+    .attr("y", center.y - 5)
+    .attr("width", 10)
+    .attr("height", 10)
+    .attr("fill", "currentColor");
+
+  svg
+    .append("path")
+    .attr("d", quarterArc(geometry, referenceStddev))
+    .attr("transform", transform)
+    .attr("fill", "none")
+    .attr("stroke", "#888")
+    .attr("stroke-dasharray", "10,10")
+    .attr("stroke-width", 2);
+}
+
+/** The two standard deviation axes with their ticks and title */
+function drawAxes(svg: Svg, geometry: TaylorGeometry) {
+  const { center, radius } = geometry;
+  const end = radius(STDDEV_MAX);
+  const line = (x1: number, y1: number, x2: number, y2: number) =>
+    svg
+      .append("line")
+      .attr("x1", x1)
+      .attr("y1", y1)
+      .attr("x2", x2)
+      .attr("y2", y2)
+      .attr("stroke", "currentColor");
+
+  line(center.x, center.y, center.x + end, center.y);
+  line(center.x, center.y, center.x, center.y - end);
+
+  for (const sd of STDDEV_TICKS) {
+    const x = center.x + radius(sd);
+    line(x, center.y - 5, x, center.y + 5);
+    svg
+      .append("text")
+      .attr("x", x)
+      .attr("y", center.y + 18)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .text(sd);
+
+    const y = center.y - radius(sd);
+    line(center.x - 5, y, center.x + 5, y);
+    svg
+      .append("text")
+      .attr("x", center.x - 18)
+      .attr("y", y + 4)
+      .attr("text-anchor", "end")
+      .attr("font-size", "12px")
+      .text(sd);
+  }
+
+  svg
+    .append("text")
+    .attr("x", center.x + end / 2)
+    .attr("y", center.y + 40)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "14px")
+    .text("Standard deviation (Normalized)");
+}
+
+/** The RMSE circles around the reference point, clipped to the diagram */
+function drawRmseContours(
+  svg: Svg,
+  geometry: TaylorGeometry,
+  referenceStddev: number,
+  clipId: string,
+) {
+  const { center, radius } = geometry;
+  const end = radius(STDDEV_MAX);
+  // A filled quarter circle: centre, top of the y axis, arc to the end of the x axis
+  svg
+    .append("defs")
+    .append("clipPath")
+    .attr("id", clipId)
+    .append("path")
+    .attr(
+      "d",
+      `M ${center.x},${center.y} L ${center.x},${center.y - end} A ${end},${end} 0 0 1 ${center.x + end},${center.y} Z`,
+    );
+
+  const ref = { x: center.x + radius(referenceStddev), y: center.y };
+  const contours = svg.append("g").attr("clip-path", `url(#${clipId})`);
+  // Labels sit just outside each circle, a little past the top of it
+  const labelAngle = Math.PI * 0.62;
+  for (const rmse of RMSE_CONTOURS) {
+    contours
+      .append("circle")
+      .attr("cx", ref.x)
+      .attr("cy", ref.y)
+      .attr("r", radius(rmse))
+      .attr("fill", "none")
+      .attr("stroke", "#ddd")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-dasharray", "10,5");
+
+    const labelRadius = radius(rmse) + 10;
+    svg
+      .append("text")
+      .attr("x", ref.x + labelRadius * Math.cos(labelAngle))
+      .attr("y", ref.y - labelRadius * Math.sin(labelAngle))
+      .attr("font-size", "12px")
+      .attr("fill", "#aaa")
+      .text(rmse);
+  }
+}
+
+/** The correlation ticks on the outer arc and its title */
+function drawCorrelationTicks(svg: Svg, geometry: TaylorGeometry) {
+  const { center, radius } = geometry;
+  const outer = radius(STDDEV_MAX);
+  const tickEnd = outer + 8;
+  const at = (distance: number, angle: number) => ({
+    x: center.x + distance * Math.cos(angle),
+    y: center.y - distance * Math.sin(angle),
+  });
+
+  for (const corr of CORRELATION_TICKS) {
+    const angle = Math.acos(corr);
+    const from = at(outer, angle);
+    const to = at(tickEnd, angle);
+    svg
+      .append("line")
+      .attr("x1", from.x)
+      .attr("y1", from.y)
+      .attr("x2", to.x)
+      .attr("y2", to.y)
+      .attr("stroke", "#888")
+      .attr("stroke-width", 2);
+
+    svg
+      .append("text")
+      .attr("x", center.x + (tickEnd + 16) * Math.cos(angle))
+      .attr("y", center.y - (tickEnd + 8) * Math.sin(angle))
+      .attr("text-anchor", "middle")
+      .attr("font-size", "13px")
+      .text(corr);
+  }
+
+  const titleAngle = Math.PI / 4;
+  const title = at(outer + 40, titleAngle);
+  svg
+    .append("text")
+    .attr("x", title.x)
+    .attr("y", title.y)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "14px")
+    .attr("font-weight", "600")
+    .style("fill", "var(--muted-foreground)")
+    .attr(
+      "transform",
+      `rotate(${titleAngle * (180 / Math.PI)}, ${title.x}, ${title.y})`,
+    )
+    .text("Correlation");
+}
+
+/** A point per model, growing and darkening while hovered */
+function drawModels(
+  svg: Svg,
+  geometry: TaylorGeometry,
+  models: TaylorDiagramModel[],
+  onHover: (model: TaylorDiagramModel | null) => void,
+) {
+  for (const model of models) {
+    const { x, y } = geometry.point(model.stddev, model.correlation);
+    const fill = model.color ?? "orange";
+    const hoverFill = d3.color(fill)?.darker(0.6).formatHex() ?? fill;
+
+    svg
+      .append("circle")
+      .attr("cx", x)
+      .attr("cy", y)
+      .attr("r", 6)
+      .attr("fill", fill)
+      .style("cursor", "pointer")
+      .style("transition", "r 0.2s ease, fill 0.2s ease")
+      .on("mouseenter", function () {
+        d3.select(this).attr("r", 9).attr("fill", hoverFill);
+        onHover(model);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).attr("r", 6).attr("fill", fill);
+        onHover(null);
+      });
+  }
+}
+
 /**
  * TaylorDiagramContent component renders a Taylor diagram visualization
  * showing model performance in terms of correlation and normalized standard deviation.
@@ -43,6 +272,8 @@ export function TaylorDiagramContent({
   marginRight = 50,
 }: TaylorDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  // Unique per diagram, so several diagrams on a page keep their own clip path
+  const clipId = `taylor-clip-${useId().replace(/[^\w-]/g, "")}`;
   const [hoveredModel, setHoveredModel] = useState<TaylorDiagramModel | null>(
     null,
   );
@@ -77,285 +308,23 @@ export function TaylorDiagramContent({
 
   useEffect(() => {
     if (!svgRef.current) return;
-
-    // Clear previous content to prevent duplicate elements
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    // Track mouse position for tooltip
-    const handleMouseMove = (event: MouseEvent) => {
-      setMousePosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-    };
-
-    svgRef.current.addEventListener("mousemove", handleMouseMove);
-    const currentSvg = svgRef.current;
-
     const svg = d3.select(svgRef.current);
-    const radius = Math.min(
-      width - marginLeft - marginRight,
-      height - marginTop - marginBottom,
-    );
-    const center = { x: marginLeft, y: height - marginBottom }; // bottom-left origin
+    // Clear previous content to prevent duplicate elements
+    svg.selectAll("*").remove();
 
-    // Define the maximum standard deviation for the diagram
-    const stddevMax = 1.6;
-
-    // Scale for converting standard deviation values to pixel radius
-    const r = d3.scaleLinear().domain([0, stddevMax]).range([0, radius]);
-
-    /**
-     * Convert correlation coefficient to angle in radians
-     * Correlation of 1.0 maps to 0° (horizontal), 0.0 maps to 90° (vertical)
-     */
-    const corrToAngle = (c: number) => Math.acos(c);
-
-    // Arc generator for standard deviation circles (quarter circles)
-    const arc = d3
-      .arc<number>()
-      .innerRadius((d: number) => r(d))
-      .outerRadius((d: number) => r(d))
-      .startAngle(0)
-      .endAngle(Math.PI / 2);
-
-    // Draw standard deviation arcs at fixed intervals
-    [0.4, 0.8, 1.0, 1.2, 1.6].forEach((sd) => {
-      svg
-        .append("path")
-        .attr("d", arc(sd))
-        .attr("transform", `translate(${center.x},${center.y})`)
-        .attr("fill", "none")
-        .attr("stroke", "#aaa");
+    const geometry = taylorGeometry({
+      width,
+      height,
+      marginTop,
+      marginBottom,
+      marginLeft,
+      marginRight,
     });
-
-    // Draw reference point (black square) at the reference standard deviation
-    svg
-      .append("rect")
-      .attr("x", center.x + r(referenceStddev) - 5)
-      .attr("y", center.y - 5)
-      .attr("width", 10)
-      .attr("height", 10)
-      .attr("fill", "black");
-
-    // Draw dashed circle at reference standard deviation
-    svg
-      .append("path")
-      .attr("d", arc(referenceStddev))
-      .attr("transform", `translate(${center.x},${center.y})`)
-      .attr("fill", "none")
-      .attr("stroke", "#888")
-      .attr("stroke-dasharray", "10,10")
-      .attr("stroke-width", 2);
-
-    // Plot model points based on correlation (angle) and standard deviation (radius)
-    models.forEach((model) => {
-      const angle = corrToAngle(model.correlation);
-      const x = center.x + r(model.stddev) * Math.cos(angle);
-      const y = center.y - r(model.stddev) * Math.sin(angle);
-      const fill = model.color ?? "orange";
-      const hoverFill = d3.color(fill)?.darker(0.6).formatHex() ?? fill;
-
-      svg
-        .append("circle")
-        .attr("cx", x)
-        .attr("cy", y)
-        .attr("r", 6)
-        .attr("fill", fill)
-        .style("cursor", "pointer")
-        .style("transition", "r 0.2s ease, fill 0.2s ease")
-        .on("mouseenter", function () {
-          d3.select(this).attr("r", 9).attr("fill", hoverFill);
-          setHoveredModel(model);
-        })
-        .on("mouseleave", function () {
-          d3.select(this).attr("r", 6).attr("fill", fill);
-          setHoveredModel(null);
-        });
-    });
-
-    // Draw x-axis (horizontal standard deviation axis)
-    svg
-      .append("line")
-      .attr("x1", center.x)
-      .attr("y1", center.y)
-      .attr("x2", center.x + r(stddevMax))
-      .attr("y2", center.y)
-      .attr("stroke", "black");
-
-    // Draw y-axis (vertical standard deviation axis)
-    svg
-      .append("line")
-      .attr("x1", center.x)
-      .attr("y1", center.y)
-      .attr("x2", center.x)
-      .attr("y2", center.y - r(stddevMax))
-      .attr("stroke", "black");
-
-    // X-axis ticks and labels
-    [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6].forEach((sd) => {
-      const x = center.x + r(sd);
-      svg
-        .append("line")
-        .attr("x1", x)
-        .attr("y1", center.y - 5)
-        .attr("x2", x)
-        .attr("y2", center.y + 5)
-        .attr("stroke", "black");
-
-      svg
-        .append("text")
-        .attr("x", x)
-        .attr("y", center.y + 18)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "12px")
-        .text(sd);
-    });
-
-    // Y-axis ticks and labels
-    [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6].forEach((sd) => {
-      const y = center.y - r(sd);
-      svg
-        .append("line")
-        .attr("x1", center.x - 5)
-        .attr("y1", y)
-        .attr("x2", center.x + 5)
-        .attr("y2", y)
-        .attr("stroke", "black");
-
-      svg
-        .append("text")
-        .attr("x", center.x - 18)
-        .attr("y", y + 4)
-        .attr("text-anchor", "end")
-        .attr("font-size", "12px")
-        .text(sd);
-    });
-
-    // X-axis label
-    svg
-      .append("text")
-      .attr("x", center.x + r(stddevMax) / 2)
-      .attr("y", center.y + 40)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .text("Standard deviation (Normalized)");
-
-    // Create unique clip path ID to avoid conflicts with multiple diagrams
-    const clipId = `taylor-clip-${Date.now()}`;
-
-    // Create clip path for Taylor diagram region - use a filled quarter circle
-    // Path creates a filled region: center -> top of Y-axis -> arc to right of X-axis -> close
-    svg
-      .append("defs")
-      .append("clipPath")
-      .attr("id", clipId)
-      .append("path")
-      .attr(
-        "d",
-        `M ${center.x},${center.y} L ${center.x},${center.y - r(stddevMax)} A ${r(stddevMax)},${r(stddevMax)} 0 0 1 ${center.x + r(stddevMax)},${center.y} Z`,
-      );
-
-    // RMSE contour arcs centered at the reference point
-    const refX = center.x + r(referenceStddev);
-    const refY = center.y;
-
-    // Create a group for RMSE arcs with clipping applied
-    const rmseGroup = svg.append("g").attr("clip-path", `url(#${clipId})`);
-
-    // Draw RMSE arcs as circles (simpler and more reliable than d3.arc for full circles)
-    [0.4, 0.8, 1.2, 1.6].forEach((rmse) => {
-      const radiusVal = r(rmse);
-      const labelOffset = 10;
-
-      // Draw the circle
-      rmseGroup
-        .append("circle")
-        .attr("cx", refX)
-        .attr("cy", refY)
-        .attr("r", radiusVal)
-        .attr("fill", "none")
-        .attr("stroke", "#ddd")
-        .attr("stroke-width", 1.5)
-        .attr("stroke-dasharray", "10,5");
-
-      // Add label at 45 degrees if it's within the diagram bounds
-      const labelAngle = Math.PI * 0.62;
-      const labelX = refX + (radiusVal + labelOffset) * Math.cos(labelAngle);
-      const labelY = refY - (radiusVal + labelOffset) * Math.sin(labelAngle);
-
-      // Check if label is within the valid diagram region
-      const dx = labelX - center.x;
-      const dy = labelY - center.y;
-      const labelDist = Math.sqrt(dx * dx + dy * dy);
-
-      svg
-        .append("text")
-        .attr("x", labelX)
-        .attr("y", labelY)
-        .attr("font-size", "12px")
-        .attr("fill", "#aaa")
-        .text(rmse);
-
-      if (
-        labelDist <= r(stddevMax) &&
-        labelAngle >= 0 &&
-        labelAngle <= Math.PI / 2
-      ) {
-      }
-    });
-
-    // Correlation tick marks and labels on the outer arc
-    [0.99, 0.95, 0.9, 0.8, 0.7, 0.6, 0.4].forEach((corr) => {
-      const angle = corrToAngle(corr);
-      const rOuter = r(stddevMax);
-      const rTick = rOuter + 8; // length of tick
-      const x1 = center.x + rOuter * Math.cos(angle);
-      const y1 = center.y - rOuter * Math.sin(angle);
-      const x2 = center.x + rTick * Math.cos(angle);
-      const y2 = center.y - rTick * Math.sin(angle);
-
-      svg
-        .append("line")
-        .attr("x1", x1)
-        .attr("y1", y1)
-        .attr("x2", x2)
-        .attr("y2", y2)
-        .attr("stroke", "#888")
-        .attr("stroke-width", 2);
-
-      svg
-        .append("text")
-        .attr("x", center.x + (rTick + 16) * Math.cos(angle))
-        .attr("y", center.y - (rTick + 8) * Math.sin(angle))
-        .attr("text-anchor", "middle")
-        .attr("font-size", "13px")
-        .text(corr);
-    });
-
-    // Add "Correlation" label along the outer arc
-    const labelAngle = Math.PI / 4; // 45 degrees
-    const labelRadius = r(stddevMax) + 40; // Further out than tick labels
-    svg
-      .append("text")
-      .attr("x", center.x + labelRadius * Math.cos(labelAngle))
-      .attr("y", center.y - labelRadius * Math.sin(labelAngle))
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .attr("font-weight", "600")
-      .attr("fill", "#555")
-      .attr(
-        "transform",
-        `rotate(${labelAngle * (180 / Math.PI)}, ${center.x + labelRadius * Math.cos(labelAngle)}, ${center.y - labelRadius * Math.sin(labelAngle)})`,
-      )
-      .text("Correlation");
-
-    // Cleanup mouse event listener
-    return () => {
-      if (currentSvg) {
-        currentSvg.removeEventListener("mousemove", handleMouseMove);
-      }
-    };
+    drawStddevGrid(svg, geometry, referenceStddev);
+    drawModels(svg, geometry, models, setHoveredModel);
+    drawAxes(svg, geometry);
+    drawRmseContours(svg, geometry, referenceStddev, clipId);
+    drawCorrelationTicks(svg, geometry);
   }, [
     models,
     width,
@@ -365,20 +334,16 @@ export function TaylorDiagramContent({
     marginBottom,
     marginLeft,
     marginRight,
+    clipId,
   ]);
 
   // Handle empty state
   if (models.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
-        <div className="text-center text-sm text-gray-500">
-          <p>No model data available</p>
-          <p className="text-xs mt-1">
-            This diagram requires models with correlation and standard deviation
-            values
-          </p>
-        </div>
-      </div>
+      <ChartEmptyState title="No model data available">
+        This diagram requires models with correlation and standard deviation
+        values
+      </ChartEmptyState>
     );
   }
 
@@ -389,6 +354,12 @@ export function TaylorDiagramContent({
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
+        // Text and axes take the theme's text colour
+        className="text-foreground"
+        fill="currentColor"
+        onMouseMove={(event) =>
+          setMousePosition({ x: event.clientX, y: event.clientY })
+        }
       />
       {hoveredModel && (
         <div
@@ -398,22 +369,22 @@ export function TaylorDiagramContent({
             pointerEvents: "none",
             zIndex: 50,
           }}
-          className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-[200px]"
+          className="bg-popover text-popover-foreground border rounded-lg shadow-lg p-4 min-w-[200px]"
         >
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+            <div className="text-sm font-semibold border-b pb-2">
               {hoveredModel.name}
             </div>
             <div className="text-xs space-y-1">
               <div className="flex justify-between">
-                <span className="text-gray-600">Correlation:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Correlation:</span>
+                <span className="font-medium">
                   {hoveredModel.correlation.toFixed(3)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Std Dev:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Std Dev:</span>
+                <span className="font-medium">
                   {hoveredModel.stddev.toFixed(3)}
                 </span>
               </div>

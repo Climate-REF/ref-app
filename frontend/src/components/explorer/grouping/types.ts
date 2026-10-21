@@ -11,18 +11,6 @@ export interface ChartGroupingConfig {
 }
 
 /**
- * Props for components that support grouping functionality
- */
-export interface GroupingProps {
-  /** Initial grouping configuration */
-  initialGrouping?: ChartGroupingConfig;
-  /** Callback when grouping configuration changes */
-  onGroupingChange?: (config: ChartGroupingConfig) => void;
-  /** Whether to hide the grouping controls */
-  hideControls?: boolean;
-}
-
-/**
  * Available dimensions for grouping, extracted from data
  */
 export interface AvailableDimensions {

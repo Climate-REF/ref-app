@@ -36,7 +36,7 @@ function numericColumn(
   };
 }
 
-export const columns: ColumnDef<DiagnosticCatalogEntry>[] = [
+const columns: ColumnDef<DiagnosticCatalogEntry>[] = [
   {
     accessorKey: "name",
     enableSorting: true,
