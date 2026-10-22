@@ -71,4 +71,4 @@ ENV GIT_COMMIT=$GIT_COMMIT
 USER 1000
 
 # Run the REF CLI tool by default
-ENTRYPOINT ["fastapi", "run", "--workers", "4", "/app/src/ref_backend/main.py"]
+ENTRYPOINT ["/app/scripts/start.sh"]
