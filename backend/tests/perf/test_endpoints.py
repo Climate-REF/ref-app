@@ -39,7 +39,6 @@ ENDPOINTS = [
     ),
     Endpoint(id="diagnostics.catalog", path="diagnostics/catalog"),
     Endpoint(id="diagnostics.value-flags", path="diagnostics/value-flags"),
-    Endpoint(id="diagnostics.facets", path="diagnostics/facets", allowed_scans=frozenset({"metric_value"})),
     Endpoint(id="diagnostics.get", path=_DIAGNOSTIC),
     Endpoint(id="diagnostics.execution-groups", path=f"{_DIAGNOSTIC}/execution_groups"),
     Endpoint(id="diagnostics.values.scalar", path=f"{_DIAGNOSTIC}/values", params={"value_type": "scalar"}),

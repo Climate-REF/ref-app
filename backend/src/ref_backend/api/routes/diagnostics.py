@@ -1,7 +1,6 @@
 from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import func, select
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -29,7 +28,6 @@ from ref_backend.models import (
     Execution,
     ExecutionGroup,
     MetricValueCollection,
-    MetricValueFacetSummary,
 )
 from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
@@ -216,31 +214,6 @@ async def value_flags(
             )
             for d in scope.diagnostics
         ]
-    )
-
-
-@router.get("/facets", name="facets")
-async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
-    """
-    Query the unique dimensions and metrics for all diagnostics (both scalar and series)
-    """
-    # Query the base class so no type filter is added.
-    # With one, SQLite walks the type index instead of the covering index on each dimension.
-    session = app_context.session
-    dimension_summary = {}
-    for dimension_name in models.MetricValue._cv_dimensions:
-        if not hasattr(models.MetricValue, dimension_name):
-            continue
-
-        column = getattr(models.MetricValue, dimension_name)
-        values = session.scalars(select(column).where(column.isnot(None)).distinct())
-        dimension_summary[dimension_name] = sorted(values)
-
-    count = session.scalar(select(func.count(models.MetricValue.id))) or 0
-
-    return MetricValueFacetSummary(
-        dimensions=dimension_summary,
-        count=count,
     )
 
 

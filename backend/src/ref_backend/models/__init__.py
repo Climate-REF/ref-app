@@ -34,7 +34,6 @@ from ref_backend.models.values import (
     NON_FACET_DIMENSIONS,
     Facet,
     MetricValueCollection,
-    MetricValueFacetSummary,
     ScalarValue,
     SeriesValue,
 )
@@ -62,7 +61,6 @@ __all__ = [
     "FailedRun",
     "GroupBy",
     "MetricValueCollection",
-    "MetricValueFacetSummary",
     "ModelDetail",
     "ModelSummary",
     "ProviderSummary",

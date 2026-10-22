@@ -583,30 +583,6 @@ def test_diagnostic_values_pagination_with_filter(client: TestClient, settings):
         assert item["dimensions"].get(facet["key"]) == filter_value
 
 
-def test_diagnostics_facets_dimensions_are_sorted_and_non_null(client: TestClient, settings) -> None:
-    """Test that facets dimensions contain only sorted, non-null values.
-
-    Validates the ORM-based facets query correctly filters NULLs and sorts results.
-    """
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-
-    for dimension_name, values in data["dimensions"].items():
-        assert isinstance(values, list), f"Dimension '{dimension_name}' should be a list"
-        assert None not in values, f"Dimension '{dimension_name}' should not contain null values"
-        assert values == sorted(values), f"Dimension '{dimension_name}' should be sorted"
-        assert len(values) == len(set(values)), f"Dimension '{dimension_name}' should have unique values"
-
-
-def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) -> None:
-    """Test that facets count reflects total metric values."""
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-    assert data["count"] >= 0
-
-
 def _diagnostics_with_values(session, value_class) -> set[int]:
     query = (
         session.query(models.ExecutionGroup.diagnostic_id)
@@ -665,26 +641,6 @@ def test_retracted_values_are_hidden(writable_client: TestClient) -> None:
     assert not writable_client.get(detail_url).json()["has_metric_values"]
     values = writable_client.get(f"{detail_url}/values", params=scalars).json()
     assert values["data"] == []
-
-
-def test_diagnostics_facets_cover_scalar_and_series_values(client: TestClient, settings) -> None:
-    """Facets are the union of the scalar and series dimension values, and count both."""
-    database = Database.from_config(test_ref_config(), run_migrations=False, read_only=True)
-    session = database.session
-    scalars = session.query(models.ScalarMetricValue).all()
-    series = session.query(models.SeriesMetricValue).all()
-    assert scalars
-    assert series
-
-    expected = {}
-    for dimension_name in models.MetricValue._cv_dimensions:
-        values = {getattr(value, dimension_name) for value in [*scalars, *series]} - {None}
-        if values:
-            expected[dimension_name] = sorted(values)
-
-    data = client.get(f"{settings.API_V1_STR}/diagnostics/facets").json()
-    assert {key: values for key, values in data["dimensions"].items() if values} == expected
-    assert data["count"] == len(scalars) + len(series)
 
 
 def test_diagnostic_executions_ignores_truly_unknown_query_params(client: TestClient, settings) -> None:
@@ -778,17 +734,6 @@ def test_diagnostic_404_invalid_provider(client: TestClient, settings) -> None:
     """Test that requesting a nonexistent diagnostic returns 404."""
     r = client.get(f"{settings.API_V1_STR}/diagnostics/nonexistent-provider/nonexistent-diagnostic")
     assert r.status_code == 404
-
-
-def test_diagnostics_facets(client: TestClient, settings) -> None:
-    """Test that diagnostics facets endpoint returns dimension summary."""
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-    assert "dimensions" in data
-    assert "count" in data
-    assert isinstance(data["dimensions"], dict)
-    assert isinstance(data["count"], int)
 
 
 def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:

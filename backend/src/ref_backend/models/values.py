@@ -184,18 +184,3 @@ class MetricValueCollection(BaseModel):
             had_outliers=None,
             outlier_count=None,
         )
-
-
-class MetricValueFacetSummary(BaseModel):
-    """
-    Summary of the dimensions used in a metric value collection.
-    """
-
-    dimensions: dict[str, list[str]]
-    """
-    Dimensions and their unique values for the current filter
-    """
-    count: int
-    """
-    Number of metric values with the current filter
-    """

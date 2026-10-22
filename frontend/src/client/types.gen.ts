@@ -1300,24 +1300,6 @@ export type MetricValueCollection = {
 };
 
 /**
- * MetricValueFacetSummary
- *
- * Summary of the dimensions used in a metric value collection.
- */
-export type MetricValueFacetSummary = {
-    /**
-     * Dimensions
-     */
-    dimensions: {
-        [key: string]: Array<string>;
-    };
-    /**
-     * Count
-     */
-    count: number;
-};
-
-/**
  * MetricValueType
  *
  * Type of metric values to query.
@@ -2325,22 +2307,6 @@ export type DiagnosticsValueFlagsResponses = {
 };
 
 export type DiagnosticsValueFlagsResponse = DiagnosticsValueFlagsResponses[keyof DiagnosticsValueFlagsResponses];
-
-export type DiagnosticsFacetsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/diagnostics/facets';
-};
-
-export type DiagnosticsFacetsResponses = {
-    /**
-     * Successful Response
-     */
-    200: MetricValueFacetSummary;
-};
-
-export type DiagnosticsFacetsResponse = DiagnosticsFacetsResponses[keyof DiagnosticsFacetsResponses];
 
 export type DiagnosticsGetData = {
     body?: never;
