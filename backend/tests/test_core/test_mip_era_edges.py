@@ -9,7 +9,7 @@ from climate_ref import models
 from climate_ref_core.datasets import SourceDatasetType
 from ref_backend.core.mip_eras import (
     CMIP_ERAS,
-    cmip_dataset_filter,
+    cmip_input_filter,
     dataset_model_for,
     eras_in_scope,
     mip_eras_for_executions,
@@ -81,7 +81,10 @@ def _obs_only_execution(session) -> models.Execution:
 
 
 def _matches(session, execution_id: int, mip_era: str, *, or_no_model_input: bool = False) -> bool:
-    clause = cmip_dataset_filter({"mip_era": mip_era}, or_no_model_input=or_no_model_input)
+    input_filter = cmip_input_filter({"mip_era": mip_era}, or_no_model_input=or_no_model_input)
+    if input_filter is None:
+        return False
+    clause = input_filter.execution_clause()
     return execution_id in session.scalars(select(models.Execution.id).where(clause)).all()
 
 

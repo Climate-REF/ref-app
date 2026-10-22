@@ -100,14 +100,8 @@ def _input_filter(
     )
 
 
-def cmip_dataset_filter(facets: Mapping[str, str], *, or_no_model_input: bool = False) -> ColumnElement[bool]:
-    """Match executions as `cmip_input_filter` does, or no execution when nothing can match."""
-    input_filter = cmip_input_filter(facets, or_no_model_input=or_no_model_input)
-    return input_filter.execution_clause() if input_filter else false()
-
-
 def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
-    """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
+    """Match execution groups holding an execution that satisfies `cmip_input_filter`."""
     input_filter = cmip_input_filter(facets)
     return input_filter.execution_group_clause() if input_filter else false()
 

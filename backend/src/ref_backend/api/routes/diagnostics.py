@@ -13,7 +13,6 @@ from ref_backend.core.metric_values import (
     parse_id_list,
 )
 from ref_backend.core.mip_eras import (
-    cmip_dataset_filter,
     cmip_input_filter,
     execution_group_filter,
 )
@@ -328,15 +327,17 @@ async def list_executions(
     e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
     """
     diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    input_filter = cmip_input_filter(dict(request.query_params))
+    if input_filter is None:
+        return Collection(data=[])
 
-    executions_query = (
+    executions = (
         app_context.session.query(models.Execution)
         .join(models.ExecutionGroup)
         .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-        .filter(cmip_dataset_filter(dict(request.query_params)))
+        .filter(input_filter.execution_clause())
+        .all()
     )
-
-    executions = executions_query.all()
 
     return Collection(data=[Execution.build(e, app_context) for e in executions])
 

@@ -5,7 +5,6 @@ from climate_ref import models
 from climate_ref.database import Database
 from ref_backend.core.mip_eras import (
     CMIP_ERAS,
-    cmip_dataset_filter,
     cmip_input_filter,
     cv_column,
     dataset_model_for,
@@ -19,7 +18,10 @@ def session():
 
 
 def _count(session, facets) -> int:
-    return session.scalar(select(func.count(models.Execution.id)).where(cmip_dataset_filter(facets)))
+    input_filter = cmip_input_filter(facets)
+    if input_filter is None:
+        return 0
+    return session.scalar(select(func.count(models.Execution.id)).where(input_filter.execution_clause()))
 
 
 def _a_source_id(session) -> str:
