@@ -52,6 +52,7 @@ ENV STATIC_DIR=/app/static
 ENV REF_CONFIGURATION=/ref
 ENV FRONTEND_HOST=http://0.0.0.0:8000
 ENV XDG_CACHE_HOME=$REF_CONFIGURATION/cache
+ENV WEB_CONCURRENCY=4
 
 RUN useradd -m -u 1000 app
 
@@ -71,4 +72,4 @@ ENV GIT_COMMIT=$GIT_COMMIT
 USER 1000
 
 # Run the REF CLI tool by default
-ENTRYPOINT ["fastapi", "run", "--workers", "4", "/app/src/ref_backend/main.py"]
+ENTRYPOINT ["/app/scripts/start.sh"]
