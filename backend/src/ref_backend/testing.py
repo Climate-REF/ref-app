@@ -46,3 +46,8 @@ def test_ref_config() -> Config:
     config.ignore_datasets_file = EXAMPLE_DIR / "ignore_datasets.yaml"
 
     return config
+
+
+# Test modules import these by name, so stop pytest collecting them as tests.
+test_settings.__test__ = False  # type: ignore[attr-defined]
+test_ref_config.__test__ = False  # type: ignore[attr-defined]
