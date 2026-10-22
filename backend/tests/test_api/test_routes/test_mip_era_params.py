@@ -47,9 +47,24 @@ def test_an_unknown_era_matches_nothing(client: TestClient, settings, path, para
     assert amount(unknown.json()) == 0
 
 
-def test_an_unknown_era_on_a_model_is_not_found(client: TestClient, settings) -> None:
+def test_an_unknown_era_on_a_model_is_an_empty_model(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/models/{MODEL}", params={"mip_era": "CMIP5"})
-    assert r.status_code == 404
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["source_id"] == MODEL
+    assert body["diagnostics"] == body["failures"] == body["mip_eras"] == []
+    assert body["execution_groups"]["total"] == 0
+
+
+@pytest.mark.parametrize(
+    ("source_id", "mip_era"), [("NOT-A-MODEL", None), ("NOT-A-MODEL", "CMIP5"), (MODEL, "CMIP7")]
+)
+def test_a_missing_model_or_a_known_era_without_runs_is_not_found(
+    client: TestClient, settings, source_id, mip_era
+) -> None:
+    params = {"mip_era": mip_era} if mip_era else {}
+    assert client.get(f"{settings.API_V1_STR}/models/{source_id}", params=params).status_code == 404
 
 
 @pytest.mark.parametrize(

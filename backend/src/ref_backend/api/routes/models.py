@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from climate_ref import models
 from ref_backend.api.deps import SessionDep
+from ref_backend.core.mip_eras import eras_in_scope
 from ref_backend.core.model_ensemble import ensemble_comparisons
 from ref_backend.core.model_runs import (
     ModelFacets,
@@ -80,7 +81,8 @@ async def get(
     Summarise the runs a single model took part in, broken down by diagnostic.
     """
     rows = model_run_rows(session, mip_era=mip_era, source_id=source_id)
-    if not rows:
+    # An unknown era gives an empty model, as it does an empty list on the other routes.
+    if not rows and (eras_in_scope(mip_era) or not model_run_rows(session, source_id=source_id)):
         raise HTTPException(status_code=404, detail="Model not found")
 
     by_diagnostic: dict[int, list[ModelRunRow]] = defaultdict(list)
