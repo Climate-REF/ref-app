@@ -878,7 +878,7 @@ def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClie
         assert rd.json()["resource_usage"] == diagnostic["resource_usage"]
 
     usage = timed[0]["resource_usage"]
-    assert usage["timed_execution_count"] <= timed[0]["execution_count"]
+    assert usage["timed_execution_count"] > 0
     assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
 
 
@@ -944,7 +944,6 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
     assert detail["promoted_version"] == diagnostic["promoted_version"] + 1
     assert detail["execution_group_count"] == 0
     assert detail["successful_execution_group_count"] == 0
-    assert detail["execution_count"] == 0
 
     relisted = next(
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
@@ -1023,7 +1022,6 @@ def test_diagnostics_catalog_with_an_unknown_era_counts_nothing(client: TestClie
     assert catalog["data"]
     assert all(d["execution_group_count"] == 0 for d in catalog["data"])
     assert all(d["successful_execution_group_count"] == 0 for d in catalog["data"])
-    assert all(d["execution_count"] == 0 for d in catalog["data"])
 
 
 FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")

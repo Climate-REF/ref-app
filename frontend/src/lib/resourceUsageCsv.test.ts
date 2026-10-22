@@ -9,8 +9,6 @@ const base = {
   has_metric_values: false,
   has_scalar_values: false,
   has_series_values: false,
-  execution_count: 1,
-  successful_execution_count: 1,
   execution_group_count: 1,
   successful_execution_group_count: 1,
   promoted_version: 1,

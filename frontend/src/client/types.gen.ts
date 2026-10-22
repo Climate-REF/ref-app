@@ -682,14 +682,6 @@ export type DiagnosticCatalogEntry = {
      */
     execution_groups: Array<number>;
     /**
-     * Execution Count
-     */
-    execution_count: number;
-    /**
-     * Successful Execution Count
-     */
-    successful_execution_count: number;
-    /**
      * Execution Group Count
      */
     execution_group_count: number;
@@ -776,14 +768,6 @@ export type DiagnosticSummary = {
      * Execution Groups
      */
     execution_groups: Array<number>;
-    /**
-     * Execution Count
-     */
-    execution_count: number;
-    /**
-     * Successful Execution Count
-     */
-    successful_execution_count: number;
     /**
      * Execution Group Count
      */

@@ -1,7 +1,7 @@
 from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import ColumnElement, Integer, false, func, select
+from sqlalchemy import func, select
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -78,7 +78,6 @@ class _Scope(NamedTuple):
     diagnostics: list[models.Diagnostic]
     input_datasets: InputDatasetFilter | None
     matches_nothing: bool
-    group_scope: list[ColumnElement[bool]]
 
 
 def _scoped_diagnostics(app_context: AppContextDep, mip_era: str | None, source_id: str | None) -> _Scope:
@@ -92,21 +91,7 @@ def _scoped_diagnostics(app_context: AppContextDep, mip_era: str | None, source_
     facets = {key: value for key, value in {"mip_era": mip_era, "source_id": source_id}.items() if value}
     input_datasets = cmip_input_filter(facets) if facets else None
     matches_nothing = not diagnostics or (bool(facets) and input_datasets is None)
-
-    promoted_version = (
-        select(models.Diagnostic.promoted_version)
-        .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
-        .scalar_subquery()
-    )
-    group_scope: list[ColumnElement[bool]] = [
-        models.ExecutionGroup.diagnostic_id.in_([d.id for d in diagnostics]),
-        models.ExecutionGroup.diagnostic_version == promoted_version,
-    ]
-    if input_datasets:
-        group_scope.append(input_datasets.execution_group_clause())
-    if matches_nothing:
-        group_scope.append(false())
-    return _Scope(diagnostics, input_datasets, matches_nothing, group_scope)
+    return _Scope(diagnostics, input_datasets, matches_nothing)
 
 
 def _diagnostics_with_values(
@@ -135,22 +120,6 @@ def _value_types(app_context: AppContextDep, scope: _Scope) -> _ValueTypes:
 
 
 def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[DiagnosticCatalogEntry]:
-    group_scope = scope.group_scope
-    execution_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id,
-            func.count(models.Execution.id).label("total_count"),
-            func.sum(func.cast(models.Execution.successful, Integer)).label("successful_count"),
-        )
-        .join(models.Execution)
-        .filter(*group_scope)
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
-    )
-    execution_stats = {
-        row.diagnostic_id: {"total": row.total_count, "successful": row.successful_count or 0}
-        for row in execution_counts
-    }
     resource_usage = (
         {}
         if scope.matches_nothing
@@ -178,7 +147,6 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
             DiagnosticCatalogEntry.build_with_stats(
                 m,
                 app_context,
-                execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
                 execution_group_count=stats.total if stats else 0,
                 successful_execution_group_count=stats.successful if stats else 0,
                 resource_usage=resource_usage.get((m.provider.slug, m.slug)),

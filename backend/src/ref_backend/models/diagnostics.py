@@ -67,14 +67,6 @@ class DiagnosticCatalogEntry(BaseModel):
     """
     List of IDs for the provider executions associated with this provider
     """
-    execution_count: int
-    """
-    Total number of executions across all execution groups for this diagnostic
-    """
-    successful_execution_count: int
-    """
-    Number of successful executions across all execution groups for this diagnostic
-    """
     execution_group_count: int
     """
     Number of execution groups for this diagnostic
@@ -185,11 +177,10 @@ class DiagnosticCatalogEntry(BaseModel):
             logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
 
     @staticmethod
-    def build_with_stats(  # noqa: PLR0913
+    def build_with_stats(
         diagnostic: models.Diagnostic,
         app_context: "AppContext",
         *,
-        execution_stats: dict[str, int],
         execution_group_count: int,
         successful_execution_group_count: int,
         resource_usage: ExecutionResourceSummary | None = None,
@@ -210,8 +201,6 @@ class DiagnosticCatalogEntry(BaseModel):
             name=diagnostic.name,
             description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
-            execution_count=execution_stats["total"],
-            successful_execution_count=execution_stats["successful"],
             execution_group_count=execution_group_count,
             successful_execution_group_count=successful_execution_group_count,
             promoted_version=diagnostic.promoted_version,
@@ -265,31 +254,6 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
 
         has_metric_values = has_scalar_values or has_series_values
 
-        # Every count below is scoped to the promoted version, matching the values endpoints.
-        # Without that scoping a page can report thousands of successful groups and still show an
-        # empty table, because the values of a superseded version are hidden.
-        promoted_scope = (
-            models.ExecutionGroup.diagnostic_id == diagnostic.id,
-            models.ExecutionGroup.diagnostic_version == diagnostic.promoted_version,
-        )
-
-        # Execution counts for this diagnostic
-        execution_count = (
-            app_context.session.query(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(*promoted_scope)
-            .count()
-        )
-        successful_execution_count = (
-            app_context.session.query(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(
-                *promoted_scope,
-                models.Execution.successful.is_(True),
-            )
-            .count()
-        )
-
         # The reader only matches slugs as substrings, so pick the exact one out.
         group_stats = next(
             (
@@ -327,8 +291,6 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
             has_metric_values=has_metric_values,
             has_scalar_values=has_scalar_values,
             has_series_values=has_series_values,
-            execution_count=execution_count,
-            successful_execution_count=successful_execution_count,
             execution_group_count=execution_group_count,
             successful_execution_group_count=successful_execution_group_count,
             promoted_version=diagnostic.promoted_version,
