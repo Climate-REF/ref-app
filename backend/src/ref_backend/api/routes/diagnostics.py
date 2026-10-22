@@ -384,8 +384,8 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
         execution_ids=() if mip_era and input_datasets is None else None,
         input_datasets=input_datasets,
         dimensions=parse_dimension_filters(request.query_params),
-        isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
-        exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
+        isolate_ids=parse_id_list(isolate_ids),
+        exclude_ids=parse_id_list(exclude_ids),
     )
 
     return fetch_metric_values(

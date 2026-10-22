@@ -1083,3 +1083,13 @@ def test_diagnostic_without_provider(app, client: TestClient, settings):
         del app.dependency_overrides[deps._provider_registry_dependency]
 
     assert r.status_code == 200
+
+
+@pytest.mark.parametrize("param", ["isolate_ids", "exclude_ids"])
+def test_a_blank_id_list_is_no_filter(client: TestClient, param) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    params = {"value_type": "scalar", "detect_outliers": "off"}
+    everything = client.get(url, params=params).json()
+
+    assert everything["total_count"] > 0
+    assert client.get(url, params={**params, param: ","}).json() == everything

@@ -12,9 +12,14 @@ class MetricValueType(StrEnum):
     SERIES = "series"
 
 
-def parse_id_list(id_str: str) -> list[int]:
-    """Parse comma-separated list of IDs into integers."""
+def parse_id_list(id_str: str | None) -> list[int] | None:
+    """
+    Parse comma-separated list of IDs into integers.
+
+    A missing or blank list is `None`, because the reader reads an empty list as matching nothing.
+    """
     try:
-        return [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        ids = [int(i.strip()) for i in (id_str or "").split(",") if i.strip()]
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid id in list: {e}") from e
+    return ids or None

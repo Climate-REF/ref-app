@@ -32,6 +32,10 @@ class TestParseIdList:
         result = parse_id_list("1,,2,,,3")
         assert result == [1, 2, 3]
 
+    @pytest.mark.parametrize("id_str", [None, "", ",", " , "])
+    def test_a_blank_list_is_no_filter(self, id_str):
+        assert parse_id_list(id_str) is None
+
     def test_invalid_input_raises_http_exception(self):
         """Test that invalid input raises HTTPException with status_code=400."""
         with pytest.raises(HTTPException) as exc_info:
