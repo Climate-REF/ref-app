@@ -6,4 +6,4 @@ case "${REF_MIGRATE_DATABASE:-false}" in
   1 | true | True | TRUE) ref db migrate ;;
 esac
 
-exec fastapi run --workers 4 /app/src/ref_backend/main.py "$@"
+exec fastapi run --workers "${WEB_CONCURRENCY:-4}" /app/src/ref_backend/main.py "$@"
