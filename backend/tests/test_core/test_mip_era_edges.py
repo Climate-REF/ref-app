@@ -12,7 +12,6 @@ from ref_backend.core.mip_eras import (
     cmip_dataset_filter,
     dataset_model_for,
     eras_in_scope,
-    executions_in_mip_era,
     mip_eras_for_executions,
 )
 from ref_backend.core.reader_values import annotate_mip_eras
@@ -81,11 +80,9 @@ def _obs_only_execution(session) -> models.Execution:
     return execution
 
 
-def _matches(session, execution_id: int, mip_era: str) -> bool:
-    return (
-        execution_id
-        in session.scalars(select(models.Execution.id).where(cmip_dataset_filter({"mip_era": mip_era}))).all()
-    )
+def _matches(session, execution_id: int, mip_era: str, *, or_no_model_input: bool = False) -> bool:
+    clause = cmip_dataset_filter({"mip_era": mip_era}, or_no_model_input=or_no_model_input)
+    return execution_id in session.scalars(select(models.Execution.id).where(clause)).all()
 
 
 def _values(*items: SeriesValue) -> MetricValueCollection:
@@ -104,30 +101,26 @@ def test_a_mixed_era_execution_has_no_era_but_passes_both_filters(writable_sessi
     execution = _cmip6_execution(writable_session)
     execution.datasets.append(_cmip7_dataset(writable_session))
     writable_session.flush()
-    diagnostic_id = execution.execution_group.diagnostic_id
 
     assert mip_eras_for_executions(writable_session, [execution.id]) == {}
     for era in ("CMIP6", "CMIP7"):
         assert _matches(writable_session, execution.id, era)
-        assert execution.id in executions_in_mip_era(writable_session, era, diagnostic_id)
+        assert _matches(writable_session, execution.id, era, or_no_model_input=True)
 
 
 def test_an_execution_without_cmip_input_answers_to_every_era(writable_session):
     execution = _obs_only_execution(writable_session)
-    diagnostic_id = execution.execution_group.diagnostic_id
 
     assert mip_eras_for_executions(writable_session, [execution.id]) == {}
     for era in ("CMIP6", "cmip7"):
         assert not _matches(writable_session, execution.id, era)
-        assert execution.id in executions_in_mip_era(writable_session, era, diagnostic_id)
+        assert _matches(writable_session, execution.id, era, or_no_model_input=True)
 
 
-def test_an_unknown_era_still_keeps_executions_without_cmip_input(writable_session):
-    """Pins current behaviour: the no-CMIP half of the rule ignores whether the era exists."""
+def test_an_unknown_era_drops_executions_without_cmip_input(writable_session):
     execution = _obs_only_execution(writable_session)
-    diagnostic_id = execution.execution_group.diagnostic_id
 
-    assert executions_in_mip_era(writable_session, "CMIP5", diagnostic_id) == [execution.id]
+    assert not _matches(writable_session, execution.id, "CMIP5", or_no_model_input=True)
 
 
 def test_mip_id_labels_an_execution_the_inputs_do_not_settle(writable_session):

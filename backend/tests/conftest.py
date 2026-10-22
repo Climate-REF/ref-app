@@ -1,4 +1,7 @@
+import copy
+import shutil
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
@@ -39,3 +42,27 @@ def app() -> FastAPI:
 def client(app) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def writable_client(tmp_path: Path) -> Generator[TestClient, None, None]:
+    """A client over a copy of the fixture database, for tests that have to write to it."""
+    settings = test_settings()
+    config = copy.deepcopy(test_ref_config())
+
+    source = Path(config.db.database_url.removeprefix("sqlite:///"))
+    database_copy = tmp_path / source.name
+    shutil.copy(source, database_copy)
+    config.db.database_url = f"sqlite:///{database_copy}"
+
+    app = build_app(
+        settings=settings,
+        ref_config=config,
+        database=deps._get_database_dependency(settings, config),
+    )
+    app.dependency_overrides[get_settings] = lambda: settings
+    app.dependency_overrides[deps._ref_config_dependency] = lambda: config
+
+    with TestClient(app) as client:
+        client.ref_config = config  # type: ignore[attr-defined]
+        yield client

@@ -3,7 +3,7 @@
 from collections.abc import Collection, Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, false, or_, select
+from sqlalchemy import ColumnElement, false, select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
@@ -61,13 +61,19 @@ def _facet_values(value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
-def cmip_input_filter(facets: Mapping[str, str]) -> InputDatasetFilter | None:
+def cmip_input_filter(
+    facets: Mapping[str, str], *, or_no_model_input: bool = False
+) -> InputDatasetFilter | None:
     """
     Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.
 
     A facet no CMIP era carries is ignored, which keeps unknown query parameters harmless.
     A facet only one era carries excludes the other, so a CMIP7-only facet does not pull in
     all of CMIP6. Returns `None` when nothing can satisfy the request.
+
+    With `or_no_model_input` an execution with no model input also matches.
+    It carries no era, so dropping it would lose values rather than label them.
+    An unknown era still matches nothing.
     """
     eras = eras_in_scope(facets.get("mip_era"))
     known = {
@@ -77,19 +83,26 @@ def cmip_input_filter(facets: Mapping[str, str]) -> InputDatasetFilter | None:
     }
     if not eras or any(not any(_carries(era, key) for era in eras) for key in known):
         return None
-    return _input_filter(eras, known or None)
+    return _input_filter(eras, known or None, or_no_model_input=or_no_model_input)
 
 
 def _input_filter(
-    eras: tuple[SourceDatasetType, ...], facets: Mapping[str, tuple[str, ...]] | None = None
+    eras: tuple[SourceDatasetType, ...],
+    facets: Mapping[str, tuple[str, ...]] | None = None,
+    *,
+    or_no_model_input: bool = False,
 ) -> InputDatasetFilter:
     # The attrs converter leaves mypy with an unbound Iterable[_T_co] for source_types.
-    return InputDatasetFilter(source_types=eras, facets=facets)  # type: ignore[arg-type]
+    return InputDatasetFilter(
+        source_types=eras,  # type: ignore[arg-type]
+        facets=facets,
+        or_no_model_input=or_no_model_input,
+    )
 
 
-def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
+def cmip_dataset_filter(facets: Mapping[str, str], *, or_no_model_input: bool = False) -> ColumnElement[bool]:
     """Match executions as `cmip_input_filter` does, or no execution when nothing can match."""
-    input_filter = cmip_input_filter(facets)
+    input_filter = cmip_input_filter(facets, or_no_model_input=or_no_model_input)
     return input_filter.execution_clause() if input_filter else false()
 
 
@@ -112,26 +125,6 @@ def execution_groups_per_era(reader: Reader) -> dict[str, int]:
             stats = reader.executions.statistics(input_datasets=_input_filter((era,)))
             counts[label] = sum(s.total for s in stats)
     return counts
-
-
-def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:
-    """
-    Find the executions of a diagnostic that ran against `mip_era`, plus any with no era at all.
-
-    An execution with no CMIP input carries no era, so dropping it would lose values rather than
-    label them. Scoping the values query this way is what keeps outlier detection and pagination
-    inside a single era.
-    """
-    no_cmip_input = ~cmip_dataset_filter({})
-    rows = session.execute(
-        select(models.Execution.id)
-        .join(models.Execution.execution_group)
-        .where(
-            models.ExecutionGroup.diagnostic_id == diagnostic_id,
-            or_(cmip_dataset_filter({"mip_era": mip_era}), no_cmip_input),
-        )
-    ).scalars()
-    return list(rows)
 
 
 def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:

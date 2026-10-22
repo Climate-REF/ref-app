@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from statistics import fmean, pstdev, quantiles
 from typing import Any, NamedTuple
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
@@ -114,8 +114,7 @@ def _scalar_rows(
         )
     )
     if mip_era:
-        # An execution with no CMIP input carries no era, so it answers to whichever is asked for.
-        statement = statement.where(or_(cmip_dataset_filter({"mip_era": mip_era}), ~cmip_dataset_filter({})))
+        statement = statement.where(cmip_dataset_filter({"mip_era": mip_era}, or_no_model_input=True))
 
     return [
         ScalarRow(row[0], row[1], row[2], _units(row[3]), tuple(row[4:]))

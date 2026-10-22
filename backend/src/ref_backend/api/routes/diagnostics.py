@@ -16,7 +16,6 @@ from ref_backend.core.mip_eras import (
     cmip_dataset_filter,
     cmip_input_filter,
     execution_group_filter,
-    executions_in_mip_era,
 )
 from ref_backend.core.reader_values import (
     fetch_metric_values,
@@ -364,13 +363,9 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
       see only the values the caller is charting
     """
     # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
-    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
-    execution_ids = None
-    if mip_era:
-        # The reader reads an empty id list as unconstrained, so an era that matched no execution
-        # needs an id no value can carry rather than no filter at all.
-        execution_ids = executions_in_mip_era(app_context.session, mip_era, diagnostic.id) or [0]
+    input_datasets = cmip_input_filter({"mip_era": mip_era}, or_no_model_input=True) if mip_era else None
 
     # Scope to this diagnostic/provider via exact-match slugs. The filter keeps only the
     # promoted diagnostic version, so values from superseded versions are hidden. Exposing
@@ -378,7 +373,9 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     metric_filter = MetricValueFilter(
         diagnostic_slug=diagnostic_slug,
         provider_slug=provider_slug,
-        execution_ids=execution_ids,
+        # An unknown era matches no execution.
+        execution_ids=() if mip_era and input_datasets is None else None,
+        input_datasets=input_datasets,
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,

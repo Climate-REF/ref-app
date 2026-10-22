@@ -2,6 +2,11 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+
+from climate_ref import models
+from climate_ref.database import Database
+from climate_ref_core.datasets import SourceDatasetType
 
 MODEL = "ACCESS-ESM1-5"
 DIAGNOSTIC = "esmvaltool/climate-at-global-warming-levels"
@@ -63,3 +68,45 @@ def test_the_era_ignores_case(client: TestClient, settings, path, params) -> Non
 def test_an_empty_era_is_no_filter(client: TestClient, settings, path, params) -> None:
     url = f"{settings.API_V1_STR}{path}"
     assert client.get(url, params={**params, "mip_era": ""}).json() == client.get(url, params=params).json()
+
+
+def _add_obs_only_value(config) -> int:
+    """Add a scalar value from an execution of `DIAGNOSTIC` that ran on observations alone."""
+    provider_slug, diagnostic_slug = DIAGNOSTIC.split("/")
+    with Database.from_config(config, run_migrations=False).session_scope() as session:
+        group = session.scalars(
+            select(models.ExecutionGroup)
+            .join(models.Diagnostic)
+            .join(models.Provider)
+            .where(models.Diagnostic.slug == diagnostic_slug, models.Provider.slug == provider_slug)
+            .limit(1)
+        ).one()
+        obs = session.scalars(
+            select(models.Dataset).where(models.Dataset.dataset_type == SourceDatasetType.obs4MIPs).limit(1)
+        ).one()
+        execution = models.Execution(
+            execution_group_id=group.id, dataset_hash="obs-only", output_fragment="obs-only", successful=True
+        )
+        execution.datasets.append(obs)
+        session.add(execution)
+        session.flush()
+        value = models.ScalarMetricValue.build(
+            execution_id=execution.id, value=1.0, dimensions={}, attributes=None
+        )
+        session.add(value)
+        session.flush()
+        value_id = value.id
+        session.commit()
+    return value_id
+
+
+@pytest.mark.parametrize(("mip_era", "included"), [("CMIP6", True), ("cmip7", True), ("CMIP5", False)])
+def test_values_keep_obs_only_runs_for_a_known_era(writable_client: TestClient, mip_era, included) -> None:
+    value_id = _add_obs_only_value(writable_client.ref_config)  # type: ignore[attr-defined]
+    r = writable_client.get(
+        f"/api/v1/diagnostics/{DIAGNOSTIC}/values",
+        params={"value_type": "scalar", "mip_era": mip_era, "limit": 500, "detect_outliers": "off"},
+    )
+
+    assert r.status_code == 200
+    assert (value_id in {v["id"] for v in r.json()["data"]}) is included

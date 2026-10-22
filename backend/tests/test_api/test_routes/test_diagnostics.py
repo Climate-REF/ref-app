@@ -1,8 +1,4 @@
-import copy
-import shutil
-from collections.abc import Generator
 from datetime import timedelta
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,9 +8,7 @@ from climate_ref import models
 from climate_ref.database import Database
 from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
-from ref_backend.builder import build_app
-from ref_backend.core.config import get_settings
-from ref_backend.testing import test_ref_config, test_settings
+from ref_backend.testing import test_ref_config
 
 
 def get_diagnostic(client: TestClient, settings) -> dict:
@@ -931,30 +925,6 @@ def test_diagnostic_group_by_lists_each_pairing_once(client: TestClient) -> None
             (entry["source_type"], tuple(entry["group_by"] or ())) for entry in diagnostic["group_by"]
         ]
         assert len(pairings) == len(set(pairings)), diagnostic["slug"]
-
-
-@pytest.fixture
-def writable_client(tmp_path: Path) -> Generator[TestClient, None, None]:
-    """A client over a copy of the fixture database, for tests that have to write to it."""
-    settings = test_settings()
-    config = copy.deepcopy(test_ref_config())
-
-    source = Path(config.db.database_url.removeprefix("sqlite:///"))
-    database_copy = tmp_path / source.name
-    shutil.copy(source, database_copy)
-    config.db.database_url = f"sqlite:///{database_copy}"
-
-    app = build_app(
-        settings=settings,
-        ref_config=config,
-        database=deps._get_database_dependency(settings, config),
-    )
-    app.dependency_overrides[get_settings] = lambda: settings
-    app.dependency_overrides[deps._ref_config_dependency] = lambda: config
-
-    with TestClient(app) as client:
-        client.ref_config = config  # type: ignore[attr-defined]
-        yield client
 
 
 def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: TestClient) -> None:
