@@ -6,7 +6,7 @@ from starlette.responses import StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
-from climate_ref.results import DiagnosticFilter, InputDatasetFilter, MetricValueFilter
+from climate_ref.results import DiagnosticFilter, InputDatasetFilter, MetricValueFilter, ResourceFilter
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.metric_values import (
     MetricValueType,
@@ -21,7 +21,7 @@ from ref_backend.core.reader_values import (
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.resource_usage import RESOURCE_AGGREGATES, summary_from_row
+from ref_backend.core.resource_usage import resource_usage_by_diagnostic
 from ref_backend.models import (
     Collection,
     DiagnosticCatalogEntry,
@@ -137,13 +137,11 @@ def _value_types(app_context: AppContextDep, scope: _Scope) -> _ValueTypes:
 
 def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[DiagnosticCatalogEntry]:
     group_scope = scope.group_scope
-    # Count executions and roll up their resource usage per diagnostic
     execution_counts = (
         app_context.session.query(
             models.ExecutionGroup.diagnostic_id,
             func.count(models.Execution.id).label("total_count"),
             func.sum(func.cast(models.Execution.successful, Integer)).label("successful_count"),
-            *RESOURCE_AGGREGATES,
         )
         .join(models.Execution)
         .filter(*group_scope)
@@ -154,7 +152,16 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
         row.diagnostic_id: {"total": row.total_count, "successful": row.successful_count or 0}
         for row in execution_counts
     }
-    resource_usage = {row.diagnostic_id: summary_from_row(row) for row in execution_counts}
+    resource_usage = (
+        {}
+        if scope.matches_nothing
+        else resource_usage_by_diagnostic(
+            app_context.reader,
+            ResourceFilter(
+                include_superseded=False, include_retracted=True, input_datasets=scope.input_datasets
+            ),
+        )
+    )
 
     group_stats = (
         {}
@@ -175,7 +182,7 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
                 execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
                 execution_group_count=stats.total if stats else 0,
                 successful_execution_group_count=stats.successful if stats else 0,
-                resource_usage=resource_usage.get(m.id),
+                resource_usage=resource_usage.get((m.provider.slug, m.slug)),
             )
         )
     return entries

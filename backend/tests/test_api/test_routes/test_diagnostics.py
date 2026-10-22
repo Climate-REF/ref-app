@@ -952,6 +952,35 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
     assert relisted["execution_group_count"] == 0
 
 
+def _catalog_usage(client: TestClient, diagnostic_id: int) -> dict | None:
+    entries = client.get("/api/v1/diagnostics/catalog").json()["data"]
+    return next(d for d in entries if d["id"] == diagnostic_id)["resource_usage"]
+
+
+def test_catalog_resource_usage_counts_retracted_runs_at_the_promoted_version(
+    writable_client: TestClient,
+) -> None:
+    entries = writable_client.get("/api/v1/diagnostics/catalog").json()["data"]
+    diagnostic = next(d for d in entries if d["resource_usage"] is not None)
+    before = diagnostic["resource_usage"]
+
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        for execution in database.session.scalars(
+            select(models.Execution)
+            .join(models.ExecutionGroup)
+            .where(models.ExecutionGroup.diagnostic_id == diagnostic["id"])
+        ):
+            execution.retracted = True
+    assert _catalog_usage(writable_client, diagnostic["id"]) == before
+
+    with database.session.begin():
+        record = database.session.get(models.Diagnostic, diagnostic["id"])
+        assert record is not None
+        record.promoted_version = record.promoted_version + 1
+    assert _catalog_usage(writable_client, diagnostic["id"]) is None
+
+
 def test_a_backfilled_failure_does_not_decide_a_group(writable_client: TestClient) -> None:
     """The latest execution is the newest by created_at, not the highest id."""
     listing = writable_client.get("/api/v1/diagnostics/").json()["data"]

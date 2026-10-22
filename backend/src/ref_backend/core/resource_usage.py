@@ -1,13 +1,10 @@
 """Aggregates of the wall, CPU and memory usage recorded against executions."""
 
-from typing import Any
-
 import attrs
 from pydantic import BaseModel
-from sqlalchemy import Row, func
 
-from climate_ref import models
 from climate_ref.results import Reader, ResourceFilter
+from climate_ref.results.resources import ResourceSummary
 
 
 class ExecutionResourceSummary(BaseModel):
@@ -54,33 +51,21 @@ class ExecutionResourceSummary(BaseModel):
     """
 
 
-RESOURCE_AGGREGATES = (
-    func.count(models.Execution.wall_seconds).label("timed_execution_count"),
-    func.sum(models.Execution.wall_seconds).label("wall_seconds_total"),
-    func.avg(models.Execution.wall_seconds).label("wall_seconds_mean"),
-    func.max(models.Execution.wall_seconds).label("wall_seconds_max"),
-    func.sum(models.Execution.cpu_seconds).label("cpu_seconds_total"),
-    func.avg(models.Execution.cpu_seconds).label("cpu_seconds_mean"),
-    func.min(models.Execution.peak_memory_bytes).label("peak_memory_bytes_min"),
-    func.max(models.Execution.peak_memory_bytes).label("peak_memory_bytes_max"),
-)
-
-
-def summary_from_row(row: Row[Any]) -> ExecutionResourceSummary | None:
-    """
-    Build a summary from a row that carries the ``RESOURCE_AGGREGATES`` labels.
-
-    Returns ``None`` when the row holds no timed executions.
-    """
-    values = row._mapping
-    if not values["timed_execution_count"]:
-        return None
-    return ExecutionResourceSummary.model_validate(dict(values))
+def _summary(summary: ResourceSummary) -> ExecutionResourceSummary:
+    return ExecutionResourceSummary.model_validate(attrs.asdict(summary))
 
 
 def resource_usage(reader: Reader, filters: ResourceFilter) -> ExecutionResourceSummary | None:
     """Roll up the resource usage of the executions matching ``filters``."""
     summary = reader.resources.summary(filters)
-    if summary is None:
-        return None
-    return ExecutionResourceSummary.model_validate(attrs.asdict(summary))
+    return _summary(summary) if summary else None
+
+
+def resource_usage_by_diagnostic(
+    reader: Reader, filters: ResourceFilter
+) -> dict[tuple[str | None, str | None], ExecutionResourceSummary]:
+    """Roll up the resource usage of the executions matching ``filters``, per provider and diagnostic slug."""
+    return {
+        (summary.provider_slug, summary.diagnostic_slug): _summary(summary)
+        for summary in reader.resources.summaries(filters, group_by="diagnostic")
+    }
