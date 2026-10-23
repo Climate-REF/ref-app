@@ -5,6 +5,6 @@ Sentry.init({
   dsn: import.meta.env.PROD
     ? "https://11fe89ec0b64497ccd1e78e4bece59d5@o495046.ingest.us.sentry.io/4510072293425152"
     : "",
-  sendDefaultPii: false,
+  dataCollection: { userInfo: false, cookies: false, httpHeaders: false },
   integrations: [],
 });
