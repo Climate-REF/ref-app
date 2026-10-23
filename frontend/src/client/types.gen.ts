@@ -2352,6 +2352,65 @@ export type DiagnosticsListExecutionGroupsResponses = {
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
 
+export type DiagnosticsListMetricValueFacetsData = {
+    body?: never;
+    path: {
+        /**
+         * Provider Slug
+         */
+        provider_slug: string;
+        /**
+         * Diagnostic Slug
+         */
+        diagnostic_slug: string;
+    };
+    query: {
+        /**
+         * Type of metric values to read the facets of
+         */
+        value_type: MetricValueType;
+        /**
+         * Isolate Ids
+         *
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Exclude Ids
+         *
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
+        /**
+         * Mip Era
+         *
+         * Keep only the execution groups that draw on this era, or on no model data
+         */
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
+    };
+    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values/facets';
+};
+
+export type DiagnosticsListMetricValueFacetsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DiagnosticsListMetricValueFacetsError = DiagnosticsListMetricValueFacetsErrors[keyof DiagnosticsListMetricValueFacetsErrors];
+
+export type DiagnosticsListMetricValueFacetsResponses = {
+    /**
+     * Response Diagnostics-List Metric Value Facets
+     *
+     * Successful Response
+     */
+    200: Array<Facet>;
+};
+
+export type DiagnosticsListMetricValueFacetsResponse = DiagnosticsListMetricValueFacetsResponses[keyof DiagnosticsListMetricValueFacetsResponses];
+
 export type DiagnosticsListMetricValuesData = {
     body?: never;
     path: {
@@ -2415,6 +2474,12 @@ export type DiagnosticsListMetricValuesData = {
          * Keep only the execution groups that draw on this era, or on no model data
          */
         mip_era?: 'CMIP6' | 'CMIP7' | null;
+        /**
+         * With Facets
+         *
+         * Fill `facets`, which `/values/facets` also returns
+         */
+        with_facets?: boolean;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
@@ -2699,6 +2764,59 @@ export type ExecutionsMetricBundleResponses = {
 
 export type ExecutionsMetricBundleResponse = ExecutionsMetricBundleResponses[keyof ExecutionsMetricBundleResponses];
 
+export type ExecutionsListMetricValueFacetsData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+    };
+    query: {
+        /**
+         * Execution Id
+         */
+        execution_id?: string | null;
+        /**
+         * Type of metric values to read the facets of
+         */
+        value_type: MetricValueType;
+        /**
+         * Isolate Ids
+         *
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Exclude Ids
+         *
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/values/facets';
+};
+
+export type ExecutionsListMetricValueFacetsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecutionsListMetricValueFacetsError = ExecutionsListMetricValueFacetsErrors[keyof ExecutionsListMetricValueFacetsErrors];
+
+export type ExecutionsListMetricValueFacetsResponses = {
+    /**
+     * Response Executions-List Metric Value Facets
+     *
+     * Successful Response
+     */
+    200: Array<Facet>;
+};
+
+export type ExecutionsListMetricValueFacetsResponse = ExecutionsListMetricValueFacetsResponses[keyof ExecutionsListMetricValueFacetsResponses];
+
 export type ExecutionsListMetricValuesData = {
     body?: never;
     path: {
@@ -2756,6 +2874,12 @@ export type ExecutionsListMetricValuesData = {
          * Comma-separated list of metric value IDs to exclude
          */
         exclude_ids?: string | null;
+        /**
+         * With Facets
+         *
+         * Fill `facets`, which `/values/facets` also returns
+         */
+        with_facets?: boolean;
     };
     url: '/api/v1/executions/{group_id}/values';
 };

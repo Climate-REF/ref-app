@@ -15,17 +15,17 @@ def test_execution_list_count(client: TestClient, settings) -> None:
     assert len(data["data"]) > 0
 
 
-def get_execution_group_id(client: TestClient, settings) -> str:
-    """Helper to get an execution group ID that has scalar metric values."""
+def get_execution_group_id(client: TestClient, settings, value_type: str = "scalar") -> str:
+    """Helper to get an execution group ID that has metric values of `value_type`."""
     r = client.get(f"{settings.API_V1_STR}/executions")
     assert r.status_code == 200
     data = r.json()
     assert len(data["data"]) > 0
     for group in data["data"]:
-        rv = client.get(f"{settings.API_V1_STR}/executions/{group['id']}/values?value_type=scalar")
+        rv = client.get(f"{settings.API_V1_STR}/executions/{group['id']}/values?value_type={value_type}")
         if rv.status_code == 200 and rv.json()["count"] > 0:
             return group["id"]
-    pytest.skip("No execution group with scalar values found in test data")
+    pytest.skip(f"No execution group with {value_type} values found in test data")
 
 
 def test_execution_values_outlier_detection_off(client: TestClient, settings):
@@ -607,3 +607,35 @@ def test_execution_statistics_count_groups_per_era(client: TestClient, settings)
 
     listed = client.get(f"{settings.API_V1_STR}/executions/?mip_era=CMIP6").json()
     assert by_era["CMIP6"]["total"] == listed["total_count"] > 0
+
+
+@pytest.mark.parametrize("value_type", ["scalar", "series"])
+def test_execution_value_facets_match_the_values(client: TestClient, settings, value_type):
+    group_id = get_execution_group_id(client, settings, value_type)
+    url = f"{settings.API_V1_STR}/executions/{group_id}/values"
+    params = {"value_type": value_type, "limit": 1}
+
+    facets = client.get(f"{url}/facets", params=params)
+    values = client.get(url, params=params).json()
+
+    assert facets.status_code == 200
+    assert values["facets"]
+    assert facets.json() == values["facets"]
+    assert client.get(url, params={**params, "with_facets": "false"}).json()["facets"] == []
+
+
+@pytest.mark.parametrize(
+    ("params", "status"),
+    [({}, 422), ({"value_type": "all"}, 422), ({"value_type": "scalar", "isolate_ids": "x"}, 400)],
+)
+def test_execution_value_facets_reject_bad_input(client: TestClient, settings, params, status):
+    group_id = get_execution_group_id(client, settings)
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/values/facets", params=params)
+
+    assert r.status_code == status
+
+
+def test_execution_value_facets_of_an_unknown_group(client: TestClient, settings):
+    r = client.get(f"{settings.API_V1_STR}/executions/999999/values/facets", params={"value_type": "scalar"})
+
+    assert r.status_code == 404

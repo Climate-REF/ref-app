@@ -24,12 +24,17 @@ def _rows(body) -> int:
     return len(body["data"])
 
 
+def _facet_values(body) -> int:
+    return sum(len(f["values"]) for f in body)
+
+
 ROUTES = [
     ("/diagnostics/", {}, _group_total),
     ("/diagnostics/catalog", {}, _group_total),
     ("/diagnostics/value-flags", {}, _with_values),
     (f"/diagnostics/{DIAGNOSTIC}/execution_groups", {}, _rows),
     (f"/diagnostics/{DIAGNOSTIC}/values", {"value_type": "scalar"}, _rows),
+    (f"/diagnostics/{DIAGNOSTIC}/values/facets", {"value_type": "scalar"}, _facet_values),
     ("/executions/", {}, _rows),
     ("/models/", {}, _rows),
     (f"/models/{MODEL}/ensemble", {}, _rows),

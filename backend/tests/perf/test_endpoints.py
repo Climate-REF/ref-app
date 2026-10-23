@@ -50,6 +50,26 @@ ENDPOINTS = [
         params={"value_type": "scalar", "source_id": "{source_id}"},
     ),
     Endpoint(id="diagnostics.values.series", path=f"{_DIAGNOSTIC}/values", params={"value_type": "series"}),
+    Endpoint(
+        id="diagnostics.values.scalar.page",
+        path=f"{_DIAGNOSTIC}/values",
+        params={"value_type": "scalar", "with_facets": "false"},
+    ),
+    Endpoint(
+        id="diagnostics.values.series.page",
+        path=f"{_DIAGNOSTIC}/values",
+        params={"value_type": "series", "with_facets": "false"},
+    ),
+    Endpoint(
+        id="diagnostics.values.facets.scalar",
+        path=f"{_DIAGNOSTIC}/values/facets",
+        params={"value_type": "scalar"},
+    ),
+    Endpoint(
+        id="diagnostics.values.facets.series",
+        path=f"{_DIAGNOSTIC}/values/facets",
+        params={"value_type": "series"},
+    ),
     # executions: the recent list and an execution group's page
     Endpoint(id="executions.list", path="executions/", allowed_scans=frozenset({"execution_group"})),
     Endpoint(
@@ -66,6 +86,7 @@ ENDPOINTS = [
     Endpoint(id="executions.get", path=_GROUP),
     Endpoint(id="executions.values.scalar", path=f"{_GROUP}/values", params={"value_type": "scalar"}),
     Endpoint(id="executions.values.series", path=f"{_GROUP}/values", params={"value_type": "series"}),
+    Endpoint(id="executions.values.facets", path=f"{_GROUP}/values/facets", params={"value_type": "scalar"}),
     # models and datasets
     Endpoint(
         id="models.list",

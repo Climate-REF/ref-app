@@ -61,6 +61,15 @@ class Facet(BaseModel):
 NON_FACET_DIMENSIONS = frozenset({"kind"})
 
 
+def facets_of(collection: "ScalarValueCollection | SeriesValueCollection") -> list[Facet]:
+    """Return the facets of a reader collection that callers can filter on."""
+    return [
+        Facet(key=f.key, values=list(f.values))
+        for f in collection.facets
+        if f.key not in NON_FACET_DIMENSIONS
+    ]
+
+
 _PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {
     "value_units": ("value_units", "units"),
     "value_long_name": ("value_long_name", "long_name"),
@@ -129,17 +138,11 @@ class MetricValueCollection(BaseModel):
             for item in collection.items
         ]
 
-        facets = [
-            Facet(key=f.key, values=list(f.values))
-            for f in collection.facets
-            if f.key not in NON_FACET_DIMENSIONS
-        ]
-
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
             total_count=_counted(collection.total_count),
-            facets=facets,
+            facets=facets_of(collection),
             types=["scalar"],
             had_outliers=collection.had_outliers if detection_ran else None,
             outlier_count=collection.outlier_count if detection_ran else None,
@@ -169,17 +172,11 @@ class MetricValueCollection(BaseModel):
                 )
             )
 
-        facets = [
-            Facet(key=f.key, values=list(f.values))
-            for f in collection.facets
-            if f.key not in NON_FACET_DIMENSIONS
-        ]
-
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
             total_count=_counted(collection.total_count),
-            facets=facets,
+            facets=facets_of(collection),
             types=["series"],
             had_outliers=None,
             outlier_count=None,

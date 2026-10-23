@@ -928,3 +928,67 @@ def test_a_blank_id_list_is_no_filter(client: TestClient, param) -> None:
 
     assert everything["total_count"] > 0
     assert client.get(url, params={**params, param: ","}).json() == everything
+
+
+@pytest.mark.parametrize("value_type", ["scalar", "series"])
+def test_value_facets_match_the_values(client: TestClient, settings, value_type) -> None:
+    diagnostic = next(
+        d
+        for d in client.get(f"{settings.API_V1_STR}/diagnostics/").json()["data"]
+        if d[f"has_{value_type}_values"]
+    )
+    url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/values"
+    params = {"value_type": value_type, "limit": 1}
+
+    facets = client.get(f"{url}/facets", params=params)
+    values = client.get(url, params=params).json()
+
+    assert facets.status_code == 200
+    assert values["facets"]
+    assert facets.json() == values["facets"]
+    assert client.get(url, params={**params, "with_facets": "false"}).json()["facets"] == []
+
+
+def test_value_facets_follow_the_dimension_filters(client: TestClient) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    everything = {
+        f["key"]: f["values"] for f in client.get(f"{url}/facets", params={"value_type": "scalar"}).json()
+    }
+    key, (value, *_) = next((k, v) for k, v in everything.items() if len(v) > 1)
+
+    narrowed = client.get(f"{url}/facets", params={"value_type": "scalar", key: value}).json()
+
+    assert {f["key"]: f["values"] for f in narrowed}[key] == [value]
+
+
+def test_value_facets_follow_the_isolated_ids(client: TestClient) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    params = {"value_type": "scalar", "detect_outliers": "off"}
+    value_id = client.get(url, params={**params, "limit": 1}).json()["data"][0]["id"]
+
+    for ids in ({"isolate_ids": str(value_id)}, {"exclude_ids": str(value_id)}):
+        facets = client.get(f"{url}/facets", params={**params, **ids}).json()
+        assert facets == client.get(url, params={**params, **ids}).json()["facets"]
+
+
+@pytest.mark.parametrize(
+    ("params", "status"),
+    [
+        ({}, 422),
+        ({"value_type": "all"}, 422),
+        ({"value_type": "scalar", "isolate_ids": "1,x"}, 400),
+        ({"value_type": "scalar", "exclude_ids": "x"}, 400),
+    ],
+)
+def test_value_facets_reject_bad_input(client: TestClient, params, status) -> None:
+    r = client.get(
+        "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values/facets", params=params
+    )
+
+    assert r.status_code == status
+
+
+def test_value_facets_of_an_unknown_diagnostic(client: TestClient) -> None:
+    r = client.get("/api/v1/diagnostics/nope/nope/values/facets", params={"value_type": "scalar"})
+
+    assert r.status_code == 404

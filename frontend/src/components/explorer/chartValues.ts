@@ -5,7 +5,7 @@ import type { MetricValuesQuery } from "./content/useExplorerMetricValues";
 /**
  * The search of the values page listing the values a chart card shows
  *
- * The page pages through the values itself, so the chart's limit is left out.
+ * The page pages through the values and reads the facets itself, so the chart's limit is left out.
  * Outliers are detected and unverified values hidden unless the chart says otherwise.
  */
 export function chartValuesSearch(
@@ -16,6 +16,7 @@ export function chartValuesSearch(
     limit: _limit,
     offset: _offset,
     format: _format,
+    with_facets: _withFacets,
     detect_outliers,
     include_unverified,
     ...filters

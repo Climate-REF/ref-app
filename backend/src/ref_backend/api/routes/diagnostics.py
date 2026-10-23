@@ -15,6 +15,7 @@ from ref_backend.core.metric_values import (
 )
 from ref_backend.core.mip_eras import MipEra, source_id_datasets, source_types_for
 from ref_backend.core.reader_values import (
+    fetch_facets,
     fetch_metric_values,
     parse_dimension_filters,
 )
@@ -25,6 +26,7 @@ from ref_backend.models import (
     DiagnosticSummary,
     DiagnosticValueFlags,
     ExecutionGroup,
+    Facet,
     GroupCounts,
     MetricValueCollection,
 )
@@ -236,6 +238,55 @@ async def list_execution_groups(
     return Collection(data=[ExecutionGroup.build(g, app_context) for g in groups], total_count=len(groups))
 
 
+async def _metric_filter(  # noqa: PLR0913, PLR0917
+    app_context: AppContextDep,
+    provider_slug: str,
+    diagnostic_slug: str,
+    request: Request,
+    mip_era: MipEra | None,
+    isolate_ids: str | None,
+    exclude_ids: str | None,
+) -> MetricValueFilter:
+    # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
+    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    return MetricValueFilter(
+        diagnostic_slug=diagnostic_slug,
+        provider_slug=provider_slug,
+        include_superseded=False,
+        include_retracted=False,
+        latest_only=False,
+        source_types=source_types_for(mip_era),
+        or_no_model_input=mip_era is not None,
+        dimensions=parse_dimension_filters(request.query_params),
+        isolate_ids=parse_id_list(isolate_ids),
+        exclude_ids=parse_id_list(exclude_ids),
+    )
+
+
+@router.get("/{provider_slug}/{diagnostic_slug}/values/facets")
+async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+    app_context: AppContextDep,
+    provider_slug: str,
+    diagnostic_slug: str,
+    request: Request,
+    value_type: MetricValueType = Query(..., description="Type of metric values to read the facets of"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+    mip_era: MipEra | None = Query(
+        None, description="Keep only the execution groups that draw on this era, or on no model data"
+    ),
+) -> list[Facet]:
+    """
+    Get the facets of the values `/values` returns for the same filters, without the values.
+
+    They cover every page and the outliers too, so a client can keep them while it pages.
+    """
+    metric_filter = await _metric_filter(
+        app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
+    )
+    return fetch_facets(app_context, metric_filter, value_type)
+
+
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=MetricValueCollection)
 async def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
@@ -255,6 +306,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     mip_era: MipEra | None = Query(
         None, description="Keep only the execution groups that draw on this era, or on no model data"
     ),
+    with_facets: bool = Query(True, description="Fill `facets`, which `/values/facets` also returns"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic (both scalar and series)
@@ -269,25 +321,14 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
 
     Values come from the promoted diagnostic version, and retracted executions are left out.
     """
-    # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
-    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
-
-    metric_filter = MetricValueFilter(
-        diagnostic_slug=diagnostic_slug,
-        provider_slug=provider_slug,
-        include_superseded=False,
-        include_retracted=False,
-        latest_only=False,
-        source_types=source_types_for(mip_era),
-        or_no_model_input=mip_era is not None,
-        dimensions=parse_dimension_filters(request.query_params),
-        isolate_ids=parse_id_list(isolate_ids),
-        exclude_ids=parse_id_list(exclude_ids),
+    metric_filter = await _metric_filter(
+        app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
     )
 
     return fetch_metric_values(
         app_context,
         metric_filter,
+        with_facets=with_facets,
         value_type=value_type,
         format=format,
         offset=offset,

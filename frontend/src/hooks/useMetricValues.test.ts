@@ -44,6 +44,10 @@ function createDefaultOptions(overrides: Record<string, any> = {}) {
       queryKey: ["test"],
       queryFn: () => Promise.resolve(null),
     }),
+    fetchFacetsOptions: vi.fn().mockReturnValue({
+      queryKey: ["facets"],
+      queryFn: () => Promise.resolve(null),
+    }),
     fetchDownload: vi.fn().mockResolvedValue({ data: "csv-data" }),
     getDownloadFilename: vi.fn().mockReturnValue("test.csv"),
   };
@@ -348,6 +352,63 @@ describe("useMetricValues", () => {
           }),
         }),
       );
+    });
+  });
+
+  describe("facets", () => {
+    it("reads the values without facets, and the facets without paging or outliers", () => {
+      const options = createDefaultOptions({
+        offset: "50",
+        limit: "25",
+        source_id: "A",
+      });
+      renderHook(() => useMetricValues(options), { wrapper: createWrapper() });
+
+      expect(options.fetchQueryOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ with_facets: false, offset: "50" }),
+        }),
+      );
+      expect(options.fetchFacetsOptions).toHaveBeenCalledWith({
+        path: options.pathParams,
+        query: { source_id: "A", value_type: "scalar" },
+      });
+    });
+
+    it("reads the facets with the page when the facets query fails", () => {
+      mockedUseQuery.mockImplementation(
+        (options: any) =>
+          (options.queryKey[0] === "facets"
+            ? { data: undefined, isLoading: false, isError: true }
+            : { data: MOCK_METRIC_VALUES, isLoading: false }) as any,
+      );
+      const options = createDefaultOptions();
+      const { result } = renderHook(() => useMetricValues(options), {
+        wrapper: createWrapper(),
+      });
+
+      expect(options.fetchQueryOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ with_facets: true }),
+        }),
+      );
+      expect(result.current.facets).toEqual(MOCK_METRIC_VALUES.facets);
+    });
+
+    it("is loading until the facets are in", () => {
+      mockedUseQuery.mockImplementation(
+        (options: any) =>
+          (options.queryKey[0] === "facets"
+            ? { data: undefined, isLoading: true }
+            : { data: MOCK_METRIC_VALUES, isLoading: false }) as any,
+      );
+      const options = createDefaultOptions();
+      const { result } = renderHook(() => useMetricValues(options), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.facets).toEqual([]);
     });
   });
 

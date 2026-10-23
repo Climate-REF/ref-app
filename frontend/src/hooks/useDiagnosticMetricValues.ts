@@ -1,6 +1,9 @@
 import type { useNavigate } from "@tanstack/react-router";
 import { diagnosticsListMetricValues } from "@/client";
-import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
+import {
+  diagnosticsListMetricValueFacetsOptions,
+  diagnosticsListMetricValuesOptions,
+} from "@/client/@tanstack/react-query.gen.ts";
 
 import { useMetricValues } from "./useMetricValues";
 
@@ -28,6 +31,7 @@ export function useDiagnosticMetricValues({
     valueType,
     navigate,
     fetchQueryOptions: diagnosticsListMetricValuesOptions,
+    fetchFacetsOptions: diagnosticsListMetricValueFacetsOptions,
     fetchDownload: diagnosticsListMetricValues,
     getDownloadFilename: (params, type) =>
       `metric-values-${params.provider_slug}-${params.diagnostic_slug}-${type}.csv`,

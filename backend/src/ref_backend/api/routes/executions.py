@@ -26,6 +26,7 @@ from ref_backend.core.metric_values import (
 )
 from ref_backend.core.mip_eras import MipEra, source_id_datasets, source_types_for
 from ref_backend.core.reader_values import (
+    fetch_facets,
     fetch_metric_values,
     parse_dimension_filters,
 )
@@ -36,6 +37,7 @@ from ref_backend.models import (
     Execution,
     ExecutionGroup,
     ExecutionStats,
+    Facet,
     GroupCounts,
     MetricValueCollection,
 )
@@ -272,6 +274,39 @@ async def metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
+def _metric_filter(
+    execution: models.Execution, request: Request, isolate_ids: str | None, exclude_ids: str | None
+) -> MetricValueFilter:
+    return MetricValueFilter(
+        execution_ids=execution.id,
+        include_superseded=True,
+        include_retracted=True,
+        latest_only=False,
+        dimensions=parse_dimension_filters(request.query_params),
+        isolate_ids=parse_id_list(isolate_ids),
+        exclude_ids=parse_id_list(exclude_ids),
+    )
+
+
+@router.get("/{group_id}/values/facets")
+async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+    app_context: AppContextDep,
+    request: Request,
+    group_id: str,
+    execution_id: str | None = None,
+    value_type: MetricValueType = Query(..., description="Type of metric values to read the facets of"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+) -> list[Facet]:
+    """
+    Get the facets of the values `/values` returns for the same filters, without the values.
+
+    They cover every page and the outliers too, so a client can keep them while it pages.
+    """
+    execution = await _get_execution(group_id, execution_id, app_context)
+    return fetch_facets(app_context, _metric_filter(execution, request, isolate_ids, exclude_ids), value_type)
+
+
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
 async def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
@@ -288,6 +323,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
     isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
     exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+    with_facets: bool = Query(True, description="Fill `facets`, which `/values/facets` also returns"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Fetch metric values for a specific execution (both scalar and series)
@@ -301,19 +337,10 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     """
     execution = await _get_execution(group_id, execution_id, app_context)
 
-    metric_filter = MetricValueFilter(
-        execution_ids=execution.id,
-        include_superseded=True,
-        include_retracted=True,
-        latest_only=False,
-        dimensions=parse_dimension_filters(request.query_params),
-        isolate_ids=parse_id_list(isolate_ids),
-        exclude_ids=parse_id_list(exclude_ids),
-    )
-
     return fetch_metric_values(
         app_context,
-        metric_filter,
+        _metric_filter(execution, request, isolate_ids, exclude_ids),
+        with_facets=with_facets,
         value_type=value_type,
         format=format,
         offset=offset,

@@ -27,11 +27,12 @@ describe("chartValuesSearch", () => {
     });
   });
 
-  it("leaves out the value type, paging and unset filters", () => {
+  it("leaves out the value type, paging, facets and unset filters", () => {
     const search = chartValuesSearch({
       value_type: "series",
       limit: 500,
       offset: 0,
+      with_facets: false,
       mip_era: undefined,
       isolate_ids: null,
     });
