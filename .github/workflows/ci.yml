@@ -110,6 +110,19 @@ jobs:
       with:
         enable-cache: true
 
+    # The databases depend on the climate-ref version on each side, which the lock files pin.
+    - name: Key the synthetic database cache
+      id: perf-db
+      run: |
+        key=$(cat uv.lock <(git show "origin/${{ github.base_ref }}:backend/uv.lock") | sha256sum | cut -c1-16)
+        echo "key=perf-db-$key" >> "$GITHUB_OUTPUT"
+
+    - name: Cache the synthetic databases
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ref-app/perf
+        key: ${{ steps.perf-db.outputs.key }}
+
     - name: Compare query performance against the base branch
       env:
         REF_PERF_ROUNDS: "10"
