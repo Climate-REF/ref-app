@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from climate_ref import models
 from climate_ref.database import Database
+from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
 from ref_backend.builder import build_app
 from ref_backend.core.config import get_settings
@@ -995,3 +996,16 @@ def test_diagnostics_catalog_counts_one_model(client: TestClient, settings):
     assert sum(total for total, _ in model.values()) > 0
     assert sum(total for total, _ in model.values()) < sum(total for total, _ in everything.values())
     assert all(total == 0 for total, _ in nothing.values())
+
+
+def test_diagnostic_without_provider(app, client: TestClient, settings):
+    diagnostic = get_diagnostic(client, settings)
+    app.dependency_overrides[deps._provider_registry_dependency] = lambda: ProviderRegistry(providers=[])
+    try:
+        r = client.get(
+            f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+        )
+    finally:
+        del app.dependency_overrides[deps._provider_registry_dependency]
+
+    assert r.status_code == 200

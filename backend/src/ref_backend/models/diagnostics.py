@@ -20,7 +20,17 @@ from ref_backend.models.aft import AFTDiagnosticDetail
 from ref_backend.models.common import GroupBy, ProviderSummary
 
 if TYPE_CHECKING:
+    from climate_ref_core.diagnostics import Diagnostic
     from ref_backend.api.deps import AppContext
+
+
+def _concrete_diagnostic(diagnostic: models.Diagnostic, app_context: "AppContext") -> "Diagnostic | None":
+    """Find the registered diagnostic for a stored one, or None when its provider is not installed."""
+    try:
+        return app_context.provider_registry.get_metric(diagnostic.provider.slug, diagnostic.slug)
+    except KeyError:
+        logger.warning(f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}")
+        return None
 
 
 class DiagnosticCatalogEntry(BaseModel):
@@ -113,14 +123,8 @@ class DiagnosticCatalogEntry(BaseModel):
     @staticmethod
     def _build_group_by_summary(diagnostic: models.Diagnostic, app_context: "AppContext") -> list[GroupBy]:
         """Extract and build group_by information from diagnostic data requirements."""
-        try:
-            concrete_diagnostic = app_context.provider_registry.get_metric(
-                diagnostic.provider.slug, diagnostic.slug
-            )
-        except KeyError:
-            logger.warning(
-                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
-            )
+        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
+        if concrete_diagnostic is None:
             return []
         data_requirements = sorted(
             concrete_diagnostic.data_requirements,
@@ -196,16 +200,8 @@ class DiagnosticCatalogEntry(BaseModel):
         group_by_summary = DiagnosticCatalogEntry._build_group_by_summary(diagnostic, app_context)
         aft = DiagnosticCatalogEntry._get_aft_link(diagnostic)
 
-        try:
-            concrete_diagnostic = app_context.provider_registry.get_metric(
-                diagnostic.provider.slug, diagnostic.slug
-            )
-            description = concrete_diagnostic.__doc__ or ""
-        except KeyError:
-            logger.warning(
-                f"Could not find concrete diagnostic for {diagnostic.provider.slug}/{diagnostic.slug}"
-            )
-            description = ""
+        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
+        description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
 
         # Build the base diagnostic summary
         summary = DiagnosticCatalogEntry(
@@ -328,9 +324,8 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
             .count()
         )
 
-        concrete_diagnostic = app_context.provider_registry.get_metric(
-            diagnostic.provider.slug, diagnostic.slug
-        )
+        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
+        description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
 
         resource_usage = resource_usage_for_diagnostic(app_context.session, diagnostic.id)
 
@@ -340,7 +335,7 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
             provider=ProviderSummary.build(diagnostic.provider),
             slug=diagnostic.slug,
             name=diagnostic.name,
-            description=concrete_diagnostic.__doc__ or "",
+            description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
             has_metric_values=has_metric_values,
             has_scalar_values=has_scalar_values,
