@@ -16,6 +16,11 @@ function Flaky({ broken }: { broken: { current: boolean } }) {
   return <p>Working</p>;
 }
 
+function Data({ queryFn }: { queryFn: () => Promise<string> }) {
+  const { data } = useSuspenseQuery({ queryKey: ["data"], queryFn });
+  return <p>{data}</p>;
+}
+
 const fallback = ({ error, reset }: FallbackProps) => (
   <button type="button" onClick={reset}>
     Try again after {error?.message}
@@ -102,14 +107,10 @@ describe("ErrorBoundary", () => {
       .fn()
       .mockRejectedValueOnce(new Error("Offline"))
       .mockResolvedValue("Loaded");
-    function Data() {
-      const { data } = useSuspenseQuery({ queryKey: ["data"], queryFn });
-      return <p>{data}</p>;
-    }
     renderBoundary(
       <ErrorBoundary fallback={fallback}>
         <Suspense fallback={<p>Loading</p>}>
-          <Data />
+          <Data queryFn={queryFn} />
         </Suspense>
       </ErrorBoundary>,
     );

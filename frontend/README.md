@@ -1,11 +1,12 @@
 # REF Frontend
 
 React 19 + TypeScript single-page application for the Climate Rapid Evaluation Framework (REF).
- It consumes the FastAPI backend via an auto-generated OpenAPI client and presents datasets, diagnostics, executions, and explorer views.
+It consumes the FastAPI backend via an auto-generated OpenAPI client and presents datasets, diagnostics, executions, and explorer views.
 
 Status: Alpha
 
 ## Tech stack
+
 - React 19, TypeScript, Vite 6
 - TanStack Router (file-based routing with plugin), TanStack Query, TanStack Table
 - Tailwind CSS v4 with @tailwindcss/vite
@@ -19,10 +20,12 @@ Key configuration files:
 - frontend/openapi-ts.config.ts — OpenAPI client generation
 
 ## Requirements
+
 - Node.js v22 (see .nvmrc)
 - Backend running locally and serving /api (default proxy target http://localhost:8000)
 
 ## Quick start
+
 1. Generate API client (from repo root):
 
 ```bash
@@ -45,6 +48,7 @@ npm run dev
 Vite dev server runs on http://localhost:5173 and proxies /api to http://localhost:8000 by default.
 
 ## Scripts
+
 - npm run dev — start Vite
 - npm run build — type-check and build
 - npm run preview — preview production build locally
@@ -52,6 +56,7 @@ Vite dev server runs on http://localhost:5173 and proxies /api to http://localho
 - npm run openapi-ts — same as make generate-client, exports openapi.json from the backend and regenerates src/client
 
 ## OpenAPI client generation
+
 The client is generated with @hey-api/openapi-ts using the config in frontend/openapi-ts.config.ts. It expects openapi.json in the frontend directory and outputs to src/client, including:
 - types.gen.ts — TypeScript types
 - sdk.gen.ts — API functions
@@ -61,6 +66,7 @@ In this repo, make generate-client (at the repository root) prepares openapi.jso
 The generator needs the TypeScript 5 compiler API, which TypeScript 7 does not ship. The script therefore runs it through npx in a temp directory with its own TypeScript 5.
 
 ## Routing
+
 Routes are file-based under src/routes using TanStack Router and the Vite plugin with auto code splitting. The route tree is generated into src/routeTree.gen.ts.
 
 Primary paths:
@@ -72,9 +78,11 @@ Primary paths:
 - /content/* — static content (about, privacy, terms)
 
 ## Styling
+
 Tailwind CSS v4 is integrated via the @tailwindcss/vite plugin. Global styles live in src/styles/global.css. No separate tailwind.config.js is required.
 
 ## Environment variables
+
 The app reads Vite variables from import.meta.env. Optional:
 - VITE_ENABLE_WHY_DID_YOU_RENDER=true enables why-did-you-render during development for performance debugging.
 
@@ -92,6 +100,7 @@ npm run lint
 ```
 
 ## Project structure (frontend/src)
+
 - client/ — auto-generated API client and hooks
 - components/ — reusable components (app, dashboard, datasets, diagnostics, execution, explorer, ui)
 - hooks/ — custom React hooks
@@ -100,4 +109,5 @@ npm run lint
 - styles/ — global styles
 
 ## API proxy notes
+
 The Vite dev server proxies /api to http://localhost:8000 (see frontend/vite.config.ts). If your backend uses a different port, update the proxy target accordingly.
