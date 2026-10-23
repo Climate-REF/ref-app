@@ -45,3 +45,14 @@ mypy: ## Run mypy type checker
 .PHONY: generate-metadata
 generate-metadata: ## Generate diagnostic metadata YAML from provider registry
 	uv run python scripts/generate_metadata.py
+
+REF_PERF_SCALE ?= 0.1
+BASE ?= origin/main
+
+.PHONY: test-perf
+test-perf: ## run the API performance tests against a synthetic database (REF_PERF_SCALE=1 for full size)
+	REF_PERF_SCALE=$(REF_PERF_SCALE) uv run pytest tests/perf -r a -v
+
+.PHONY: perf-compare
+perf-compare: ## fail if the API performance tests are slower than on BASE (default origin/main)
+	REF_PERF_SCALE=$(REF_PERF_SCALE) scripts/perf-compare.sh $(BASE)
