@@ -1,12 +1,10 @@
 """
 Fixtures for the API performance tests, which run against a large synthetic database.
 
-These only run when ``REF_PERF_SCALE`` or ``REF_PERF_DATABASE`` is set (see ``make test-perf``).
+These only run when ``REF_PERF_SCALE`` is set (see ``make test-perf``).
 The database is built once per shape, scale and schema, and cached under ``REF_PERF_CACHE``.
-``REF_PERF_DATABASE`` points at a database built already, e.g. by ``scripts/perf-database.py``.
 """
 
-import importlib
 import os
 import sqlite3
 from collections.abc import Callable, Iterator
@@ -24,23 +22,20 @@ from ref_backend.api import deps
 from ref_backend.builder import build_app
 from ref_backend.core.config import Settings, get_settings
 
-# Older climate-ref releases lack the generator, so they can only run against a REF_PERF_DATABASE.
-synthetic: Any
-try:
-    synthetic = importlib.import_module("climate_ref.testing.synthetic")
-except ImportError:
-    synthetic = None
+
+@pytest.fixture(scope="session")
+def synthetic() -> Any:
+    """The synthetic database generator from climate-ref."""
+    if not os.environ.get("REF_PERF_SCALE"):
+        pytest.skip("set REF_PERF_SCALE to run the API performance tests")
+    return pytest.importorskip(
+        "climate_ref.testing.synthetic", reason="needs a climate-ref with the synthetic database generator"
+    )
 
 
 @pytest.fixture(scope="session")
-def perf_database_path() -> Path:
+def perf_database_path(synthetic: Any) -> Path:
     """The synthetic database for this scale and schema, built on first use."""
-    if database := os.environ.get("REF_PERF_DATABASE"):
-        return Path(database)
-    if not os.environ.get("REF_PERF_SCALE"):
-        pytest.skip("set REF_PERF_SCALE to run the API performance tests")
-    if synthetic is None:
-        pytest.skip("needs a climate-ref with the synthetic database generator")
     cache = Path(os.environ.get("REF_PERF_CACHE", Path.home() / ".cache" / "ref-app" / "perf"))
     path: Path = synthetic.cached_synthetic_database(cache, scale=float(os.environ["REF_PERF_SCALE"]))
     return path
@@ -125,14 +120,11 @@ def targets(perf_database_path: Path) -> Targets:
 
 @pytest.fixture(scope="session")
 def large_table_scans(
-    perf_database: Database, perf_database_path: Path
+    synthetic: Any, perf_database: Database, perf_database_path: Path
 ) -> Callable[[Callable[[], Any]], frozenset[str]]:
     """Run a call once and return the large tables that any of its queries reads in full."""
 
     def _scans(call: Callable[[], Any]) -> frozenset[str]:
-        if synthetic is None:
-            call()
-            return frozenset()
         with synthetic.captured_statements(perf_database) as statements:
             call()
         scans: frozenset[str] = synthetic.large_table_scans(perf_database_path, statements)
