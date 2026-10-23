@@ -3,11 +3,9 @@
 from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 
-import attrs
 from pydantic import BaseModel, computed_field
 
 from climate_ref import models
-from climate_ref.results.diagnostics import DiagnosticView
 
 T = TypeVar("T")
 
@@ -68,11 +66,9 @@ class GroupCounts(BaseModel):
     """
 
     @staticmethod
-    def of(view: DiagnosticView | None) -> "GroupCounts":
-        """Convert a diagnostic's counts from the reader, with `None` for one that has no groups."""
-        if view is None:
-            return GroupCounts.summed([])
-        return GroupCounts.model_validate(attrs.asdict(view.groups))
+    def of(row: Any | None) -> "GroupCounts":
+        """Convert a row of `select_group_counts`, with `None` for a diagnostic that has no groups."""
+        return GroupCounts.summed([row] if row is not None else [])
 
     @staticmethod
     def summed(rows: Sequence[Any]) -> "GroupCounts":

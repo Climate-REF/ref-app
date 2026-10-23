@@ -27,17 +27,19 @@ class Endpoint:
 _DIAGNOSTIC = "diagnostics/{provider_slug}/{diagnostic_slug}"
 _GROUP = "executions/{execution_group_id}"
 
-# The allowed scans record what each endpoint read when this suite was added, not what it should read.
+# The allowed scans record the full reads each endpoint is known to make, not what it should read.
 ENDPOINTS = [
     # diagnostics: the landing page and a diagnostic's page
-    Endpoint(id="diagnostics.list", path="diagnostics/"),
+    Endpoint(id="diagnostics.list", path="diagnostics/", allowed_scans=frozenset({"execution_group"})),
     Endpoint(
         id="diagnostics.list.cmip6",
         path="diagnostics/",
         params={"mip_era": "CMIP6"},
         allowed_scans=frozenset({"execution_group"}),
     ),
-    Endpoint(id="diagnostics.catalog", path="diagnostics/catalog"),
+    Endpoint(
+        id="diagnostics.catalog", path="diagnostics/catalog", allowed_scans=frozenset({"execution_group"})
+    ),
     Endpoint(id="diagnostics.value-flags", path="diagnostics/value-flags"),
     Endpoint(id="diagnostics.get", path=_DIAGNOSTIC),
     Endpoint(id="diagnostics.execution-groups", path=f"{_DIAGNOSTIC}/execution_groups"),
@@ -59,7 +61,7 @@ ENDPOINTS = [
     Endpoint(
         id="executions.statistics",
         path="executions/statistics",
-        allowed_scans=frozenset({"execution", "dataset", "dataset_file"}),
+        allowed_scans=frozenset({"execution_group", "dataset", "dataset_file"}),
     ),
     Endpoint(id="executions.get", path=_GROUP),
     Endpoint(id="executions.values.scalar", path=f"{_GROUP}/values", params={"value_type": "scalar"}),

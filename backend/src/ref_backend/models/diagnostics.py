@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.query import select_group_counts
 from climate_ref.results import DiagnosticFilter, ResourceFilter
-from climate_ref.results.diagnostics import DiagnosticView
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
@@ -178,7 +178,7 @@ class DiagnosticCatalogEntry(BaseModel):
         diagnostic: models.Diagnostic,
         app_context: "AppContext",
         *,
-        view: DiagnosticView | None,
+        groups: GroupCounts,
         resource_usage: ExecutionResourceSummary | None = None,
     ) -> "DiagnosticCatalogEntry":
         """Build a DiagnosticCatalogEntry with pre-computed statistics to avoid N+1 queries."""
@@ -197,7 +197,7 @@ class DiagnosticCatalogEntry(BaseModel):
             name=diagnostic.name,
             description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
-            groups=GroupCounts.of(view),
+            groups=groups,
             promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
@@ -244,11 +244,12 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
         def has_values(value_type: StoredMetricValueType) -> bool:
             return bool(app_context.reader.diagnostics.with_values(value_type, this_diagnostic))
 
-        views = app_context.reader.diagnostics.list(this_diagnostic, with_count=False).items
         entry = DiagnosticCatalogEntry.build_with_stats(
             diagnostic,
             app_context,
-            view=views[0] if views else None,
+            groups=GroupCounts.summed(
+                app_context.session.execute(select_group_counts(this_diagnostic)).all()
+            ),
             resource_usage=resource_usage(
                 app_context.reader,
                 ResourceFilter(

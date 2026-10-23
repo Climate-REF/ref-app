@@ -5,6 +5,7 @@ from starlette.responses import StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.query import select_group_counts
 from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, MetricValueFilter, ResourceFilter
 from ref_backend.api.deps import AppContextDep
 from ref_backend.core.execution_groups import load_execution_groups
@@ -24,6 +25,7 @@ from ref_backend.models import (
     DiagnosticSummary,
     DiagnosticValueFlags,
     ExecutionGroup,
+    GroupCounts,
     MetricValueCollection,
 )
 
@@ -115,13 +117,16 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
             input_datasets=scope.filters.input_datasets,
         ),
     )
-    views = {
-        (view.provider_slug, view.diagnostic_slug): view
-        for view in app_context.reader.diagnostics.list(scope.filters, with_count=False)
+    counts = {
+        (row.provider_slug, row.diagnostic_slug): row
+        for row in app_context.session.execute(select_group_counts(scope.filters))
     }
     return [
         DiagnosticCatalogEntry.build_with_stats(
-            m, app_context, view=views.get(_key(m)), resource_usage=resource_usage.get(_key(m))
+            m,
+            app_context,
+            groups=GroupCounts.of(counts.get(_key(m))),
+            resource_usage=resource_usage.get(_key(m)),
         )
         for m in scope.diagnostics
     ]
