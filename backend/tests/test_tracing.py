@@ -2,12 +2,17 @@ import json
 import sys
 
 import pytest
+import sqlalchemy
+from cr_service.middleware import WideEventMiddleware
+from fastapi import FastAPI
 from loguru import logger
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from starlette.testclient import TestClient
 
+from ref_backend.builder import BindQueryStatistics, RequestQueryMonitor
 from ref_backend.log import setup_logging
 
 TRACE_ID = "4bf92f3577b34da6a3ce929d0e0e4736"
@@ -69,3 +74,23 @@ def test_wide_event_names_the_route_when_no_endpoint_runs(client, json_logs):
     (event,) = [line for line in json_logs() if line.get("event") == "http_request"]
     assert event["status"] == 405
     assert event["route"] == "/api/v1/diagnostics/"
+
+
+def test_failed_request_keeps_its_query_statistics(json_logs):
+    engine = sqlalchemy.create_engine("sqlite://")
+    app = FastAPI()
+
+    @app.get("/boom")
+    def boom():
+        with engine.connect() as connection:
+            connection.execute(sqlalchemy.text("SELECT 1"))
+        raise RuntimeError("boom")
+
+    app.add_middleware(RequestQueryMonitor, engine=engine, actions=[BindQueryStatistics()])
+    app.add_middleware(WideEventMiddleware)
+
+    TestClient(app, raise_server_exceptions=False).get("/boom")
+
+    (event,) = [line for line in json_logs() if line.get("event") == "http_request"]
+    assert event["status"] == 500
+    assert event["db_queries"] == 1

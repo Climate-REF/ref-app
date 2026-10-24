@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from importlib.metadata import version
 
 import sentry_sdk
@@ -11,6 +12,7 @@ from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
 from prometheus_fastapi_instrumentator import routing
+from sqlalchemy import Engine
 from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -44,6 +46,25 @@ if you have any questions or feedback.
 def custom_generate_unique_id(route: APIRoute) -> str:
     # The cr-service health and metrics routes carry no tag.
     return f"{route.tags[0]}-{route.name}" if route.tags else route.name
+
+
+class RequestQueryMonitor(SQLAlchemyMonitor):
+    """Runs the actions even when the endpoint raises, so a failed request keeps its query statistics."""
+
+    def __init__(self, app: ASGIApp, *, engine: Engine, actions: list[Action]) -> None:
+        super().__init__(app, engine=engine, actions=actions)
+        self.actions = actions
+
+    async def _dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        statistics = AlchemyStatistics()
+        self.request_context.set(statistics)
+        try:
+            return await call_next(request)
+        finally:
+            for action in self.actions:
+                action.handle(statistics)
 
 
 class SlowQueryMonitor(ConditionalAction):
@@ -141,7 +162,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         },
     )
     app.add_middleware(
-        SQLAlchemyMonitor,
+        RequestQueryMonitor,
         engine=database._engine,
         actions=[
             BindQueryStatistics(),
