@@ -11,5 +11,15 @@ Sentry.init({
     httpHeaders: false,
     httpBodies: [],
   },
+  // Low traffic, so every page load is traced.
+  // The backend follows the browser's sampling decision, so this rate also sets how many API spans it records.
+  tracesSampleRate: 1.0,
+  // Same-origin calls plus the hosted APIs listed in `lib/apiEndpoint.ts`.
+  tracePropagationTargets: [
+    /^\/api\//,
+    /^https:\/\/[\w.-]*climate-ref\.org\/api\//,
+  ],
+  // The backend's OpenTelemetry spans join the trace through `traceparent`.
+  propagateTraceparent: true,
   integrations: [],
 });
