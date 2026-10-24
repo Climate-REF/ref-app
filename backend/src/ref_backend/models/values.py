@@ -91,6 +91,12 @@ def _normalize_presentation_attributes(
     return normalized
 
 
+def _counted(total_count: int | None) -> int:
+    if total_count is None:
+        raise ValueError("Read the values with with_count=True to report total_count")
+    return total_count
+
+
 class MetricValueCollection(BaseModel):
     data: Sequence[ScalarValue | SeriesValue]
     count: int
@@ -132,7 +138,7 @@ class MetricValueCollection(BaseModel):
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=collection.total_count,
+            total_count=_counted(collection.total_count),
             facets=facets,
             types=["scalar"],
             had_outliers=collection.had_outliers if detection_ran else None,
@@ -172,7 +178,7 @@ class MetricValueCollection(BaseModel):
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=collection.total_count,
+            total_count=_counted(collection.total_count),
             facets=facets,
             types=["series"],
             had_outliers=None,

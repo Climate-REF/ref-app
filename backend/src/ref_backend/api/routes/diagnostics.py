@@ -394,7 +394,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
         # needs an id no value can carry rather than no filter at all.
         execution_ids = executions_in_mip_era(app_context.session, mip_era, diagnostic.id) or [0]
 
-    # Scope to this diagnostic/provider via exact-match slugs. ``promoted_only`` keeps only the
+    # Scope to this diagnostic/provider via exact-match slugs. The filter keeps only the
     # promoted diagnostic version, so values from superseded versions are hidden. Exposing
     # previous versions needs a separate design (TODO). Retracted executions are still included.
     metric_filter = MetricValueFilter(
@@ -404,7 +404,6 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
         exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        promoted_only=True,
         include_retracted=True,
     )
 
