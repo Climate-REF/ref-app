@@ -5,7 +5,7 @@ from cr_service import context, metrics, tracing
 from cr_service.health import router as health_router
 from cr_service.info import ServiceInfo
 from cr_service.middleware import WideEventMiddleware
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
@@ -16,7 +16,7 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
-from starlette.types import Scope
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from climate_ref.config import Config
 from climate_ref.database import Database
@@ -75,9 +75,17 @@ class BindQueryStatistics(Action):
         )
 
 
-async def bind_route(request: Request) -> None:
+class BindRouteMiddleware:
     """Put the route template on the wide event, named as the `handler` label in /metrics names it."""
-    context.bind(route=routing.get_route_name(request, should_include_root_path=False))
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            # None for a path no route matches.
+            context.bind(route=routing.get_route_name(Request(scope), should_include_root_path=False))
+        await self.app(scope, receive, send)
 
 
 class SPAStaticFiles(StaticFiles):
@@ -123,7 +131,6 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         description=description,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         generate_unique_id_function=custom_generate_unique_id,
-        dependencies=[Depends(bind_route)],
         contact={
             "name": "Development Lead - Jared Lewis",
             "email": "jared.lewis@climate-resource.com",
@@ -161,6 +168,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         results_max_age=settings.RESULTS_CACHE_MAX_AGE,
     )
     # Outermost, so the wide event times the whole stack and sees the query statistics.
+    app.add_middleware(BindRouteMiddleware)
     app.add_middleware(WideEventMiddleware)
 
     # Registered before the static mount, so the SPA fallback does not swallow the probes or /metrics.

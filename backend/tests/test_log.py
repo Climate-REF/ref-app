@@ -58,3 +58,13 @@ def test_json_lines_include_the_exception(restore_loguru, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert payload["level"] == "error"
     assert "ValueError: boom" in payload["exc"]
+
+
+def test_text_lines_show_the_bound_fields(restore_loguru, capsys):
+    setup_logging("INFO")
+
+    logger.bind(event="http_request", status=404, route="/api/v1/executions/{group_id}").info("http_request")
+
+    line = capsys.readouterr().err
+    assert "status=404" in line
+    assert "route='/api/v1/executions/{group_id}'" in line

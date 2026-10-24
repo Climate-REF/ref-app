@@ -56,12 +56,27 @@ def _json_sink(message: "Message") -> None:
         payload["exc"] = "".join(traceback.format_exception(*record["exception"]))
     # Compact separators, because Grafana matches `"trace_id":"<id>"` to link a line to its trace.
     sys.stdout.write(json.dumps(payload, default=str, separators=(",", ":")) + "\n")
+    sys.stdout.flush()
+
+
+def _text_format(record: "Record") -> str:
+    """Loguru's default line, followed by the bound fields as ``key=value`` pairs."""
+    fields = " ".join(f"{key}={value!r}" for key, value in record["extra"].items() if key != "_fields")
+    record["extra"]["_fields"] = f" | {fields}" if fields else ""
+    return (
+        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | "
+        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+        "{extra[_fields]}\n{exception}"
+    )
 
 
 def setup_logging(log_level: str, json_logs: bool = False) -> None:
     logger.configure(patcher=_add_request_context)
     logger.remove()
-    logger.add(_json_sink if json_logs else sys.stderr, level=log_level.upper())
+    if json_logs:
+        logger.add(_json_sink, level=log_level.upper())
+    else:
+        logger.add(sys.stderr, level=log_level.upper(), format=_text_format)
 
     # Remove existing handlers
     for handler in logging.root.handlers[:]:

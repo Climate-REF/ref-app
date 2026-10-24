@@ -36,16 +36,19 @@ def test_request_span_continues_the_browser_trace(exporter, client):
     assert spans[0].attributes["http.route"] == "/api/v1/utils/about"
 
 
-def test_each_request_logs_one_wide_event(exporter, client, capsys):
+@pytest.fixture
+def json_logs(capsys):
     setup_logging("INFO", json_logs=True)
-    try:
-        capsys.readouterr()
-        client.get("/api/v1/diagnostics/", headers={"traceparent": f"00-{TRACE_ID}-00f067aa0ba902b7-01"})
-        lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
-    finally:
-        logger.remove()
-        logger.configure(patcher=None)
-        logger.add(sys.stderr)
+    capsys.readouterr()
+    yield lambda: [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    logger.remove()
+    logger.configure(patcher=None)
+    logger.add(sys.stderr)
+
+
+def test_each_request_logs_one_wide_event(exporter, client, json_logs):
+    client.get("/api/v1/diagnostics/", headers={"traceparent": f"00-{TRACE_ID}-00f067aa0ba902b7-01"})
+    lines = json_logs()
 
     events = [line for line in lines if line.get("event") == "http_request"]
     assert len(events) == 1
@@ -58,3 +61,11 @@ def test_each_request_logs_one_wide_event(exporter, client, capsys):
     assert event["trace_id"] == TRACE_ID
     assert all(line["level"] != "debug" for line in lines)
     assert not any("query_stats" in line["message"] for line in lines)
+
+
+def test_wide_event_names_the_route_when_no_endpoint_runs(client, json_logs):
+    client.post("/api/v1/diagnostics/")
+
+    (event,) = [line for line in json_logs() if line.get("event") == "http_request"]
+    assert event["status"] == 405
+    assert event["route"] == "/api/v1/diagnostics/"
