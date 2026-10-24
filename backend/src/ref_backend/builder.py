@@ -1,6 +1,10 @@
 from dataclasses import asdict
+from importlib.metadata import version
 
 import sentry_sdk
+from cr_service import metrics, tracing
+from cr_service.health import router as health_router
+from cr_service.info import ServiceInfo
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
@@ -19,7 +23,8 @@ from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
 from ref_backend.caching import CacheControlMiddleware
 from ref_backend.core.config import Settings
-from ref_backend.metrics import instrument_app
+
+SERVICE = ServiceInfo(name="ref-backend", version=version("ref-backend"))
 
 description = """
 API for querying the results from the Climate Rapid Evaluation Framework (Climate REF).
@@ -36,7 +41,8 @@ if you have any questions or feedback.
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
-    return f"{route.tags[0]}-{route.name}"
+    # The cr-service health and metrics routes carry no tag.
+    return f"{route.tags[0]}-{route.name}" if route.tags else route.name
 
 
 class SlowQueryMonitor(ConditionalAction):
@@ -95,9 +101,14 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
     if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
         sentry_sdk.init(
             dsn=str(settings.SENTRY_DSN),
+            environment=settings.ENVIRONMENT,
             release=settings.GIT_COMMIT,
-            enable_tracing=True,
+            traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+            send_default_pii=False,
         )
+    # FastAPI traces each request itself once a tracer provider is installed.
+    tracing.install_provider(SERVICE)
+    tracing.instrument_sqlalchemy(database._engine)
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
@@ -141,8 +152,9 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         results_max_age=settings.RESULTS_CACHE_MAX_AGE,
     )
 
-    # Registered before the static mount, so the SPA fallback does not swallow /metrics.
-    instrument_app(app)
+    # Registered before the static mount, so the SPA fallback does not swallow the probes or /metrics.
+    app.include_router(health_router)
+    metrics.instrument_app(app)
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 

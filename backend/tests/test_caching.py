@@ -99,7 +99,9 @@ class TestCacheControlMiddleware:
 
 
 class TestLiveEndpointsAreNotStored:
-    @pytest.mark.parametrize("path", ["/api/v1/utils/health-check/", "/api/v1/utils/about", "/metrics"])
+    @pytest.mark.parametrize(
+        "path", ["/api/v1/utils/health-check/", "/api/v1/utils/about", "/metrics", "/livez", "/readyz"]
+    )
     def test_no_store(self, client: TestClient, path: str):
         r = client.get(path)
         assert r.status_code == 200

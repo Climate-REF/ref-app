@@ -66,6 +66,8 @@ const router = createRouter({
   defaultPreloadStaleTime: 0,
 });
 
+Sentry.addIntegration(Sentry.tanstackRouterBrowserTracingIntegration(router));
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;

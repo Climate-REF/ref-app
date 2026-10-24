@@ -7,8 +7,10 @@ def test_metrics_records_instrumented_requests(client):
     assert any(line.startswith("http_request_duration_seconds_count{") for line in lines)
 
 
-def test_metrics_excludes_health_check(client):
-    client.get("/api/v1/utils/health-check/")
+def test_metrics_excludes_probes(client):
+    assert client.get("/livez").status_code == 200
+    assert client.get("/readyz").status_code == 200
     response = client.get("/metrics")
-    assert "health-check" not in response.text
+    assert "/livez" not in response.text
+    assert "/readyz" not in response.text
     assert 'handler="/metrics"' not in response.text

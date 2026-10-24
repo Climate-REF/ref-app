@@ -5,6 +5,7 @@ from typing import Annotated, Any, Literal
 from pydantic import (
     AnyUrl,
     BeforeValidator,
+    Field,
     HttpUrl,
     computed_field,
 )
@@ -66,6 +67,7 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Climate Rapid Evaluation Framework"
     SENTRY_DSN: HttpUrl | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = Field(default=1.0, ge=0.0, le=1.0)
     REF_CONFIGURATION: str = "data"
     REF_READ_ONLY_DATABASE: bool = False
     """
