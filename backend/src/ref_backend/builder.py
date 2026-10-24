@@ -1,15 +1,16 @@
-from dataclasses import asdict
 from importlib.metadata import version
 
 import sentry_sdk
-from cr_service import metrics, tracing
+from cr_service import context, metrics, tracing
 from cr_service.health import router as health_router
 from cr_service.info import ServiceInfo
-from fastapi import FastAPI
+from cr_service.middleware import WideEventMiddleware
+from fastapi import Depends, FastAPI, Request
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
+from prometheus_fastapi_instrumentator import routing
 from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -64,12 +65,19 @@ class SlowQueryMonitor(ConditionalAction):
                 )
 
 
-class LogStatistics(Action):
-    """Action that logs current statistics."""
+class BindQueryStatistics(Action):
+    """Put the request's query count and time on its wide event."""
 
     def handle(self, statistics: AlchemyStatistics) -> None:
-        if statistics.total_invocations > 0:
-            logger.info(asdict(statistics))
+        context.bind(
+            db_queries=statistics.total_invocations,
+            db_time_ms=round(statistics.total_invocation_time_ms, 2),
+        )
+
+
+async def bind_route(request: Request) -> None:
+    """Put the route template on the wide event, named as the `handler` label in /metrics names it."""
+    context.bind(route=routing.get_route_name(request, should_include_root_path=False))
 
 
 class SPAStaticFiles(StaticFiles):
@@ -115,6 +123,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         description=description,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         generate_unique_id_function=custom_generate_unique_id,
+        dependencies=[Depends(bind_route)],
         contact={
             "name": "Development Lead - Jared Lewis",
             "email": "jared.lewis@climate-resource.com",
@@ -128,7 +137,7 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         SQLAlchemyMonitor,
         engine=database._engine,
         actions=[
-            LogStatistics(),
+            BindQueryStatistics(),
             WarnMaxTotalInvocation(max_invocations=10),
             SlowQueryMonitor(threshold_ms=100),
         ],
@@ -151,6 +160,8 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         api_max_age=settings.API_CACHE_MAX_AGE,
         results_max_age=settings.RESULTS_CACHE_MAX_AGE,
     )
+    # Outermost, so the wide event times the whole stack and sees the query statistics.
+    app.add_middleware(WideEventMiddleware)
 
     # Registered before the static mount, so the SPA fallback does not swallow the probes or /metrics.
     app.include_router(health_router)

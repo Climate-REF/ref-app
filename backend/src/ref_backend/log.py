@@ -6,11 +6,15 @@ import traceback
 from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
+from cr_service.context import get_context
 from cr_service.tracing import current_trace_context
 from loguru import logger
 
 if TYPE_CHECKING:
     from loguru import Message, Record
+
+
+_RESERVED_LOG_RECORD_KEYS = frozenset(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
 
 
 class InterceptHandler(logging.Handler):
@@ -27,11 +31,15 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        # Carries `extra` across, which is where cr-service puts the wide event's fields.
+        fields = {
+            key: value for key, value in record.__dict__.items() if key not in _RESERVED_LOG_RECORD_KEYS
+        }
+        logger.bind(**fields).opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def _add_trace_context(record: "Record") -> None:
-    record["extra"].update(current_trace_context())
+def _add_request_context(record: "Record") -> None:
+    record["extra"] = {**current_trace_context(), **get_context(), **record["extra"]}
 
 
 def _json_sink(message: "Message") -> None:
@@ -51,10 +59,9 @@ def _json_sink(message: "Message") -> None:
 
 
 def setup_logging(log_level: str, json_logs: bool = False) -> None:
-    logger.configure(patcher=_add_trace_context)
-    if json_logs:
-        logger.remove()
-        logger.add(_json_sink, level="DEBUG")
+    logger.configure(patcher=_add_request_context)
+    logger.remove()
+    logger.add(_json_sink if json_logs else sys.stderr, level=log_level.upper())
 
     # Remove existing handlers
     for handler in logging.root.handlers[:]:
@@ -66,7 +73,6 @@ def setup_logging(log_level: str, json_logs: bool = False) -> None:
     # List of loggers to intercept
     loggers = (
         "uvicorn",
-        "uvicorn.access",
         "uvicorn.error",
         "fastapi",
         "asyncio",
@@ -77,3 +83,8 @@ def setup_logging(log_level: str, json_logs: bool = False) -> None:
         logging_logger = logging.getLogger(logger_name)
         logging_logger.handlers = []
         logging_logger.propagate = True
+
+    # The wide event replaces uvicorn's access line.
+    access = logging.getLogger("uvicorn.access")
+    access.handlers = []
+    access.propagate = False
