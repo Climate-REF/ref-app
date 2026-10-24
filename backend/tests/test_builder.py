@@ -18,3 +18,5 @@ def test_sentry_release_is_the_git_commit(monkeypatch):
     builder.build_app(settings, config, deps._get_database_dependency(settings, config))
 
     assert calls[0]["release"] == "e145da768b1725ce708150597a565df09c923dc3"
+    assert calls[0]["environment"] == "staging"
+    assert calls[0]["traces_sample_rate"] == 1.0
