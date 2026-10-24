@@ -30,6 +30,8 @@ make perf-compare BASE=v0.8.2   # against any ref
 
 This checks out the base in a temporary worktree and runs this branch's tests against both.
 It fails when an endpoint's median is more than `REF_PERF_THRESHOLD` percent slower than on the base, default 30.
+An endpoint that fails on the base, such as one added by this branch, is not compared.
+Each one is named in a warning.
 Running the same code twice locally drifts by up to about 20%, so a smaller threshold is noise.
 CI runs this on every pull request, and caches the databases until either lock file changes.
 

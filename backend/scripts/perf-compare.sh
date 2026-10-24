@@ -24,8 +24,31 @@ git -C "$BACKEND" worktree add --quiet --detach "$WORK/base" "$BASE"
     uv sync --locked --quiet
     uv run --with pytest-benchmark pytest "$BACKEND/tests/perf" \
         --rootdir="$BACKEND" --confcutdir="$BACKEND/tests/perf" -p no:cacheprovider -q \
-        --benchmark-storage="$STORAGE" --benchmark-save=base
-) || echo "::warning::some performance tests failed on $BASE, comparing the rest"
+        --benchmark-storage="$STORAGE" --benchmark-save=base --junitxml="$WORK/base.xml"
+) || true
+
+# Name each endpoint that failed on the base, because it has no baseline and is not compared.
+python3 - "$WORK/base.xml" "$BASE" <<'EOF'
+import os
+import sys
+import xml.etree.ElementTree as ET
+
+report, base = sys.argv[1:]
+if not os.path.exists(report):
+    sys.exit(f"::error::the performance tests did not run on {base}")
+lines = []
+for case in ET.parse(report).iter("testcase"):
+    problem = case.find("failure")
+    if problem is None:
+        problem = case.find("error")
+    if problem is not None:
+        name, reason = case.get("name"), (problem.get("message") or "failed").splitlines()[0][:200]
+        print(f"::warning title=Not compared::{name} failed on {base}: {reason.replace('%', '%25')}")
+        lines.append(f"- `{name}`: {reason}")
+if lines and "GITHUB_STEP_SUMMARY" in os.environ:
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+        summary.write(f"### Not compared, because they failed on {base}\n\n" + "\n".join(lines) + "\n")
+EOF
 
 cd "$BACKEND"
 uv run pytest tests/perf -q \
