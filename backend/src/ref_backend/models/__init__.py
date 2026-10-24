@@ -12,7 +12,7 @@ from ref_backend.models.aft import (
     AFTDiagnosticSummary,
     RefDiagnosticLink,
 )
-from ref_backend.models.common import Collection, GroupBy, ProviderSummary, T
+from ref_backend.models.common import Collection, GroupBy, GroupCounts, ProviderSummary, T
 from ref_backend.models.datasets import CMIPDatasetMetadata, Dataset
 from ref_backend.models.diagnostics import DiagnosticCatalogEntry, DiagnosticSummary, DiagnosticValueFlags
 from ref_backend.models.executions import (
@@ -34,7 +34,6 @@ from ref_backend.models.values import (
     NON_FACET_DIMENSIONS,
     Facet,
     MetricValueCollection,
-    MetricValueFacetSummary,
     ScalarValue,
     SeriesValue,
 )
@@ -61,8 +60,8 @@ __all__ = [
     "Facet",
     "FailedRun",
     "GroupBy",
+    "GroupCounts",
     "MetricValueCollection",
-    "MetricValueFacetSummary",
     "ModelDetail",
     "ModelSummary",
     "ProviderSummary",

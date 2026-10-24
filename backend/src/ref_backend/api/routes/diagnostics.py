@@ -1,37 +1,35 @@
 from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import ColumnElement, Integer, func, select
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
-from climate_ref.results import MetricValueFilter
+from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.query import select_group_counts
+from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, MetricValueFilter, ResourceFilter
 from ref_backend.api.deps import AppContextDep
+from ref_backend.core.execution_groups import load_execution_groups
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import (
-    cmip_dataset_filter,
-    execution_group_filter,
-    executions_in_mip_era,
-)
+from ref_backend.core.mip_eras import MipEra, era_scope, source_id_datasets
 from ref_backend.core.reader_values import (
+    fetch_facets,
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.resource_usage import RESOURCE_AGGREGATES, summary_from_row
+from ref_backend.core.resource_usage import resource_usage_by_diagnostic
 from ref_backend.models import (
     Collection,
     DiagnosticCatalogEntry,
     DiagnosticSummary,
     DiagnosticValueFlags,
-    Execution,
     ExecutionGroup,
+    Facet,
+    GroupCounts,
     MetricValueCollection,
-    MetricValueFacetSummary,
 )
-from ref_backend.models.executions import EXECUTION_GROUP_LOAD_OPTIONS
 
 router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
@@ -72,224 +70,135 @@ def _listed_diagnostics(app_context: AppContextDep) -> list[models.Diagnostic]:
     return query.all()
 
 
-def _group_scope(
-    diagnostic_ids: list[int], mip_era: str | None, source_id: str | None = None
-) -> list[ColumnElement[bool]]:
-    promoted_version = (
-        select(models.Diagnostic.promoted_version)
-        .where(models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
-        .scalar_subquery()
+class _Scope(NamedTuple):
+    """The listed diagnostics, and the filter that picks which of their execution groups count"""
+
+    diagnostics: list[models.Diagnostic]
+    filters: DiagnosticFilter
+
+
+def _scoped_diagnostics(app_context: AppContextDep, mip_era: MipEra | None, source_id: str | None) -> _Scope:
+    """Get the listed diagnostics, counting only the groups that draw on `mip_era` and ran `source_id`"""
+    return _Scope(
+        _listed_diagnostics(app_context),
+        DiagnosticFilter(
+            include_superseded=False,
+            include_retracted=False,
+            **era_scope(mip_era),
+            input_datasets=source_id_datasets(source_id),
+        ),
     )
-    group_scope: list[ColumnElement[bool]] = [
-        models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
-        models.ExecutionGroup.diagnostic_version == promoted_version,
-    ]
-    # Selectors do not record source_id, so match on the datasets used, as the executions list does.
-    facets = {key: value for key, value in {"mip_era": mip_era, "source_id": source_id}.items() if value}
-    if facets:
-        matching_groups = select(models.ExecutionGroup.id).where(execution_group_filter(facets))
-        group_scope.append(models.ExecutionGroup.id.in_(matching_groups))
-    return group_scope
-
-
-def _scoped_diagnostics(
-    app_context: AppContextDep, mip_era: str | None, source_id: str | None
-) -> tuple[list[models.Diagnostic], list[ColumnElement[bool]]]:
-    """
-    Get the listed diagnostics, with the scope that counts their groups for `mip_era` and `source_id`
-
-    Without any listed diagnostic the scope matches no group, so the counts come out empty.
-    """
-    diagnostics = _listed_diagnostics(app_context)
-    return diagnostics, _group_scope([d.id for d in diagnostics], mip_era, source_id)
-
-
-def _diagnostics_with_values(
-    app_context: AppContextDep, value_class: type[models.MetricValue], group_scope: list[ColumnElement[bool]]
-) -> set[int]:
-    rows = (
-        app_context.session.query(models.ExecutionGroup.diagnostic_id)
-        .join(models.Execution)
-        .join(value_class)
-        .filter(*group_scope)
-        .distinct()
-    )
-    return {row[0] for row in rows}
 
 
 class _ValueTypes(NamedTuple):
-    """The ids of the diagnostics with scalar values and of those with series values"""
+    """The (provider, diagnostic) slugs of the diagnostics with scalar values and of those with series"""
 
-    scalar: set[int]
-    series: set[int]
+    scalar: frozenset[tuple[str, str]]
+    series: frozenset[tuple[str, str]]
 
 
-def _value_types(app_context: AppContextDep, group_scope: list[ColumnElement[bool]]) -> _ValueTypes:
+def _value_types(app_context: AppContextDep, scope: _Scope) -> _ValueTypes:
+    with_values = app_context.reader.diagnostics.with_values
     return _ValueTypes(
-        scalar=_diagnostics_with_values(app_context, models.ScalarMetricValue, group_scope),
-        series=_diagnostics_with_values(app_context, models.SeriesMetricValue, group_scope),
+        scalar=with_values(StoredMetricValueType.SCALAR, scope.filters),
+        series=with_values(StoredMetricValueType.SERIES, scope.filters),
     )
 
 
-def _catalog_entries(
-    app_context: AppContextDep, diagnostics: list[models.Diagnostic], group_scope: list[ColumnElement[bool]]
-) -> list[DiagnosticCatalogEntry]:
-    # Count executions and roll up their resource usage per diagnostic
-    execution_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id,
-            func.count(models.Execution.id).label("total_count"),
-            func.sum(func.cast(models.Execution.successful, Integer)).label("successful_count"),
-            *RESOURCE_AGGREGATES,
-        )
-        .join(models.Execution)
-        .filter(*group_scope)
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
+def _key(diagnostic: models.Diagnostic | DiagnosticCatalogEntry) -> tuple[str, str]:
+    return diagnostic.provider.slug, diagnostic.slug
+
+
+def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[DiagnosticCatalogEntry]:
+    resource_usage = resource_usage_by_diagnostic(
+        app_context.reader,
+        ResourceFilter(
+            include_superseded=False,
+            include_retracted=True,
+            source_types=scope.filters.source_types,
+            or_no_model_input=scope.filters.or_no_model_input,
+            input_datasets=scope.filters.input_datasets,
+        ),
     )
-    execution_stats = {
-        row.diagnostic_id: {"total": row.total_count, "successful": row.successful_count or 0}
-        for row in execution_counts
+    counts = {
+        (row.provider_slug, row.diagnostic_slug): row
+        for row in app_context.session.execute(select_group_counts(scope.filters))
     }
-    resource_usage = {row.diagnostic_id: summary_from_row(row) for row in execution_counts}
-
-    # Count execution groups per diagnostic
-    execution_group_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id, func.count(models.ExecutionGroup.id).label("group_count")
-        )
-        .filter(*group_scope)
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
-    )
-    group_counts = {row[0]: row[1] for row in execution_group_counts}
-
-    # Count successful execution groups (latest execution successful)
-    # Subquery: latest execution id per group
-    latest_exec_per_group = (
-        app_context.session.query(
-            models.Execution.execution_group_id.label("egid"),
-            func.max(models.Execution.id).label("latest_exec_id"),
-        )
-        .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
-        .filter(*group_scope)
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
-
-    # Join back to executions to check success of latest
-    successful_group_counts = (
-        app_context.session.query(
-            models.ExecutionGroup.diagnostic_id,
-            func.count(latest_exec_per_group.c.egid).label("successful_count"),
-        )
-        .join(models.Execution, models.Execution.id == latest_exec_per_group.c.latest_exec_id)
-        .join(models.ExecutionGroup, models.ExecutionGroup.id == latest_exec_per_group.c.egid)
-        .filter(models.Execution.successful.is_(True))
-        .group_by(models.ExecutionGroup.diagnostic_id)
-        .all()
-    )
-    successful_group_counts_dict = {row[0]: row[1] for row in successful_group_counts}
-
     return [
         DiagnosticCatalogEntry.build_with_stats(
             m,
             app_context,
-            execution_stats=execution_stats.get(m.id, {"total": 0, "successful": 0}),
-            execution_group_count=group_counts.get(m.id, 0),
-            successful_execution_group_count=successful_group_counts_dict.get(m.id, 0),
-            resource_usage=resource_usage.get(m.id),
+            groups=GroupCounts.of(counts.get(_key(m))),
+            resource_usage=resource_usage.get(_key(m)),
         )
-        for m in diagnostics
+        for m in scope.diagnostics
     ]
 
 
 @router.get("/", name="list")
 async def _list(
-    app_context: AppContextDep, mip_era: str | None = None, source_id: str | None = None
+    app_context: AppContextDep,
+    mip_era: MipEra | None = Query(None, description="Count only the execution groups that draw on this era"),
+    source_id: str | None = Query(None, description="Count only the execution groups that ran this model"),
 ) -> Collection[DiagnosticSummary]:
     """
     List the currently registered diagnostics
 
-    Pass `mip_era` to count only the execution groups that ran against that era,
-    and `source_id` to count only those that ran against that model.
+    Counts cover the promoted version of each diagnostic and leave out retracted executions.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, group_scope)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, scope)
     return Collection(
         data=[
             DiagnosticSummary.from_catalog_entry(
                 entry,
-                has_scalar_values=entry.id in value_types.scalar,
-                has_series_values=entry.id in value_types.series,
+                has_scalar_values=_key(entry) in value_types.scalar,
+                has_series_values=_key(entry) in value_types.series,
             )
-            for entry in _catalog_entries(app_context, diagnostics, group_scope)
+            for entry in _catalog_entries(app_context, scope)
         ]
     )
 
 
 @router.get("/catalog", name="catalog")
 async def catalog(
-    app_context: AppContextDep, mip_era: str | None = None, source_id: str | None = None
+    app_context: AppContextDep,
+    mip_era: MipEra | None = Query(None, description="Count only the execution groups that draw on this era"),
+    source_id: str | None = Query(None, description="Count only the execution groups that ran this model"),
 ) -> Collection[DiagnosticCatalogEntry]:
     """
     List the diagnostics like `/diagnostics/`, without whether each has metric values
 
     Checking for metric values is most of the cost of the full listing.
     Fetch those from `/diagnostics/value-flags`.
-
-    Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    return Collection(data=_catalog_entries(app_context, diagnostics, group_scope))
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    return Collection(data=_catalog_entries(app_context, scope))
 
 
 @router.get("/value-flags", name="value_flags")
 async def value_flags(
-    app_context: AppContextDep, mip_era: str | None = None, source_id: str | None = None
+    app_context: AppContextDep,
+    mip_era: MipEra | None = Query(None, description="Check only the execution groups that draw on this era"),
+    source_id: str | None = Query(None, description="Check only the execution groups that ran this model"),
 ) -> Collection[DiagnosticValueFlags]:
     """
     Whether each listed diagnostic has scalar and series values
 
     These are the flags `/diagnostics/catalog` leaves out.
     """
-    diagnostics, group_scope = _scoped_diagnostics(app_context, mip_era, source_id)
-    value_types = _value_types(app_context, group_scope)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
+    value_types = _value_types(app_context, scope)
     return Collection(
         data=[
             DiagnosticValueFlags(
                 id=d.id,
-                has_metric_values=d.id in value_types.scalar or d.id in value_types.series,
-                has_scalar_values=d.id in value_types.scalar,
-                has_series_values=d.id in value_types.series,
+                has_metric_values=_key(d) in value_types.scalar or _key(d) in value_types.series,
+                has_scalar_values=_key(d) in value_types.scalar,
+                has_series_values=_key(d) in value_types.series,
             )
-            for d in diagnostics
+            for d in scope.diagnostics
         ]
-    )
-
-
-@router.get("/facets", name="facets")
-async def facets(app_context: AppContextDep) -> MetricValueFacetSummary:
-    """
-    Query the unique dimensions and metrics for all diagnostics (both scalar and series)
-    """
-    # Query the base class so no type filter is added.
-    # With one, SQLite walks the type index instead of the covering index on each dimension.
-    session = app_context.session
-    dimension_summary = {}
-    for dimension_name in models.MetricValue._cv_dimensions:
-        if not hasattr(models.MetricValue, dimension_name):
-            continue
-
-        column = getattr(models.MetricValue, dimension_name)
-        values = session.scalars(select(column).where(column.isnot(None)).distinct())
-        dimension_summary[dimension_name] = sorted(values)
-
-    count = session.scalar(select(func.count(models.MetricValue.id))) or 0
-
-    return MetricValueFacetSummary(
-        dimensions=dimension_summary,
-        count=count,
     )
 
 
@@ -305,56 +214,77 @@ async def get(app_context: AppContextDep, provider_slug: str, diagnostic_slug: s
 
 @router.get("/{provider_slug}/{diagnostic_slug}/execution_groups")
 async def list_execution_groups(
-    app_context: AppContextDep, provider_slug: str, diagnostic_slug: str, mip_era: str | None = None
+    app_context: AppContextDep,
+    provider_slug: str,
+    diagnostic_slug: str,
+    mip_era: MipEra | None = Query(None, description="Keep only the execution groups that draw on this era"),
 ) -> Collection[ExecutionGroup]:
     """
-    Fetch execution groups for a diagnostic.
+    Fetch the execution groups of a diagnostic, at its promoted version
 
-    Pass `mip_era` to keep only the groups that ran against that era.
+    Groups whose latest execution is retracted are left out, matching the counts.
     """
-    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
-    group_filters = [models.ExecutionGroup.diagnostic_id == diagnostic.id]
-    if mip_era:
-        group_filters.append(execution_group_filter({"mip_era": mip_era}))
-
-    # Eager-load relationships to avoid per-item queries
-    execution_groups = (
-        app_context.session.query(models.ExecutionGroup)
-        .options(*EXECUTION_GROUP_LOAD_OPTIONS)
-        .filter(*group_filters)
-        .all()
+    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    groups, _ = load_execution_groups(
+        app_context.session,
+        ExecutionGroupFilter(
+            provider_slug=provider_slug,
+            diagnostic_slug=diagnostic_slug,
+            include_superseded=False,
+            include_retracted=False,
+            **era_scope(mip_era),
+        ),
+        with_count=False,
     )
+    return Collection(data=[ExecutionGroup.build(g, app_context) for g in groups], total_count=len(groups))
 
-    return Collection(data=[ExecutionGroup.build(e, app_context) for e in execution_groups])
 
-
-@router.get(
-    "/{provider_slug}/{diagnostic_slug}/executions",
-    response_model=Collection[Execution],
-)
-async def list_executions(
+async def _metric_filter(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
     request: Request,
-) -> Collection[Execution]:
-    """
-    Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
-
-    e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
-    """
-    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
-
-    executions_query = (
-        app_context.session.query(models.Execution)
-        .join(models.ExecutionGroup)
-        .filter(models.ExecutionGroup.diagnostic_id == diagnostic.id)
-        .filter(cmip_dataset_filter(dict(request.query_params)))
+    mip_era: MipEra | None,
+    isolate_ids: str | None,
+    exclude_ids: str | None,
+) -> MetricValueFilter:
+    # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
+    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    return MetricValueFilter(
+        diagnostic_slug=diagnostic_slug,
+        provider_slug=provider_slug,
+        include_superseded=False,
+        include_retracted=False,
+        latest_only=False,
+        **era_scope(mip_era),
+        dimensions=parse_dimension_filters(request.query_params),
+        isolate_ids=parse_id_list(isolate_ids),
+        exclude_ids=parse_id_list(exclude_ids),
     )
 
-    executions = executions_query.all()
 
-    return Collection(data=[Execution.build(e, app_context) for e in executions])
+@router.get("/{provider_slug}/{diagnostic_slug}/values/facets")
+async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+    app_context: AppContextDep,
+    provider_slug: str,
+    diagnostic_slug: str,
+    request: Request,
+    value_type: MetricValueType = Query(..., description="Type of metric values to read the facets of"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+    mip_era: MipEra | None = Query(
+        None, description="Keep only the execution groups that draw on this era, or on no model data"
+    ),
+) -> list[Facet]:
+    """
+    Get the facets of the values `/values` returns for the same filters, without the values.
+
+    They cover every page and the outliers too, so a client can keep them while it pages.
+    """
+    metric_filter = await _metric_filter(
+        app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
+    )
+    return fetch_facets(app_context, metric_filter, value_type)
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=MetricValueCollection)
@@ -373,7 +303,10 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
     isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
     exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
-    mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
+    mip_era: MipEra | None = Query(
+        None, description="Keep only the execution groups that draw on this era, or on no model data"
+    ),
+    with_facets: bool = Query(True, description="Fill `facets`, which `/values/facets` also returns"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Get all the diagnostic values for a given diagnostic (both scalar and series)
@@ -382,35 +315,20 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     - `format`: Return format - 'json' (default) or 'csv'
     - `offset`: Number of items to skip (default 0)
     - `limit`: Maximum number of items to return (default 50, max 500)
-    - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
-      see only the values the caller is charting
+    - `mip_era`: Restrict to the groups of one era, so outlier detection and pagination
+      see only the values the caller is charting.
+      Groups that use no model data, such as observation-only ones, are kept.
+
+    Values come from the promoted diagnostic version, and retracted executions are left out.
     """
-    # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
-    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
-
-    execution_ids = None
-    if mip_era:
-        # The reader reads an empty id list as unconstrained, so an era that matched no execution
-        # needs an id no value can carry rather than no filter at all.
-        execution_ids = executions_in_mip_era(app_context.session, mip_era, diagnostic.id) or [0]
-
-    # Scope to this diagnostic/provider via exact-match slugs. ``promoted_only`` keeps only the
-    # promoted diagnostic version, so values from superseded versions are hidden. Exposing
-    # previous versions needs a separate design (TODO). Retracted executions are still included.
-    metric_filter = MetricValueFilter(
-        diagnostic_slug=diagnostic_slug,
-        provider_slug=provider_slug,
-        execution_ids=execution_ids,
-        dimensions=parse_dimension_filters(request.query_params),
-        isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
-        exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        promoted_only=True,
-        include_retracted=True,
+    metric_filter = await _metric_filter(
+        app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
     )
 
     return fetch_metric_values(
         app_context,
         metric_filter,
+        with_facets=with_facets,
         value_type=value_type,
         format=format,
         offset=offset,

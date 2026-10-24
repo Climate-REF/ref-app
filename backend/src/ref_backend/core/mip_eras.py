@@ -1,18 +1,26 @@
 """Helpers for telling the CMIP6 and CMIP7 eras apart."""
 
-from collections.abc import Collection, Mapping
-from typing import Any
+from collections.abc import Collection
+from typing import Any, Literal
 
-from sqlalchemy import ColumnElement, and_, distinct, false, func, or_, select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import ColumnCollection
 
 from climate_ref import models
+from climate_ref.models.execution import ExecutionGroupSourceType
+from climate_ref.query.filters import ExecutionScope
+from climate_ref.results import InputDatasetFilter
 from climate_ref_core.datasets import SourceDatasetType
-from ref_backend.core.filter_utils import build_filter_clause
+
+MipEra = Literal["CMIP6", "CMIP7"]
 
 #: The MIP eras the app presents. Data from the two is never combined on a chart.
-CMIP_ERAS: tuple[SourceDatasetType, ...] = (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
+_ERA_TYPES: dict[MipEra, SourceDatasetType] = {
+    "CMIP6": SourceDatasetType.CMIP6,
+    "CMIP7": SourceDatasetType.CMIP7,
+}
+_TYPE_ERAS: dict[SourceDatasetType, MipEra] = {source_type: era for era, source_type in _ERA_TYPES.items()}
+CMIP_ERAS: tuple[SourceDatasetType, ...] = tuple(_ERA_TYPES.values())
 
 
 def dataset_model_for(source_type: SourceDatasetType) -> type[models.Dataset]:
@@ -29,16 +37,36 @@ def dataset_type_label(source_type: SourceDatasetType) -> str:
     return str(source_type.value)
 
 
-def mip_era_for(source_type: SourceDatasetType) -> str | None:
+def mip_era_for(source_type: SourceDatasetType) -> MipEra | None:
     """Map a source dataset type onto the MIP era label used to keep the eras apart."""
-    if source_type not in CMIP_ERAS:
-        return None
-    return dataset_type_label(source_type).upper()
+    return _TYPE_ERAS.get(source_type)
 
 
-def _mapped_columns(source_type: SourceDatasetType) -> ColumnCollection[str, Any]:
-    """Return the columns an era's dataset table actually carries."""
-    return dataset_model_for(source_type).__mapper__.columns
+def source_types_for(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...] | None:
+    """Resolve a `mip_era` query value into the source types it keeps, or `None` to keep every group."""
+    return None if mip_era is None else (_ERA_TYPES[mip_era],)
+
+
+def era_scope(mip_era: MipEra | None) -> dict[str, Any]:
+    """Filter fields keeping the groups that draw on `mip_era`, or on no model data, or every group."""
+    if mip_era is None:
+        return {}
+    return {"source_types": source_types_for(mip_era), "or_no_model_input": True}
+
+
+def eras_in_scope(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...]:
+    """Resolve a `mip_era` query value into the CMIP eras it keeps."""
+    return source_types_for(mip_era) or CMIP_ERAS
+
+
+def era_group_clauses(mip_era: MipEra) -> list[ColumnElement[bool]]:
+    """Clauses over `ExecutionGroup` keeping the groups that draw on `mip_era`, or on no model data."""
+    return ExecutionScope(**era_scope(mip_era)).group_clauses()
+
+
+def source_id_datasets(source_id: str | None) -> InputDatasetFilter | None:
+    """Match executions that ran against a model, which selectors do not always record."""
+    return InputDatasetFilter(facets={"source_id": source_id}) if source_id else None
 
 
 def cv_column(mapped: Any, name: str) -> Any:
@@ -46,112 +74,31 @@ def cv_column(mapped: Any, name: str) -> Any:
     return getattr(mapped, name)
 
 
-def cmip_dataset_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
+def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, MipEra]:
     """
-    Match executions holding a CMIP6 or CMIP7 dataset that satisfies every facet in `facets`.
+    Map each execution onto the MIP era its group draws on.
 
-    A facet no CMIP era carries is ignored, which keeps unknown query parameters harmless.
-    A facet only one era carries excludes the other, so a CMIP7-only facet does not pull in
-    all of CMIP6.
-    """
-    requested_era = facets.get("mip_era")
-    columns_by_era = {era: _mapped_columns(era) for era in CMIP_ERAS}
-    known = {
-        key: value
-        for key, value in facets.items()
-        if key != "mip_era" and any(key in columns for columns in columns_by_era.values())
-    }
-
-    branches = []
-    for source_type in CMIP_ERAS:
-        if requested_era and requested_era.upper() != mip_era_for(source_type):
-            continue
-
-        dataset_model = dataset_model_for(source_type)
-        if any(key not in columns_by_era[source_type] for key in known):
-            continue
-
-        conditions = [build_filter_clause(getattr(dataset_model, key), value) for key, value in known.items()]
-        datasets = models.Execution.datasets.of_type(dataset_model)
-        branches.append(datasets.any(and_(*conditions)) if conditions else datasets.any())
-
-    if not branches:
-        # Nothing can satisfy the request, so match no rows rather than every row.
-        return false()
-    return or_(*branches)
-
-
-def execution_group_filter(facets: Mapping[str, str]) -> ColumnElement[bool]:
-    """Match execution groups holding an execution that satisfies `cmip_dataset_filter`."""
-    return models.ExecutionGroup.executions.any(cmip_dataset_filter(facets))
-
-
-def execution_groups_per_era(session: Session) -> dict[str, int]:
-    """
-    Count the execution groups that ran against each MIP era, keyed by era label.
-
-    A group holding both eras counts once for each, so the counts do not partition the total.
-    Groups are counted at the promoted version of each diagnostic, matching the overall statistics.
-    """
-    rows = session.execute(
-        select(models.Dataset.dataset_type, func.count(distinct(models.ExecutionGroup.id)))
-        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-        .join(models.ExecutionGroup.executions)
-        .join(models.Execution.datasets)
-        .where(
-            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-            models.Dataset.dataset_type.in_(CMIP_ERAS),
-        )
-        .group_by(models.Dataset.dataset_type)
-    ).all()
-
-    counts = {mip_era_for(source_type): count for source_type, count in rows}
-    return {label: counts.get(label, 0) for era in CMIP_ERAS if (label := mip_era_for(era))}
-
-
-def executions_in_mip_era(session: Session, mip_era: str, diagnostic_id: int) -> list[int]:
-    """
-    Find the executions of a diagnostic that ran against `mip_era`, plus any with no era at all.
-
-    An execution with no CMIP input carries no era, so dropping it would lose values rather than
-    label them. Scoping the values query this way is what keeps outlier detection and pagination
-    inside a single era.
-    """
-    no_cmip_input = ~cmip_dataset_filter({})
-    rows = session.execute(
-        select(models.Execution.id)
-        .join(models.Execution.execution_group)
-        .where(
-            models.ExecutionGroup.diagnostic_id == diagnostic_id,
-            or_(cmip_dataset_filter({"mip_era": mip_era}), no_cmip_input),
-        )
-    ).scalars()
-    return list(rows)
-
-
-def mip_eras_for_executions(session: Session, execution_ids: Collection[int]) -> dict[int, str]:
-    """
-    Map each execution onto the MIP era of the model datasets it ran against.
-
-    Most diagnostics never record an era on their own values, so this recovers it from the inputs.
-    An execution mixing eras is left out, because no single era describes it.
+    Most diagnostics never record an era on their own values, so this recovers it from the group.
+    A group drawing on both eras is left out, because no single era describes it.
     """
     if not execution_ids:
         return {}
 
     rows = session.execute(
-        select(models.Execution.id, models.Dataset.dataset_type)
-        .join(models.Execution.datasets)
+        select(models.Execution.id, ExecutionGroupSourceType.source_type)
+        .join(
+            ExecutionGroupSourceType,
+            ExecutionGroupSourceType.execution_group_id == models.Execution.execution_group_id,
+        )
         .where(
             models.Execution.id.in_(execution_ids),
-            models.Dataset.dataset_type.in_(CMIP_ERAS),
+            ExecutionGroupSourceType.source_type.in_(CMIP_ERAS),
         )
-        .distinct()
     ).all()
 
-    eras: dict[int, str | None] = {}
-    for execution_id, dataset_type in rows:
-        era = mip_era_for(dataset_type)
+    eras: dict[int, MipEra | None] = {}
+    for execution_id, source_type in rows:
+        era = mip_era_for(source_type)
         eras[execution_id] = era if execution_id not in eras else None
 
     return {execution_id: era for execution_id, era in eras.items() if era is not None}

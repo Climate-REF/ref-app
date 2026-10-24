@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import {
   diagnosticsGetOptions,
   executionsGetOptions,
+  executionsListMetricValuesOptions,
 } from "@/client/@tanstack/react-query.gen";
 import { DownloadOutputs } from "@/components/execution/downloadOutputs.tsx";
 import { ExecutionStatusBadge } from "@/components/execution/executionStatusBadge";
@@ -49,6 +50,31 @@ const NavTab = ({
   );
 };
 
+/**
+ * Whether the group's latest execution stored values of this type
+ *
+ * The diagnostic's own flags only cover its promoted version, so they miss older groups.
+ */
+const useHasValues = (
+  groupId: string,
+  valueType: "scalar" | "series",
+  enabled: boolean,
+) => {
+  const { data } = useQuery({
+    ...executionsListMetricValuesOptions({
+      path: { group_id: groupId },
+      query: {
+        value_type: valueType,
+        limit: 1,
+        detect_outliers: "off",
+        with_facets: false,
+      },
+    }),
+    enabled,
+  });
+  return (data?.total_count ?? 0) > 0;
+};
+
 const ExecutionInfoLayout = () => {
   const { groupId } = Route.useParams();
   const location = useLocation();
@@ -70,6 +96,9 @@ const ExecutionInfoLayout = () => {
       },
     }),
   );
+
+  const hasScalarValues = useHasValues(groupId, "scalar", !!execution);
+  const hasSeriesValues = useHasValues(groupId, "series", !!execution);
 
   // Determine the active tab based on the current URL pathname
   const activeTab = location.pathname.split("/").pop() || "datasets";
@@ -182,12 +211,12 @@ const ExecutionInfoLayout = () => {
               <NavTab
                 value="scalar"
                 label="Scalar Values"
-                disabled={!execution || !diagnostic.has_scalar_values}
+                disabled={!hasScalarValues}
               />
               <NavTab
                 value="series"
                 label="Series Values"
-                disabled={!execution || !diagnostic.has_series_values}
+                disabled={!hasSeriesValues}
               />
               <TabsTrigger value="logs" asChild>
                 <Link to="/executions/$groupId/logs" params={{ groupId }}>

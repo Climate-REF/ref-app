@@ -11,14 +11,28 @@ vi.mock("@tanstack/react-query", async () => {
 
 const mockedUseQuery = vi.mocked(useQuery);
 
+const groupCounts = (
+  total: number,
+  successful: number,
+  failed: number,
+  running: number,
+  not_started: number,
+) => ({
+  total,
+  successful,
+  failed,
+  running,
+  not_started,
+  dirty: 0,
+});
+
 const STATS = {
-  total_execution_groups: 1200,
-  successful_execution_groups: 1000,
-  failed_execution_groups: 150,
-  running_execution_groups: 30,
-  not_started_execution_groups: 20,
+  groups: groupCounts(1200, 1000, 150, 30, 20),
   success_rate_percentage: 83.3,
-  execution_groups_by_mip_era: { CMIP6: 900, CMIP7: 300 },
+  groups_by_mip_era: {
+    CMIP6: groupCounts(900, 800, 70, 20, 10),
+    CMIP7: groupCounts(300, 200, 80, 10, 10),
+  },
   scalar_value_count: 5000,
   series_value_count: 250,
   total_datasets: 42,

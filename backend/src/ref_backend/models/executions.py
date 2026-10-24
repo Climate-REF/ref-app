@@ -4,11 +4,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, computed_field
-from sqlalchemy.orm import selectinload
 
 from climate_ref import models
 from climate_ref.models.execution import ResultOutputType
+from ref_backend.core.mip_eras import MipEra
 from ref_backend.core.resource_usage import ExecutionResourceSummary
+from ref_backend.models.common import GroupCounts
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
@@ -40,19 +41,6 @@ class ExecutionOutput(BaseModel):
             updated_at=output.updated_at,
             url=f"{app_context.settings.BACKEND_HOST}{app_context.settings.API_V1_STR}/results/{output.id}",
         )
-
-
-# Everything ExecutionGroup.build touches without outputs,
-# so a page of groups loads in a fixed number of queries.
-EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS = (
-    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.datasets),
-    selectinload(models.ExecutionGroup.diagnostic).selectinload(models.Diagnostic.provider),
-)
-# Everything ExecutionGroup.build touches, including each execution's outputs.
-EXECUTION_GROUP_LOAD_OPTIONS = (
-    selectinload(models.ExecutionGroup.executions).selectinload(models.Execution.outputs),
-    *EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS,
-)
 
 
 class ExecutionGroup(BaseModel):
@@ -160,37 +148,23 @@ class ExecutionStats(BaseModel):
     Statistics for execution groups and their success rates.
     """
 
-    total_execution_groups: int
+    groups: GroupCounts
     """
-    Total number of execution groups in the database.
+    Execution groups at the promoted version of each diagnostic, by the outcome of their latest execution
     """
-    successful_execution_groups: int
+    groups_by_mip_era: dict[MipEra, GroupCounts]
     """
-    Number of execution groups whose latest execution was successful.
-    """
-    failed_execution_groups: int
-    """
-    Number of execution groups whose latest execution failed.
-    """
-    running_execution_groups: int
-    """
-    Number of execution groups whose latest execution is still running.
-    """
-    not_started_execution_groups: int
-    """
-    Number of execution groups that have not been executed yet.
-    """
-    execution_groups_by_mip_era: dict[str, int]
-    """
-    Number of execution groups that ran against each MIP era, keyed by era label.
+    The same counts for the groups that draw on each MIP era.
+
+    A group drawing on both eras counts in each, so these do not add up to `groups`.
     """
     scalar_value_count: int
     """
-    Number of scalar metric values available.
+    Number of scalar metric values stored, from every version.
     """
     series_value_count: int
     """
-    Number of series metric values available.
+    Number of series metric values stored, from every version.
     """
     total_datasets: int
     """
@@ -202,7 +176,7 @@ class ExecutionStats(BaseModel):
     """
     resource_usage: ExecutionResourceSummary | None
     """
-    Wall, CPU and memory usage rolled up across every execution.
+    Wall, CPU and memory usage rolled up across every execution at the promoted versions.
 
     Absent when no execution has recorded a wall time.
     """
@@ -211,8 +185,8 @@ class ExecutionStats(BaseModel):
     @property
     def success_rate_percentage(self) -> float:
         """
-        Success rate as a percentage (0-100).
+        Share of the groups whose latest execution succeeded, as a percentage (0-100).
         """
-        if self.total_execution_groups == 0:
+        if self.groups.total == 0:
             return 0.0
-        return round((self.successful_execution_groups / self.total_execution_groups) * 100, 1)
+        return round(self.groups.successful / self.groups.total * 100, 1)

@@ -10,17 +10,20 @@ const valuesQuery = vi.fn();
 vi.mock("@tanstack/react-query", async () => ({
   ...(await vi.importActual("@tanstack/react-query")),
   useSuspenseQuery: () => ({ data: { executions: groupExecutions } }),
-  useQuery: () => ({
-    data: {
-      data: [],
-      count: 0,
-      total_count: 0,
-      facets: [{ key: "source_id", values: ["A", "B"] }],
-      types: ["scalar"],
-    },
-    isLoading: false,
-    ...valuesQuery(),
-  }),
+  useQuery: ({ queryKey }: { queryKey: [{ _id: string }] }) =>
+    queryKey[0]._id.endsWith("Facets")
+      ? { data: [{ key: "source_id", values: ["A", "B"] }] }
+      : {
+          data: {
+            data: [],
+            count: 0,
+            total_count: 0,
+            facets: [],
+            types: ["scalar"],
+          },
+          isLoading: false,
+          ...valuesQuery(),
+        },
 }));
 
 describe("ExecutionValuesPanel", () => {

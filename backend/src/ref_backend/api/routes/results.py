@@ -15,7 +15,7 @@ async def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> 
     """
     Fetch a result
     """
-    result = session.query(ExecutionOutput).get(result_id)
+    result = session.get(ExecutionOutput, result_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Result not found")
 

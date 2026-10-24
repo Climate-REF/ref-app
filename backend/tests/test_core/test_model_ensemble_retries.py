@@ -94,3 +94,25 @@ def test_writes_do_not_reach_the_checked_in_fixture(writable_session):
     assert writable_session.scalar(select(func.count(models.Execution.id))) == before + 1
     original.expire_all()
     assert original.scalar(select(func.count(models.Execution.id))) == before
+
+
+def test_a_retracted_latest_execution_leaves_the_ensemble(writable_session):
+    """A retracted run must not fall back to the attempt it replaced either."""
+    values = writable_session.scalars(
+        select(models.ScalarMetricValue).where(cv_column(models.ScalarMetricValue, "source_id") == MODEL)
+    ).all()
+    for candidate in values:
+        deciding = writable_session.get(models.Execution, candidate.execution_id)
+        diagnostic_id = deciding.execution_group.diagnostic_id
+        before = _comparisons_for(writable_session, diagnostic_id)
+        if before:
+            break
+    else:
+        pytest.skip("No metric of this model is reported by enough others in the fixture")
+
+    deciding.retracted = True
+    writable_session.flush()
+
+    after = _comparisons_for(writable_session, diagnostic_id)
+    members = sum(c.ensemble.count for c in after.values())
+    assert members < sum(c.ensemble.count for c in before.values())

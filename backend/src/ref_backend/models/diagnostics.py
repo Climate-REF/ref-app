@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import func, select
 
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
+from climate_ref.query import select_group_counts
+from climate_ref.results import DiagnosticFilter, ResourceFilter
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
     load_diagnostic_metadata_cached,
 )
-from ref_backend.core.metric_values import metric_value_type_is
-from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage_for_diagnostic
+from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage
 from ref_backend.models.aft import AFTDiagnosticDetail
-from ref_backend.models.common import GroupBy, ProviderSummary
+from ref_backend.models.common import GroupBy, GroupCounts, ProviderSummary
 
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
@@ -68,21 +68,9 @@ class DiagnosticCatalogEntry(BaseModel):
     """
     List of IDs for the provider executions associated with this provider
     """
-    execution_count: int
+    groups: GroupCounts
     """
-    Total number of executions across all execution groups for this diagnostic
-    """
-    successful_execution_count: int
-    """
-    Number of successful executions across all execution groups for this diagnostic
-    """
-    execution_group_count: int
-    """
-    Number of execution groups for this diagnostic
-    """
-    successful_execution_group_count: int
-    """
-    Number of execution groups whose latest execution is successful
+    Execution groups at the promoted version, by the outcome of their latest execution
     """
     promoted_version: int
     """
@@ -186,13 +174,11 @@ class DiagnosticCatalogEntry(BaseModel):
             logger.debug(f"Applied metadata overrides for diagnostic {diagnostic_key}")
 
     @staticmethod
-    def build_with_stats(  # noqa: PLR0913
+    def build_with_stats(
         diagnostic: models.Diagnostic,
         app_context: "AppContext",
         *,
-        execution_stats: dict[str, int],
-        execution_group_count: int,
-        successful_execution_group_count: int,
+        groups: GroupCounts,
         resource_usage: ExecutionResourceSummary | None = None,
     ) -> "DiagnosticCatalogEntry":
         """Build a DiagnosticCatalogEntry with pre-computed statistics to avoid N+1 queries."""
@@ -211,10 +197,7 @@ class DiagnosticCatalogEntry(BaseModel):
             name=diagnostic.name,
             description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
-            execution_count=execution_stats["total"],
-            successful_execution_count=execution_stats["successful"],
-            execution_group_count=execution_group_count,
-            successful_execution_group_count=successful_execution_group_count,
+            groups=groups,
             promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
@@ -251,109 +234,37 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
     @staticmethod
     def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
         """Build a DiagnosticSummary with individual database queries."""
-        metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
-        group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
-        aft = DiagnosticSummary._get_aft_link(diagnostic)
+        this_diagnostic = DiagnosticFilter(
+            provider_slug=diagnostic.provider.slug,
+            diagnostic_slug=diagnostic.slug,
+            include_superseded=False,
+            include_retracted=False,
+        )
 
         def has_values(value_type: StoredMetricValueType) -> bool:
-            query = (
-                select(models.MetricValue.id)
-                .join(models.Execution)
-                .join(models.ExecutionGroup)
-                .where(models.ExecutionGroup.diagnostic_id == diagnostic.id, metric_value_type_is(value_type))
-                .limit(1)
-            )
-            return app_context.session.scalar(query) is not None
+            return bool(app_context.reader.diagnostics.with_values(value_type, this_diagnostic))
 
-        has_scalar_values = has_values(StoredMetricValueType.SCALAR)
-        has_series_values = has_values(StoredMetricValueType.SERIES)
-
-        has_metric_values = has_scalar_values or has_series_values
-
-        # Every count below is scoped to the promoted version, matching the values endpoints.
-        # Without that scoping a page can report thousands of successful groups and still show an
-        # empty table, because the values of a superseded version are hidden.
-        promoted_scope = (
-            models.ExecutionGroup.diagnostic_id == diagnostic.id,
-            models.ExecutionGroup.diagnostic_version == diagnostic.promoted_version,
+        entry = DiagnosticCatalogEntry.build_with_stats(
+            diagnostic,
+            app_context,
+            groups=GroupCounts.summed(
+                app_context.session.execute(select_group_counts(this_diagnostic)).all()
+            ),
+            resource_usage=resource_usage(
+                app_context.reader,
+                ResourceFilter(
+                    provider_slug=diagnostic.provider.slug,
+                    diagnostic_slug=diagnostic.slug,
+                    include_superseded=False,
+                    include_retracted=True,
+                ),
+            ),
         )
-
-        # Execution counts for this diagnostic
-        execution_count = (
-            app_context.session.query(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(*promoted_scope)
-            .count()
+        return DiagnosticSummary.from_catalog_entry(
+            entry,
+            has_scalar_values=has_values(StoredMetricValueType.SCALAR),
+            has_series_values=has_values(StoredMetricValueType.SERIES),
         )
-        successful_execution_count = (
-            app_context.session.query(models.Execution)
-            .join(models.ExecutionGroup)
-            .filter(
-                *promoted_scope,
-                models.Execution.successful.is_(True),
-            )
-            .count()
-        )
-
-        # Execution group counts for this diagnostic
-        execution_group_count = (
-            app_context.session.query(models.ExecutionGroup).filter(*promoted_scope).count()
-        )
-
-        # Count execution groups whose latest execution is successful
-        ExecutionGroup = models.ExecutionGroup
-        Execution = models.Execution
-
-        # Subquery: latest execution id per group
-        latest_exec_per_group = (
-            app_context.session.query(
-                Execution.execution_group_id.label("egid"),
-                func.max(Execution.id).label("latest_exec_id"),
-            )
-            .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-            .filter(*promoted_scope)
-            .group_by(Execution.execution_group_id)
-            .subquery()
-        )
-
-        # Join back to executions to check success of latest
-        successful_execution_group_count = (
-            app_context.session.query(latest_exec_per_group.c.egid)
-            .join(Execution, Execution.id == latest_exec_per_group.c.latest_exec_id)
-            .filter(Execution.successful.is_(True))
-            .count()
-        )
-
-        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
-        description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
-
-        resource_usage = resource_usage_for_diagnostic(app_context.session, diagnostic.id)
-
-        # Build the base diagnostic summary
-        summary = DiagnosticSummary(
-            id=diagnostic.id,
-            provider=ProviderSummary.build(diagnostic.provider),
-            slug=diagnostic.slug,
-            name=diagnostic.name,
-            description=description,
-            execution_groups=[e.id for e in diagnostic.execution_groups],
-            has_metric_values=has_metric_values,
-            has_scalar_values=has_scalar_values,
-            has_series_values=has_series_values,
-            execution_count=execution_count,
-            successful_execution_count=successful_execution_count,
-            execution_group_count=execution_group_count,
-            successful_execution_group_count=successful_execution_group_count,
-            promoted_version=diagnostic.promoted_version,
-            group_by=group_by_summary,
-            aft_link=aft,
-            resource_usage=resource_usage,
-        )
-
-        # Apply metadata overrides from YAML if available
-        DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
-
-        return summary
 
     @staticmethod
     def from_catalog_entry(

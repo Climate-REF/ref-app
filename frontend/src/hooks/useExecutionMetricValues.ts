@@ -1,6 +1,9 @@
 import type { useNavigate } from "@tanstack/react-router";
 import { executionsListMetricValues } from "@/client";
-import { executionsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen.ts";
+import {
+  executionsListMetricValueFacetsOptions,
+  executionsListMetricValuesOptions,
+} from "@/client/@tanstack/react-query.gen.ts";
 import { useMetricValues } from "./useMetricValues";
 
 interface UseExecutionMetricValuesOptions {
@@ -27,6 +30,7 @@ export function useExecutionMetricValues({
     valueType,
     navigate,
     fetchQueryOptions: executionsListMetricValuesOptions,
+    fetchFacetsOptions: executionsListMetricValueFacetsOptions,
     fetchDownload: executionsListMetricValues,
     getDownloadFilename: (params, type) =>
       `metric-values-${params.group_id}-${type}.csv`,

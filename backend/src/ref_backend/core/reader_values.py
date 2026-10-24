@@ -14,7 +14,8 @@ from climate_ref.results.values import ScalarValueCollection, SeriesValueCollect
 from ref_backend.core.json_utils import sanitize_float_value
 from ref_backend.core.metric_values import MetricValueType
 from ref_backend.core.mip_eras import mip_eras_for_executions
-from ref_backend.models import MetricValueCollection
+from ref_backend.models import Facet, MetricValueCollection
+from ref_backend.models.values import facets_of
 
 if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
@@ -160,6 +161,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
     detect_outliers: Literal["off", "iqr"],
     include_unverified: bool,
     filename_stem: str,
+    with_facets: bool = True,
 ) -> MetricValueCollection | StreamingResponse:
     """
     Read metric values for an already-scoped filter and render them as JSON or CSV.
@@ -167,6 +169,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
     `filename_stem` names the CSV download, which is the only thing that varies
     between the diagnostic-scoped and execution-scoped endpoints.
     CSV exports return every matching value, so `offset` and `limit` are ignored there.
+    Pass `with_facets=False` to leave `facets` empty, for a caller that reads them from `fetch_facets`.
     """
     if value_type == MetricValueType.SCALAR:
         detection_ran = detect_outliers == "iqr"
@@ -177,6 +180,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
                 metric_filter,
                 outliers=outlier_policy,
                 include_unverified=include_unverified,
+                with_facets=False,
             )
             return generate_csv_response_scalar(
                 collection, detection_ran, f"metric_values_scalar_{filename_stem}.csv"
@@ -188,6 +192,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             include_unverified=include_unverified,
             offset=offset,
             limit=limit,
+            with_facets=with_facets,
         )
         return annotate_mip_eras(
             app_context, MetricValueCollection.build_scalar_from_reader(collection, detection_ran)
@@ -195,7 +200,7 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
 
     if value_type == MetricValueType.SERIES:
         if format == "csv":
-            series_collection = app_context.reader.values.series_values(metric_filter)
+            series_collection = app_context.reader.values.series_values(metric_filter, with_facets=False)
             return generate_csv_response_series(
                 series_collection, f"metric_values_series_{filename_stem}.csv"
             )
@@ -204,9 +209,23 @@ def fetch_metric_values(  # noqa: PLR0913, PLR0917
             metric_filter,
             offset=offset,
             limit=limit,
+            with_facets=with_facets,
         )
         return annotate_mip_eras(
             app_context, MetricValueCollection.build_series_from_reader(series_collection)
         )
 
     raise HTTPException(status_code=500, detail="Unknown value_type")
+
+
+def fetch_facets(
+    app_context: "AppContext", metric_filter: MetricValueFilter, value_type: MetricValueType
+) -> list[Facet]:
+    """
+    Read the facets of every value `metric_filter` keeps, without loading the values.
+
+    These match the `facets` of `fetch_metric_values`, which cover outliers too.
+    """
+    values = app_context.reader.values
+    read = values.scalar_values if value_type == MetricValueType.SCALAR else values.series_values
+    return facets_of(read(metric_filter, limit=0, with_count=False))

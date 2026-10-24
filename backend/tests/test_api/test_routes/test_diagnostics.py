@@ -1,18 +1,14 @@
-import copy
-import shutil
-from collections.abc import Generator
-from pathlib import Path
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from climate_ref import models
 from climate_ref.database import Database
 from climate_ref.provider_registry import ProviderRegistry
 from ref_backend.api import deps
-from ref_backend.builder import build_app
-from ref_backend.core.config import get_settings
-from ref_backend.testing import test_ref_config, test_settings
+from ref_backend.testing import test_ref_config
 
 
 def get_diagnostic(client: TestClient, settings) -> dict:
@@ -91,24 +87,6 @@ def test_diagnostic_comparison(client: TestClient, settings):
 
     assert "source" in data
     assert "ensemble" in data
-
-
-def test_diagnostic_executions(client: TestClient, settings):
-    """Test the executions endpoint for a diagnostic."""
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    source_id = "ACCESS-ESM1-5"
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions?source_id={source_id}"
-    )
-
-    assert r.status_code == 200
-    data = r.json()
-    assert data["count"] > 0
-    assert len(data["data"]) > 0
 
 
 def test_diagnostic_values_outlier_detection_off(client: TestClient, settings):
@@ -587,39 +565,17 @@ def test_diagnostic_values_pagination_with_filter(client: TestClient, settings):
         assert item["dimensions"].get(facet["key"]) == filter_value
 
 
-def test_diagnostics_facets_dimensions_are_sorted_and_non_null(client: TestClient, settings) -> None:
-    """Test that facets dimensions contain only sorted, non-null values.
-
-    Validates the ORM-based facets query correctly filters NULLs and sorts results.
-    """
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-
-    for dimension_name, values in data["dimensions"].items():
-        assert isinstance(values, list), f"Dimension '{dimension_name}' should be a list"
-        assert None not in values, f"Dimension '{dimension_name}' should not contain null values"
-        assert values == sorted(values), f"Dimension '{dimension_name}' should be sorted"
-        assert len(values) == len(set(values)), f"Dimension '{dimension_name}' should have unique values"
-
-
-def test_diagnostics_facets_count_is_non_negative(client: TestClient, settings) -> None:
-    """Test that facets count reflects total metric values."""
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-    assert data["count"] >= 0
-
-
-def _diagnostics_with_values(session, value_class, *, promoted_only: bool) -> set[int]:
+def _diagnostics_with_values(session, value_class) -> set[int]:
     query = (
         session.query(models.ExecutionGroup.diagnostic_id)
         .join(models.Execution)
         .join(value_class)
         .join(models.Diagnostic, models.Diagnostic.id == models.ExecutionGroup.diagnostic_id)
+        .filter(
+            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+            models.Execution.retracted.is_(False),
+        )
     )
-    if promoted_only:
-        query = query.filter(models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version)
     return {row[0] for row in query.distinct()}
 
 
@@ -627,84 +583,46 @@ def test_diagnostics_has_values_flags_match_each_value_type(client: TestClient, 
     """The list and detail flags agree with a query against each metric value subclass."""
     session = Database.from_config(test_ref_config(), run_migrations=False, read_only=True).session
     listing = client.get(f"{settings.API_V1_STR}/diagnostics/").json()["data"]
+    listed = {d["id"] for d in listing}
 
     for value_class, flag in [
         (models.ScalarMetricValue, "has_scalar_values"),
         (models.SeriesMetricValue, "has_series_values"),
     ]:
-        promoted = _diagnostics_with_values(session, value_class, promoted_only=True)
-        assert promoted, flag
-        assert {d["id"] for d in listing if d[flag]} == promoted
+        expected = _diagnostics_with_values(session, value_class) & listed
+        assert expected, flag
+        assert {d["id"] for d in listing if d[flag]} == expected
 
-        any_version = _diagnostics_with_values(session, value_class, promoted_only=False)
         for diagnostic in listing:
             url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
-            expected = diagnostic["id"] in any_version
-            assert client.get(url).json()[flag] == expected, (flag, diagnostic["slug"])
+            assert client.get(url).json()[flag] == (diagnostic["id"] in expected), (flag, diagnostic["slug"])
 
 
-def test_diagnostics_facets_cover_scalar_and_series_values(client: TestClient, settings) -> None:
-    """Facets are the union of the scalar and series dimension values, and count both."""
-    database = Database.from_config(test_ref_config(), run_migrations=False, read_only=True)
-    session = database.session
-    scalars = session.query(models.ScalarMetricValue).all()
-    series = session.query(models.SeriesMetricValue).all()
-    assert scalars
-    assert series
+def test_retracted_values_are_hidden(writable_client: TestClient) -> None:
+    """Retracting every execution behind a diagnostic's values clears its flags and its values."""
+    listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
+    diagnostic = next(d for d in listing if d["has_scalar_values"])
+    detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+    scalars = {"value_type": "scalar", "detect_outliers": "off"}
+    assert writable_client.get(f"{detail_url}/values", params=scalars).json()["data"]
 
-    expected = {}
-    for dimension_name in models.MetricValue._cv_dimensions:
-        values = {getattr(value, dimension_name) for value in [*scalars, *series]} - {None}
-        if values:
-            expected[dimension_name] = sorted(values)
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        executions = database.session.scalars(
+            select(models.Execution)
+            .join(models.ExecutionGroup)
+            .where(models.ExecutionGroup.diagnostic_id == diagnostic["id"])
+        ).all()
+        for execution in executions:
+            execution.retracted = True
 
-    data = client.get(f"{settings.API_V1_STR}/diagnostics/facets").json()
-    assert {key: values for key, values in data["dimensions"].items() if values} == expected
-    assert data["count"] == len(scalars) + len(series)
-
-
-def test_diagnostic_executions_ignores_truly_unknown_query_params(client: TestClient, settings) -> None:
-    """Test that query params not matching any model attribute are silently ignored.
-
-    Only params matching a real CMIP6Dataset attribute should affect filtering.
-    Completely nonexistent param names must not cause errors.
-    """
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
-        "?nonexistent_column=test&fake_param=evil&zzz_not_real=bad"
+    relisted = next(
+        d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
-    assert r.status_code == 200
-
-    # Truly unknown params should be ignored, yielding the same results as unfiltered
-    r_unfiltered = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
-    )
-    assert r_unfiltered.status_code == 200
-    assert r.json()["count"] == r_unfiltered.json()["count"]
-
-
-def test_diagnostic_executions_dunder_attrs_do_not_crash(client: TestClient, settings) -> None:
-    """Test that dunder attribute names in query params don't cause 500 errors.
-
-    NOTE: hasattr(CMIP6Dataset, '__tablename__') is True because it's a
-    SQLAlchemy class attribute. This means dunder names pass the hasattr check
-    and may produce unexpected filter behavior (returning 0 results). This test
-    verifies the server doesn't crash -- the empty result is a known limitation
-    of the unfiltered hasattr approach (tracked as MEDIUM priority).
-    """
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions?__tablename__=evil"
-    )
-    # Must not crash with a 500
-    assert r.status_code == 200
+    assert not relisted["has_metric_values"]
+    assert not writable_client.get(detail_url).json()["has_metric_values"]
+    values = writable_client.get(f"{detail_url}/values", params=scalars).json()
+    assert values["data"] == []
 
 
 def test_diagnostic_values_ignores_unknown_filter_params(client: TestClient, settings) -> None:
@@ -756,37 +674,6 @@ def test_diagnostic_404_invalid_provider(client: TestClient, settings) -> None:
     assert r.status_code == 404
 
 
-def test_diagnostics_facets(client: TestClient, settings) -> None:
-    """Test that diagnostics facets endpoint returns dimension summary."""
-    r = client.get(f"{settings.API_V1_STR}/diagnostics/facets")
-    assert r.status_code == 200
-    data = r.json()
-    assert "dimensions" in data
-    assert "count" in data
-    assert isinstance(data["dimensions"], dict)
-    assert isinstance(data["count"], int)
-
-
-def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:
-    """A `mip_era` filter restricts executions to a single MIP era."""
-    diagnostic = get_diagnostic(client, settings)
-    base = (
-        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
-    )
-
-    unfiltered = client.get(base)
-    cmip6 = client.get(f"{base}?mip_era=CMIP6")
-    cmip7 = client.get(f"{base}?mip_era=CMIP7")
-
-    assert unfiltered.status_code == 200
-    assert cmip6.status_code == 200
-    assert cmip7.status_code == 200
-
-    # The test fixtures are CMIP6 only, so CMIP7 is empty and CMIP6 accounts for everything.
-    assert cmip7.json()["count"] == 0
-    assert cmip6.json()["count"] == unfiltered.json()["count"]
-
-
 def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
     """Model values are stamped with the era of their inputs, even when the diagnostic omits it."""
     diagnostic = get_diagnostic_with_scalar_values(client, settings)
@@ -822,22 +709,6 @@ def test_diagnostic_values_filtered_by_mip_era(client: TestClient, settings) -> 
     assert cmip6.json()["total_count"] == unfiltered.json()["total_count"]
 
 
-def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: TestClient, settings) -> None:
-    """An unrecognised query parameter is ignored without dropping the filters beside it."""
-    diagnostic = get_diagnostic(client, settings)
-    base = (
-        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
-    )
-
-    matching = client.get(f"{base}?source_id=ACCESS-ESM1-5&not_a_facet=zzz")
-    missing = client.get(f"{base}?source_id=NOT-A-MODEL&not_a_facet=zzz")
-
-    assert matching.status_code == 200
-    assert missing.status_code == 200
-    assert matching.json()["count"] > 0
-    assert missing.json()["count"] == 0
-
-
 def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/diagnostics/")
     assert r.status_code == 200
@@ -854,7 +725,7 @@ def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClie
         assert rd.json()["resource_usage"] == diagnostic["resource_usage"]
 
     usage = timed[0]["resource_usage"]
-    assert usage["timed_execution_count"] <= timed[0]["execution_count"]
+    assert usage["timed_execution_count"] > 0
     assert usage["wall_seconds_total"] >= usage["wall_seconds_max"] >= usage["wall_seconds_mean"] > 0
 
 
@@ -869,19 +740,16 @@ def test_diagnostics_list_counts_only_the_requested_era(client: TestClient) -> N
 
     # Every diagnostic is still listed, only its statistics change with the era.
     assert set(cmip6) == set(everything) == set(cmip7)
-    assert sum(d["execution_group_count"] for d in cmip6.values()) > 0
+    assert sum(d["groups"]["total"] for d in cmip6.values()) > 0
     # The fixture database only holds CMIP6 datasets.
-    assert all(d["execution_group_count"] == 0 for d in cmip7.values())
+    assert all(d["groups"]["total"] == 0 for d in cmip7.values())
     assert all(not d["has_metric_values"] for d in cmip7.values())
-    assert all(
-        cmip6[slug]["execution_group_count"] <= everything[slug]["execution_group_count"]
-        for slug in everything
-    )
+    assert all(cmip6[slug]["groups"]["total"] <= everything[slug]["groups"]["total"] for slug in everything)
 
 
 def test_execution_groups_filter_by_era(client: TestClient) -> None:
     listing = client.get("/api/v1/diagnostics/").json()["data"]
-    diagnostic = next(d for d in listing if d["execution_group_count"] > 0)
+    diagnostic = next(d for d in listing if d["groups"]["total"] > 0)
     base = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/execution_groups"
 
     everything = client.get(base).json()["data"]
@@ -903,34 +771,10 @@ def test_diagnostic_group_by_lists_each_pairing_once(client: TestClient) -> None
         assert len(pairings) == len(set(pairings)), diagnostic["slug"]
 
 
-@pytest.fixture
-def writable_client(tmp_path: Path) -> Generator[TestClient, None, None]:
-    """A client over a copy of the fixture database, for tests that have to write to it."""
-    settings = test_settings()
-    config = copy.deepcopy(test_ref_config())
-
-    source = Path(config.db.database_url.removeprefix("sqlite:///"))
-    database_copy = tmp_path / source.name
-    shutil.copy(source, database_copy)
-    config.db.database_url = f"sqlite:///{database_copy}"
-
-    app = build_app(
-        settings=settings,
-        ref_config=config,
-        database=deps._get_database_dependency(settings, config),
-    )
-    app.dependency_overrides[get_settings] = lambda: settings
-    app.dependency_overrides[deps._ref_config_dependency] = lambda: config
-
-    with TestClient(app) as client:
-        client.ref_config = config  # type: ignore[attr-defined]
-        yield client
-
-
 def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: TestClient) -> None:
     """Counts follow the same promoted-version gate as the values, so they cannot disagree."""
     listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
-    diagnostic = next(d for d in listing if d["execution_group_count"] > 0)
+    diagnostic = next(d for d in listing if d["groups"]["total"] > 0)
     detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
 
     database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
@@ -942,14 +786,79 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
     # Every group now sits on a superseded version, so nothing is left to count.
     detail = writable_client.get(detail_url).json()
     assert detail["promoted_version"] == diagnostic["promoted_version"] + 1
-    assert detail["execution_group_count"] == 0
-    assert detail["successful_execution_group_count"] == 0
-    assert detail["execution_count"] == 0
+    assert detail["groups"]["total"] == 0
+    assert detail["groups"]["successful"] == 0
 
     relisted = next(
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
-    assert relisted["execution_group_count"] == 0
+    assert relisted["groups"]["total"] == 0
+
+
+def _catalog_usage(client: TestClient, diagnostic_id: int) -> dict | None:
+    entries = client.get("/api/v1/diagnostics/catalog").json()["data"]
+    return next(d for d in entries if d["id"] == diagnostic_id)["resource_usage"]
+
+
+def test_catalog_resource_usage_counts_retracted_runs_at_the_promoted_version(
+    writable_client: TestClient,
+) -> None:
+    entries = writable_client.get("/api/v1/diagnostics/catalog").json()["data"]
+    diagnostic = next(d for d in entries if d["resource_usage"] is not None)
+    before = diagnostic["resource_usage"]
+
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        for execution in database.session.scalars(
+            select(models.Execution)
+            .join(models.ExecutionGroup)
+            .where(models.ExecutionGroup.diagnostic_id == diagnostic["id"])
+        ):
+            execution.retracted = True
+    assert _catalog_usage(writable_client, diagnostic["id"]) == before
+
+    with database.session.begin():
+        record = database.session.get(models.Diagnostic, diagnostic["id"])
+        assert record is not None
+        record.promoted_version = record.promoted_version + 1
+    assert _catalog_usage(writable_client, diagnostic["id"]) is None
+
+
+def test_a_backfilled_failure_does_not_decide_a_group(writable_client: TestClient) -> None:
+    """The latest execution is the newest by created_at, not the highest id."""
+    listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
+    diagnostic = next(d for d in listing if d["groups"]["successful"] > 0)
+    detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
+    before = writable_client.get(detail_url).json()
+
+    database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
+    with database.session.begin():
+        group = database.session.scalars(
+            select(models.ExecutionGroup).where(
+                models.ExecutionGroup.diagnostic_id == diagnostic["id"],
+                models.ExecutionGroup.diagnostic_version == diagnostic["promoted_version"],
+                models.ExecutionGroup.executions.any(models.Execution.successful.is_(True)),
+            )
+        ).first()
+        assert group is not None
+        newest = max(group.executions, key=lambda e: (e.created_at, e.id))
+        assert newest.successful
+        database.session.add(
+            models.Execution(
+                execution_group_id=group.id,
+                dataset_hash="backfill",
+                output_fragment=newest.output_fragment,
+                successful=False,
+                created_at=newest.created_at - timedelta(days=1),
+            )
+        )
+
+    after = writable_client.get(detail_url).json()
+    assert after["groups"]["successful"] == before["groups"]["successful"]
+    relisted = next(
+        d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
+    )
+    assert relisted["groups"]["successful"] == before["groups"]["successful"]
 
 
 FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")
@@ -980,8 +889,8 @@ def test_diagnostics_catalog_counts_one_model(client: TestClient, settings):
         assert r.status_code == 200
         return {
             f"{d['provider']['slug']}/{d['slug']}": (
-                d["execution_group_count"],
-                d["successful_execution_group_count"],
+                d["groups"]["total"],
+                d["groups"]["successful"],
             )
             for d in r.json()["data"]
         }
@@ -1009,3 +918,77 @@ def test_diagnostic_without_provider(app, client: TestClient, settings):
         del app.dependency_overrides[deps._provider_registry_dependency]
 
     assert r.status_code == 200
+
+
+@pytest.mark.parametrize("param", ["isolate_ids", "exclude_ids"])
+def test_a_blank_id_list_is_no_filter(client: TestClient, param) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    params = {"value_type": "scalar", "detect_outliers": "off"}
+    everything = client.get(url, params=params).json()
+
+    assert everything["total_count"] > 0
+    assert client.get(url, params={**params, param: ","}).json() == everything
+
+
+@pytest.mark.parametrize("value_type", ["scalar", "series"])
+def test_value_facets_match_the_values(client: TestClient, settings, value_type) -> None:
+    diagnostic = next(
+        d
+        for d in client.get(f"{settings.API_V1_STR}/diagnostics/").json()["data"]
+        if d[f"has_{value_type}_values"]
+    )
+    url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/values"
+    params = {"value_type": value_type, "limit": 1}
+
+    facets = client.get(f"{url}/facets", params=params)
+    values = client.get(url, params=params).json()
+
+    assert facets.status_code == 200
+    assert values["facets"]
+    assert facets.json() == values["facets"]
+    assert client.get(url, params={**params, "with_facets": "false"}).json()["facets"] == []
+
+
+def test_value_facets_follow_the_dimension_filters(client: TestClient) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    everything = {
+        f["key"]: f["values"] for f in client.get(f"{url}/facets", params={"value_type": "scalar"}).json()
+    }
+    key, (value, *_) = next((k, v) for k, v in everything.items() if len(v) > 1)
+
+    narrowed = client.get(f"{url}/facets", params={"value_type": "scalar", key: value}).json()
+
+    assert {f["key"]: f["values"] for f in narrowed}[key] == [value]
+
+
+def test_value_facets_follow_the_isolated_ids(client: TestClient) -> None:
+    url = "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values"
+    params = {"value_type": "scalar", "detect_outliers": "off"}
+    value_id = client.get(url, params={**params, "limit": 1}).json()["data"][0]["id"]
+
+    for ids in ({"isolate_ids": str(value_id)}, {"exclude_ids": str(value_id)}):
+        facets = client.get(f"{url}/facets", params={**params, **ids}).json()
+        assert facets == client.get(url, params={**params, **ids}).json()["facets"]
+
+
+@pytest.mark.parametrize(
+    ("params", "status"),
+    [
+        ({}, 422),
+        ({"value_type": "all"}, 422),
+        ({"value_type": "scalar", "isolate_ids": "1,x"}, 400),
+        ({"value_type": "scalar", "exclude_ids": "x"}, 400),
+    ],
+)
+def test_value_facets_reject_bad_input(client: TestClient, params, status) -> None:
+    r = client.get(
+        "/api/v1/diagnostics/esmvaltool/climate-at-global-warming-levels/values/facets", params=params
+    )
+
+    assert r.status_code == status
+
+
+def test_value_facets_of_an_unknown_diagnostic(client: TestClient) -> None:
+    r = client.get("/api/v1/diagnostics/nope/nope/values/facets", params={"value_type": "scalar"})
+
+    assert r.status_code == 404

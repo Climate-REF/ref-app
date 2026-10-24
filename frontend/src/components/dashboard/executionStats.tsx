@@ -25,16 +25,16 @@ export function ExecutionStats() {
     );
   }
 
-  const perEra = data?.execution_groups_by_mip_era;
+  const perEra = data?.groups_by_mip_era;
   return (
     <>
       <StatCard
         title="Total Execution Groups"
         loading={isLoading}
-        value={formatCount(data?.total_execution_groups)}
+        value={formatCount(data?.groups.total)}
         hint={
           data
-            ? `${formatCount(perEra?.CMIP6 ?? 0)} ran against CMIP6, ${formatCount(perEra?.CMIP7 ?? 0)} against CMIP7`
+            ? `${formatCount(perEra?.CMIP6?.total ?? 0)} ran against CMIP6, ${formatCount(perEra?.CMIP7?.total ?? 0)} against CMIP7`
             : "..."
         }
       />
@@ -44,7 +44,7 @@ export function ExecutionStats() {
         value={`${data?.success_rate_percentage}%`}
         hint={
           data
-            ? `${formatCount(data.successful_execution_groups)} successful, ${formatCount(data.failed_execution_groups)} failed`
+            ? `${formatCount(data.groups.successful)} successful, ${formatCount(data.groups.failed)} failed`
             : "..."
         }
       />
