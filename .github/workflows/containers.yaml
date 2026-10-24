@@ -39,6 +39,8 @@ jobs:
           tags: |
             type=ref,event=pr
             type=ref,event=tag
+            # An immutable tag per commit, so a deployment can pin exactly what it runs.
+            type=raw,value=sha-${{ env.BUILD_SHA }}
             # set latest tag for default branch
             type=raw,value=main,enable={{is_default_branch}}
       - uses: docker/build-push-action@v7
