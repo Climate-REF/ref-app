@@ -92,3 +92,39 @@ jobs:
     - name: Run tests
       run: |
         uv run coverage run -m pytest tests/ && uv run coverage report --fail-under=90
+
+  backend-perf:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.3.0
+      with:
+        enable-cache: true
+
+    # The databases depend on the climate-ref version on each side, which the lock files pin.
+    - name: Key the synthetic database cache
+      id: perf-db
+      run: |
+        key=$(cat uv.lock <(git show "origin/${{ github.base_ref }}:backend/uv.lock") | sha256sum | cut -c1-16)
+        echo "key=perf-db-$key" >> "$GITHUB_OUTPUT"
+
+    - name: Cache the synthetic databases
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ref-app/perf
+        key: ${{ steps.perf-db.outputs.key }}
+
+    - name: Compare query performance against the base branch
+      env:
+        REF_PERF_ROUNDS: "10"
+      run: |
+        scripts/perf-compare.sh "origin/${{ github.base_ref }}"

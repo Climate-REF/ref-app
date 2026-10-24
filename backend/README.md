@@ -35,6 +35,9 @@ make dev
 make test
 ```
 
+`make test-perf` times the API against a large synthetic database.
+See [tests/perf/README.md](tests/perf/README.md).
+
 ### Code Quality
 
 The project uses:
