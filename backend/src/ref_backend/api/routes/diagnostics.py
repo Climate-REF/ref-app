@@ -13,7 +13,7 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import MipEra, source_id_datasets, source_types_for
+from ref_backend.core.mip_eras import MipEra, era_scope, source_id_datasets
 from ref_backend.core.reader_values import (
     fetch_facets,
     fetch_metric_values,
@@ -84,7 +84,7 @@ def _scoped_diagnostics(app_context: AppContextDep, mip_era: MipEra | None, sour
         DiagnosticFilter(
             include_superseded=False,
             include_retracted=False,
-            source_types=source_types_for(mip_era),
+            **era_scope(mip_era),
             input_datasets=source_id_datasets(source_id),
         ),
     )
@@ -116,6 +116,7 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
             include_superseded=False,
             include_retracted=True,
             source_types=scope.filters.source_types,
+            or_no_model_input=scope.filters.or_no_model_input,
             input_datasets=scope.filters.input_datasets,
         ),
     )
@@ -231,7 +232,7 @@ async def list_execution_groups(
             diagnostic_slug=diagnostic_slug,
             include_superseded=False,
             include_retracted=False,
-            source_types=source_types_for(mip_era),
+            **era_scope(mip_era),
         ),
         with_count=False,
     )
@@ -255,8 +256,7 @@ async def _metric_filter(  # noqa: PLR0913, PLR0917
         include_superseded=False,
         include_retracted=False,
         latest_only=False,
-        source_types=source_types_for(mip_era),
-        or_no_model_input=mip_era is not None,
+        **era_scope(mip_era),
         dimensions=parse_dimension_filters(request.query_params),
         isolate_ids=parse_id_list(isolate_ids),
         exclude_ids=parse_id_list(exclude_ids),

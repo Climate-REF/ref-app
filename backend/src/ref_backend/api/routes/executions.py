@@ -15,7 +15,6 @@ from climate_ref.models.dataset import DatasetFile
 from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.query import select_group_counts
 from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, MetricValueFilter, ResourceFilter
-from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
 from ref_backend.core.execution_groups import load_execution_groups
@@ -24,7 +23,7 @@ from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import MipEra, source_id_datasets, source_types_for
+from ref_backend.core.mip_eras import MipEra, era_scope, source_id_datasets
 from ref_backend.core.reader_values import (
     fetch_facets,
     fetch_metric_values,
@@ -63,15 +62,13 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
     """
     session = app_context.reader.session
 
-    def group_counts(source_types: tuple[SourceDatasetType, ...] | None = None) -> GroupCounts:
-        filters = DiagnosticFilter(
-            include_superseded=False, include_retracted=False, source_types=source_types
-        )
+    def group_counts(mip_era: MipEra | None = None) -> GroupCounts:
+        filters = DiagnosticFilter(include_superseded=False, include_retracted=False, **era_scope(mip_era))
         return GroupCounts.summed(session.execute(select_group_counts(filters)).all())
 
     return ExecutionStats(
         groups=group_counts(),
-        groups_by_mip_era={era: group_counts(source_types_for(era)) for era in get_args(MipEra)},
+        groups_by_mip_era={era: group_counts(era) for era in get_args(MipEra)},
         scalar_value_count=session.query(models.ScalarMetricValue).count(),
         series_value_count=session.query(models.SeriesMetricValue).count(),
         total_datasets=session.query(models.Dataset).count(),
@@ -127,7 +124,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
         dirty=dirty,
         successful=successful,
         failure_reasons=failure_reason,
-        source_types=source_types_for(mip_era),
+        **era_scope(mip_era),
         input_datasets=source_id_datasets(source_id),
     )
     groups, total_count = load_execution_groups(

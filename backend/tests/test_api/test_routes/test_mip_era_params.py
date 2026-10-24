@@ -96,7 +96,7 @@ def _add_obs_only_value(config) -> int:
         session.add(execution)
         session.flush()
         value = models.ScalarMetricValue.build(
-            execution_id=execution.id, value=1.0, dimensions={}, attributes=None
+            execution_id=execution.id, value=1.0, dimensions={"source_id": "obs"}, attributes=None
         )
         session.add(value)
         session.flush()
@@ -115,3 +115,25 @@ def test_values_keep_obs_only_runs_for_either_era(writable_client: TestClient, m
 
     assert r.status_code == 200
     assert value_id in {v["id"] for v in r.json()["data"]}
+
+
+def _cmip7_groups(body) -> int:
+    return body["groups_by_mip_era"]["CMIP7"]["total"]
+
+
+@pytest.mark.parametrize(
+    ("path", "params", "amount"),
+    [
+        *((path, params, amount) for path, params, amount in ROUTES if not path.startswith("/models/")),
+        ("/executions/statistics", {}, _cmip7_groups),
+    ],
+)
+def test_an_obs_only_group_counts_for_an_era_without_runs(
+    writable_client: TestClient, path, params, amount
+) -> None:
+    """The fixture holds no CMIP7 runs, so with CMIP7 only the obs-only group is left."""
+    _add_obs_only_value(writable_client.ref_config)  # type: ignore[attr-defined]
+    r = writable_client.get(f"/api/v1{path}", params={**params, "mip_era": "CMIP7"})
+
+    assert r.status_code == 200
+    assert amount(r.json()) > 0

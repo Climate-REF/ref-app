@@ -47,6 +47,13 @@ def source_types_for(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...] | 
     return None if mip_era is None else (_ERA_TYPES[mip_era],)
 
 
+def era_scope(mip_era: MipEra | None) -> dict[str, Any]:
+    """Filter fields keeping the groups that draw on `mip_era`, or on no model data, or every group."""
+    if mip_era is None:
+        return {}
+    return {"source_types": source_types_for(mip_era), "or_no_model_input": True}
+
+
 def eras_in_scope(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...]:
     """Resolve a `mip_era` query value into the CMIP eras it keeps."""
     return source_types_for(mip_era) or CMIP_ERAS
@@ -54,7 +61,7 @@ def eras_in_scope(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...]:
 
 def era_group_clauses(mip_era: MipEra) -> list[ColumnElement[bool]]:
     """Clauses over `ExecutionGroup` keeping the groups that draw on `mip_era`, or on no model data."""
-    return ExecutionScope(source_types=source_types_for(mip_era), or_no_model_input=True).group_clauses()
+    return ExecutionScope(**era_scope(mip_era)).group_clauses()
 
 
 def source_id_datasets(source_id: str | None) -> InputDatasetFilter | None:
