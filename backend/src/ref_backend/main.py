@@ -32,7 +32,7 @@ ref_config = get_ref_config(settings)
 database = deps._get_database_dependency(settings, ref_config)
 provider_registry = get_provider_registry(ref_config, read_only=settings.REF_READ_ONLY_DATABASE)
 
-setup_logging(settings.LOG_LEVEL)
+setup_logging(settings.LOG_LEVEL, json_logs=settings.ENVIRONMENT != "local")
 app = build_app(settings, ref_config, database)
 
 
