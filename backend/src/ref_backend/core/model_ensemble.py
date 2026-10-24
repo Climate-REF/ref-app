@@ -84,9 +84,8 @@ class ScalarRow(NamedTuple):
 
 def _model_values(mip_era: MipEra | None, **kwargs: Any) -> Select[Any]:
     """Select each group's latest model values, in the era's groups and those with no model input."""
-    return select_scalar_values(MetricValueFilter(latest_only=True, **era_scope(mip_era), **kwargs)).order_by(
-        None
-    )
+    filters = MetricValueFilter(latest_only=True, **era_scope(mip_era), **kwargs)
+    return select_scalar_values(filters).order_by(None)
 
 
 def _scalar_rows(
