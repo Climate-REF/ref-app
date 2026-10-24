@@ -1,3 +1,85 @@
+## v0.9.0 (2026-10-24)
+
+### Features
+
+- Added a "failures" page to list failed executions. (#132)
+- Added the commit the site was built from to the footer, linked to GitHub, and to `/utils/about` as `commit`. (#134)
+- Added the `REF_MIGRATE_DATABASE` environment variable, which runs `ref db migrate` once when the container starts.
+  A backup of a SQLite database is taken before any pending migrations are applied. (#144)
+- * Added `/diagnostics/{provider}/{diagnostic}/values/facets` and `/executions/{group_id}/values/facets`, which return the facets of the metric values `/values` returns for the same filters.
+  * Added a `with_facets` argument to `/values`. Set it to `false` to skip the facets.
+
+  (#147)
+
+### Improvements
+
+- * `/{group_id}/logs` now accepts an optional `lines` argument that limits the returned log to the stated number of lines taken from the end of the log. (#132)
+- * Added a model selection and some log parsing to the failures page. (#133)
+- * Failures page now allows filtering by `failure_reason`, model and date range.
+  * Upgraded to use climate-ref v0.19.0 and exposed `failure_reason` in the API.
+
+  (#137)
+- Added the `WEB_CONCURRENCY` environment variable to set the number of API workers, which defaults to 4. (#144)
+- * Sped up the diagnostic, execution and metric value endpoints, most by five to ten times on a large database.
+  * The values tables and explorer filters now load facets once per filter instead of with every page.
+
+  (#147)
+- Added request tracing from the dashboard through the API, and `/livez` and `/readyz` health probes. (#150)
+- Added one structured log line per API request, with its route, status, duration and trace id, and made `LOG_LEVEL` apply to all API logs. (#153)
+
+### Bug Fixes
+
+- Client errors such as 404s from crawlers are now logged at info rather than error. A missing execution log is still logged as an error. (#131)
+- * Execution groups whose latest execution is still running now show as running, and groups that have never run show as not run instead of failed. Their pages open instead of failing.
+  * The executions list shows API errors instead of an empty list. Its filters wait until typing pauses, and "Clear All" also empties the inputs.
+  * The datasets page no longer breaks on a malformed facet filter in the URL, and typing in the diagnostics search no longer adds a browser history entry per key.
+  * Series charts: the tooltip compares values at the highlighted point, y-axis labels stay readable for large values in a small range, toggling a legend group works while a series is soloed, and reference series are visible in dark mode.
+  * Explorer cards: "View chart values" and the CSV download use the card's region, MIP era and unverified setting, series cards download series values, and a configured filter default that does not exist falls back to the first option.
+  * Execution value tabs keep their filters in the URL, and value tab links with numeric facet values no longer fail.
+  * "Try Again" after an error retries the failed part instead of reloading the page, and navigating away from a page that failed shows the new page.
+  * The Taylor diagram is readable in dark mode, and links in explorer descriptions are shown as links.
+  * Log downloads are named after the execution group, the log view has a Debug filter, and the model page shows the actual error when loading fails.
+
+  (#139)
+- Backend errors reported to Sentry now carry the release they came from. (#140)
+- Pull request previews now start, and show the staging banner and sparse results like the staging site. (#141)
+- Fixed a 500 error when fetching a diagnostic whose provider is not installed. (#145)
+
+### Breaking Changes
+
+- * The `/executions` endpoint (and others that return an execution group) will no longer return the full diagnostic definition or the latest execution as an extra field.
+    Query the `/diagnostics/catalog` to resolve the provided diagnostic slug instead and access the latest execution as `executions.at(-1)`. (#132)
+- * The `/executions` endpoint will by default not list the output files of successfull executions anymore. Add the `include_outputs=true` argument to get them via this endpoint. (#137)
+- * The `mip_era` parameter now only accepts `CMIP6` or `CMIP7`, and any other value returns a 422. An era now keeps the execution groups that draw on that era or on no model data, such as observation-only groups.
+  * Diagnostics and `/executions/statistics` now report execution group counts under `groups`, and `groups_by_mip_era` replaced `execution_groups_by_mip_era`.
+  * Removed `execution_count` and `successful_execution_count` from diagnostics.
+  * Group counts, diagnostic values, value flags and the executions list now leave out retracted executions.
+  * A diagnostic's execution groups now only cover its promoted version.
+  * An execution group from a superseded diagnostic version now returns its values instead of none.
+  * Filtering by `source_id`, and listing a dataset's executions, now look at each group's latest execution only.
+  * Resource usage now only covers the promoted version of each diagnostic, and still includes retracted executions.
+  * `/executions` now returns a 422 for an unknown `failure_reason`, or a negative `limit` or `offset`.
+  * `/datasets` is now ordered by slug.
+  * Removed the unused `/diagnostics/facets` and `/diagnostics/{provider}/{diagnostic}/executions` endpoints.
+
+  (#147)
+
+### Trivial Changes
+
+- Updates katex to 0.19. (#124)
+- * Added [Fallow](https://fallow.tools) to check the frontend for dead code, duplication and complexity (`make fallow-audit`), skipping generated code and the shadcn/ui components.
+  * Removed dead frontend code: unused exports, components, hook state and props, barrel re-exports, and an import cycle between the theme explorer and its route.
+  * Merged duplicated code into shared pieces, such as one data table and one panel for the scalar and series value tabs, one execution status badge, and shared stat cards, filter popovers and chart empty states.
+  * Moved logic out of components into tested functions (log parsing and summary, filters and search params, pagination, chart data and axes, Taylor diagram geometry, explorer mapping), split the largest components and the chart drawing code into smaller parts, and pointed two tests at the real code instead of copies of it. The frontend test suite grew from 384 to 626 tests.
+  * Moved build-only packages to `devDependencies` and `@tailwindcss/typography`, which the styles load, to `dependencies`, and updated the deprecated Biome config.
+
+  (#139)
+- Added API performance tests against a synthetic database, which CI compares against the base branch on every pull request. (#145)
+- Updated dependencies, including climate-ref 0.19.2 and Sentry 11. (#146)
+- The CI performance comparison now uses the pull request's base commit, and writes a table of every endpoint's timings to the job summary, naming each endpoint it could not compare. (#149)
+- Tagged each `climate-ref-frontend` image with `sha-<commit>`, so a deployment can pin the exact build. (#154)
+
+
 ## v0.8.2 (2026-10-15)
 
 ### Bug Fixes
