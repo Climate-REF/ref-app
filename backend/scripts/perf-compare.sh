@@ -24,11 +24,16 @@ git -C "$BACKEND" worktree add --quiet --detach "$WORK/base" "$BASE"
     uv sync --locked --quiet
     uv run --with pytest-benchmark pytest "$BACKEND/tests/perf" \
         --rootdir="$BACKEND" --confcutdir="$BACKEND/tests/perf" -p no:cacheprovider -q \
-        --benchmark-storage="$STORAGE" --benchmark-save=base
-) || echo "::warning::some performance tests failed on $BASE, comparing the rest"
+        --benchmark-storage="$STORAGE" --benchmark-save=base \
+        --benchmark-json="$WORK/base.json" --junitxml="$WORK/base.xml"
+) || true
 
 cd "$BACKEND"
+status=0
 uv run pytest tests/perf -q \
     --benchmark-storage="$STORAGE" --benchmark-compare \
     --benchmark-compare-fail="median:${REF_PERF_THRESHOLD:-30}%" \
-    --benchmark-columns=median,iqr,rounds
+    --benchmark-columns=median,iqr,rounds --benchmark-json="$WORK/head.json" || status=$?
+
+python3 scripts/perf-report.py "$WORK" "$BASE" "${REF_PERF_THRESHOLD:-30}"
+exit "$status"
