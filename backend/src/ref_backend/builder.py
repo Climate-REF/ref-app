@@ -1,21 +1,24 @@
-from dataclasses import asdict
+from collections.abc import Awaitable, Callable
 from importlib.metadata import version
 
 import sentry_sdk
-from cr_service import metrics, tracing
+from cr_service import context, metrics, tracing
 from cr_service.health import router as health_router
 from cr_service.info import ServiceInfo
-from fastapi import FastAPI
+from cr_service.middleware import WideEventMiddleware
+from fastapi import FastAPI, Request
 from fastapi.routing import APIRoute
 from fastapi_sqlalchemy_monitor import AlchemyStatistics, SQLAlchemyMonitor
 from fastapi_sqlalchemy_monitor.action import Action, ConditionalAction, WarnMaxTotalInvocation
 from loguru import logger
+from prometheus_fastapi_instrumentator import routing
+from sqlalchemy import Engine
 from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
-from starlette.types import Scope
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from climate_ref.config import Config
 from climate_ref.database import Database
@@ -45,6 +48,25 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}" if route.tags else route.name
 
 
+class RequestQueryMonitor(SQLAlchemyMonitor):
+    """Runs the actions even when the endpoint raises, so a failed request keeps its query statistics."""
+
+    def __init__(self, app: ASGIApp, *, engine: Engine, actions: list[Action]) -> None:
+        super().__init__(app, engine=engine, actions=actions)
+        self.actions = actions
+
+    async def _dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        statistics = AlchemyStatistics()
+        self.request_context.set(statistics)
+        try:
+            return await call_next(request)
+        finally:
+            for action in self.actions:
+                action.handle(statistics)
+
+
 class SlowQueryMonitor(ConditionalAction):
     def __init__(self, threshold_ms: float):
         self.threshold_ms = threshold_ms
@@ -64,12 +86,27 @@ class SlowQueryMonitor(ConditionalAction):
                 )
 
 
-class LogStatistics(Action):
-    """Action that logs current statistics."""
+class BindQueryStatistics(Action):
+    """Put the request's query count and time on its wide event."""
 
     def handle(self, statistics: AlchemyStatistics) -> None:
-        if statistics.total_invocations > 0:
-            logger.info(asdict(statistics))
+        context.bind(
+            db_queries=statistics.total_invocations,
+            db_time_ms=round(statistics.total_invocation_time_ms, 2),
+        )
+
+
+class BindRouteMiddleware:
+    """Put the route template on the wide event, named as the `handler` label in /metrics names it."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            # None for a path no route matches.
+            context.bind(route=routing.get_route_name(Request(scope), should_include_root_path=False))
+        await self.app(scope, receive, send)
 
 
 class SPAStaticFiles(StaticFiles):
@@ -125,10 +162,10 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         },
     )
     app.add_middleware(
-        SQLAlchemyMonitor,
+        RequestQueryMonitor,
         engine=database._engine,
         actions=[
-            LogStatistics(),
+            BindQueryStatistics(),
             WarnMaxTotalInvocation(max_invocations=10),
             SlowQueryMonitor(threshold_ms=100),
         ],
@@ -151,6 +188,9 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
         api_max_age=settings.API_CACHE_MAX_AGE,
         results_max_age=settings.RESULTS_CACHE_MAX_AGE,
     )
+    # Outermost, so the wide event times the whole stack and sees the query statistics.
+    app.add_middleware(BindRouteMiddleware)
+    app.add_middleware(WideEventMiddleware)
 
     # Registered before the static mount, so the SPA fallback does not swallow the probes or /metrics.
     app.include_router(health_router)
