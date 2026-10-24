@@ -5,11 +5,20 @@ from collections.abc import Sequence
 from typing import Any, NamedTuple
 
 from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, union
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 
 from climate_ref import models
-from climate_ref.query import select_latest_executions
-from ref_backend.core.mip_eras import MipEra, cv_column, dataset_model_for, eras_in_scope, mip_era_for
+from climate_ref.query import select_execution_group_ids, select_execution_groups
+from climate_ref.results import ExecutionGroupFilter
+from ref_backend.core.mip_eras import (
+    MipEra,
+    cv_column,
+    dataset_model_for,
+    era_scope,
+    eras_in_scope,
+    mip_era_for,
+    source_id_datasets,
+)
 from ref_backend.models.model_runs import RunCounts
 
 
@@ -30,9 +39,21 @@ class ModelFacets(NamedTuple):
     dataset_count: int
 
 
-def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
+def _model_filter(mip_era: MipEra | None, **kwargs: Any) -> ExecutionGroupFilter:
+    return ExecutionGroupFilter(**era_scope(mip_era), **kwargs)
+
+
+def _outcome(execution: Any) -> Any:
+    return case(
+        (execution.successful.is_(True), "successful"),
+        (execution.successful.is_(False), "failed"),
+        else_="running",
+    )
+
+
+def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any]:
     """
-    Select every (execution group, model) pairing at the promoted version of each diagnostic.
+    Select every (execution group, model) pairing the group filter keeps, with the group's outcome.
 
     A group that ran several models appears once per model, so the counts answer
     "what did this model take part in" rather than partitioning the groups.
@@ -44,65 +65,42 @@ def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSele
     Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
-    latest = select_latest_executions().subquery()
+    groups = select_execution_group_ids(_model_filter(mip_era))
     statements = []
     for era in eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
         model_source_id = cv_column(dataset_model, "source_id")
         statement = (
-            select(
+            groups.with_only_columns(
                 models.ExecutionGroup.id.label("group_id"),
                 models.ExecutionGroup.diagnostic_id.label("diagnostic_id"),
                 model_source_id.label("source_id"),
                 models.Execution.id.label("execution_id"),
+                _outcome(models.Execution).label("outcome"),
             )
-            .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-            .join(latest, latest.c.execution_group_id == models.ExecutionGroup.id)
-            .join(models.Execution, models.Execution.id == latest.c.execution_id)
             .join(models.Execution.datasets.of_type(dataset_model))
-            .where(
-                models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-                models.Execution.retracted.is_(False),
-                model_source_id.isnot(None),
-            )
+            .where(model_source_id.isnot(None))
             .distinct()
         )
         if source_id:
             statement = statement.where(model_source_id == source_id)
         statements.append(statement)
 
-    return union(*statements) if statements else None
-
-
-def _outcome(execution: Any) -> Any:
-    return case(
-        (execution.successful.is_(True), "successful"),
-        (execution.successful.is_(False), "failed"),
-        else_="running",
-    )
+    return union(*statements) if len(statements) > 1 else statements[0]
 
 
 def model_run_rows(
     session: Session, *, mip_era: MipEra | None = None, source_id: str | None = None
 ) -> list[ModelRunRow]:
     """Tally execution groups per model, diagnostic and outcome."""
-    groups = _model_groups(mip_era, source_id)
-    if groups is None:
-        return []
-
-    subquery = groups.subquery("model_groups")
-    execution = aliased(models.Execution)
-    outcome = _outcome(execution)
-
+    subquery = _model_groups(mip_era, source_id).subquery("model_groups")
     rows = session.execute(
         select(
             subquery.c.source_id,
             subquery.c.diagnostic_id,
-            outcome.label("outcome"),
+            subquery.c.outcome,
             func.count(distinct(subquery.c.group_id)).label("group_count"),
-        )
-        .join(execution, execution.id == subquery.c.execution_id)
-        .group_by(subquery.c.source_id, subquery.c.diagnostic_id, outcome)
+        ).group_by(subquery.c.source_id, subquery.c.diagnostic_id, subquery.c.outcome)
     ).all()
 
     return [ModelRunRow(*row) for row in rows]
@@ -167,22 +165,14 @@ def failed_runs(
 
     Returns the group, the id of the execution that decided the outcome, and the outcome itself.
     """
-    groups = _model_groups(mip_era, source_id)
-    if groups is None:
-        return []
+    filters = _model_filter(mip_era, successful=False, input_datasets=source_id_datasets(source_id))
+    statement: Select[Any] = (
+        select_execution_groups(filters).order_by(None).order_by(models.ExecutionGroup.updated_at.desc())
+    )
+    rows = session.execute(statement).tuples().all()
 
-    subquery = groups.subquery("model_groups")
-    execution = aliased(models.Execution)
-    outcome = _outcome(execution)
-
-    rows = session.execute(
-        select(models.ExecutionGroup, execution.id, outcome.label("outcome"))
-        .select_from(subquery)
-        .join(models.ExecutionGroup, models.ExecutionGroup.id == subquery.c.group_id)
-        .join(execution, execution.id == subquery.c.execution_id)
-        .where(outcome != "successful")
-        .distinct()
-        .order_by(models.ExecutionGroup.updated_at.desc())
-    ).all()
-
-    return [(row[0], row[1], row[2]) for row in rows]
+    return [
+        (group, execution.id, "failed" if execution.successful is False else "running")
+        for group, execution in rows
+        if execution
+    ]

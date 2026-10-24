@@ -3,12 +3,11 @@
 from collections.abc import Collection
 from typing import Any, Literal
 
-from sqlalchemy import ColumnElement, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
 from climate_ref.models.execution import ExecutionGroupSourceType
-from climate_ref.query.filters import ExecutionScope
 from climate_ref.results import InputDatasetFilter
 from climate_ref_core.datasets import SourceDatasetType
 
@@ -57,11 +56,6 @@ def era_scope(mip_era: MipEra | None) -> dict[str, Any]:
 def eras_in_scope(mip_era: MipEra | None) -> tuple[SourceDatasetType, ...]:
     """Resolve a `mip_era` query value into the CMIP eras it keeps."""
     return source_types_for(mip_era) or CMIP_ERAS
-
-
-def era_group_clauses(mip_era: MipEra) -> list[ColumnElement[bool]]:
-    """Clauses over `ExecutionGroup` keeping the groups that draw on `mip_era`, or on no model data."""
-    return ExecutionScope(**era_scope(mip_era)).group_clauses()
 
 
 def source_id_datasets(source_id: str | None) -> InputDatasetFilter | None:

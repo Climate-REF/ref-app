@@ -5,12 +5,13 @@ from collections.abc import Sequence
 from statistics import fmean, pstdev, quantiles
 from typing import Any, NamedTuple
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from climate_ref.query import select_latest_executions
-from ref_backend.core.mip_eras import MipEra, cv_column, era_group_clauses
+from climate_ref.query import select_scalar_values
+from climate_ref.results import MetricValueFilter
+from ref_backend.core.mip_eras import MipEra, cv_column, era_scope
 from ref_backend.models.model_runs import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
@@ -81,6 +82,13 @@ class ScalarRow(NamedTuple):
     dimensions: tuple[str | None, ...]
 
 
+def _model_values(mip_era: MipEra | None, **kwargs: Any) -> Select[Any]:
+    """Select each group's latest model values, in the era's groups and those with no model input."""
+    return select_scalar_values(MetricValueFilter(latest_only=True, **era_scope(mip_era), **kwargs)).order_by(
+        None
+    )
+
+
 def _scalar_rows(
     session: Session,
     *,
@@ -90,32 +98,22 @@ def _scalar_rows(
 ) -> list[ScalarRow]:
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
-    # A retried group holds a value per attempt, so only the unretracted execution that decided it counts.
-    latest = select_latest_executions().subquery()
-
     statement = (
-        select(
+        _model_values(mip_era, dimensions={"kind": "model"})
+        .with_only_columns(
             models.ExecutionGroup.diagnostic_id,
             cv_column(value, "source_id"),
             value.value,
             value.attributes,
             *columns,
+            maintain_column_froms=True,
         )
-        .join(models.Execution, value.execution_id == models.Execution.id)
-        .join(models.ExecutionGroup, models.Execution.execution_group_id == models.ExecutionGroup.id)
-        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-        .join(latest, latest.c.execution_id == models.Execution.id)
         .where(
-            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
             models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
-            models.Execution.retracted.is_(False),
-            cv_column(value, "kind") == "model",
             cv_column(value, "source_id").isnot(None),
             value.value.isnot(None),
         )
     )
-    if mip_era:
-        statement = statement.where(*era_group_clauses(mip_era))
 
     return [
         ScalarRow(row[0], row[1], row[2], _units(row[3]), tuple(row[4:]))
@@ -123,18 +121,15 @@ def _scalar_rows(
     ]
 
 
-def _diagnostics_for_model(session: Session, *, source_id: str) -> list[int]:
+def _diagnostics_for_model(
+    session: Session, *, source_id: str, mip_era: MipEra | None, diagnostic_slug: str | None
+) -> list[int]:
     """Find the diagnostics that recorded a scalar value for this model."""
     statement = (
-        select(models.ExecutionGroup.diagnostic_id)
-        .join(models.Execution, models.Execution.execution_group_id == models.ExecutionGroup.id)
-        .join(models.ScalarMetricValue, models.ScalarMetricValue.execution_id == models.Execution.id)
-        .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-        .where(
-            models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
-            cv_column(models.ScalarMetricValue, "source_id") == source_id,
-            cv_column(models.ScalarMetricValue, "kind") == "model",
+        _model_values(
+            mip_era, diagnostic_slug=diagnostic_slug, dimensions={"kind": "model", "source_id": source_id}
         )
+        .with_only_columns(models.ExecutionGroup.diagnostic_id, maintain_column_froms=True)
         .distinct()
     )
     return list(session.scalars(statement))
@@ -156,17 +151,15 @@ def ensemble_comparisons(
     """
     dimensions = grouping_dimensions()
 
-    model_diagnostics = _diagnostics_for_model(session, source_id=source_id)
+    model_diagnostics = _diagnostics_for_model(
+        session, source_id=source_id, mip_era=mip_era, diagnostic_slug=diagnostic_slug
+    )
     diagnostics = {
         diagnostic.id: diagnostic
         for diagnostic in session.scalars(
             select(models.Diagnostic).where(models.Diagnostic.id.in_(model_diagnostics))
         )
     }
-    if diagnostic_slug:
-        diagnostics = {
-            key: diagnostic for key, diagnostic in diagnostics.items() if diagnostic.slug == diagnostic_slug
-        }
     if not diagnostics:
         return []
 
