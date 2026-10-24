@@ -27,7 +27,7 @@ git -C "$BACKEND" worktree add --quiet --detach "$WORK/base" "$BASE"
         --benchmark-storage="$STORAGE" --benchmark-save=base --junitxml="$WORK/base.xml"
 ) || true
 
-# Name each endpoint that failed on the base, because it has no baseline and is not compared.
+# Name each endpoint that failed or skipped on the base, because it has no baseline and is not compared.
 python3 - "$WORK/base.xml" "$BASE" <<'EOF'
 import os
 import sys
@@ -38,16 +38,16 @@ if not os.path.exists(report):
     sys.exit(f"::error::the performance tests did not run on {base}")
 lines = []
 for case in ET.parse(report).iter("testcase"):
-    problem = case.find("failure")
-    if problem is None:
-        problem = case.find("error")
-    if problem is not None:
-        name, reason = case.get("name"), (problem.get("message") or "failed").splitlines()[0][:200]
-        print(f"::warning title=Not compared::{name} failed on {base}: {reason.replace('%', '%25')}")
+    problems = [p for tag in ("failure", "error", "skipped") if (p := case.find(tag)) is not None]
+    if problems:
+        problem = problems[0]
+        name, reason = case.get("name"), (problem.get("message") or problem.tag).splitlines()[0][:200]
+        print(f"::warning title=Not compared::{name} on {base}: {reason.replace('%', '%25')}")
         lines.append(f"- `{name}`: {reason}")
 if lines and "GITHUB_STEP_SUMMARY" in os.environ:
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
-        summary.write(f"### Not compared, because they failed on {base}\n\n" + "\n".join(lines) + "\n")
+        summary.write(f"### Not compared, because they failed or skipped on {base}\n\n")
+        summary.write("\n".join(lines) + "\n")
 EOF
 
 cd "$BACKEND"
