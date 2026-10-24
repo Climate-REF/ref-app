@@ -328,7 +328,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     """
     Fetch metric values for a specific execution (both scalar and series)
 
-    - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+    - `value_type`: Type of metric values - 'scalar' or 'series' (required)
     - `format`: Return format - 'json' (default) or 'csv'
     - `offset`: Number of items to skip (default 0)
     - `limit`: Maximum number of items to return (default 50, max 500)
