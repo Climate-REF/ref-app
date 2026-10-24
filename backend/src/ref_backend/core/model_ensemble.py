@@ -5,12 +5,12 @@ from collections.abc import Sequence
 from statistics import fmean, pstdev, quantiles
 from typing import Any, NamedTuple
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from ref_backend.core.mip_eras import cmip_dataset_filter, cv_column
-from ref_backend.core.model_runs import latest_executions
+from climate_ref.query import select_latest_executions
+from ref_backend.core.mip_eras import MipEra, cv_column, era_group_clauses
 from ref_backend.models.model_runs import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
@@ -86,12 +86,12 @@ def _scalar_rows(
     *,
     diagnostic_ids: Sequence[int],
     dimensions: Sequence[str],
-    mip_era: str | None,
+    mip_era: MipEra | None,
 ) -> list[ScalarRow]:
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
-    # A retried group holds a value per attempt, so only the execution that decided it counts.
-    latest = latest_executions()
+    # A retried group holds a value per attempt, so only the unretracted execution that decided it counts.
+    latest = select_latest_executions().subquery()
 
     statement = (
         select(
@@ -108,14 +108,14 @@ def _scalar_rows(
         .where(
             models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
             models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
+            models.Execution.retracted.is_(False),
             cv_column(value, "kind") == "model",
             cv_column(value, "source_id").isnot(None),
             value.value.isnot(None),
         )
     )
     if mip_era:
-        # An execution with no CMIP input carries no era, so it answers to whichever is asked for.
-        statement = statement.where(or_(cmip_dataset_filter({"mip_era": mip_era}), ~cmip_dataset_filter({})))
+        statement = statement.where(*era_group_clauses(mip_era))
 
     return [
         ScalarRow(row[0], row[1], row[2], _units(row[3]), tuple(row[4:]))
@@ -144,7 +144,7 @@ def ensemble_comparisons(
     session: Session,
     *,
     source_id: str,
-    mip_era: str | None = None,
+    mip_era: MipEra | None = None,
     diagnostic_slug: str | None = None,
 ) -> list[EnsembleComparison]:
     """

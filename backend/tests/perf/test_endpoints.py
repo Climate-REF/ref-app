@@ -27,19 +27,20 @@ class Endpoint:
 _DIAGNOSTIC = "diagnostics/{provider_slug}/{diagnostic_slug}"
 _GROUP = "executions/{execution_group_id}"
 
-# The allowed scans record what each endpoint read when this suite was added, not what it should read.
+# The allowed scans record the full reads each endpoint is known to make, not what it should read.
 ENDPOINTS = [
     # diagnostics: the landing page and a diagnostic's page
-    Endpoint(id="diagnostics.list", path="diagnostics/"),
+    Endpoint(id="diagnostics.list", path="diagnostics/", allowed_scans=frozenset({"execution_group"})),
     Endpoint(
         id="diagnostics.list.cmip6",
         path="diagnostics/",
         params={"mip_era": "CMIP6"},
         allowed_scans=frozenset({"execution_group"}),
     ),
-    Endpoint(id="diagnostics.catalog", path="diagnostics/catalog"),
+    Endpoint(
+        id="diagnostics.catalog", path="diagnostics/catalog", allowed_scans=frozenset({"execution_group"})
+    ),
     Endpoint(id="diagnostics.value-flags", path="diagnostics/value-flags"),
-    Endpoint(id="diagnostics.facets", path="diagnostics/facets", allowed_scans=frozenset({"metric_value"})),
     Endpoint(id="diagnostics.get", path=_DIAGNOSTIC),
     Endpoint(id="diagnostics.execution-groups", path=f"{_DIAGNOSTIC}/execution_groups"),
     Endpoint(id="diagnostics.values.scalar", path=f"{_DIAGNOSTIC}/values", params={"value_type": "scalar"}),
@@ -49,6 +50,26 @@ ENDPOINTS = [
         params={"value_type": "scalar", "source_id": "{source_id}"},
     ),
     Endpoint(id="diagnostics.values.series", path=f"{_DIAGNOSTIC}/values", params={"value_type": "series"}),
+    Endpoint(
+        id="diagnostics.values.scalar.page",
+        path=f"{_DIAGNOSTIC}/values",
+        params={"value_type": "scalar", "with_facets": "false"},
+    ),
+    Endpoint(
+        id="diagnostics.values.series.page",
+        path=f"{_DIAGNOSTIC}/values",
+        params={"value_type": "series", "with_facets": "false"},
+    ),
+    Endpoint(
+        id="diagnostics.values.facets.scalar",
+        path=f"{_DIAGNOSTIC}/values/facets",
+        params={"value_type": "scalar"},
+    ),
+    Endpoint(
+        id="diagnostics.values.facets.series",
+        path=f"{_DIAGNOSTIC}/values/facets",
+        params={"value_type": "series"},
+    ),
     # executions: the recent list and an execution group's page
     Endpoint(id="executions.list", path="executions/", allowed_scans=frozenset({"execution_group"})),
     Endpoint(
@@ -60,11 +81,12 @@ ENDPOINTS = [
     Endpoint(
         id="executions.statistics",
         path="executions/statistics",
-        allowed_scans=frozenset({"execution", "dataset", "dataset_file"}),
+        allowed_scans=frozenset({"execution_group", "dataset", "dataset_file"}),
     ),
     Endpoint(id="executions.get", path=_GROUP),
     Endpoint(id="executions.values.scalar", path=f"{_GROUP}/values", params={"value_type": "scalar"}),
     Endpoint(id="executions.values.series", path=f"{_GROUP}/values", params={"value_type": "series"}),
+    Endpoint(id="executions.values.facets", path=f"{_GROUP}/values/facets", params={"value_type": "scalar"}),
     # models and datasets
     Endpoint(
         id="models.list",

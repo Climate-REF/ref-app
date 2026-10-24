@@ -23,7 +23,14 @@ interface ValuesPanelProps<TSearch> {
 function MetricValuesTable({
   valueType,
   search,
-  result: { metricValues, isLoading, initialFilters, pagination, handlers },
+  result: {
+    metricValues,
+    facets,
+    isLoading,
+    initialFilters,
+    pagination,
+    handlers,
+  },
 }: {
   valueType: ValueType;
   search: Pick<ExecutionValuesSearch, "detect_outliers" | "include_unverified">;
@@ -31,7 +38,7 @@ function MetricValuesTable({
 }) {
   return (
     <Values
-      facets={metricValues?.facets ?? []}
+      facets={facets}
       values={metricValues?.data ?? []}
       loading={isLoading}
       hadOutliers={metricValues?.had_outliers ?? undefined}

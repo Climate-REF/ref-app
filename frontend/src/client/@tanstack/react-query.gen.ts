@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsCatalog, diagnosticsFacets, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListExecutions, diagnosticsListMetricValues, diagnosticsValueFlags, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, modelsEnsemble, modelsGet, modelsList, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsCatalogData, DiagnosticsCatalogError, DiagnosticsCatalogResponse, DiagnosticsFacetsData, DiagnosticsFacetsResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionsData, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, DiagnosticsValueFlagsData, DiagnosticsValueFlagsError, DiagnosticsValueFlagsResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ModelsEnsembleData, ModelsEnsembleError, ModelsEnsembleResponse, ModelsGetData, ModelsGetError, ModelsGetResponse, ModelsListData, ModelsListError, ModelsListResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
+import { cmip7AssessmentFastTrackAftGetAftDiagnostic, cmip7AssessmentFastTrackAftListAftDiagnostics, datasetsExecutions, datasetsGet, datasetsList, diagnosticsCatalog, diagnosticsGet, diagnosticsList, diagnosticsListExecutionGroups, diagnosticsListMetricValueFacets, diagnosticsListMetricValues, diagnosticsValueFlags, executionsExecution, executionsExecutionArchive, executionsExecutionDatasets, executionsExecutionLogs, executionsGet, executionsGetExecutionStatistics, executionsListMetricValueFacets, executionsListMetricValues, executionsListRecentExecutionGroups, executionsMetricBundle, explorerGetCollection, explorerGetTheme, explorerListCollections, explorerListThemes, modelsEnsemble, modelsGet, modelsList, type Options, resultsGetResult, utilsAbout, utilsHealthCheck } from '../sdk.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticError, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponse, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponse, DatasetsExecutionsData, DatasetsExecutionsError, DatasetsExecutionsResponse, DatasetsGetData, DatasetsGetError, DatasetsGetResponse, DatasetsListData, DatasetsListError, DatasetsListResponse, DiagnosticsCatalogData, DiagnosticsCatalogError, DiagnosticsCatalogResponse, DiagnosticsGetData, DiagnosticsGetError, DiagnosticsGetResponse, DiagnosticsListData, DiagnosticsListError, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, DiagnosticsListMetricValueFacetsData, DiagnosticsListMetricValueFacetsError, DiagnosticsListMetricValueFacetsResponse, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, DiagnosticsListResponse, DiagnosticsValueFlagsData, DiagnosticsValueFlagsError, DiagnosticsValueFlagsResponse, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveError, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsError, ExecutionsExecutionDatasetsResponse, ExecutionsExecutionError, ExecutionsExecutionLogsData, ExecutionsExecutionLogsError, ExecutionsExecutionResponse, ExecutionsGetData, ExecutionsGetError, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponse, ExecutionsGetResponse, ExecutionsListMetricValueFacetsData, ExecutionsListMetricValueFacetsError, ExecutionsListMetricValueFacetsResponse, ExecutionsListMetricValuesData, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsError, ExecutionsListRecentExecutionGroupsResponse, ExecutionsMetricBundleData, ExecutionsMetricBundleError, ExecutionsMetricBundleResponse, ExplorerGetCollectionData, ExplorerGetCollectionError, ExplorerGetCollectionResponse, ExplorerGetThemeData, ExplorerGetThemeError, ExplorerGetThemeResponse, ExplorerListCollectionsData, ExplorerListCollectionsResponse, ExplorerListThemesData, ExplorerListThemesResponse, ModelsEnsembleData, ModelsEnsembleError, ModelsEnsembleResponse, ModelsGetData, ModelsGetError, ModelsGetResponse, ModelsListData, ModelsListError, ModelsListResponse, ResultsGetResultData, ResultsGetResultError, UtilsAboutData, UtilsAboutResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -191,7 +191,9 @@ export const datasetsExecutionsQueryKey = (options: Options<DatasetsExecutionsDa
 /**
  * Executions
  *
- * List the currently registered diagnostics
+ * List the execution groups whose latest execution used this dataset
+ *
+ * Groups from every diagnostic version are returned, retracted ones included.
  */
 export const datasetsExecutionsOptions = (options: Options<DatasetsExecutionsData>) => queryOptions<DatasetsExecutionsResponse, DatasetsExecutionsError, DatasetsExecutionsResponse, ReturnType<typeof datasetsExecutionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -211,7 +213,9 @@ export const datasetsExecutionsInfiniteQueryKey = (options: Options<DatasetsExec
 /**
  * Executions
  *
- * List the currently registered diagnostics
+ * List the execution groups whose latest execution used this dataset
+ *
+ * Groups from every diagnostic version are returned, retracted ones included.
  */
 export const datasetsExecutionsInfiniteOptions = (options: Options<DatasetsExecutionsData>) => {
     const opts = infiniteQueryOptions<DatasetsExecutionsResponse, DatasetsExecutionsError, InfiniteData<DatasetsExecutionsResponse>, QueryKey<Options<DatasetsExecutionsData>>, number | Pick<QueryKey<Options<DatasetsExecutionsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
@@ -245,8 +249,7 @@ export const diagnosticsListQueryKey = (options?: Options<DiagnosticsListData>) 
  *
  * List the currently registered diagnostics
  *
- * Pass `mip_era` to count only the execution groups that ran against that era,
- * and `source_id` to count only those that ran against that model.
+ * Counts cover the promoted version of each diagnostic and leave out retracted executions.
  */
 export const diagnosticsListOptions = (options?: Options<DiagnosticsListData>) => queryOptions<DiagnosticsListResponse, DiagnosticsListError, DiagnosticsListResponse, ReturnType<typeof diagnosticsListQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -270,8 +273,6 @@ export const diagnosticsCatalogQueryKey = (options?: Options<DiagnosticsCatalogD
  *
  * Checking for metric values is most of the cost of the full listing.
  * Fetch those from `/diagnostics/value-flags`.
- *
- * Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
  */
 export const diagnosticsCatalogOptions = (options?: Options<DiagnosticsCatalogData>) => queryOptions<DiagnosticsCatalogResponse, DiagnosticsCatalogError, DiagnosticsCatalogResponse, ReturnType<typeof diagnosticsCatalogQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -308,26 +309,6 @@ export const diagnosticsValueFlagsOptions = (options?: Options<DiagnosticsValueF
     queryKey: diagnosticsValueFlagsQueryKey(options)
 });
 
-export const diagnosticsFacetsQueryKey = (options?: Options<DiagnosticsFacetsData>) => createQueryKey('diagnosticsFacets', options);
-
-/**
- * Facets
- *
- * Query the unique dimensions and metrics for all diagnostics (both scalar and series)
- */
-export const diagnosticsFacetsOptions = (options?: Options<DiagnosticsFacetsData>) => queryOptions<DiagnosticsFacetsResponse, DefaultError, DiagnosticsFacetsResponse, ReturnType<typeof diagnosticsFacetsQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await diagnosticsFacets({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: diagnosticsFacetsQueryKey(options)
-});
-
 export const diagnosticsGetQueryKey = (options: Options<DiagnosticsGetData>) => createQueryKey('diagnosticsGet', options);
 
 /**
@@ -353,9 +334,9 @@ export const diagnosticsListExecutionGroupsQueryKey = (options: Options<Diagnost
 /**
  * List Execution Groups
  *
- * Fetch execution groups for a diagnostic.
+ * Fetch the execution groups of a diagnostic, at its promoted version
  *
- * Pass `mip_era` to keep only the groups that ran against that era.
+ * Groups whose latest execution is retracted are left out, matching the counts.
  */
 export const diagnosticsListExecutionGroupsOptions = (options: Options<DiagnosticsListExecutionGroupsData>) => queryOptions<DiagnosticsListExecutionGroupsResponse, DiagnosticsListExecutionGroupsError, DiagnosticsListExecutionGroupsResponse, ReturnType<typeof diagnosticsListExecutionGroupsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -370,18 +351,18 @@ export const diagnosticsListExecutionGroupsOptions = (options: Options<Diagnosti
     queryKey: diagnosticsListExecutionGroupsQueryKey(options)
 });
 
-export const diagnosticsListExecutionsQueryKey = (options: Options<DiagnosticsListExecutionsData>) => createQueryKey('diagnosticsListExecutions', options);
+export const diagnosticsListMetricValueFacetsQueryKey = (options: Options<DiagnosticsListMetricValueFacetsData>) => createQueryKey('diagnosticsListMetricValueFacets', options);
 
 /**
- * List Executions
+ * List Metric Value Facets
  *
- * Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
+ * Get the facets of the values `/values` returns for the same filters, without the values.
  *
- * e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
+ * They cover every page and the outliers too, so a client can keep them while it pages.
  */
-export const diagnosticsListExecutionsOptions = (options: Options<DiagnosticsListExecutionsData>) => queryOptions<DiagnosticsListExecutionsResponse, DiagnosticsListExecutionsError, DiagnosticsListExecutionsResponse, ReturnType<typeof diagnosticsListExecutionsQueryKey>>({
+export const diagnosticsListMetricValueFacetsOptions = (options: Options<DiagnosticsListMetricValueFacetsData>) => queryOptions<DiagnosticsListMetricValueFacetsResponse, DiagnosticsListMetricValueFacetsError, DiagnosticsListMetricValueFacetsResponse, ReturnType<typeof diagnosticsListMetricValueFacetsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-        const { data } = await diagnosticsListExecutions({
+        const { data } = await diagnosticsListMetricValueFacets({
             ...options,
             ...queryKey[0],
             signal,
@@ -389,7 +370,7 @@ export const diagnosticsListExecutionsOptions = (options: Options<DiagnosticsLis
         });
         return data;
     },
-    queryKey: diagnosticsListExecutionsQueryKey(options)
+    queryKey: diagnosticsListMetricValueFacetsQueryKey(options)
 });
 
 export const diagnosticsListMetricValuesQueryKey = (options: Options<DiagnosticsListMetricValuesData>) => createQueryKey('diagnosticsListMetricValues', options);
@@ -403,8 +384,11 @@ export const diagnosticsListMetricValuesQueryKey = (options: Options<Diagnostics
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
- * - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
- * see only the values the caller is charting
+ * - `mip_era`: Restrict to the groups of one era, so outlier detection and pagination
+ * see only the values the caller is charting.
+ * Groups that use no model data, such as observation-only ones, are kept.
+ *
+ * Values come from the promoted diagnostic version, and retracted executions are left out.
  */
 export const diagnosticsListMetricValuesOptions = (options: Options<DiagnosticsListMetricValuesData>) => queryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, DiagnosticsListMetricValuesResponse, ReturnType<typeof diagnosticsListMetricValuesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -430,8 +414,11 @@ export const diagnosticsListMetricValuesInfiniteQueryKey = (options: Options<Dia
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
- * - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
- * see only the values the caller is charting
+ * - `mip_era`: Restrict to the groups of one era, so outlier detection and pagination
+ * see only the values the caller is charting.
+ * Groups that use no model data, such as observation-only ones, are kept.
+ *
+ * Values come from the promoted diagnostic version, and retracted executions are left out.
  */
 export const diagnosticsListMetricValuesInfiniteOptions = (options: Options<DiagnosticsListMetricValuesData>) => {
     const opts = infiniteQueryOptions<DiagnosticsListMetricValuesResponse, DiagnosticsListMetricValuesError, InfiniteData<DiagnosticsListMetricValuesResponse>, QueryKey<Options<DiagnosticsListMetricValuesData>>, number | Pick<QueryKey<Options<DiagnosticsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
@@ -466,7 +453,8 @@ export const executionsGetExecutionStatisticsQueryKey = (options?: Options<Execu
  * Get execution statistics for the dashboard.
  *
  * Execution groups are counted at the promoted version of each diagnostic,
- * and classified by the outcome of their latest execution.
+ * by the outcome of their latest execution, leaving out retracted executions.
+ * Metric values, datasets and files are counted as stored, whatever their version or retraction.
  */
 export const executionsGetExecutionStatisticsOptions = (options?: Options<ExecutionsGetExecutionStatisticsData>) => queryOptions<ExecutionsGetExecutionStatisticsResponse, DefaultError, ExecutionsGetExecutionStatisticsResponse, ReturnType<typeof executionsGetExecutionStatisticsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -486,9 +474,10 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
 /**
  * List Recent Execution Groups
  *
- * List the most recent execution groups
+ * List the most recently updated execution groups
  *
- * Only groups at the promoted version of their diagnostic are returned.
+ * Only groups at the promoted version of their diagnostic are returned,
+ * and groups whose latest execution is retracted are left out.
  *
  * Supports filtering by:
  * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
@@ -496,9 +485,8 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  * - dirty
  * - successful (filters by latest execution success)
  * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
- * - source_id (filters groups that include an execution whose datasets
- * include a CMIP6 or CMIP7 dataset with this source_id)
- * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ * - source_id (the latest execution ran against a dataset of this model)
+ * - mip_era (the group draws on this era)
  *
  * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
  * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
@@ -521,9 +509,10 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
 /**
  * List Recent Execution Groups
  *
- * List the most recent execution groups
+ * List the most recently updated execution groups
  *
- * Only groups at the promoted version of their diagnostic are returned.
+ * Only groups at the promoted version of their diagnostic are returned,
+ * and groups whose latest execution is retracted are left out.
  *
  * Supports filtering by:
  * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
@@ -531,9 +520,8 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  * - dirty
  * - successful (filters by latest execution success)
  * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
- * - source_id (filters groups that include an execution whose datasets
- * include a CMIP6 or CMIP7 dataset with this source_id)
- * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ * - source_id (the latest execution ran against a dataset of this model)
+ * - mip_era (the group draws on this era)
  *
  * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
  * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
@@ -568,7 +556,7 @@ export const executionsGetQueryKey = (options: Options<ExecutionsGetData>) => cr
 /**
  * Get
  *
- * Inspect a specific execution
+ * Inspect a specific execution group, whatever its version or retraction
  */
 export const executionsGetOptions = (options: Options<ExecutionsGetData>) => queryOptions<ExecutionsGetResponse, ExecutionsGetError, ExecutionsGetResponse, ReturnType<typeof executionsGetQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -667,6 +655,28 @@ export const executionsMetricBundleOptions = (options: Options<ExecutionsMetricB
     queryKey: executionsMetricBundleQueryKey(options)
 });
 
+export const executionsListMetricValueFacetsQueryKey = (options: Options<ExecutionsListMetricValueFacetsData>) => createQueryKey('executionsListMetricValueFacets', options);
+
+/**
+ * List Metric Value Facets
+ *
+ * Get the facets of the values `/values` returns for the same filters, without the values.
+ *
+ * They cover every page and the outliers too, so a client can keep them while it pages.
+ */
+export const executionsListMetricValueFacetsOptions = (options: Options<ExecutionsListMetricValueFacetsData>) => queryOptions<ExecutionsListMetricValueFacetsResponse, ExecutionsListMetricValueFacetsError, ExecutionsListMetricValueFacetsResponse, ReturnType<typeof executionsListMetricValueFacetsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await executionsListMetricValueFacets({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: executionsListMetricValueFacetsQueryKey(options)
+});
+
 export const executionsListMetricValuesQueryKey = (options: Options<ExecutionsListMetricValuesData>) => createQueryKey('executionsListMetricValues', options);
 
 /**
@@ -678,6 +688,8 @@ export const executionsListMetricValuesQueryKey = (options: Options<ExecutionsLi
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
+ *
+ * The values of the named execution are returned, whatever its version or retraction.
  */
 export const executionsListMetricValuesOptions = (options: Options<ExecutionsListMetricValuesData>) => queryOptions<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, ExecutionsListMetricValuesResponse, ReturnType<typeof executionsListMetricValuesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -703,6 +715,8 @@ export const executionsListMetricValuesInfiniteQueryKey = (options: Options<Exec
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
+ *
+ * The values of the named execution are returned, whatever its version or retraction.
  */
 export const executionsListMetricValuesInfiniteOptions = (options: Options<ExecutionsListMetricValuesData>) => {
     const opts = infiniteQueryOptions<ExecutionsListMetricValuesResponse, ExecutionsListMetricValuesError, InfiniteData<ExecutionsListMetricValuesResponse>, QueryKey<Options<ExecutionsListMetricValuesData>>, number | Pick<QueryKey<Options<ExecutionsListMetricValuesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(

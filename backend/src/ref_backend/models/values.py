@@ -61,6 +61,15 @@ class Facet(BaseModel):
 NON_FACET_DIMENSIONS = frozenset({"kind"})
 
 
+def facets_of(collection: "ScalarValueCollection | SeriesValueCollection") -> list[Facet]:
+    """Return the facets of a reader collection that callers can filter on."""
+    return [
+        Facet(key=f.key, values=list(f.values))
+        for f in collection.facets
+        if f.key not in NON_FACET_DIMENSIONS
+    ]
+
+
 _PRESENTATION_ATTRIBUTE_FALLBACKS: dict[str, tuple[str, ...]] = {
     "value_units": ("value_units", "units"),
     "value_long_name": ("value_long_name", "long_name"),
@@ -89,6 +98,12 @@ def _normalize_presentation_attributes(
                 break
         normalized[target] = value
     return normalized
+
+
+def _counted(total_count: int | None) -> int:
+    if total_count is None:
+        raise ValueError("Read the values with with_count=True to report total_count")
+    return total_count
 
 
 class MetricValueCollection(BaseModel):
@@ -123,17 +138,11 @@ class MetricValueCollection(BaseModel):
             for item in collection.items
         ]
 
-        facets = [
-            Facet(key=f.key, values=list(f.values))
-            for f in collection.facets
-            if f.key not in NON_FACET_DIMENSIONS
-        ]
-
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=collection.total_count,
-            facets=facets,
+            total_count=_counted(collection.total_count),
+            facets=facets_of(collection),
             types=["scalar"],
             had_outliers=collection.had_outliers if detection_ran else None,
             outlier_count=collection.outlier_count if detection_ran else None,
@@ -163,33 +172,12 @@ class MetricValueCollection(BaseModel):
                 )
             )
 
-        facets = [
-            Facet(key=f.key, values=list(f.values))
-            for f in collection.facets
-            if f.key not in NON_FACET_DIMENSIONS
-        ]
-
         return MetricValueCollection(
             data=all_data,
             count=len(all_data),
-            total_count=collection.total_count,
-            facets=facets,
+            total_count=_counted(collection.total_count),
+            facets=facets_of(collection),
             types=["series"],
             had_outliers=None,
             outlier_count=None,
         )
-
-
-class MetricValueFacetSummary(BaseModel):
-    """
-    Summary of the dimensions used in a metric value collection.
-    """
-
-    dimensions: dict[str, list[str]]
-    """
-    Dimensions and their unique values for the current filter
-    """
-    count: int
-    """
-    Number of metric values with the current filter
-    """

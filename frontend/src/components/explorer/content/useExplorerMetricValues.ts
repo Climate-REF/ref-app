@@ -48,7 +48,8 @@ export function useExplorerMetricValues(
         provider_slug: contentItem.provider,
         diagnostic_slug: contentItem.diagnostic,
       },
-      query,
+      // The filter controls read the facets on their own
+      query: { ...query, with_facets: false },
     }),
   );
 

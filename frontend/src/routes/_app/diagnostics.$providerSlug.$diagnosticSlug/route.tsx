@@ -231,8 +231,7 @@ const DiagnosticInfoLayout = () => {
               help='A collection of diagnostic runs that share the same combination of dataset grouping values. For example, if grouped by model and experiment, all runs for "CESM2" and "historical" form one execution group. The counter shows how many groups completed successfully versus the total number of groups.'
             >
               <p className="font-medium">
-                {data.successful_execution_group_count}/
-                {data.execution_group_count}
+                {data.groups.successful}/{data.groups.total}
               </p>
             </InfoField>
             <InfoField

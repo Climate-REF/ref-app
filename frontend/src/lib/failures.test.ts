@@ -29,8 +29,7 @@ const diagnostic = (
     provider: { slug: provider, name: provider },
     slug,
     name: slug,
-    execution_group_count: total,
-    successful_execution_group_count: successful,
+    groups: { total, successful },
   }) as DiagnosticCatalogEntry;
 
 let nextId = 1;

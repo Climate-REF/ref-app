@@ -8,7 +8,8 @@ from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, uni
 from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
-from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for, mip_era_for
+from climate_ref.query import select_latest_executions
+from ref_backend.core.mip_eras import MipEra, cv_column, dataset_model_for, eras_in_scope, mip_era_for
 from ref_backend.models.model_runs import RunCounts
 
 
@@ -29,13 +30,7 @@ class ModelFacets(NamedTuple):
     dataset_count: int
 
 
-def _eras_in_scope(mip_era: str | None) -> tuple[Any, ...]:
-    if mip_era is None:
-        return CMIP_ERAS
-    return tuple(era for era in CMIP_ERAS if mip_era_for(era) == mip_era.upper())
-
-
-def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
+def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
     """
     Select every (execution group, model) pairing at the promoted version of each diagnostic.
 
@@ -45,12 +40,13 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
     Participation is read from the execution that decides the group, the same one the outcome
     comes from. A retry run against different datasets would otherwise report the latest outcome
     for a model that took no part in it.
+    A group whose deciding execution is retracted is left out, rather than falling back to an older run.
     Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
-    latest = latest_executions()
+    latest = select_latest_executions().subquery()
     statements = []
-    for era in _eras_in_scope(mip_era):
+    for era in eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
         model_source_id = cv_column(dataset_model, "source_id")
         statement = (
@@ -61,11 +57,12 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
                 models.Execution.id.label("execution_id"),
             )
             .join(models.Diagnostic, models.ExecutionGroup.diagnostic_id == models.Diagnostic.id)
-            .join(latest, latest.c.group_id == models.ExecutionGroup.id)
+            .join(latest, latest.c.execution_group_id == models.ExecutionGroup.id)
             .join(models.Execution, models.Execution.id == latest.c.execution_id)
             .join(models.Execution.datasets.of_type(dataset_model))
             .where(
                 models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+                models.Execution.retracted.is_(False),
                 model_source_id.isnot(None),
             )
             .distinct()
@@ -77,37 +74,6 @@ def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[
     return union(*statements) if statements else None
 
 
-def latest_executions() -> Any:
-    """
-    Select the execution that decides each group, the way `climate_ref` picks the latest.
-
-    That is newest `created_at`, with the highest id breaking a tie. Ranking on id alone parts
-    company with `created_at` whenever rows land out of order, and these counts would then
-    disagree with the statistics endpoint and the CLI for the same group.
-    """
-    newest = (
-        select(
-            models.Execution.execution_group_id.label("group_id"),
-            func.max(models.Execution.created_at).label("created_at"),
-        )
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
-    return (
-        select(
-            models.Execution.execution_group_id.label("group_id"),
-            func.max(models.Execution.id).label("execution_id"),
-        )
-        .join(
-            newest,
-            (models.Execution.execution_group_id == newest.c.group_id)
-            & (models.Execution.created_at == newest.c.created_at),
-        )
-        .group_by(models.Execution.execution_group_id)
-        .subquery()
-    )
-
-
 def _outcome(execution: Any) -> Any:
     return case(
         (execution.successful.is_(True), "successful"),
@@ -117,7 +83,7 @@ def _outcome(execution: Any) -> Any:
 
 
 def model_run_rows(
-    session: Session, *, mip_era: str | None = None, source_id: str | None = None
+    session: Session, *, mip_era: MipEra | None = None, source_id: str | None = None
 ) -> list[ModelRunRow]:
     """Tally execution groups per model, diagnostic and outcome."""
     groups = _model_groups(mip_era, source_id)
@@ -143,14 +109,14 @@ def model_run_rows(
 
 
 def model_facets(
-    session: Session, *, mip_era: str | None = None, source_id: str | None = None
+    session: Session, *, mip_era: MipEra | None = None, source_id: str | None = None
 ) -> dict[str, ModelFacets]:
     """Describe each model from its ingested datasets, counting every version."""
     eras: dict[str, set[str]] = defaultdict(set)
     institutions: dict[str, set[str]] = defaultdict(set)
     counts: dict[str, int] = defaultdict(int)
 
-    for era in _eras_in_scope(mip_era):
+    for era in eras_in_scope(mip_era):
         dataset_model = dataset_model_for(era)
         model_source_id = cv_column(dataset_model, "source_id")
         institution_id = cv_column(dataset_model, "institution_id")
@@ -194,7 +160,7 @@ def tally(rows: Sequence[ModelRunRow]) -> RunCounts:
 
 
 def failed_runs(
-    session: Session, *, source_id: str, mip_era: str | None = None
+    session: Session, *, source_id: str, mip_era: MipEra | None = None
 ) -> list[tuple[models.ExecutionGroup, int, str]]:
     """
     Find the groups this model ran in whose latest execution did not succeed.

@@ -1,8 +1,7 @@
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { diagnosticsListMetricValuesOptions } from "@/client/@tanstack/react-query.gen";
+import { diagnosticsListMetricValueFacetsOptions } from "@/client/@tanstack/react-query.gen";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
-import type { MetricValueCollection } from "@/components/execution/values/types";
 import {
   Select,
   SelectContent,
@@ -89,12 +88,11 @@ export function useFilterControls(
     }
   }
 
-  const facetQuery = diagnosticsListMetricValuesOptions({
+  const facetQuery = diagnosticsListMetricValueFacetsOptions({
     path: { provider_slug: provider, diagnostic_slug: diagnostic },
     query: {
       ...facetQueryFilters,
       value_type: valueType,
-      limit: 1,
       mip_era: selectedMipEra ?? undefined,
     },
   });
@@ -106,8 +104,7 @@ export function useFilterControls(
 
   const facetMap = useMemo(() => {
     const map = new Map<string, string[]>();
-    const facets = (facetData as MetricValueCollection | undefined)?.facets;
-    for (const facet of facets ?? []) {
+    for (const facet of facetData ?? []) {
       map.set(facet.key, facet.values);
     }
     return map;

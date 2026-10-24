@@ -1,6 +1,7 @@
 """Shared response wrappers and small summaries used across the API."""
 
-from typing import Generic, TypeVar
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field
 
@@ -43,3 +44,39 @@ class ProviderSummary(BaseModel):
 class GroupBy(BaseModel):
     source_type: str
     group_by: list[str] | None
+
+
+class GroupCounts(BaseModel):
+    """
+    How many execution groups are running, failed, succeeded or not started.
+
+    Each group is counted once, by the outcome of its latest execution,
+    so `successful + failed + running + not_started == total`.
+    `dirty` overlaps the others.
+    """
+
+    total: int
+    successful: int
+    failed: int
+    running: int
+    not_started: int
+    dirty: int
+    """
+    Groups whose inputs have changed, so they need to be run again
+    """
+
+    @staticmethod
+    def of(row: Any | None) -> "GroupCounts":
+        """Convert a row of `select_group_counts`, with `None` for a diagnostic that has no groups."""
+        return GroupCounts.summed([row] if row is not None else [])
+
+    @staticmethod
+    def summed(rows: Sequence[Any]) -> "GroupCounts":
+        """Add up the per-diagnostic rows of `select_group_counts`."""
+        return GroupCounts(
+            total=sum(row.group_count for row in rows),
+            **{name: sum(getattr(row, name) for row in rows) for name in _OUTCOMES},
+        )
+
+
+_OUTCOMES = ("successful", "failed", "running", "not_started", "dirty")

@@ -582,26 +582,6 @@ export type CollectionExecutionGroup = {
 };
 
 /**
- * Collection[Execution]
- */
-export type CollectionExecution = {
-    /**
-     * Data
-     */
-    data: Array<Execution>;
-    /**
-     * Total Count
-     */
-    total_count?: number | null;
-    /**
-     * Count
-     *
-     * Number of data items present
-     */
-    readonly count: number;
-};
-
-/**
  * Collection[ModelSummary]
  */
 export type CollectionModelSummary = {
@@ -641,7 +621,7 @@ export type Dataset = {
     /**
      * Mip Era
      */
-    mip_era?: string | null;
+    mip_era?: 'CMIP6' | 'CMIP7' | null;
     /**
      * More Info Url
      */
@@ -681,22 +661,7 @@ export type DiagnosticCatalogEntry = {
      * Execution Groups
      */
     execution_groups: Array<number>;
-    /**
-     * Execution Count
-     */
-    execution_count: number;
-    /**
-     * Successful Execution Count
-     */
-    successful_execution_count: number;
-    /**
-     * Execution Group Count
-     */
-    execution_group_count: number;
-    /**
-     * Successful Execution Group Count
-     */
-    successful_execution_group_count: number;
+    groups: GroupCounts;
     /**
      * Promoted Version
      */
@@ -776,22 +741,7 @@ export type DiagnosticSummary = {
      * Execution Groups
      */
     execution_groups: Array<number>;
-    /**
-     * Execution Count
-     */
-    execution_count: number;
-    /**
-     * Successful Execution Count
-     */
-    successful_execution_count: number;
-    /**
-     * Execution Group Count
-     */
-    execution_group_count: number;
-    /**
-     * Successful Execution Group Count
-     */
-    successful_execution_group_count: number;
+    groups: GroupCounts;
     /**
      * Promoted Version
      */
@@ -1002,6 +952,13 @@ export type Execution = {
 };
 
 /**
+ * ExecutionFailureReason
+ *
+ * Why an execution failed
+ */
+export type ExecutionFailureReason = 'diagnostic_error' | 'system_error' | 'result_error' | 'abandoned' | 'not_started' | 'cancelled' | 'unknown';
+
+/**
  * ExecutionGroup
  */
 export type ExecutionGroup = {
@@ -1140,31 +1097,12 @@ export type ExecutionResourceSummary = {
  * Statistics for execution groups and their success rates.
  */
 export type ExecutionStats = {
+    groups: GroupCounts;
     /**
-     * Total Execution Groups
+     * Groups By Mip Era
      */
-    total_execution_groups: number;
-    /**
-     * Successful Execution Groups
-     */
-    successful_execution_groups: number;
-    /**
-     * Failed Execution Groups
-     */
-    failed_execution_groups: number;
-    /**
-     * Running Execution Groups
-     */
-    running_execution_groups: number;
-    /**
-     * Not Started Execution Groups
-     */
-    not_started_execution_groups: number;
-    /**
-     * Execution Groups By Mip Era
-     */
-    execution_groups_by_mip_era: {
-        [key: string]: number;
+    groups_by_mip_era: {
+        [key: string]: GroupCounts;
     };
     /**
      * Scalar Value Count
@@ -1186,7 +1124,7 @@ export type ExecutionStats = {
     /**
      * Success Rate Percentage
      *
-     * Success rate as a percentage (0-100).
+     * Share of the groups whose latest execution succeeded, as a percentage (0-100).
      */
     readonly success_rate_percentage: number;
 };
@@ -1260,6 +1198,42 @@ export type GroupBy = {
 };
 
 /**
+ * GroupCounts
+ *
+ * How many execution groups are running, failed, succeeded or not started.
+ *
+ * Each group is counted once, by the outcome of its latest execution,
+ * so `successful + failed + running + not_started == total`.
+ * `dirty` overlaps the others.
+ */
+export type GroupCounts = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Successful
+     */
+    successful: number;
+    /**
+     * Failed
+     */
+    failed: number;
+    /**
+     * Running
+     */
+    running: number;
+    /**
+     * Not Started
+     */
+    not_started: number;
+    /**
+     * Dirty
+     */
+    dirty: number;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -1313,24 +1287,6 @@ export type MetricValueCollection = {
      * Outlier Count
      */
     outlier_count?: number | null;
-};
-
-/**
- * MetricValueFacetSummary
- *
- * Summary of the dimensions used in a metric value collection.
- */
-export type MetricValueFacetSummary = {
-    /**
-     * Dimensions
-     */
-    dimensions: {
-        [key: string]: Array<string>;
-    };
-    /**
-     * Count
-     */
-    count: number;
 };
 
 /**
@@ -1798,20 +1754,6 @@ export type CollectionExecutionGroupWritable = {
 };
 
 /**
- * Collection[Execution]
- */
-export type CollectionExecutionWritable = {
-    /**
-     * Data
-     */
-    data: Array<Execution>;
-    /**
-     * Total Count
-     */
-    total_count?: number | null;
-};
-
-/**
  * Collection[ModelSummary]
  */
 export type CollectionModelSummaryWritable = {
@@ -1845,7 +1787,7 @@ export type DatasetWritable = {
     /**
      * Mip Era
      */
-    mip_era?: string | null;
+    mip_era?: 'CMIP6' | 'CMIP7' | null;
 };
 
 /**
@@ -1934,31 +1876,12 @@ export type EnsembleComparisonWritable = {
  * Statistics for execution groups and their success rates.
  */
 export type ExecutionStatsWritable = {
+    groups: GroupCounts;
     /**
-     * Total Execution Groups
+     * Groups By Mip Era
      */
-    total_execution_groups: number;
-    /**
-     * Successful Execution Groups
-     */
-    successful_execution_groups: number;
-    /**
-     * Failed Execution Groups
-     */
-    failed_execution_groups: number;
-    /**
-     * Running Execution Groups
-     */
-    running_execution_groups: number;
-    /**
-     * Not Started Execution Groups
-     */
-    not_started_execution_groups: number;
-    /**
-     * Execution Groups By Mip Era
-     */
-    execution_groups_by_mip_era: {
-        [key: string]: number;
+    groups_by_mip_era: {
+        [key: string]: GroupCounts;
     };
     /**
      * Scalar Value Count
@@ -2246,10 +2169,14 @@ export type DiagnosticsListData = {
     query?: {
         /**
          * Mip Era
+         *
+         * Count only the execution groups that draw on this era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
         /**
          * Source Id
+         *
+         * Count only the execution groups that ran this model
          */
         source_id?: string | null;
     };
@@ -2280,10 +2207,14 @@ export type DiagnosticsCatalogData = {
     query?: {
         /**
          * Mip Era
+         *
+         * Count only the execution groups that draw on this era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
         /**
          * Source Id
+         *
+         * Count only the execution groups that ran this model
          */
         source_id?: string | null;
     };
@@ -2314,10 +2245,14 @@ export type DiagnosticsValueFlagsData = {
     query?: {
         /**
          * Mip Era
+         *
+         * Check only the execution groups that draw on this era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
         /**
          * Source Id
+         *
+         * Check only the execution groups that ran this model
          */
         source_id?: string | null;
     };
@@ -2341,22 +2276,6 @@ export type DiagnosticsValueFlagsResponses = {
 };
 
 export type DiagnosticsValueFlagsResponse = DiagnosticsValueFlagsResponses[keyof DiagnosticsValueFlagsResponses];
-
-export type DiagnosticsFacetsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/diagnostics/facets';
-};
-
-export type DiagnosticsFacetsResponses = {
-    /**
-     * Successful Response
-     */
-    200: MetricValueFacetSummary;
-};
-
-export type DiagnosticsFacetsResponse = DiagnosticsFacetsResponses[keyof DiagnosticsFacetsResponses];
 
 export type DiagnosticsGetData = {
     body?: never;
@@ -2407,8 +2326,10 @@ export type DiagnosticsListExecutionGroupsData = {
     query?: {
         /**
          * Mip Era
+         *
+         * Keep only the execution groups that draw on this era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups';
 };
@@ -2431,7 +2352,7 @@ export type DiagnosticsListExecutionGroupsResponses = {
 
 export type DiagnosticsListExecutionGroupsResponse = DiagnosticsListExecutionGroupsResponses[keyof DiagnosticsListExecutionGroupsResponses];
 
-export type DiagnosticsListExecutionsData = {
+export type DiagnosticsListMetricValueFacetsData = {
     body?: never;
     path: {
         /**
@@ -2443,27 +2364,52 @@ export type DiagnosticsListExecutionsData = {
          */
         diagnostic_slug: string;
     };
-    query?: never;
-    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/executions';
+    query: {
+        /**
+         * Type of metric values to read the facets of
+         */
+        value_type: MetricValueType;
+        /**
+         * Isolate Ids
+         *
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Exclude Ids
+         *
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
+        /**
+         * Mip Era
+         *
+         * Keep only the execution groups that draw on this era, or on no model data
+         */
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
+    };
+    url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values/facets';
 };
 
-export type DiagnosticsListExecutionsErrors = {
+export type DiagnosticsListMetricValueFacetsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DiagnosticsListExecutionsError = DiagnosticsListExecutionsErrors[keyof DiagnosticsListExecutionsErrors];
+export type DiagnosticsListMetricValueFacetsError = DiagnosticsListMetricValueFacetsErrors[keyof DiagnosticsListMetricValueFacetsErrors];
 
-export type DiagnosticsListExecutionsResponses = {
+export type DiagnosticsListMetricValueFacetsResponses = {
     /**
+     * Response Diagnostics-List Metric Value Facets
+     *
      * Successful Response
      */
-    200: CollectionExecution;
+    200: Array<Facet>;
 };
 
-export type DiagnosticsListExecutionsResponse = DiagnosticsListExecutionsResponses[keyof DiagnosticsListExecutionsResponses];
+export type DiagnosticsListMetricValueFacetsResponse = DiagnosticsListMetricValueFacetsResponses[keyof DiagnosticsListMetricValueFacetsResponses];
 
 export type DiagnosticsListMetricValuesData = {
     body?: never;
@@ -2525,9 +2471,15 @@ export type DiagnosticsListMetricValuesData = {
         /**
          * Mip Era
          *
-         * Restrict to one MIP era, CMIP6 or CMIP7
+         * Keep only the execution groups that draw on this era, or on no model data
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
+        /**
+         * With Facets
+         *
+         * Fill `facets`, which `/values/facets` also returns
+         */
+        with_facets?: boolean;
     };
     url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values';
 };
@@ -2597,15 +2549,19 @@ export type ExecutionsListRecentExecutionGroupsData = {
         /**
          * Failure Reason
          */
-        failure_reason?: string | null;
+        failure_reason?: ExecutionFailureReason | null;
         /**
          * Source Id
+         *
+         * Keep only the groups whose latest execution ran this model
          */
         source_id?: string | null;
         /**
          * Mip Era
+         *
+         * Keep only the groups that draw on this era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
         /**
          * Include Outputs
          *
@@ -2808,6 +2764,59 @@ export type ExecutionsMetricBundleResponses = {
 
 export type ExecutionsMetricBundleResponse = ExecutionsMetricBundleResponses[keyof ExecutionsMetricBundleResponses];
 
+export type ExecutionsListMetricValueFacetsData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+    };
+    query: {
+        /**
+         * Execution Id
+         */
+        execution_id?: string | null;
+        /**
+         * Type of metric values to read the facets of
+         */
+        value_type: MetricValueType;
+        /**
+         * Isolate Ids
+         *
+         * Comma-separated list of metric value IDs to isolate
+         */
+        isolate_ids?: string | null;
+        /**
+         * Exclude Ids
+         *
+         * Comma-separated list of metric value IDs to exclude
+         */
+        exclude_ids?: string | null;
+    };
+    url: '/api/v1/executions/{group_id}/values/facets';
+};
+
+export type ExecutionsListMetricValueFacetsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecutionsListMetricValueFacetsError = ExecutionsListMetricValueFacetsErrors[keyof ExecutionsListMetricValueFacetsErrors];
+
+export type ExecutionsListMetricValueFacetsResponses = {
+    /**
+     * Response Executions-List Metric Value Facets
+     *
+     * Successful Response
+     */
+    200: Array<Facet>;
+};
+
+export type ExecutionsListMetricValueFacetsResponse = ExecutionsListMetricValueFacetsResponses[keyof ExecutionsListMetricValueFacetsResponses];
+
 export type ExecutionsListMetricValuesData = {
     body?: never;
     path: {
@@ -2865,6 +2874,12 @@ export type ExecutionsListMetricValuesData = {
          * Comma-separated list of metric value IDs to exclude
          */
         exclude_ids?: string | null;
+        /**
+         * With Facets
+         *
+         * Fill `facets`, which `/values/facets` also returns
+         */
+        with_facets?: boolean;
     };
     url: '/api/v1/executions/{group_id}/values';
 };
@@ -3023,9 +3038,9 @@ export type ModelsListData = {
         /**
          * Mip Era
          *
-         * Restrict to one MIP era, CMIP6 or CMIP7
+         * Restrict to one MIP era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
     };
     url: '/api/v1/models/';
 };
@@ -3060,9 +3075,9 @@ export type ModelsGetData = {
         /**
          * Mip Era
          *
-         * Restrict to one MIP era, CMIP6 or CMIP7
+         * Restrict to one MIP era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
     };
     url: '/api/v1/models/{source_id}';
 };
@@ -3097,9 +3112,9 @@ export type ModelsEnsembleData = {
         /**
          * Mip Era
          *
-         * Restrict to one MIP era, CMIP6 or CMIP7
+         * Restrict to one MIP era
          */
-        mip_era?: string | null;
+        mip_era?: 'CMIP6' | 'CMIP7' | null;
         /**
          * Diagnostic Slug
          *

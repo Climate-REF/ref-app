@@ -2,43 +2,43 @@ import mimetypes
 import os
 import tarfile
 import tempfile
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from pathlib import Path
-from typing import Literal
+from typing import Literal, get_args
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from starlette.responses import Response, StreamingResponse
 
 from climate_ref import models
 from climate_ref.models.dataset import DatasetFile
-from climate_ref.results import ExecutionGroupFilter, MetricValueFilter
+from climate_ref.models.execution import ExecutionFailureReason
+from climate_ref.query import select_group_counts
+from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, MetricValueFilter, ResourceFilter
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
+from ref_backend.core.execution_groups import load_execution_groups
 from ref_backend.core.file_handling import file_iterator, resolve_artifact, tail_lines
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
 )
-from ref_backend.core.mip_eras import execution_group_filter, execution_groups_per_era
+from ref_backend.core.mip_eras import MipEra, era_scope, source_id_datasets
 from ref_backend.core.reader_values import (
+    fetch_facets,
     fetch_metric_values,
     parse_dimension_filters,
 )
-from ref_backend.core.resource_usage import resource_usage_overall
+from ref_backend.core.resource_usage import resource_usage
 from ref_backend.models import (
     Collection,
     Dataset,
     Execution,
     ExecutionGroup,
     ExecutionStats,
+    Facet,
+    GroupCounts,
     MetricValueCollection,
-)
-from ref_backend.models.executions import (
-    EXECUTION_GROUP_LOAD_OPTIONS,
-    EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS,
 )
 
 router = APIRouter(prefix="/executions", tags=["executions"])
@@ -51,77 +51,58 @@ def _parse_int_id(value: str, resource: str) -> int:
         raise HTTPException(status_code=404, detail=f"{resource} not found") from None
 
 
-def _load_execution_groups(
-    session: Session, group_ids: Sequence[int], include_outputs: bool = True
-) -> list[models.ExecutionGroup]:
-    """
-    Load the ORM rows for execution groups the reader has already selected
-
-    The response builders need ORM objects, so the reader decides which groups to show
-    and this hydrates them, preserving the order of ``group_ids``.
-    """
-    if not group_ids:
-        return []
-
-    load_options = (
-        EXECUTION_GROUP_LOAD_OPTIONS if include_outputs else EXECUTION_GROUP_LOAD_OPTIONS_WITHOUT_OUTPUTS
-    )
-    rows = (
-        session.query(models.ExecutionGroup)
-        .options(*load_options)
-        .filter(models.ExecutionGroup.id.in_(group_ids))
-        .all()
-    )
-    by_id = {row.id: row for row in rows}
-    return [by_id[group_id] for group_id in group_ids if group_id in by_id]
-
-
 @router.get("/statistics")
 async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
     """
     Get execution statistics for the dashboard.
 
     Execution groups are counted at the promoted version of each diagnostic,
-    and classified by the outcome of their latest execution.
+    by the outcome of their latest execution, leaving out retracted executions.
+    Metric values, datasets and files are counted as stored, whatever their version or retraction.
     """
-    session = app_context.session
-    stats = app_context.reader.executions.statistics()
+    session = app_context.reader.session
+
+    def group_counts(mip_era: MipEra | None = None) -> GroupCounts:
+        filters = DiagnosticFilter(include_superseded=False, include_retracted=False, **era_scope(mip_era))
+        return GroupCounts.summed(session.execute(select_group_counts(filters)).all())
 
     return ExecutionStats(
-        total_execution_groups=sum(s.total for s in stats),
-        successful_execution_groups=sum(s.successful for s in stats),
-        failed_execution_groups=sum(s.failed for s in stats),
-        running_execution_groups=sum(s.running for s in stats),
-        not_started_execution_groups=sum(s.not_started for s in stats),
-        execution_groups_by_mip_era=execution_groups_per_era(session),
+        groups=group_counts(),
+        groups_by_mip_era={era: group_counts(era) for era in get_args(MipEra)},
         scalar_value_count=session.query(models.ScalarMetricValue).count(),
         series_value_count=session.query(models.SeriesMetricValue).count(),
         total_datasets=session.query(models.Dataset).count(),
         total_files=session.query(DatasetFile).count(),
-        resource_usage=resource_usage_overall(session),
+        resource_usage=resource_usage(
+            app_context.reader,
+            ResourceFilter(include_superseded=False, include_retracted=True, latest_only=False),
+        ),
     )
 
 
 @router.get("/")
 async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
-    limit: int = 10,
-    offset: int = 0,
+    limit: int = Query(10, ge=0),
+    offset: int = Query(0, ge=0),
     diagnostic_name_contains: str | None = None,
     provider_name_contains: str | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
-    failure_reason: str | None = None,
-    source_id: str | None = None,
-    mip_era: str | None = None,
+    failure_reason: ExecutionFailureReason | None = None,
+    source_id: str | None = Query(
+        None, description="Keep only the groups whose latest execution ran this model"
+    ),
+    mip_era: MipEra | None = Query(None, description="Keep only the groups that draw on this era"),
     include_outputs: bool = Query(
         False, description="Include the files produced by each execution; they are left out by default"
     ),
 ) -> Collection[ExecutionGroup]:
     """
-    List the most recent execution groups
+    List the most recently updated execution groups
 
-    Only groups at the promoted version of their diagnostic are returned.
+    Only groups at the promoted version of their diagnostic are returned,
+    and groups whose latest execution is retracted are left out.
 
     Supports filtering by:
     - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
@@ -129,66 +110,56 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     - dirty
     - successful (filters by latest execution success)
     - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
-    - source_id (filters groups that include an execution whose datasets
-        include a CMIP6 or CMIP7 dataset with this source_id)
-    - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+    - source_id (the latest execution ran against a dataset of this model)
+    - mip_era (the group draws on this era)
 
     Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
     make up most of the response. Fetch one group's files from `/executions/{group_id}`.
     """
-    session = app_context.session
-
     filters = ExecutionGroupFilter(
-        diagnostic_contains=[diagnostic_name_contains] if diagnostic_name_contains else None,
-        provider_contains=[provider_name_contains] if provider_name_contains else None,
+        diagnostic_contains=diagnostic_name_contains or None,
+        provider_contains=provider_name_contains or None,
+        include_superseded=False,
+        include_retracted=False,
         dirty=dirty,
         successful=successful,
+        failure_reasons=failure_reason,
+        **era_scope(mip_era),
+        input_datasets=source_id_datasets(source_id),
     )
-    # The reader orders by id, so sort here to keep the most recently updated groups first.
-    groups = sorted(
-        app_context.reader.executions.groups(filters),
-        key=lambda group: (group.updated_at, group.id),
-        reverse=True,
+    groups, total_count = load_execution_groups(
+        app_context.session,
+        filters,
+        order="recently_updated",
+        offset=offset,
+        limit=limit,
+        include_outputs=include_outputs,
     )
-
-    if failure_reason is not None:
-        groups = [group for group in groups if group.failure_reason == failure_reason]
-
-    # Selectors do not record source_id, so match on the datasets used.
-    if source_id or mip_era:
-        facets = {key: value for key, value in {"source_id": source_id, "mip_era": mip_era}.items() if value}
-        matching_ids = set(
-            session.scalars(select(models.ExecutionGroup.id).where(execution_group_filter(facets)))
-        )
-        groups = [group for group in groups if group.id in matching_ids]
-
-    total_count = len(groups)
-    page_ids = [group.id for group in groups[offset : offset + limit]]
-
     data = []
-    for eg in _load_execution_groups(session, page_ids, include_outputs=include_outputs):
+    for eg in groups:
         try:
             data.append(ExecutionGroup.build(eg, app_context, include_outputs=include_outputs))
         except Exception as e:
             logger.error(f"Error building execution group ID {eg.id}: {e}")
-            continue
-
-    return Collection(
-        total_count=total_count,
-        data=data,
-    )
+    return Collection(total_count=total_count, data=data)
 
 
 @router.get("/{group_id}")
 async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     """
-    Inspect a specific execution
+    Inspect a specific execution group, whatever its version or retraction
     """
     group_id_int = _parse_int_id(group_id, "Execution group")
-    execution_groups = _load_execution_groups(app_context.session, [group_id_int])
-    if not execution_groups:
+    groups, _ = load_execution_groups(
+        app_context.session,
+        ExecutionGroupFilter(
+            execution_group_ids=group_id_int, include_superseded=True, include_retracted=True
+        ),
+        with_count=False,
+    )
+    if not groups:
         raise HTTPException(status_code=404, detail="Execution not found")
-    return ExecutionGroup.build(execution_groups[0], app_context)
+    return ExecutionGroup.build(groups[0], app_context)
 
 
 async def _get_execution(
@@ -300,6 +271,39 @@ async def metric_bundle(
     return CMECMetric.load_from_json(file_path)
 
 
+def _metric_filter(
+    execution: models.Execution, request: Request, isolate_ids: str | None, exclude_ids: str | None
+) -> MetricValueFilter:
+    return MetricValueFilter(
+        execution_ids=execution.id,
+        include_superseded=True,
+        include_retracted=True,
+        latest_only=False,
+        dimensions=parse_dimension_filters(request.query_params),
+        isolate_ids=parse_id_list(isolate_ids),
+        exclude_ids=parse_id_list(exclude_ids),
+    )
+
+
+@router.get("/{group_id}/values/facets")
+async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+    app_context: AppContextDep,
+    request: Request,
+    group_id: str,
+    execution_id: str | None = None,
+    value_type: MetricValueType = Query(..., description="Type of metric values to read the facets of"),
+    isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
+    exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+) -> list[Facet]:
+    """
+    Get the facets of the values `/values` returns for the same filters, without the values.
+
+    They cover every page and the outliers too, so a client can keep them while it pages.
+    """
+    execution = await _get_execution(group_id, execution_id, app_context)
+    return fetch_facets(app_context, _metric_filter(execution, request, isolate_ids, exclude_ids), value_type)
+
+
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
 async def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
@@ -316,33 +320,24 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
     include_unverified: bool = Query(False, description="Include unverified (outlier) values"),
     isolate_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to isolate"),
     exclude_ids: str | None = Query(None, description="Comma-separated list of metric value IDs to exclude"),
+    with_facets: bool = Query(True, description="Fill `facets`, which `/values/facets` also returns"),
 ) -> MetricValueCollection | StreamingResponse:
     """
     Fetch metric values for a specific execution (both scalar and series)
 
-    - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+    - `value_type`: Type of metric values - 'scalar' or 'series' (required)
     - `format`: Return format - 'json' (default) or 'csv'
     - `offset`: Number of items to skip (default 0)
     - `limit`: Maximum number of items to return (default 50, max 500)
+
+    The values of the named execution are returned, whatever its version or retraction.
     """
     execution = await _get_execution(group_id, execution_id, app_context)
 
-    # Restrict to the selected execution's values; ``_get_execution`` already resolves the
-    # latest execution when no ``execution_id`` is supplied. ``promoted_only`` keeps only the
-    # promoted diagnostic version, so values from superseded versions are hidden. Exposing
-    # previous versions needs a separate design (TODO). Retracted executions are still included.
-    metric_filter = MetricValueFilter(
-        execution_ids=[execution.id],
-        dimensions=parse_dimension_filters(request.query_params),
-        isolate_ids=parse_id_list(isolate_ids) if isolate_ids else None,
-        exclude_ids=parse_id_list(exclude_ids) if exclude_ids else None,
-        promoted_only=True,
-        include_retracted=True,
-    )
-
     return fetch_metric_values(
         app_context,
-        metric_filter,
+        _metric_filter(execution, request, isolate_ids, exclude_ids),
+        with_facets=with_facets,
         value_type=value_type,
         format=format,
         offset=offset,

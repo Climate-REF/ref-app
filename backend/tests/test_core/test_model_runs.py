@@ -10,7 +10,6 @@ from ref_backend.core.mip_eras import CMIP_ERAS, cv_column, dataset_model_for
 from ref_backend.core.model_runs import (
     _model_groups,
     failed_runs,
-    latest_executions,
     model_run_rows,
     tally,
 )
@@ -173,10 +172,10 @@ def test_a_backfilled_execution_does_not_become_the_latest(writable_session):
     A row can be inserted after one it predates, such as a backfill. Ranking on id alone would
     hand the group that older run's outcome, and disagree with the statistics endpoint.
     """
-    group = writable_session.scalars(
-        select(models.ExecutionGroup).join(models.ExecutionGroup.executions).limit(1)
-    ).first()
-    deciding = group.executions[-1]
+    groups = _model_groups(None, None).subquery()
+    group_id, deciding_id = writable_session.execute(select(groups.c.group_id, groups.c.execution_id)).first()
+    group = writable_session.get(models.ExecutionGroup, group_id)
+    deciding = writable_session.get(models.Execution, deciding_id)
 
     writable_session.add(
         models.Execution(
@@ -189,8 +188,16 @@ def test_a_backfilled_execution_does_not_become_the_latest(writable_session):
     )
     writable_session.commit()
 
-    latest = latest_executions()
-    picked = writable_session.execute(
-        select(latest.c.execution_id).where(latest.c.group_id == group.id)
-    ).scalar_one()
-    assert picked == deciding.id
+    picked = writable_session.scalars(
+        select(groups.c.execution_id).where(groups.c.group_id == group.id).distinct()
+    ).all()
+    assert picked == [deciding.id]
+
+
+def test_a_retracted_latest_execution_drops_its_group(writable_session):
+    groups = _model_groups(None, None).subquery()
+    group_id, deciding_id = writable_session.execute(select(groups.c.group_id, groups.c.execution_id)).first()
+    writable_session.get(models.Execution, deciding_id).retracted = True
+    writable_session.commit()
+
+    assert group_id not in writable_session.scalars(select(groups.c.group_id)).all()
