@@ -91,9 +91,16 @@ ENDPOINTS = [
     Endpoint(
         id="models.list",
         path="models/",
-        allowed_scans=frozenset({"execution", "cmip6_dataset", "cmip7_dataset"}),
+        allowed_scans=frozenset({"execution", "execution_group", "cmip6_dataset", "cmip7_dataset"}),
     ),
-    Endpoint(id="models.get", path="models/{source_id}", allowed_scans=frozenset({"execution"})),
+    Endpoint(
+        id="models.get",
+        path="models/{source_id}",
+        allowed_scans=frozenset({"execution", "execution_group", "obs4mips_dataset"}),
+    ),
+    Endpoint(
+        id="models.ensemble", path="models/{source_id}/ensemble", allowed_scans=frozenset({"execution"})
+    ),
     Endpoint(id="datasets.list", path="datasets/"),
     Endpoint(id="datasets.get", path="datasets/{dataset_slug}"),
 ]
