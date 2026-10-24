@@ -10,10 +10,12 @@ set -euo pipefail
 BASE="${1:-origin/main}"
 BACKEND="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$(mktemp -d)"
-trap 'git -C "$BACKEND" worktree remove --force "$WORK/base" >/dev/null 2>&1 || true; rm -rf "$WORK"' EXIT
+# Inside this checkout, because pytest-benchmark crashes printing its machine_info warning for storage outside it.
+BENCHMARKS="$BACKEND/.perf-benchmarks"
+trap 'git -C "$BACKEND" worktree remove --force "$WORK/base" >/dev/null 2>&1 || true; rm -rf "$WORK" "$BENCHMARKS"' EXIT
 
 export REF_PERF_SCALE="${REF_PERF_SCALE:-0.1}"
-STORAGE="file://$WORK/benchmarks"
+STORAGE="file://$BENCHMARKS"
 
 git -C "$BACKEND" worktree add --quiet --detach "$WORK/base" "$BASE"
 
