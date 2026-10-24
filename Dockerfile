@@ -38,6 +38,8 @@ RUN npm install
 
 COPY /frontend/ /frontend/
 
+# Unset keeps the default in `frontend/src/instrument.ts`.
+ARG VITE_SENTRY_TRACES_SAMPLE_RATE
 RUN npm run build
 
 # Runtime container
