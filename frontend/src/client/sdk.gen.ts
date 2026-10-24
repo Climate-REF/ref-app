@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsCatalogData, DiagnosticsCatalogErrors, DiagnosticsCatalogResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionsData, DiagnosticsListExecutionsErrors, DiagnosticsListExecutionsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, DiagnosticsValueFlagsData, DiagnosticsValueFlagsErrors, DiagnosticsValueFlagsResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ModelsEnsembleData, ModelsEnsembleErrors, ModelsEnsembleResponses, ModelsGetData, ModelsGetErrors, ModelsGetResponses, ModelsListData, ModelsListErrors, ModelsListResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
+import type { Cmip7AssessmentFastTrackAftGetAftDiagnosticData, Cmip7AssessmentFastTrackAftGetAftDiagnosticErrors, Cmip7AssessmentFastTrackAftGetAftDiagnosticResponses, Cmip7AssessmentFastTrackAftListAftDiagnosticsData, Cmip7AssessmentFastTrackAftListAftDiagnosticsResponses, DatasetsExecutionsData, DatasetsExecutionsErrors, DatasetsExecutionsResponses, DatasetsGetData, DatasetsGetErrors, DatasetsGetResponses, DatasetsListData, DatasetsListErrors, DatasetsListResponses, DiagnosticsCatalogData, DiagnosticsCatalogErrors, DiagnosticsCatalogResponses, DiagnosticsGetData, DiagnosticsGetErrors, DiagnosticsGetResponses, DiagnosticsListData, DiagnosticsListErrors, DiagnosticsListExecutionGroupsData, DiagnosticsListExecutionGroupsErrors, DiagnosticsListExecutionGroupsResponses, DiagnosticsListMetricValuesData, DiagnosticsListMetricValuesErrors, DiagnosticsListMetricValuesResponses, DiagnosticsListResponses, DiagnosticsValueFlagsData, DiagnosticsValueFlagsErrors, DiagnosticsValueFlagsResponses, ExecutionsExecutionArchiveData, ExecutionsExecutionArchiveErrors, ExecutionsExecutionArchiveResponses, ExecutionsExecutionData, ExecutionsExecutionDatasetsData, ExecutionsExecutionDatasetsErrors, ExecutionsExecutionDatasetsResponses, ExecutionsExecutionErrors, ExecutionsExecutionLogsData, ExecutionsExecutionLogsErrors, ExecutionsExecutionLogsResponses, ExecutionsExecutionResponses, ExecutionsGetData, ExecutionsGetErrors, ExecutionsGetExecutionStatisticsData, ExecutionsGetExecutionStatisticsResponses, ExecutionsGetResponses, ExecutionsListMetricValuesData, ExecutionsListMetricValuesErrors, ExecutionsListMetricValuesResponses, ExecutionsListRecentExecutionGroupsData, ExecutionsListRecentExecutionGroupsErrors, ExecutionsListRecentExecutionGroupsResponses, ExecutionsMetricBundleData, ExecutionsMetricBundleErrors, ExecutionsMetricBundleResponses, ExplorerGetCollectionData, ExplorerGetCollectionErrors, ExplorerGetCollectionResponses, ExplorerGetThemeData, ExplorerGetThemeErrors, ExplorerGetThemeResponses, ExplorerListCollectionsData, ExplorerListCollectionsResponses, ExplorerListThemesData, ExplorerListThemesResponses, ModelsEnsembleData, ModelsEnsembleErrors, ModelsEnsembleResponses, ModelsGetData, ModelsGetErrors, ModelsGetResponses, ModelsListData, ModelsListErrors, ModelsListResponses, ResultsGetResultData, ResultsGetResultErrors, ResultsGetResultResponses, UtilsAboutData, UtilsAboutResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -53,7 +53,9 @@ export const datasetsGet = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Executions
  *
- * List the currently registered diagnostics
+ * List the execution groups whose latest execution used this dataset
+ *
+ * Groups from every diagnostic version are returned, retracted ones included.
  */
 export const datasetsExecutions = <ThrowOnError extends boolean = false>(options: Options<DatasetsExecutionsData, ThrowOnError>): RequestResult<DatasetsExecutionsResponses, DatasetsExecutionsErrors, ThrowOnError> => (options.client ?? client).get<DatasetsExecutionsResponses, DatasetsExecutionsErrors, ThrowOnError>({ url: '/api/v1/datasets/{dataset_id}/executions', ...options });
 
@@ -62,8 +64,7 @@ export const datasetsExecutions = <ThrowOnError extends boolean = false>(options
  *
  * List the currently registered diagnostics
  *
- * Pass `mip_era` to count only the execution groups that ran against that era,
- * and `source_id` to count only those that ran against that model.
+ * Counts cover the promoted version of each diagnostic and leave out retracted executions.
  */
 export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsListData, ThrowOnError>): RequestResult<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsListResponses, DiagnosticsListErrors, ThrowOnError>({ url: '/api/v1/diagnostics/', ...options });
 
@@ -74,8 +75,6 @@ export const diagnosticsList = <ThrowOnError extends boolean = false>(options?: 
  *
  * Checking for metric values is most of the cost of the full listing.
  * Fetch those from `/diagnostics/value-flags`.
- *
- * Pass `mip_era` and `source_id` to count only the execution groups that ran against that era or model.
  */
 export const diagnosticsCatalog = <ThrowOnError extends boolean = false>(options?: Options<DiagnosticsCatalogData, ThrowOnError>): RequestResult<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError> => (options?.client ?? client).get<DiagnosticsCatalogResponses, DiagnosticsCatalogErrors, ThrowOnError>({ url: '/api/v1/diagnostics/catalog', ...options });
 
@@ -98,20 +97,11 @@ export const diagnosticsGet = <ThrowOnError extends boolean = false>(options: Op
 /**
  * List Execution Groups
  *
- * Fetch execution groups for a diagnostic.
+ * Fetch the execution groups of a diagnostic, at its promoted version
  *
- * Pass `mip_era` to keep only the groups that ran against that era.
+ * Groups whose latest execution is retracted are left out, matching the counts.
  */
 export const diagnosticsListExecutionGroups = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListExecutionGroupsData, ThrowOnError>): RequestResult<DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionGroupsErrors, ThrowOnError> => (options.client ?? client).get<DiagnosticsListExecutionGroupsResponses, DiagnosticsListExecutionGroupsErrors, ThrowOnError>({ url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups', ...options });
-
-/**
- * List Executions
- *
- * Fetch executions for a specific diagnostic, with arbitrary filters on the dataset.
- *
- * e.g. `?source_id=MIROC6&experiment_id=ssp585`. Pass `mip_era` to restrict to one era.
- */
-export const diagnosticsListExecutions = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListExecutionsData, ThrowOnError>): RequestResult<DiagnosticsListExecutionsResponses, DiagnosticsListExecutionsErrors, ThrowOnError> => (options.client ?? client).get<DiagnosticsListExecutionsResponses, DiagnosticsListExecutionsErrors, ThrowOnError>({ url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/executions', ...options });
 
 /**
  * List Metric Values
@@ -122,8 +112,11 @@ export const diagnosticsListExecutions = <ThrowOnError extends boolean = false>(
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
- * - `mip_era`: Restrict to the executions of one era, so outlier detection and pagination
- * see only the values the caller is charting
+ * - `mip_era`: Restrict to the groups of one era, so outlier detection and pagination
+ * see only the values the caller is charting.
+ * Groups that use no model data, such as observation-only ones, are kept.
+ *
+ * Values come from the promoted diagnostic version, and retracted executions are left out.
  */
 export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false>(options: Options<DiagnosticsListMetricValuesData, ThrowOnError>): RequestResult<DiagnosticsListMetricValuesResponses, DiagnosticsListMetricValuesErrors, ThrowOnError> => (options.client ?? client).get<DiagnosticsListMetricValuesResponses, DiagnosticsListMetricValuesErrors, ThrowOnError>({ url: '/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values', ...options });
 
@@ -133,16 +126,18 @@ export const diagnosticsListMetricValues = <ThrowOnError extends boolean = false
  * Get execution statistics for the dashboard.
  *
  * Execution groups are counted at the promoted version of each diagnostic,
- * and classified by the outcome of their latest execution.
+ * by the outcome of their latest execution, leaving out retracted executions.
+ * Metric values, datasets and files are counted as stored, whatever their version or retraction.
  */
 export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = false>(options?: Options<ExecutionsGetExecutionStatisticsData, ThrowOnError>): RequestResult<ExecutionsGetExecutionStatisticsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ExecutionsGetExecutionStatisticsResponses, unknown, ThrowOnError>({ url: '/api/v1/executions/statistics', ...options });
 
 /**
  * List Recent Execution Groups
  *
- * List the most recent execution groups
+ * List the most recently updated execution groups
  *
- * Only groups at the promoted version of their diagnostic are returned.
+ * Only groups at the promoted version of their diagnostic are returned,
+ * and groups whose latest execution is retracted are left out.
  *
  * Supports filtering by:
  * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
@@ -150,9 +145,8 @@ export const executionsGetExecutionStatistics = <ThrowOnError extends boolean = 
  * - dirty
  * - successful (filters by latest execution success)
  * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
- * - source_id (filters groups that include an execution whose datasets
- * include a CMIP6 or CMIP7 dataset with this source_id)
- * - mip_era (restricts the above to a single era, CMIP6 or CMIP7)
+ * - source_id (the latest execution ran against a dataset of this model)
+ * - mip_era (the group draws on this era)
  *
  * Each execution's `outputs` are null unless `include_outputs` is set, because the file lists
  * make up most of the response. Fetch one group's files from `/executions/{group_id}`.
@@ -162,7 +156,7 @@ export const executionsListRecentExecutionGroups = <ThrowOnError extends boolean
 /**
  * Get
  *
- * Inspect a specific execution
+ * Inspect a specific execution group, whatever its version or retraction
  */
 export const executionsGet = <ThrowOnError extends boolean = false>(options: Options<ExecutionsGetData, ThrowOnError>): RequestResult<ExecutionsGetResponses, ExecutionsGetErrors, ThrowOnError> => (options.client ?? client).get<ExecutionsGetResponses, ExecutionsGetErrors, ThrowOnError>({ url: '/api/v1/executions/{group_id}', ...options });
 
@@ -207,6 +201,8 @@ export const executionsMetricBundle = <ThrowOnError extends boolean = false>(opt
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
+ *
+ * The values of the named execution are returned, whatever its version or retraction.
  */
 export const executionsListMetricValues = <ThrowOnError extends boolean = false>(options: Options<ExecutionsListMetricValuesData, ThrowOnError>): RequestResult<ExecutionsListMetricValuesResponses, ExecutionsListMetricValuesErrors, ThrowOnError> => (options.client ?? client).get<ExecutionsListMetricValuesResponses, ExecutionsListMetricValuesErrors, ThrowOnError>({ url: '/api/v1/executions/{group_id}/values', ...options });
 

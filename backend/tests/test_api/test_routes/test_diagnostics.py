@@ -89,24 +89,6 @@ def test_diagnostic_comparison(client: TestClient, settings):
     assert "ensemble" in data
 
 
-def test_diagnostic_executions(client: TestClient, settings):
-    """Test the executions endpoint for a diagnostic."""
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    source_id = "ACCESS-ESM1-5"
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions?source_id={source_id}"
-    )
-
-    assert r.status_code == 200
-    data = r.json()
-    assert data["count"] > 0
-    assert len(data["data"]) > 0
-
-
 def test_diagnostic_values_outlier_detection_off(client: TestClient, settings):
     """Test diagnostic values endpoint with outlier detection disabled."""
     diagnostic = get_diagnostic_with_scalar_values(client, settings)
@@ -643,50 +625,6 @@ def test_retracted_values_are_hidden(writable_client: TestClient) -> None:
     assert values["data"] == []
 
 
-def test_diagnostic_executions_ignores_truly_unknown_query_params(client: TestClient, settings) -> None:
-    """Test that query params not matching any model attribute are silently ignored.
-
-    Only params matching a real CMIP6Dataset attribute should affect filtering.
-    Completely nonexistent param names must not cause errors.
-    """
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
-        "?nonexistent_column=test&fake_param=evil&zzz_not_real=bad"
-    )
-    assert r.status_code == 200
-
-    # Truly unknown params should be ignored, yielding the same results as unfiltered
-    r_unfiltered = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions"
-    )
-    assert r_unfiltered.status_code == 200
-    assert r.json()["count"] == r_unfiltered.json()["count"]
-
-
-def test_diagnostic_executions_dunder_attrs_do_not_crash(client: TestClient, settings) -> None:
-    """Test that dunder attribute names in query params don't cause 500 errors.
-
-    NOTE: hasattr(CMIP6Dataset, '__tablename__') is True because it's a
-    SQLAlchemy class attribute. This means dunder names pass the hasattr check
-    and may produce unexpected filter behavior (returning 0 results). This test
-    verifies the server doesn't crash -- the empty result is a known limitation
-    of the unfiltered hasattr approach (tracked as MEDIUM priority).
-    """
-    diagnostic = get_diagnostic(client, settings)
-    provider_slug = diagnostic["provider"]["slug"]
-    diagnostic_slug = diagnostic["slug"]
-
-    r = client.get(
-        f"{settings.API_V1_STR}/diagnostics/{provider_slug}/{diagnostic_slug}/executions?__tablename__=evil"
-    )
-    # Must not crash with a 500
-    assert r.status_code == 200
-
-
 def test_diagnostic_values_ignores_unknown_filter_params(client: TestClient, settings) -> None:
     """Test that unknown filter params on the values endpoint are safely ignored."""
     diagnostic = get_diagnostic_with_scalar_values(client, settings)
@@ -736,26 +674,6 @@ def test_diagnostic_404_invalid_provider(client: TestClient, settings) -> None:
     assert r.status_code == 404
 
 
-def test_diagnostic_executions_filtered_by_mip_era(client: TestClient, settings) -> None:
-    """A `mip_era` filter restricts executions to a single MIP era."""
-    diagnostic = get_diagnostic(client, settings)
-    base = (
-        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
-    )
-
-    unfiltered = client.get(base)
-    cmip6 = client.get(f"{base}?mip_era=CMIP6")
-    cmip7 = client.get(f"{base}?mip_era=CMIP7")
-
-    assert unfiltered.status_code == 200
-    assert cmip6.status_code == 200
-    assert cmip7.status_code == 200
-
-    # The test fixtures are CMIP6 only, so CMIP7 is empty and CMIP6 accounts for everything.
-    assert cmip7.json()["count"] == 0
-    assert cmip6.json()["count"] == unfiltered.json()["count"]
-
-
 def test_diagnostic_values_carry_an_era(client: TestClient, settings) -> None:
     """Model values are stamped with the era of their inputs, even when the diagnostic omits it."""
     diagnostic = get_diagnostic_with_scalar_values(client, settings)
@@ -791,22 +709,6 @@ def test_diagnostic_values_filtered_by_mip_era(client: TestClient, settings) -> 
     assert cmip6.json()["total_count"] == unfiltered.json()["total_count"]
 
 
-def test_diagnostic_executions_keeps_known_filters_beside_unknown_ones(client: TestClient, settings) -> None:
-    """An unrecognised query parameter is ignored without dropping the filters beside it."""
-    diagnostic = get_diagnostic(client, settings)
-    base = (
-        f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/executions"
-    )
-
-    matching = client.get(f"{base}?source_id=ACCESS-ESM1-5&not_a_facet=zzz")
-    missing = client.get(f"{base}?source_id=NOT-A-MODEL&not_a_facet=zzz")
-
-    assert matching.status_code == 200
-    assert missing.status_code == 200
-    assert matching.json()["count"] > 0
-    assert missing.json()["count"] == 0
-
-
 def test_diagnostic_resource_usage_matches_between_list_and_get(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/diagnostics/")
     assert r.status_code == 200
@@ -838,19 +740,16 @@ def test_diagnostics_list_counts_only_the_requested_era(client: TestClient) -> N
 
     # Every diagnostic is still listed, only its statistics change with the era.
     assert set(cmip6) == set(everything) == set(cmip7)
-    assert sum(d["execution_group_count"] for d in cmip6.values()) > 0
+    assert sum(d["groups"]["total"] for d in cmip6.values()) > 0
     # The fixture database only holds CMIP6 datasets.
-    assert all(d["execution_group_count"] == 0 for d in cmip7.values())
+    assert all(d["groups"]["total"] == 0 for d in cmip7.values())
     assert all(not d["has_metric_values"] for d in cmip7.values())
-    assert all(
-        cmip6[slug]["execution_group_count"] <= everything[slug]["execution_group_count"]
-        for slug in everything
-    )
+    assert all(cmip6[slug]["groups"]["total"] <= everything[slug]["groups"]["total"] for slug in everything)
 
 
 def test_execution_groups_filter_by_era(client: TestClient) -> None:
     listing = client.get("/api/v1/diagnostics/").json()["data"]
-    diagnostic = next(d for d in listing if d["execution_group_count"] > 0)
+    diagnostic = next(d for d in listing if d["groups"]["total"] > 0)
     base = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/execution_groups"
 
     everything = client.get(base).json()["data"]
@@ -875,7 +774,7 @@ def test_diagnostic_group_by_lists_each_pairing_once(client: TestClient) -> None
 def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: TestClient) -> None:
     """Counts follow the same promoted-version gate as the values, so they cannot disagree."""
     listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
-    diagnostic = next(d for d in listing if d["execution_group_count"] > 0)
+    diagnostic = next(d for d in listing if d["groups"]["total"] > 0)
     detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
 
     database = Database.from_config(writable_client.ref_config)  # type: ignore[attr-defined]
@@ -887,13 +786,13 @@ def test_diagnostic_counts_are_scoped_to_the_promoted_version(writable_client: T
     # Every group now sits on a superseded version, so nothing is left to count.
     detail = writable_client.get(detail_url).json()
     assert detail["promoted_version"] == diagnostic["promoted_version"] + 1
-    assert detail["execution_group_count"] == 0
-    assert detail["successful_execution_group_count"] == 0
+    assert detail["groups"]["total"] == 0
+    assert detail["groups"]["successful"] == 0
 
     relisted = next(
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
-    assert relisted["execution_group_count"] == 0
+    assert relisted["groups"]["total"] == 0
 
 
 def _catalog_usage(client: TestClient, diagnostic_id: int) -> dict | None:
@@ -928,7 +827,7 @@ def test_catalog_resource_usage_counts_retracted_runs_at_the_promoted_version(
 def test_a_backfilled_failure_does_not_decide_a_group(writable_client: TestClient) -> None:
     """The latest execution is the newest by created_at, not the highest id."""
     listing = writable_client.get("/api/v1/diagnostics/").json()["data"]
-    diagnostic = next(d for d in listing if d["successful_execution_group_count"] > 0)
+    diagnostic = next(d for d in listing if d["groups"]["successful"] > 0)
     detail_url = f"/api/v1/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}"
     before = writable_client.get(detail_url).json()
 
@@ -955,18 +854,11 @@ def test_a_backfilled_failure_does_not_decide_a_group(writable_client: TestClien
         )
 
     after = writable_client.get(detail_url).json()
-    assert after["successful_execution_group_count"] == before["successful_execution_group_count"]
+    assert after["groups"]["successful"] == before["groups"]["successful"]
     relisted = next(
         d for d in writable_client.get("/api/v1/diagnostics/").json()["data"] if d["id"] == diagnostic["id"]
     )
-    assert relisted["successful_execution_group_count"] == before["successful_execution_group_count"]
-
-
-def test_diagnostics_catalog_with_an_unknown_era_counts_nothing(client: TestClient, settings) -> None:
-    catalog = client.get(f"{settings.API_V1_STR}/diagnostics/catalog", params={"mip_era": "CMIP5"}).json()
-    assert catalog["data"]
-    assert all(d["execution_group_count"] == 0 for d in catalog["data"])
-    assert all(d["successful_execution_group_count"] == 0 for d in catalog["data"])
+    assert relisted["groups"]["successful"] == before["groups"]["successful"]
 
 
 FLAGS = ("has_metric_values", "has_scalar_values", "has_series_values")
@@ -997,8 +889,8 @@ def test_diagnostics_catalog_counts_one_model(client: TestClient, settings):
         assert r.status_code == 200
         return {
             f"{d['provider']['slug']}/{d['slug']}": (
-                d["execution_group_count"],
-                d["successful_execution_group_count"],
+                d["groups"]["total"],
+                d["groups"]["successful"],
             )
             for d in r.json()["data"]
         }

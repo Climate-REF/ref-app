@@ -1,4 +1,4 @@
-"""How executions that do not sit in exactly one MIP era are scoped and labelled."""
+"""How executions whose group does not draw on exactly one MIP era are labelled."""
 
 from types import SimpleNamespace
 
@@ -6,14 +6,9 @@ import pytest
 from sqlalchemy import select
 
 from climate_ref import models
+from climate_ref.models.execution import ExecutionGroupSourceType
 from climate_ref_core.datasets import SourceDatasetType
-from ref_backend.core.mip_eras import (
-    CMIP_ERAS,
-    cmip_input_filter,
-    dataset_model_for,
-    eras_in_scope,
-    mip_eras_for_executions,
-)
+from ref_backend.core.mip_eras import CMIP_ERAS, eras_in_scope, mip_eras_for_executions, source_types_for
 from ref_backend.core.reader_values import annotate_mip_eras
 from ref_backend.models.values import MetricValueCollection, SeriesValue
 
@@ -22,70 +17,45 @@ from ref_backend.models.values import MetricValueCollection, SeriesValue
     ("mip_era", "expected"),
     [
         (None, CMIP_ERAS),
-        ("", CMIP_ERAS),
         ("CMIP7", (SourceDatasetType.CMIP7,)),
-        ("cmip7", (SourceDatasetType.CMIP7,)),
-        ("CmIp6", (SourceDatasetType.CMIP6,)),
-        ("CMIP5", ()),
-        ("obs4MIPs", ()),
+        ("CMIP6", (SourceDatasetType.CMIP6,)),
     ],
 )
 def test_eras_in_scope(mip_era, expected):
     assert eras_in_scope(mip_era) == expected
 
 
+def test_no_era_keeps_every_source_type():
+    assert source_types_for(None) is None
+
+
 def _cmip6_execution(session) -> models.Execution:
-    cmip6 = dataset_model_for(SourceDatasetType.CMIP6)
     return session.scalars(
-        select(models.Execution).join(models.Execution.datasets.of_type(cmip6)).limit(1)
+        select(models.Execution)
+        .join(
+            ExecutionGroupSourceType,
+            ExecutionGroupSourceType.execution_group_id == models.Execution.execution_group_id,
+        )
+        .where(ExecutionGroupSourceType.source_type == SourceDatasetType.CMIP6)
+        .limit(1)
     ).one()
 
 
-def _cmip7_dataset(session) -> models.Dataset:
-    dataset = dataset_model_for(SourceDatasetType.CMIP7)(
-        slug="CMIP7.probe.v1",
-        activity_id="CMIP",
-        institution_id="probe",
-        source_id="PROBE-ESM",
-        experiment_id="historical",
-        variant_label="r1i1p1f1",
-        variable_id="tas",
-        grid_label="gn",
-        frequency="mon",
-        region="glb",
-        branding_suffix="tavg-h2m-hxy-u",
-        version="v1",
-        mip_era="CMIP7",
-        instance_id="CMIP7.probe.v1",
-        version_key="v1",
+def _mixed_era_execution(session) -> models.Execution:
+    execution = _cmip6_execution(session)
+    execution.execution_group.source_types.append(
+        ExecutionGroupSourceType(source_type=SourceDatasetType.CMIP7)
     )
-    session.add(dataset)
-    return dataset
-
-
-def _obs_only_execution(session) -> models.Execution:
-    template = _cmip6_execution(session)
-    obs = session.scalars(
-        select(models.Dataset).where(models.Dataset.dataset_type == SourceDatasetType.obs4MIPs).limit(1)
-    ).one()
-    execution = models.Execution(
-        execution_group_id=template.execution_group_id,
-        dataset_hash="obs-only",
-        output_fragment="obs-only",
-        successful=True,
-    )
-    execution.datasets.append(obs)
-    session.add(execution)
     session.flush()
     return execution
 
 
-def _matches(session, execution_id: int, mip_era: str, *, or_no_model_input: bool = False) -> bool:
-    input_filter = cmip_input_filter({"mip_era": mip_era}, or_no_model_input=or_no_model_input)
-    if input_filter is None:
-        return False
-    clause = input_filter.execution_clause()
-    return execution_id in session.scalars(select(models.Execution.id).where(clause)).all()
+def _obs_only_execution(session) -> models.Execution:
+    execution = _cmip6_execution(session)
+    group = execution.execution_group
+    group.source_types = [t for t in group.source_types if t.source_type not in CMIP_ERAS]
+    session.flush()
+    return execution
 
 
 def _values(*items: SeriesValue) -> MetricValueCollection:
@@ -100,51 +70,37 @@ def _value(execution_id: int, **dimensions: str) -> SeriesValue:
     )
 
 
-def test_a_mixed_era_execution_has_no_era_but_passes_both_filters(writable_session):
+def test_a_group_drawing_on_one_era_labels_its_executions(writable_session):
     execution = _cmip6_execution(writable_session)
-    execution.datasets.append(_cmip7_dataset(writable_session))
-    writable_session.flush()
+
+    assert mip_eras_for_executions(writable_session, [execution.id]) == {execution.id: "CMIP6"}
+
+
+def test_a_mixed_era_group_has_no_era(writable_session):
+    execution = _mixed_era_execution(writable_session)
 
     assert mip_eras_for_executions(writable_session, [execution.id]) == {}
-    for era in ("CMIP6", "CMIP7"):
-        assert _matches(writable_session, execution.id, era)
-        assert _matches(writable_session, execution.id, era, or_no_model_input=True)
 
 
-def test_an_execution_without_cmip_input_answers_to_every_era(writable_session):
+def test_a_group_without_cmip_input_has_no_era(writable_session):
     execution = _obs_only_execution(writable_session)
 
     assert mip_eras_for_executions(writable_session, [execution.id]) == {}
-    for era in ("CMIP6", "cmip7"):
-        assert not _matches(writable_session, execution.id, era)
-        assert _matches(writable_session, execution.id, era, or_no_model_input=True)
 
 
-def test_an_unknown_era_drops_executions_without_cmip_input(writable_session):
-    execution = _obs_only_execution(writable_session)
-
-    assert not _matches(writable_session, execution.id, "CMIP5", or_no_model_input=True)
-
-
-def test_mip_id_labels_an_execution_the_inputs_do_not_settle(writable_session):
-    mixed = _cmip6_execution(writable_session)
-    mixed.datasets.append(_cmip7_dataset(writable_session))
-    obs_only = _obs_only_execution(writable_session)
+def test_mip_id_labels_an_execution_the_group_does_not_settle(writable_session):
+    mixed = _mixed_era_execution(writable_session)
     app_context = SimpleNamespace(session=writable_session)
 
     collection = annotate_mip_eras(
         app_context,
-        _values(
-            _value(mixed.id, mip_id="cmip7"),
-            _value(obs_only.id, mip_id="CMIP6"),
-            _value(mixed.id),
-        ),
+        _values(_value(mixed.id, mip_id="cmip7"), _value(mixed.id)),
     )
 
-    assert [v.dimensions.get("mip_era") for v in collection.data] == ["CMIP7", "CMIP6", None]
+    assert [v.dimensions.get("mip_era") for v in collection.data] == ["CMIP7", None]
 
 
-def test_the_inputs_outrank_mip_id_and_a_recorded_era_is_kept(writable_session):
+def test_the_group_outranks_mip_id_and_a_recorded_era_is_kept(writable_session):
     cmip6 = _cmip6_execution(writable_session)
     app_context = SimpleNamespace(session=writable_session)
 

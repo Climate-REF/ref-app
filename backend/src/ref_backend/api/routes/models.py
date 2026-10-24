@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from climate_ref import models
 from ref_backend.api.deps import SessionDep
-from ref_backend.core.mip_eras import eras_in_scope
+from ref_backend.core.mip_eras import MipEra
 from ref_backend.core.model_ensemble import ensemble_comparisons
 from ref_backend.core.model_runs import (
     ModelFacets,
@@ -53,7 +53,7 @@ def _summary_fields(source_id: str, rows: list[ModelRunRow], facets: ModelFacets
 @router.get("/", name="list")
 async def _list(
     session: SessionDep,
-    mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
+    mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),
 ) -> Collection[ModelSummary]:
     """
     List the models that have been run, with a tally of how their runs went.
@@ -75,14 +75,13 @@ async def _list(
 async def get(
     session: SessionDep,
     source_id: str,
-    mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
+    mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),
 ) -> ModelDetail:
     """
     Summarise the runs a single model took part in, broken down by diagnostic.
     """
     rows = model_run_rows(session, mip_era=mip_era, source_id=source_id)
-    # An unknown era gives an empty model, as it does an empty list on the other routes.
-    if not rows and (eras_in_scope(mip_era) or not model_run_rows(session, source_id=source_id)):
+    if not rows:
         raise HTTPException(status_code=404, detail="Model not found")
 
     by_diagnostic: dict[int, list[ModelRunRow]] = defaultdict(list)
@@ -133,7 +132,7 @@ async def get(
 async def ensemble(
     session: SessionDep,
     source_id: str,
-    mip_era: str | None = Query(None, description="Restrict to one MIP era, CMIP6 or CMIP7"),
+    mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),
     diagnostic_slug: str | None = Query(None, description="Restrict to a single diagnostic"),
 ) -> Collection[EnsembleComparison]:
     """

@@ -82,8 +82,7 @@ export function DiagnosticCard({
             />
           </StatRow>
           <StatRow label="Executions">
-            {diagnostic.successful_execution_group_count}/
-            {diagnostic.execution_group_count}
+            {diagnostic.groups.successful}/{diagnostic.groups.total}
             {note && (
               <Tooltip>
                 <TooltipTrigger>

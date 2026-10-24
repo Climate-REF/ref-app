@@ -8,8 +8,8 @@ from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, uni
 from sqlalchemy.orm import Session, aliased
 
 from climate_ref import models
-from climate_ref.models.execution import select_latest_executions
-from ref_backend.core.mip_eras import cv_column, dataset_model_for, eras_in_scope, mip_era_for
+from climate_ref.query import select_latest_executions
+from ref_backend.core.mip_eras import MipEra, cv_column, dataset_model_for, eras_in_scope, mip_era_for
 from ref_backend.models.model_runs import RunCounts
 
 
@@ -30,7 +30,7 @@ class ModelFacets(NamedTuple):
     dataset_count: int
 
 
-def _model_groups(mip_era: str | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
+def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any] | None:
     """
     Select every (execution group, model) pairing at the promoted version of each diagnostic.
 
@@ -81,7 +81,7 @@ def _outcome(execution: Any) -> Any:
 
 
 def model_run_rows(
-    session: Session, *, mip_era: str | None = None, source_id: str | None = None
+    session: Session, *, mip_era: MipEra | None = None, source_id: str | None = None
 ) -> list[ModelRunRow]:
     """Tally execution groups per model, diagnostic and outcome."""
     groups = _model_groups(mip_era, source_id)
@@ -107,7 +107,7 @@ def model_run_rows(
 
 
 def model_facets(
-    session: Session, *, mip_era: str | None = None, source_id: str | None = None
+    session: Session, *, mip_era: MipEra | None = None, source_id: str | None = None
 ) -> dict[str, ModelFacets]:
     """Describe each model from its ingested datasets, counting every version."""
     eras: dict[str, set[str]] = defaultdict(set)
@@ -158,7 +158,7 @@ def tally(rows: Sequence[ModelRunRow]) -> RunCounts:
 
 
 def failed_runs(
-    session: Session, *, source_id: str, mip_era: str | None = None
+    session: Session, *, source_id: str, mip_era: MipEra | None = None
 ) -> list[tuple[models.ExecutionGroup, int, str]]:
     """
     Find the groups this model ran in whose latest execution did not succeed.

@@ -61,14 +61,14 @@ const diagnosticColumns = (
     ),
   },
   {
-    accessorKey: "successful_execution_group_count",
+    accessorKey: "groups.successful",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Execution Groups" />
     ),
     enableSorting: true,
     cell: (cell) => {
       const successful = cell.getValue<number>();
-      const total = cell.row.original.execution_group_count ?? 0;
+      const total = cell.row.original.groups.total;
       const allSuccessful = total > 0 && successful === total;
       const className = allSuccessful
         ? "text-emerald-600 dark:text-emerald-400 font-medium"

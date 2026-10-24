@@ -9,8 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref import models
-from climate_ref.models.execution import select_latest_executions
-from ref_backend.core.mip_eras import cmip_input_filter, cv_column
+from climate_ref.query import select_latest_executions
+from ref_backend.core.mip_eras import MipEra, cv_column, era_group_clauses
 from ref_backend.models.model_runs import EnsembleComparison, EnsembleStatistics
 
 #: Dimensions that say which run produced a value rather than what the value measures.
@@ -86,7 +86,7 @@ def _scalar_rows(
     *,
     diagnostic_ids: Sequence[int],
     dimensions: Sequence[str],
-    mip_era: str | None,
+    mip_era: MipEra | None,
 ) -> list[ScalarRow]:
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
@@ -114,10 +114,7 @@ def _scalar_rows(
         )
     )
     if mip_era:
-        input_filter = cmip_input_filter({"mip_era": mip_era}, or_no_model_input=True)
-        if input_filter is None:
-            return []
-        statement = statement.where(input_filter.execution_clause())
+        statement = statement.where(*era_group_clauses(mip_era))
 
     return [
         ScalarRow(row[0], row[1], row[2], _units(row[3]), tuple(row[4:]))
@@ -146,7 +143,7 @@ def ensemble_comparisons(
     session: Session,
     *,
     source_id: str,
-    mip_era: str | None = None,
+    mip_era: MipEra | None = None,
     diagnostic_slug: str | None = None,
 ) -> list[EnsembleComparison]:
     """

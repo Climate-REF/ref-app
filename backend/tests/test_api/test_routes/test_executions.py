@@ -414,33 +414,24 @@ def test_execution_statistics(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/executions/statistics")
     assert r.status_code == 200
     data = r.json()
-    assert "total_execution_groups" in data
-    assert "successful_execution_groups" in data
-    assert "failed_execution_groups" in data
-    assert "scalar_value_count" in data
-    assert "series_value_count" in data
-    assert "total_datasets" in data
-    assert "total_files" in data
-    assert isinstance(data["total_execution_groups"], int)
-    assert isinstance(data["successful_execution_groups"], int)
-    assert isinstance(data["failed_execution_groups"], int)
-    assert data["total_execution_groups"] == (
-        data["successful_execution_groups"]
-        + data["failed_execution_groups"]
-        + data["running_execution_groups"]
-        + data["not_started_execution_groups"]
+    groups = data["groups"]
+    assert (
+        groups["total"] == groups["successful"] + groups["failed"] + groups["running"] + groups["not_started"]
     )
+    assert groups["total"] > 0
+    for key in ("scalar_value_count", "series_value_count", "total_datasets", "total_files"):
+        assert isinstance(data[key], int)
 
 
 def test_execution_statistics_match_list(client: TestClient, settings) -> None:
     """The list and the statistics count the same execution groups."""
-    stats = client.get(f"{settings.API_V1_STR}/executions/statistics").json()
+    stats = client.get(f"{settings.API_V1_STR}/executions/statistics").json()["groups"]
     listed = client.get(f"{settings.API_V1_STR}/executions?limit=1").json()
     successful = client.get(f"{settings.API_V1_STR}/executions?limit=1&successful=true").json()
     unsuccessful = client.get(f"{settings.API_V1_STR}/executions?limit=1&successful=false").json()
 
-    assert listed["total_count"] == stats["total_execution_groups"]
-    assert successful["total_count"] == stats["successful_execution_groups"]
+    assert listed["total_count"] == stats["total"]
+    assert successful["total_count"] == stats["successful"]
     # Not successful covers failed, running and never-run groups.
     assert unsuccessful["total_count"] == listed["total_count"] - successful["total_count"]
 
@@ -593,18 +584,10 @@ def test_execution_list_filters_by_failure_reason(client: TestClient, settings) 
     assert other["total_count"] == 0
 
 
-def test_execution_list_with_an_unknown_failure_reason_is_empty(client: TestClient, settings) -> None:
-    r = client.get(f"{settings.API_V1_STR}/executions/?failure_reason=not-a-reason")
-    assert r.status_code == 200
-    assert r.json()["total_count"] == 0
-    assert r.json()["data"] == []
-
-
-def test_execution_list_with_an_unknown_mip_era_is_empty(client: TestClient, settings) -> None:
-    r = client.get(f"{settings.API_V1_STR}/executions/?mip_era=CMIP5")
-    assert r.status_code == 200
-    assert r.json()["total_count"] == 0
-    assert r.json()["data"] == []
+@pytest.mark.parametrize("query", ["failure_reason=not-a-reason", "mip_era=CMIP5"])
+def test_execution_list_rejects_an_unknown_filter_value(client: TestClient, settings, query) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?{query}")
+    assert r.status_code == 422
 
 
 def test_execution_list_filters_by_source_id(client: TestClient, settings) -> None:
@@ -618,9 +601,9 @@ def test_execution_list_filters_by_source_id(client: TestClient, settings) -> No
 
 def test_execution_statistics_count_groups_per_era(client: TestClient, settings) -> None:
     stats = client.get(f"{settings.API_V1_STR}/executions/statistics").json()
-    by_era = stats["execution_groups_by_mip_era"]
+    by_era = stats["groups_by_mip_era"]
     assert set(by_era) == {"CMIP6", "CMIP7"}
-    assert all(0 <= count <= stats["total_execution_groups"] for count in by_era.values())
+    assert all(0 <= era["total"] <= stats["groups"]["total"] for era in by_era.values())
 
     listed = client.get(f"{settings.API_V1_STR}/executions/?mip_era=CMIP6").json()
-    assert by_era["CMIP6"] == listed["total_count"] > 0
+    assert by_era["CMIP6"]["total"] == listed["total_count"] > 0

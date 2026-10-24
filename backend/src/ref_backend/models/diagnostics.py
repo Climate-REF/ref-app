@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from climate_ref import models
 from climate_ref.models.metric_value import MetricValueType as StoredMetricValueType
 from climate_ref.results import DiagnosticFilter, ResourceFilter
+from climate_ref.results.diagnostics import DiagnosticView
 from ref_backend.core.diagnostic_metadata import (
     DiagnosticMetadata,
     ReferenceDatasetLink,
@@ -16,7 +17,7 @@ from ref_backend.core.diagnostic_metadata import (
 )
 from ref_backend.core.resource_usage import ExecutionResourceSummary, resource_usage
 from ref_backend.models.aft import AFTDiagnosticDetail
-from ref_backend.models.common import GroupBy, ProviderSummary
+from ref_backend.models.common import GroupBy, GroupCounts, ProviderSummary
 
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
@@ -67,13 +68,9 @@ class DiagnosticCatalogEntry(BaseModel):
     """
     List of IDs for the provider executions associated with this provider
     """
-    execution_group_count: int
+    groups: GroupCounts
     """
-    Number of execution groups for this diagnostic
-    """
-    successful_execution_group_count: int
-    """
-    Number of execution groups whose latest execution is successful
+    Execution groups at the promoted version, by the outcome of their latest execution
     """
     promoted_version: int
     """
@@ -181,8 +178,7 @@ class DiagnosticCatalogEntry(BaseModel):
         diagnostic: models.Diagnostic,
         app_context: "AppContext",
         *,
-        execution_group_count: int,
-        successful_execution_group_count: int,
+        view: DiagnosticView | None,
         resource_usage: ExecutionResourceSummary | None = None,
     ) -> "DiagnosticCatalogEntry":
         """Build a DiagnosticCatalogEntry with pre-computed statistics to avoid N+1 queries."""
@@ -201,8 +197,7 @@ class DiagnosticCatalogEntry(BaseModel):
             name=diagnostic.name,
             description=description,
             execution_groups=[e.id for e in diagnostic.execution_groups],
-            execution_group_count=execution_group_count,
-            successful_execution_group_count=successful_execution_group_count,
+            groups=GroupCounts.of(view),
             promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,
             aft_link=aft,
@@ -239,70 +234,36 @@ class DiagnosticSummary(DiagnosticCatalogEntry):
     @staticmethod
     def build(diagnostic: models.Diagnostic, app_context: "AppContext") -> "DiagnosticSummary":
         """Build a DiagnosticSummary with individual database queries."""
-        metadata_cache = DiagnosticSummary._ensure_metadata_cache(app_context)
-        group_by_summary = DiagnosticSummary._build_group_by_summary(diagnostic, app_context)
-        aft = DiagnosticSummary._get_aft_link(diagnostic)
-
-        key = (diagnostic.provider.slug, diagnostic.slug)
-        slug_filter = DiagnosticFilter(provider_contains=[key[0]], diagnostic_contains=[key[1]])
+        this_diagnostic = DiagnosticFilter(
+            provider_slug=diagnostic.provider.slug,
+            diagnostic_slug=diagnostic.slug,
+            include_superseded=False,
+            include_retracted=False,
+        )
 
         def has_values(value_type: StoredMetricValueType) -> bool:
-            return key in app_context.reader.diagnostics.with_values(value_type, slug_filter)
+            return bool(app_context.reader.diagnostics.with_values(value_type, this_diagnostic))
 
-        has_scalar_values = has_values(StoredMetricValueType.SCALAR)
-        has_series_values = has_values(StoredMetricValueType.SERIES)
-
-        has_metric_values = has_scalar_values or has_series_values
-
-        # The reader only matches slugs as substrings, so pick the exact one out.
-        group_stats = next(
-            (
-                stats
-                for stats in app_context.reader.diagnostics.stats(
-                    provider_contains=[diagnostic.provider.slug], diagnostic_contains=[diagnostic.slug]
-                )
-                if (stats.provider, stats.diagnostic) == (diagnostic.provider.slug, diagnostic.slug)
-            ),
-            None,
-        )
-        execution_group_count = group_stats.total if group_stats else 0
-        successful_execution_group_count = group_stats.successful if group_stats else 0
-
-        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
-        description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
-
-        diagnostic_resource_usage = resource_usage(
-            app_context.reader,
-            ResourceFilter(
-                provider_slug=diagnostic.provider.slug,
-                diagnostic_slug=diagnostic.slug,
-                include_retracted=True,
+        views = app_context.reader.diagnostics.list(this_diagnostic, with_count=False).items
+        entry = DiagnosticCatalogEntry.build_with_stats(
+            diagnostic,
+            app_context,
+            view=views[0] if views else None,
+            resource_usage=resource_usage(
+                app_context.reader,
+                ResourceFilter(
+                    provider_slug=diagnostic.provider.slug,
+                    diagnostic_slug=diagnostic.slug,
+                    include_superseded=False,
+                    include_retracted=True,
+                ),
             ),
         )
-
-        # Build the base diagnostic summary
-        summary = DiagnosticSummary(
-            id=diagnostic.id,
-            provider=ProviderSummary.build(diagnostic.provider),
-            slug=diagnostic.slug,
-            name=diagnostic.name,
-            description=description,
-            execution_groups=[e.id for e in diagnostic.execution_groups],
-            has_metric_values=has_metric_values,
-            has_scalar_values=has_scalar_values,
-            has_series_values=has_series_values,
-            execution_group_count=execution_group_count,
-            successful_execution_group_count=successful_execution_group_count,
-            promoted_version=diagnostic.promoted_version,
-            group_by=group_by_summary,
-            aft_link=aft,
-            resource_usage=diagnostic_resource_usage,
+        return DiagnosticSummary.from_catalog_entry(
+            entry,
+            has_scalar_values=has_values(StoredMetricValueType.SCALAR),
+            has_series_values=has_values(StoredMetricValueType.SERIES),
         )
-
-        # Apply metadata overrides from YAML if available
-        DiagnosticSummary._apply_metadata_overrides(summary, diagnostic, metadata_cache)
-
-        return summary
 
     @staticmethod
     def from_catalog_entry(

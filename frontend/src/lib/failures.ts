@@ -76,11 +76,11 @@ export function summariseFailures(
       const failedGroups = groups.filter(
         (group) => group.executions.at(-1)?.successful === false,
       );
-      const successful = diagnostic.successful_execution_group_count;
+      const successful = diagnostic.groups.successful;
       return {
         diagnostic,
         health: diagnosticHealth(successful, failedGroups.length),
-        total: diagnostic.execution_group_count,
+        total: diagnostic.groups.total,
         successful,
         running: groups.filter(
           (group) => group.executions.at(-1)?.successful === null,
