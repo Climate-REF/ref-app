@@ -68,3 +68,12 @@ def test_text_lines_show_the_bound_fields(restore_loguru, capsys):
     line = capsys.readouterr().err
     assert "status=404" in line
     assert "route='/api/v1/executions/{group_id}'" in line
+
+
+def test_secret_fields_are_masked(restore_loguru, capsys):
+    setup_logging("INFO", json_logs=True)
+
+    logger.bind(api_key="sk-live-123").info("Calling upstream")
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["api_key"] != "sk-live-123"

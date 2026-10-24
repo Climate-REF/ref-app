@@ -7,6 +7,7 @@ from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
 from cr_service.context import get_context
+from cr_service.redact import redact_fields
 from cr_service.tracing import current_trace_context
 from loguru import logger
 
@@ -39,7 +40,7 @@ class InterceptHandler(logging.Handler):
 
 
 def _add_request_context(record: "Record") -> None:
-    record["extra"] = {**current_trace_context(), **get_context(), **record["extra"]}
+    record["extra"] = redact_fields({**current_trace_context(), **get_context(), **record["extra"]})
 
 
 def _json_sink(message: "Message") -> None:
