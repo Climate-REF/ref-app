@@ -4,10 +4,11 @@ from collections import Counter, defaultdict
 from collections.abc import Sequence
 from typing import Any, NamedTuple
 
-from sqlalchemy import CompoundSelect, Select, case, distinct, func, select, union
+from sqlalchemy import Select, Subquery, case, distinct, func, select, union
 from sqlalchemy.orm import Session
 
 from climate_ref import models
+from climate_ref.models.execution import execution_datasets
 from climate_ref.query import select_execution_group_ids, select_execution_groups
 from climate_ref.results import ExecutionGroupFilter
 from ref_backend.core.mip_eras import (
@@ -51,7 +52,22 @@ def _outcome(execution: Any) -> Any:
     )
 
 
-def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSelect[Any] | Select[Any]:
+def _model_datasets(mip_era: MipEra | None, source_id: str | None) -> Subquery:
+    """Select the id and `source_id` of every model dataset in scope, across the eras' dataset tables."""
+    statements = []
+    for era in eras_in_scope(mip_era):
+        dataset_model = dataset_model_for(era)
+        model_source_id = cv_column(dataset_model, "source_id")
+        statement = select(dataset_model.id.label("dataset_id"), model_source_id.label("source_id")).where(
+            model_source_id.isnot(None)
+        )
+        if source_id:
+            statement = statement.where(model_source_id == source_id)
+        statements.append(statement)
+    return (union(*statements) if len(statements) > 1 else statements[0]).subquery("model_datasets")
+
+
+def _model_groups(mip_era: MipEra | None, source_id: str | None) -> Select[Any]:
     """
     Select every (execution group, model) pairing the group filter keeps, with the group's outcome.
 
@@ -65,28 +81,21 @@ def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSele
     Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
-    groups = select_execution_group_ids(_model_filter(mip_era))
-    statements = []
-    for era in eras_in_scope(mip_era):
-        dataset_model = dataset_model_for(era)
-        model_source_id = cv_column(dataset_model, "source_id")
-        statement = (
-            groups.with_only_columns(
-                models.ExecutionGroup.id.label("group_id"),
-                models.ExecutionGroup.diagnostic_id.label("diagnostic_id"),
-                model_source_id.label("source_id"),
-                models.Execution.id.label("execution_id"),
-                _outcome(models.Execution).label("outcome"),
-            )
-            .join(models.Execution.datasets.of_type(dataset_model))
-            .where(model_source_id.isnot(None))
-            .distinct()
+    # Joined once, because a select per era would look up every group's latest execution again.
+    datasets = _model_datasets(mip_era, source_id)
+    return (
+        select_execution_group_ids(_model_filter(mip_era))
+        .with_only_columns(
+            models.ExecutionGroup.id.label("group_id"),
+            models.ExecutionGroup.diagnostic_id.label("diagnostic_id"),
+            datasets.c.source_id,
+            models.Execution.id.label("execution_id"),
+            _outcome(models.Execution).label("outcome"),
         )
-        if source_id:
-            statement = statement.where(model_source_id == source_id)
-        statements.append(statement)
-
-    return union(*statements) if len(statements) > 1 else statements[0]
+        .join(execution_datasets, execution_datasets.c.execution_id == models.Execution.id)
+        .join(datasets, datasets.c.dataset_id == execution_datasets.c.dataset_id)
+        .distinct()
+    )
 
 
 def model_run_rows(
