@@ -192,3 +192,12 @@ def test_a_backfilled_execution_does_not_become_the_latest(writable_session):
         select(groups.c.execution_id).where(groups.c.group_id == group.id).distinct()
     ).all()
     assert picked == [deciding.id]
+
+
+def test_a_retracted_latest_execution_drops_its_group(writable_session):
+    groups = _model_groups(None, None).subquery()
+    group_id, deciding_id = writable_session.execute(select(groups.c.group_id, groups.c.execution_id)).first()
+    writable_session.get(models.Execution, deciding_id).retracted = True
+    writable_session.commit()
+
+    assert group_id not in writable_session.scalars(select(groups.c.group_id)).all()

@@ -90,7 +90,7 @@ def _scalar_rows(
 ) -> list[ScalarRow]:
     value = models.ScalarMetricValue
     columns = [cv_column(value, name) for name in dimensions]
-    # A retried group holds a value per attempt, so only the execution that decided it counts.
+    # A retried group holds a value per attempt, so only the unretracted execution that decided it counts.
     latest = select_latest_executions().subquery()
 
     statement = (
@@ -108,6 +108,7 @@ def _scalar_rows(
         .where(
             models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
             models.ExecutionGroup.diagnostic_id.in_(diagnostic_ids),
+            models.Execution.retracted.is_(False),
             cv_column(value, "kind") == "model",
             cv_column(value, "source_id").isnot(None),
             value.value.isnot(None),

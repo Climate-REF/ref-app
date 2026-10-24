@@ -40,6 +40,7 @@ def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSele
     Participation is read from the execution that decides the group, the same one the outcome
     comes from. A retry run against different datasets would otherwise report the latest outcome
     for a model that took no part in it.
+    A group whose deciding execution is retracted is left out, rather than falling back to an older run.
     Only `source_id` is carried alongside, so a group naming one model across two eras or two
     institutions still yields one row and is counted once.
     """
@@ -61,6 +62,7 @@ def _model_groups(mip_era: MipEra | None, source_id: str | None) -> CompoundSele
             .join(models.Execution.datasets.of_type(dataset_model))
             .where(
                 models.ExecutionGroup.diagnostic_version == models.Diagnostic.promoted_version,
+                models.Execution.retracted.is_(False),
                 model_source_id.isnot(None),
             )
             .distinct()
