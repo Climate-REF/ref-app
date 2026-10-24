@@ -4,6 +4,7 @@ Cache-Control and Vary policy for every response the app serves.
 dashboard.climate-ref.org is fronted by Cloudflare, which handles the caching according to the headers we set.
 """
 
+from cr_service.health import PROBE_PATHS
 from starlette import status
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -33,7 +34,7 @@ class CacheControlMiddleware:
         self.app = app
         self.api_prefix = api_prefix.rstrip("/") + "/"
         self.results_prefix = self.api_prefix + "results/"
-        self.uncached_paths = frozenset({"/metrics", *(self.api_prefix + p for p in UNCACHED_API_PATHS)})
+        self.uncached_paths = frozenset({*PROBE_PATHS, *(self.api_prefix + p for p in UNCACHED_API_PATHS)})
         self.api_policy = f"public, max-age={api_max_age}"
         self.results_policy = f"public, max-age={results_max_age}"
 
