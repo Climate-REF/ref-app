@@ -1,3 +1,4 @@
+import type React from "react";
 import type { DiagnosticHealth } from "@/lib/failures";
 import { cn } from "@/lib/utils";
 
@@ -28,20 +29,28 @@ export const HEALTH = {
   { label: string; description: string; colour: string }
 >;
 
+/** A diagnostic's health, or a grey swelling dot while `pending` new counts */
 export function HealthDot({
   health,
+  pending = false,
   className,
+  style,
 }: {
   health: DiagnosticHealth;
+  pending?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <span
       role="img"
-      aria-label={HEALTH[health].label}
+      aria-label={pending ? "Updating" : HEALTH[health].label}
+      style={style}
       className={cn(
         "inline-block size-3 shrink-0 rounded-full",
-        HEALTH[health].colour,
+        pending
+          ? cn(HEALTH.not_run.colour, "motion-safe:animate-swell")
+          : HEALTH[health].colour,
         className,
       )}
     />

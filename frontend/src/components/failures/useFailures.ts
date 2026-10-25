@@ -77,6 +77,8 @@ export function useFailures(mipEra: MipEra, model?: string) {
     unsuccessful: unsuccessful.data,
     models: models.data?.data.map(({ source_id }) => source_id),
     isLoading: !loaded && !pageFailed,
+    /** The catalog still holds the previous filters' counts while the new ones load */
+    isUpdating: catalog.isPlaceholderData,
     error,
     retry: () => {
       for (const query of failed) {

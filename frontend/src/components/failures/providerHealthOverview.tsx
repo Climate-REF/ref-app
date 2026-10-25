@@ -31,15 +31,32 @@ function groupByProvider(diagnostics: DiagnosticFailures[]): ProviderGroup[] {
   return [...groups.values()];
 }
 
+/** Offsets each dot's swell so a row ripples rather than pulsing in step */
+const SWELL_STAGGER_MS = 60;
+
 function DiagnosticDot({
   failures,
   filters,
+  updating,
+  index,
 }: {
   failures: DiagnosticFailures;
   filters?: FailureFilters;
+  updating: boolean;
+  index: number;
 }) {
   const { diagnostic } = failures;
-  const dot = <HealthDot health={failures.health} />;
+  const dot = (
+    <HealthDot
+      health={failures.health}
+      pending={updating}
+      style={
+        updating
+          ? { animationDelay: `${index * SWELL_STAGGER_MS}ms` }
+          : undefined
+      }
+    />
+  );
 
   // A failing diagnostic jumps to its section below, the others open the diagnostic
   return (
@@ -69,12 +86,18 @@ function DiagnosticDot({
       </TooltipTrigger>
       <TooltipContent>
         <p className="font-medium">{diagnostic.name}</p>
-        <p>
-          {failures.total === 0
-            ? "No execution groups"
-            : failureSummary(failures, filters)}
-        </p>
-        <p className="opacity-80">{HEALTH[failures.health].label}</p>
+        {updating ? (
+          <p className="opacity-80">Updating…</p>
+        ) : (
+          <>
+            <p>
+              {failures.total === 0
+                ? "No execution groups"
+                : failureSummary(failures, filters)}
+            </p>
+            <p className="opacity-80">{HEALTH[failures.health].label}</p>
+          </>
+        )}
       </TooltipContent>
     </Tooltip>
   );
@@ -84,10 +107,13 @@ function DiagnosticDot({
 export function ProviderHealthOverview({
   diagnostics,
   filters,
+  updating = false,
 }: {
   diagnostics: DiagnosticFailures[];
   /** What the failures were narrowed to, named in each dot's summary */
   filters?: FailureFilters;
+  /** The counts are from the previous filters while new ones load, so the dots go grey and swell */
+  updating?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -110,11 +136,13 @@ export function ProviderHealthOverview({
                 </p>
               </div>
               <div className="flex flex-wrap gap-1">
-                {diagnostics.map((failures) => (
+                {diagnostics.map((failures, index) => (
                   <DiagnosticDot
                     key={failures.diagnostic.slug}
                     failures={failures}
                     filters={filters}
+                    updating={updating}
+                    index={index}
                   />
                 ))}
               </div>
