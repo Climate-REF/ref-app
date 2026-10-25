@@ -118,6 +118,7 @@ def test_model_groups_carries_only_the_keys_it_counts_on():
         "diagnostic_id",
         "source_id",
         "execution_id",
+        "outcome",
     ]
 
 
