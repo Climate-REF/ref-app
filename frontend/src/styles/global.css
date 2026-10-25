@@ -109,6 +109,19 @@
   --color-cmip-blue: #000546;
   --color-cmip-mustard: #f2b30d;
   --color-cmip-cyan: #22bfb7;
+
+  --animate-swell: swell 1.6s ease-in-out infinite;
+  @keyframes swell {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.3);
+      opacity: 1;
+    }
+  }
 }
 
 @layer base {

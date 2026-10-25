@@ -69,7 +69,7 @@ function FailuresPage() {
   const search = Route.useSearch();
   const { model, reason, from, to, passing = false } = search;
   const { mipEra } = useMipEra(search.mip_era);
-  const { catalog, unsuccessful, models, isLoading, error, retry } =
+  const { catalog, unsuccessful, models, isLoading, isUpdating, error, retry } =
     useFailures(mipEra, model);
   const navigate = useNavigate({ from: Route.fullPath });
   const updateSearch = (patch: Partial<typeof search>) =>
@@ -215,6 +215,7 @@ function FailuresPage() {
               <ProviderHealthOverview
                 diagnostics={diagnostics}
                 filters={filters}
+                updating={isUpdating}
               />
             </CardContent>
           </Card>

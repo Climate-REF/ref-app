@@ -53,24 +53,37 @@ function PassingGroupList({
   mipEra: MipEra;
   model?: string;
 }) {
-  const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      ...executionsListRecentExecutionGroupsInfiniteOptions({
-        query: {
-          successful: true,
-          provider_slug: diagnostic.provider.slug,
-          diagnostic_slug: diagnostic.slug,
-          mip_era: mipEra,
-          source_id: model,
-          limit: PAGE_SIZE,
-        },
-      }),
-      initialPageParam: 0,
-      getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
-    });
+  const {
+    data,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    ...executionsListRecentExecutionGroupsInfiniteOptions({
+      query: {
+        successful: true,
+        provider_slug: diagnostic.provider.slug,
+        diagnostic_slug: diagnostic.slug,
+        mip_era: mipEra,
+        source_id: model,
+        limit: PAGE_SIZE,
+      },
+    }),
+    initialPageParam: 0,
+    getNextPageParam: (_lastPage, allPages) => nextOffset(allPages),
+  });
 
-  if (error) {
-    return <p className="text-sm text-destructive">{apiErrorMessage(error)}</p>;
+  if (!data && error) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-destructive">{apiErrorMessage(error)}</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
   }
   if (!data) {
     return (
@@ -90,6 +103,9 @@ function PassingGroupList({
           <PassingGroupItem key={group.id} group={group} />
         ))}
       </ul>
+      {error && (
+        <p className="text-sm text-destructive">{apiErrorMessage(error)}</p>
+      )}
       {hasNextPage && (
         <Button
           variant="ghost"

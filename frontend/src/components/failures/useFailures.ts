@@ -64,17 +64,21 @@ export function useFailures(mipEra: MipEra, model?: string) {
   });
 
   // A failed query that is being retried counts as loading again
-  const failed = [catalog, unsuccessful].filter(
-    (query) => query.isError && !query.isFetching,
-  );
+  const failedQuery = (query: { isError: boolean; isFetching: boolean }) =>
+    query.isError && !query.isFetching;
+  const failed = [catalog, unsuccessful, models].filter(failedQuery);
   const error = failed.length > 0 ? failed[0].error : null;
   const loaded = catalog.data !== undefined && unsuccessful.data !== undefined;
+  // The models only fill in the model picker, so their failure is reported without hiding the page
+  const pageFailed = [catalog, unsuccessful].some(failedQuery);
 
   return {
     catalog: catalog.data?.data,
     unsuccessful: unsuccessful.data,
     models: models.data?.data.map(({ source_id }) => source_id),
-    isLoading: !loaded && error === null,
+    isLoading: !loaded && !pageFailed,
+    /** The catalog still holds the previous filters' counts while the new ones load */
+    isUpdating: catalog.isPlaceholderData,
     error,
     retry: () => {
       for (const query of failed) {
