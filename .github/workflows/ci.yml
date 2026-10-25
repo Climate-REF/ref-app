@@ -131,3 +131,16 @@ jobs:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
         scripts/perf-compare.sh "$BASE_SHA"
+
+  # The only check the ruleset requires, so jobs can change without touching repo settings.
+  ci-pass:
+    if: always()
+    needs:
+      - check-changelog
+      - frontend
+      - backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a required job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
