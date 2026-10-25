@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import event, select
 
 from climate_ref import models
 from climate_ref.database import Database
@@ -992,3 +992,23 @@ def test_value_facets_of_an_unknown_diagnostic(client: TestClient) -> None:
     r = client.get("/api/v1/diagnostics/nope/nope/values/facets", params={"value_type": "scalar"})
 
     assert r.status_code == 404
+
+
+@pytest.mark.parametrize("path", ["/diagnostics/", "/diagnostics/catalog", "/diagnostics/value-flags"])
+def test_listing_does_not_query_per_diagnostic(client: TestClient, settings, path: str):
+    engine = deps._get_database_dependency(settings, test_ref_config())._engine
+    statements: list[str] = []
+
+    def record(conn, cursor, statement, *_):
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        r = client.get(f"{settings.API_V1_STR}{path}")
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+
+    assert r.status_code == 200
+    assert len(r.json()["data"]) > 10
+    # One query per diagnostic would scale with the catalogue, so stay under a small fixed number.
+    assert len(statements) <= 10, statements
