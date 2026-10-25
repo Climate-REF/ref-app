@@ -1,6 +1,9 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ExecutionGroup } from "@/client";
-import { diagnosticsCatalogOptions } from "@/client/@tanstack/react-query.gen";
+import {
+  diagnosticsCatalogOptions,
+  modelsListOptions,
+} from "@/client/@tanstack/react-query.gen";
 import { executionsListRecentExecutionGroups } from "@/client/sdk.gen";
 import type { MipEra } from "@/lib/mipEras";
 
@@ -54,6 +57,11 @@ export function useFailures(mipEra: MipEra, model?: string) {
     queryKey: ["executions", "unsuccessful", mipEra],
     queryFn: () => fetchUnsuccessfulGroups(mipEra),
   });
+  // Only lists the models without failures in the model picker, so it never holds up the page
+  const models = useQuery({
+    ...modelsListOptions({ query: { mip_era: mipEra } }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // A failed query that is being retried counts as loading again
   const failed = [catalog, unsuccessful].filter(
@@ -65,6 +73,7 @@ export function useFailures(mipEra: MipEra, model?: string) {
   return {
     catalog: catalog.data?.data,
     unsuccessful: unsuccessful.data,
+    models: models.data?.data.map(({ source_id }) => source_id),
     isLoading: !loaded && error === null,
     error,
     retry: () => {

@@ -305,3 +305,30 @@ export function failureDays(
     ? { from: days[0], to: days[days.length - 1] }
     : undefined;
 }
+
+/** Add the models without failures to the failure counts, after the failing ones, so each can be picked */
+export function withModelsWithoutFailures(
+  counts: FailureCount[],
+  models: string[],
+): FailureCount[] {
+  const failing = new Set(counts.map(({ key }) => key));
+  const passing = models
+    .filter((model) => !failing.has(model))
+    .sort((a, b) => a.localeCompare(b))
+    .map((key) => ({ key, groups: 0, diagnostics: 0 }));
+  return [...counts, ...passing];
+}
+
+/** How many execution groups the diagnostics have and how many of them succeeded */
+export function groupTotals(diagnostics: DiagnosticFailures[]): {
+  total: number;
+  successful: number;
+} {
+  return diagnostics.reduce(
+    (sum, failures) => ({
+      total: sum.total + failures.total,
+      successful: sum.successful + failures.successful,
+    }),
+    { total: 0, successful: 0 },
+  );
+}

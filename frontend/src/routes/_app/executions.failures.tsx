@@ -9,6 +9,7 @@ import {
   DiagnosticFailuresCardSkeleton,
 } from "@/components/failures/diagnosticFailuresCard";
 import { FailureFilterBar } from "@/components/failures/failureFilters";
+import { FailuresEmptyState } from "@/components/failures/failuresEmptyState";
 import {
   ProviderHealthOverview,
   ProviderHealthOverviewSkeleton,
@@ -32,7 +33,9 @@ import {
   failedGroupsSummary,
   failureDays,
   filterOptions,
+  groupTotals,
   summariseFailures,
+  withModelsWithoutFailures,
 } from "@/lib/failures";
 import { type MipEra, mipEraSearchFields } from "@/lib/mipEras";
 
@@ -43,6 +46,7 @@ const FailuresSearchSchema = z.object({
   reason: z.string().optional(),
   from: day.optional(),
   to: day.optional(),
+  passing: z.boolean().optional(),
   ...mipEraSearchFields,
 });
 
@@ -63,12 +67,10 @@ const NO_OPTIONS: FilterOptions = { reasons: [], models: [], days: new Set() };
 
 function FailuresPage() {
   const search = Route.useSearch();
-  const { model, reason, from, to } = search;
+  const { model, reason, from, to, passing = false } = search;
   const { mipEra } = useMipEra(search.mip_era);
-  const { catalog, unsuccessful, isLoading, error, retry } = useFailures(
-    mipEra,
-    model,
-  );
+  const { catalog, unsuccessful, models, isLoading, error, retry } =
+    useFailures(mipEra, model);
   const navigate = useNavigate({ from: Route.fullPath });
   const updateSearch = (patch: Partial<typeof search>) =>
     navigate({ search: (prev) => ({ ...prev, ...patch }) });
@@ -104,12 +106,26 @@ function FailuresPage() {
     [catalog, unsuccessful, filters],
   );
 
+  const modelCounts = useMemo(
+    () => withModelsWithoutFailures(options.models, models ?? []),
+    [options.models, models],
+  );
+
   const failing = (diagnostics ?? []).filter(
     (failures) => failures.failedGroups.length > 0,
   );
-  const filtered = [model, reason, from, to].some(
-    (value) => value !== undefined,
-  );
+  const shown = passing
+    ? (diagnostics ?? []).filter((failures) => failures.total > 0)
+    : failing;
+  const totals = groupTotals(diagnostics ?? []);
+  const narrowsFailures = [reason, from, to].some((v) => v !== undefined);
+  const filtered = model !== undefined || narrowsFailures;
+  const emptyHeading =
+    model !== undefined && !narrowsFailures
+      ? `No failing ${model} execution groups in ${mipEra}`
+      : filtered
+        ? "No failing execution groups match these filters"
+        : `No ${mipEra} execution groups are failing`;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -127,13 +143,17 @@ function FailuresPage() {
         onReason={(selected) => updateSearch({ reason: selected })}
         reasonLabel={reasonLabel}
         reasonDescription={reasonDescription}
-        modelCounts={options.models}
+        modelCounts={modelCounts}
         model={model}
         onModel={(selected) => updateSearch({ model: selected })}
         days={{ from, to }}
         allDays={allDays}
         failureDays={options.days}
         onDays={selectDays}
+        passing={passing}
+        onPassing={(checked) =>
+          updateSearch({ passing: checked ? true : undefined })
+        }
         onClear={
           filtered
             ? () =>
@@ -199,19 +219,26 @@ function FailuresPage() {
             </CardContent>
           </Card>
 
-          {failing.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              {filtered
-                ? "No failing execution groups match these filters."
-                : `No ${mipEra} execution groups are failing.`}
-            </p>
-          ) : (
+          {failing.length === 0 && (
+            <FailuresEmptyState
+              heading={emptyHeading}
+              totals={narrowsFailures ? undefined : totals}
+              onShowPassing={
+                !passing && totals.successful > 0
+                  ? () => updateSearch({ passing: true })
+                  : undefined
+              }
+            />
+          )}
+
+          {shown.length > 0 && (
             <div className="space-y-4">
-              {failing.map((failures) => (
+              {shown.map((failures) => (
                 <DiagnosticFailuresCard
                   key={`${failures.diagnostic.provider.slug}/${failures.diagnostic.slug}`}
                   failures={failures}
                   filters={filters}
+                  passingEra={passing ? mipEra : undefined}
                 />
               ))}
             </div>

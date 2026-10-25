@@ -14,9 +14,11 @@ import {
   failuresByReason,
   filterOptions,
   groupFacets,
+  groupTotals,
   lastSucceededAt,
   reasonBreakdown,
   summariseFailures,
+  withModelsWithoutFailures,
 } from "./failures";
 
 const diagnostic = (
@@ -398,5 +400,29 @@ describe("failureSummary", () => {
     expect(
       failureSummary(failures, { model: "CanESM5", reason: "system_error" }),
     ).toBe("1 of 4 CanESM5 execution groups failed (System error)");
+  });
+});
+
+describe("withModelsWithoutFailures", () => {
+  it("lists the models without failures after the failing ones, by name", () => {
+    const failing = [{ key: "CESM2", groups: 2, diagnostics: 1 }];
+    expect(
+      withModelsWithoutFailures(failing, ["MIROC6", "CESM2", "ACCESS-ESM1-6"]),
+    ).toEqual([
+      { key: "CESM2", groups: 2, diagnostics: 1 },
+      { key: "ACCESS-ESM1-6", groups: 0, diagnostics: 0 },
+      { key: "MIROC6", groups: 0, diagnostics: 0 },
+    ]);
+  });
+});
+
+describe("groupTotals", () => {
+  it("adds up the groups and successes of every diagnostic", () => {
+    const summaries = summariseFailures(
+      [diagnostic("pmp", "enso", 5, 4), diagnostic("ilamb", "gpp", 3, 3)],
+      [],
+    );
+    expect(groupTotals(summaries)).toEqual({ total: 8, successful: 7 });
+    expect(groupTotals([])).toEqual({ total: 0, successful: 0 });
   });
 });

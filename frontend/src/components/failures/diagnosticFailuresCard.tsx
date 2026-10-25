@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { ChevronRight, SquareArrowOutUpRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { ExecutionGroup } from "@/client";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +29,12 @@ import {
   lastSucceededAt,
   reasonBreakdown,
 } from "@/lib/failures";
+import type { MipEra } from "@/lib/mipEras";
 import { FailureReasonBadge } from "./failureReasonBadge";
 import { HealthDot } from "./health";
 import { LogExcerpt } from "./logExcerpt";
+import { OpenGroupLink } from "./openGroupLink";
+import { PassingGroups } from "./passingGroups";
 
 const day = (date: string) => format(new Date(date), "d MMM yyyy");
 
@@ -91,15 +94,7 @@ function FailedGroupItem({ group }: { group: ExecutionGroup }) {
           <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
             {format(new Date(execution.updated_at), "yyyy-MM-dd HH:mm")}
           </span>
-          <Link
-            to="/executions/$groupId/logs"
-            params={{ groupId: group.id.toString() }}
-            aria-label="Open execution group"
-            title="Open execution group"
-            className="shrink-0"
-          >
-            <SquareArrowOutUpRight className="size-4 text-blue-500 hover:text-blue-300 dark:text-blue-400 dark:hover:text-blue-300" />
-          </Link>
+          <OpenGroupLink groupId={group.id} />
         </div>
         <CollapsibleContent className="px-2 pb-2">
           <LogExcerpt groupId={group.id} executionId={execution.id} />
@@ -109,14 +104,20 @@ function FailedGroupItem({ group }: { group: ExecutionGroup }) {
   );
 }
 
-/** A diagnostic with failing execution groups, listing each with what its log says about the failure. */
+/**
+ * A diagnostic's failing execution groups, listing each with what its log says about the failure
+ *
+ * Given `passingEra`, it also lists the diagnostic's passing groups of that era.
+ */
 export function DiagnosticFailuresCard({
   failures,
   filters = {},
+  passingEra,
 }: {
   failures: DiagnosticFailures;
   /** What the failures were narrowed to, named in the summary */
   filters?: FailureFilters;
+  passingEra?: MipEra;
 }) {
   const [showAll, setShowAll] = useState(false);
   const { diagnostic } = failures;
@@ -178,6 +179,14 @@ export function DiagnosticFailuresCard({
               ? "Show fewer"
               : `Show all ${groups.length} failed execution groups`}
           </Button>
+        )}
+        {passingEra && failures.successful > 0 && (
+          <PassingGroups
+            diagnostic={diagnostic}
+            count={failures.successful}
+            mipEra={passingEra}
+            model={filters.model}
+          />
         )}
       </CardContent>
     </Card>

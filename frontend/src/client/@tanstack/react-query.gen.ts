@@ -482,6 +482,7 @@ export const executionsListRecentExecutionGroupsQueryKey = (options?: Options<Ex
  * Supports filtering by:
  * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
  * - provider_name_contains (case-insensitive substring of the provider slug)
+ * - provider_slug and diagnostic_slug (exact slugs)
  * - dirty
  * - successful (filters by latest execution success)
  * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
@@ -517,6 +518,7 @@ export const executionsListRecentExecutionGroupsInfiniteQueryKey = (options?: Op
  * Supports filtering by:
  * - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
  * - provider_name_contains (case-insensitive substring of the provider slug)
+ * - provider_slug and diagnostic_slug (exact slugs)
  * - dirty
  * - successful (filters by latest execution success)
  * - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
@@ -684,7 +686,7 @@ export const executionsListMetricValuesQueryKey = (options: Options<ExecutionsLi
  *
  * Fetch metric values for a specific execution (both scalar and series)
  *
- * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+ * - `value_type`: Type of metric values - 'scalar' or 'series' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
@@ -711,7 +713,7 @@ export const executionsListMetricValuesInfiniteQueryKey = (options: Options<Exec
  *
  * Fetch metric values for a specific execution (both scalar and series)
  *
- * - `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)
+ * - `value_type`: Type of metric values - 'scalar' or 'series' (required)
  * - `format`: Return format - 'json' (default) or 'csv'
  * - `offset`: Number of items to skip (default 0)
  * - `limit`: Maximum number of items to return (default 50, max 500)
