@@ -87,6 +87,8 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     offset: int = Query(0, ge=0),
     diagnostic_name_contains: str | None = None,
     provider_name_contains: str | None = None,
+    provider_slug: str | None = Query(None, description="Keep only the groups of this provider"),
+    diagnostic_slug: str | None = Query(None, description="Keep only the groups of this diagnostic"),
     dirty: bool | None = None,
     successful: bool | None = None,
     failure_reason: ExecutionFailureReason | None = None,
@@ -107,6 +109,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     Supports filtering by:
     - diagnostic_name_contains (case-insensitive substring of the diagnostic slug)
     - provider_name_contains (case-insensitive substring of the provider slug)
+    - provider_slug and diagnostic_slug (exact slugs)
     - dirty
     - successful (filters by latest execution success)
     - failure_reason (filters by why the latest execution failed, e.g. `system_error`)
@@ -119,6 +122,8 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     filters = ExecutionGroupFilter(
         diagnostic_contains=diagnostic_name_contains or None,
         provider_contains=provider_name_contains or None,
+        provider_slug=provider_slug,
+        diagnostic_slug=diagnostic_slug,
         include_superseded=False,
         include_retracted=False,
         dirty=dirty,

@@ -1,6 +1,7 @@
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -9,6 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -21,7 +23,9 @@ import { cn } from "@/lib/utils";
 import { type DayRange, DayRangePicker } from "./dayRangePicker";
 
 const countText = ({ groups, diagnostics }: FailureCount) =>
-  `${groups} failed in ${diagnostics} ${diagnostics === 1 ? "diagnostic" : "diagnostics"}`;
+  groups === 0
+    ? "no failures"
+    : `${groups} failed in ${diagnostics} ${diagnostics === 1 ? "diagnostic" : "diagnostics"}`;
 
 /**
  * A searchable dropdown picking one value to filter failures by, or all of them
@@ -144,6 +148,8 @@ export function FailureFilterBar({
   allDays,
   failureDays,
   onDays,
+  passing,
+  onPassing,
   onClear,
   summary,
   disabled,
@@ -165,6 +171,8 @@ export function FailureFilterBar({
   /** Days with failures matching the other filters, marked in the calendar */
   failureDays?: Set<string>;
   onDays: (days: DayRange) => void;
+  passing: boolean;
+  onPassing: (passing: boolean) => void;
   onClear?: () => void;
   summary?: string;
   disabled?: boolean;
@@ -206,6 +214,17 @@ export function FailureFilterBar({
           onChange={onDays}
           disabled={disabled || !allDays}
         />
+        <div className="flex items-center gap-2 text-sm">
+          <Checkbox
+            id="failures-show-passing"
+            checked={passing}
+            onCheckedChange={(checked) => onPassing(checked === true)}
+            disabled={disabled}
+          />
+          <Label htmlFor="failures-show-passing" className="font-normal">
+            Show passing groups
+          </Label>
+        </div>
         {onClear && (
           <Button variant="ghost" size="sm" onClick={onClear}>
             <X className="size-4" />

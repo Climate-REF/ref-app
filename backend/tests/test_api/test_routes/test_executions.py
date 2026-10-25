@@ -436,6 +436,24 @@ def test_execution_statistics_match_list(client: TestClient, settings) -> None:
     assert unsuccessful["total_count"] == listed["total_count"] - successful["total_count"]
 
 
+def test_execution_list_filters_by_exact_slugs(client: TestClient, settings) -> None:
+    """The slug filters match whole slugs, unlike the `_contains` filters."""
+    group = client.get(f"{settings.API_V1_STR}/executions?limit=1").json()["data"][0]
+    provider, diagnostic = group["provider_slug"], group["diagnostic_slug"]
+
+    matched = client.get(
+        f"{settings.API_V1_STR}/executions",
+        params={"provider_slug": provider, "diagnostic_slug": diagnostic, "limit": 1000},
+    ).json()
+    assert matched["total_count"] > 0
+    assert {(g["provider_slug"], g["diagnostic_slug"]) for g in matched["data"]} == {(provider, diagnostic)}
+
+    partial = client.get(
+        f"{settings.API_V1_STR}/executions", params={"diagnostic_slug": diagnostic[:-1], "limit": 1}
+    ).json()
+    assert all(g["diagnostic_slug"] == diagnostic[:-1] for g in partial["data"])
+
+
 def test_execution_list_pagination(client: TestClient, settings) -> None:
     page1 = client.get(f"{settings.API_V1_STR}/executions?limit=2&offset=0").json()
     page2 = client.get(f"{settings.API_V1_STR}/executions?limit=2&offset=2").json()

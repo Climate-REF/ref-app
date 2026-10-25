@@ -2539,6 +2539,18 @@ export type ExecutionsListRecentExecutionGroupsData = {
          */
         provider_name_contains?: string | null;
         /**
+         * Provider Slug
+         *
+         * Keep only the groups of this provider
+         */
+        provider_slug?: string | null;
+        /**
+         * Diagnostic Slug
+         *
+         * Keep only the groups of this diagnostic
+         */
+        diagnostic_slug?: string | null;
+        /**
          * Dirty
          */
         dirty?: boolean | null;
