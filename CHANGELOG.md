@@ -1,3 +1,24 @@
+## v0.9.1 (2026-10-26)
+
+### Features
+
+- The failures page can now show passing execution groups, and lists models without failures with an empty state saying how many of their groups passed. (#159)
+
+### Improvements
+
+- The `/models` endpoints now count execution groups the same way as the diagnostics endpoints, and the models list is about twice as fast on a large database. In the ensemble comparison a value with no `kind` now counts as a model value. (#156)
+- Sped up the diagnostics listing by loading every diagnostic's provider and execution groups in a fixed number of queries. (#157)
+- The diagnostic dots on the failures page now turn grey and gently swell while the counts for new filters load. (#161)
+
+### Bug Fixes
+
+- Loading more passing groups on the failures page no longer hides the groups already loaded when it fails, and a failure to load the model list is now reported with a retry. (#161)
+
+### Trivial Changes
+
+- Renovate now batches updates weekly and merges dev tooling, GitHub Actions and lockfile updates once CI passes. (#160)
+
+
 ## v0.9.0 (2026-10-24)
 
 ### Features

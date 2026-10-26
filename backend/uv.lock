@@ -4113,7 +4113,7 @@ wheels = [
 
 [[package]]
 name = "ref-backend"
-version = "0.9.0"
+version = "0.9.1"
 source = { editable = "." }
 dependencies = [
     { name = "climate-ref", extra = ["aft-providers", "postgres"] },
