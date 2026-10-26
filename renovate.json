@@ -62,10 +62,11 @@
       "automerge": true
     },
     {
-      "description": "The core library sets what the API can serve, so it is reviewed on its own",
+      "description": "The core library sets what the API can serve, so it is reviewed on its own and our own releases skip the release-age wait",
       "matchDepNames": ["climate-ref"],
       "groupName": "climate-ref",
-      "schedule": ["at any time"]
+      "schedule": ["at any time"],
+      "minimumReleaseAge": null
     },
     {
       "matchManagers": ["github-actions"],
