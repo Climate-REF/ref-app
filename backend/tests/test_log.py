@@ -1,8 +1,10 @@
 import json
+import logging
 import re
 import sys
 
 import pytest
+import sentry_sdk
 from loguru import logger
 from opentelemetry import trace
 from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags
@@ -77,3 +79,14 @@ def test_secret_fields_are_masked(restore_loguru, capsys):
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["api_key"] != "sk-live-123"
+
+
+def test_stdlib_lines_name_the_calling_module_under_sentry(restore_loguru, capsys):
+    # Sentry's logging integration wraps the stdlib handler call, as it does when deployed.
+    sentry_sdk.init()
+    setup_logging("INFO", json_logs=True)
+
+    logging.getLogger("uvicorn.error").info("Started server process")
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["logger"] == __name__

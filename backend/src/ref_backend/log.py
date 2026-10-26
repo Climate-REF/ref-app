@@ -6,6 +6,7 @@ import traceback
 from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
+import sentry_sdk.integrations.logging
 from cr_service.context import get_context
 from cr_service.redact import redact_fields
 from cr_service.tracing import current_trace_context
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
 
 
 _RESERVED_LOG_RECORD_KEYS = frozenset(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
+# Sentry wraps the stdlib handler call, so its frames sit between the caller and this handler.
+_LOGGING_FILES = frozenset({logging.__file__, sentry_sdk.integrations.logging.__file__})
 
 
 class InterceptHandler(logging.Handler):
@@ -28,7 +31,7 @@ class InterceptHandler(logging.Handler):
 
         # Find caller to get correct stack depth
         frame, depth = inspect.currentframe(), 0
-        while frame and (depth == 0 or frame.f_code.co_filename == logging.__file__):
+        while frame and (depth == 0 or frame.f_code.co_filename in _LOGGING_FILES):
             frame = frame.f_back
             depth += 1
 
