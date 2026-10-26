@@ -51,7 +51,7 @@ def _summary_fields(source_id: str, rows: list[ModelRunRow], facets: ModelFacets
 
 
 @router.get("/", name="list")
-async def _list(
+def _list(
     session: SessionDep,
     mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),
 ) -> Collection[ModelSummary]:
@@ -72,7 +72,7 @@ async def _list(
 
 
 @router.get("/{source_id}")
-async def get(
+def get(
     session: SessionDep,
     source_id: str,
     mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),
@@ -129,7 +129,7 @@ async def get(
 
 
 @router.get("/{source_id}/ensemble")
-async def ensemble(
+def ensemble(
     session: SessionDep,
     source_id: str,
     mip_era: MipEra | None = Query(None, description="Restrict to one MIP era"),

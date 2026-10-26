@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -69,7 +67,7 @@ def test_result_releases_connection_before_streaming():
             pytest.skip("No execution results available in test data")
         assert pool.checkedout() == idle + 1
 
-        response = asyncio.run(get_result(session, reader, result.id))
+        response = get_result(session, reader, result.id)
 
         assert response.status_code == 200
         assert pool.checkedout() == idle

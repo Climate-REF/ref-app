@@ -52,7 +52,7 @@ def _parse_int_id(value: str, resource: str) -> int:
 
 
 @router.get("/statistics")
-async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
+def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
     """
     Get execution statistics for the dashboard.
 
@@ -81,7 +81,7 @@ async def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats
 
 
 @router.get("/")
-async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
+def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     limit: int = Query(10, ge=0),
     offset: int = Query(0, ge=0),
@@ -150,7 +150,7 @@ async def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
 
 
 @router.get("/{group_id}")
-async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
+def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     """
     Inspect a specific execution group, whatever its version or retraction
     """
@@ -167,9 +167,7 @@ async def get(app_context: AppContextDep, group_id: str) -> ExecutionGroup:
     return ExecutionGroup.build(groups[0], app_context)
 
 
-async def _get_execution(
-    group_id: str, execution_id: str | None, app_context: AppContext
-) -> models.Execution:
+def _get_execution(group_id: str, execution_id: str | None, app_context: AppContext) -> models.Execution:
     """
     Resolve the execution a route is asking about
 
@@ -192,7 +190,7 @@ async def _get_execution(
 
 
 @router.get("/{group_id}/execution")
-async def execution(
+def execution(
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
@@ -202,25 +200,25 @@ async def execution(
 
     Gets the latest result if no execution_id is provided
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
 
     return Execution.build(execution, app_context)
 
 
 @router.get("/{group_id}/datasets")
-async def execution_datasets(
+def execution_datasets(
     app_context: AppContextDep, group_id: str, execution_id: str | None = None
 ) -> Collection[Dataset]:
     """
     Query the datasets that were used for a specific execution
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
 
     return Collection(data=[Dataset.build(dataset) for dataset in execution.datasets])
 
 
 @router.get("/{group_id}/logs")
-async def execution_logs(
+def execution_logs(
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
@@ -233,7 +231,7 @@ async def execution_logs(
 
     Pass `lines` to fetch only the end of the log, rather than the whole file.
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
     output_fragment = execution.output_fragment
     # Release the connection now, so streaming the file does not hold it open
     app_context.session.close()
@@ -255,7 +253,7 @@ async def execution_logs(
 
 
 @router.get("/{group_id}/metric_bundle")
-async def metric_bundle(
+def metric_bundle(
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
@@ -263,7 +261,7 @@ async def metric_bundle(
     """
     Fetch a result using the slug
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
 
     file_path = resolve_artifact(
         app_context.reader.artifacts.output_file, execution.output_fragment, "diagnostic.json"
@@ -291,7 +289,7 @@ def _metric_filter(
 
 
 @router.get("/{group_id}/values/facets")
-async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+def list_metric_value_facets(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     request: Request,
     group_id: str,
@@ -305,12 +303,12 @@ async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
 
     They cover every page and the outliers too, so a client can keep them while it pages.
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
     return fetch_facets(app_context, _metric_filter(execution, request, isolate_ids, exclude_ids), value_type)
 
 
 @router.get("/{group_id}/values", response_model=MetricValueCollection)
-async def list_metric_values(  # noqa: PLR0913, PLR0917
+def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     request: Request,
     group_id: str,
@@ -337,7 +335,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
 
     The values of the named execution are returned, whatever its version or retraction.
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
 
     return fetch_metric_values(
         app_context,
@@ -354,7 +352,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
 
 
 @router.get("/{group_id}/archive")
-async def execution_archive(
+def execution_archive(
     app_context: AppContextDep,
     group_id: str,
     execution_id: str | None = None,
@@ -364,7 +362,7 @@ async def execution_archive(
 
     The archive is created on-the-fly and streamed directly to the client.
     """
-    execution = await _get_execution(group_id, execution_id, app_context)
+    execution = _get_execution(group_id, execution_id, app_context)
     result_path = resolve_artifact(app_context.reader.artifacts.output_directory, execution.output_fragment)
 
     if not result_path.exists():

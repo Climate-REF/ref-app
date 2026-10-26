@@ -8,7 +8,7 @@ router = APIRouter(prefix="/cmip7-aft-diagnostics", tags=["CMIP7 Assessment Fast
 
 
 @router.get("/", response_model=list[AFTDiagnosticSummary])
-async def list_aft_diagnostics() -> list[AFTDiagnosticSummary]:
+def list_aft_diagnostics() -> list[AFTDiagnosticSummary]:
     """
     Get all AFT diagnostics.
     """
@@ -20,7 +20,7 @@ async def list_aft_diagnostics() -> list[AFTDiagnosticSummary]:
 
 
 @router.get("/{aft_id}", response_model=AFTDiagnosticDetail)
-async def get_aft_diagnostic(aft_id: str) -> AFTDiagnosticDetail:
+def get_aft_diagnostic(aft_id: str) -> AFTDiagnosticDetail:
     """
     Get detailed AFT diagnostic by ID.
     """
