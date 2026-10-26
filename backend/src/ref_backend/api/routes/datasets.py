@@ -35,7 +35,7 @@ def _parse_source_type(dataset_type: str) -> SourceDatasetType:
 
 
 @router.get("/", name="list")
-async def _list(  # noqa: PLR0913, PLR0917
+def _list(  # noqa: PLR0913, PLR0917
     reader: ReaderDep,
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -76,7 +76,7 @@ async def _list(  # noqa: PLR0913, PLR0917
 
 
 @router.get("/{slug}", name="get")
-async def get(
+def get(
     reader: ReaderDep,
     slug: str,
 ) -> Dataset:
@@ -92,7 +92,7 @@ async def get(
 
 
 @router.get("/{dataset_id}/executions")
-async def executions(
+def executions(
     app_context: AppContextDep,
     dataset_id: int,
     offset: int = Query(0, ge=0),

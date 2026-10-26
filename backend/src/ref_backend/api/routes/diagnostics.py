@@ -35,7 +35,7 @@ from ref_backend.models import (
 router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
 
-async def _get_diagnostic(
+def _get_diagnostic(
     app_context: AppContextDep, provider_slug: str, diagnostic_slug: str
 ) -> models.Diagnostic:
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
@@ -146,7 +146,7 @@ def _catalog_entries(app_context: AppContextDep, scope: _Scope) -> list[Diagnost
 
 
 @router.get("/", name="list")
-async def _list(
+def _list(
     app_context: AppContextDep,
     mip_era: MipEra | None = Query(None, description="Count only the execution groups that draw on this era"),
     source_id: str | None = Query(None, description="Count only the execution groups that ran this model"),
@@ -171,7 +171,7 @@ async def _list(
 
 
 @router.get("/catalog", name="catalog")
-async def catalog(
+def catalog(
     app_context: AppContextDep,
     mip_era: MipEra | None = Query(None, description="Count only the execution groups that draw on this era"),
     source_id: str | None = Query(None, description="Count only the execution groups that ran this model"),
@@ -187,7 +187,7 @@ async def catalog(
 
 
 @router.get("/value-flags", name="value_flags")
-async def value_flags(
+def value_flags(
     app_context: AppContextDep,
     mip_era: MipEra | None = Query(None, description="Check only the execution groups that draw on this era"),
     source_id: str | None = Query(None, description="Check only the execution groups that ran this model"),
@@ -213,17 +213,17 @@ async def value_flags(
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}")
-async def get(app_context: AppContextDep, provider_slug: str, diagnostic_slug: str) -> DiagnosticSummary:
+def get(app_context: AppContextDep, provider_slug: str, diagnostic_slug: str) -> DiagnosticSummary:
     """
     Fetch a result using the slug
     """
-    diagnostic = await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    diagnostic = _get_diagnostic(app_context, provider_slug, diagnostic_slug)
 
     return DiagnosticSummary.build(diagnostic, app_context)
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/execution_groups")
-async def list_execution_groups(
+def list_execution_groups(
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -234,7 +234,7 @@ async def list_execution_groups(
 
     Groups whose latest execution is retracted are left out, matching the counts.
     """
-    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    _get_diagnostic(app_context, provider_slug, diagnostic_slug)
     groups, _ = load_execution_groups(
         app_context.session,
         ExecutionGroupFilter(
@@ -249,7 +249,7 @@ async def list_execution_groups(
     return Collection(data=[ExecutionGroup.build(g, app_context) for g in groups], total_count=len(groups))
 
 
-async def _metric_filter(  # noqa: PLR0913, PLR0917
+def _metric_filter(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -259,7 +259,7 @@ async def _metric_filter(  # noqa: PLR0913, PLR0917
     exclude_ids: str | None,
 ) -> MetricValueFilter:
     # Validates the provider/diagnostic exist and are not excluded (raises 404 otherwise).
-    await _get_diagnostic(app_context, provider_slug, diagnostic_slug)
+    _get_diagnostic(app_context, provider_slug, diagnostic_slug)
     return MetricValueFilter(
         diagnostic_slug=diagnostic_slug,
         provider_slug=provider_slug,
@@ -274,7 +274,7 @@ async def _metric_filter(  # noqa: PLR0913, PLR0917
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values/facets")
-async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
+def list_metric_value_facets(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -291,14 +291,14 @@ async def list_metric_value_facets(  # noqa: PLR0913, PLR0917
 
     They cover every page and the outliers too, so a client can keep them while it pages.
     """
-    metric_filter = await _metric_filter(
+    metric_filter = _metric_filter(
         app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
     )
     return fetch_facets(app_context, metric_filter, value_type)
 
 
 @router.get("/{provider_slug}/{diagnostic_slug}/values", response_model=MetricValueCollection)
-async def list_metric_values(  # noqa: PLR0913, PLR0917
+def list_metric_values(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
     provider_slug: str,
     diagnostic_slug: str,
@@ -331,7 +331,7 @@ async def list_metric_values(  # noqa: PLR0913, PLR0917
 
     Values come from the promoted diagnostic version, and retracted executions are left out.
     """
-    metric_filter = await _metric_filter(
+    metric_filter = _metric_filter(
         app_context, provider_slug, diagnostic_slug, request, mip_era, isolate_ids, exclude_ids
     )
 

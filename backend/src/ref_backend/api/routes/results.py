@@ -11,7 +11,7 @@ router = APIRouter(prefix="/results", tags=["results"])
 
 
 @router.get("/{result_id}")
-async def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> StreamingResponse:
+def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> StreamingResponse:
     """
     Fetch a result
     """
