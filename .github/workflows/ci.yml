@@ -6,6 +6,9 @@ on:
     branches: [main]
     tags: ['v*']
 
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   check-changelog:
@@ -135,6 +138,7 @@ jobs:
   # The only check the ruleset requires, so jobs can change without touching repo settings.
   ci-pass:
     if: always()
+    permissions: {}
     needs:
       - check-changelog
       - frontend
