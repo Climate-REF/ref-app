@@ -1,3 +1,12 @@
+## v0.9.2 (2026-10-26)
+
+### Trivial Changes
+
+- Gave the `ci-pass` CI job no token permissions. (#164)
+- Fixed the `logger` field on backend JSON logs, which named Sentry instead of the calling module. (#165)
+- Renovate now opens climate-ref update PRs as soon as a release is published. (#166)
+
+
 ## v0.9.1 (2026-10-26)
 
 ### Features
