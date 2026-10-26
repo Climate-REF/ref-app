@@ -240,8 +240,7 @@ def execution_logs(
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
     if not file_path.exists():
-        # Error, not warning: a missing log means the solve died before the execution wrote it.
-        logger.error(f"Log file not found: {file_path}")
+        logger.warning(f"Log file not found: {file_path}")
         raise HTTPException(status_code=404, detail="Log file not found")
 
     headers = {"Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"}
