@@ -1,3 +1,14 @@
+## v0.9.3 (2026-10-27)
+
+### Bug Fixes
+
+- A slow request no longer holds up every other request on the same API worker, so pages and health checks stay responsive while heavy diagnostic values load. (#167)
+
+### Trivial Changes
+
+- Missing execution log files are now logged as a warning rather than an error. (#168)
+
+
 ## v0.9.2 (2026-10-26)
 
 ### Trivial Changes
