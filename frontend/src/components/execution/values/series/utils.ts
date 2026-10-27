@@ -159,7 +159,21 @@ export function createScaledTickFormatter(
  * @param template - Template string with {dimension_name} placeholders
  * @returns Formatted label string
  */
+/**
+ * The dimensions a series is labelled from.
+ *
+ * A reference series carries the dimensions of the model run that stored it,
+ * so it takes its observational source as `source_id` and drops that run's experiment.
+ */
+function labelSource(series: SeriesValue): Record<string, string> {
+  const referenceSource = series.dimensions.reference_source_id;
+  if (series.kind !== "reference" || !referenceSource) return series.dimensions;
+  const { experiment_id: _experiment, ...dimensions } = series.dimensions;
+  return { ...dimensions, source_id: referenceSource };
+}
+
 function applyLabelTemplate(series: SeriesValue, template?: string): string {
+  const dimensions = labelSource(series);
   if (!template) {
     // Fallback to key dimensions
     const keyDims = [
@@ -171,8 +185,8 @@ function applyLabelTemplate(series: SeriesValue, template?: string): string {
     ];
     const parts: string[] = [];
     keyDims.forEach((dim) => {
-      if (series.dimensions[dim]) {
-        parts.push(series.dimensions[dim]);
+      if (dimensions[dim]) {
+        parts.push(dimensions[dim]);
       }
     });
     return parts.join(" | ") || "Series";
@@ -181,7 +195,7 @@ function applyLabelTemplate(series: SeriesValue, template?: string): string {
   let result = template;
   const placeholderRegex = /\{([^}]+)\}/g;
   result = result.replace(placeholderRegex, (_, dimensionName) => {
-    return series.dimensions[dimensionName] || "";
+    return dimensions[dimensionName] || "";
   });
   return result;
 }

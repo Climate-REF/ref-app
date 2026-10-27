@@ -258,6 +258,25 @@ describe("createChartData", () => {
     expect(result.seriesMetadata[0].color).toBe("#000000");
   });
 
+  it("names a reference series after its observational source", () => {
+    const ceres: SeriesValue = {
+      ...mockReferenceSeriesValue,
+      dimensions: {
+        source_id: "ACCESS-CM2",
+        reference_source_id: "CERES-EBAF-4-2-1",
+        experiment_id: "historical",
+        variable_id: "lwcre",
+      },
+    };
+    expect(createChartData([], [ceres]).seriesMetadata[0].label).toBe(
+      "CERES-EBAF-4-2-1 | lwcre",
+    );
+    expect(
+      createChartData([], [ceres], "{source_id} {variable_id}")
+        .seriesMetadata[0].label,
+    ).toBe("CERES-EBAF-4-2-1 lwcre");
+  });
+
   it("combines regular and reference series with reference after regular", () => {
     const result = createChartData(
       [mockSeriesValue],
