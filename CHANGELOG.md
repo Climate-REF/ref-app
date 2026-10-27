@@ -1,3 +1,10 @@
+## v0.9.4 (2026-10-27)
+
+### Improvements
+
+- Sped up loading series values on the diagnostic explorer, such as the Cloud radiative effects charts, by upgrading to climate-ref 0.20.2. (#169)
+
+
 ## v0.9.3 (2026-10-27)
 
 ### Bug Fixes
