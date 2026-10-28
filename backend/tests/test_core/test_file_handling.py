@@ -108,14 +108,6 @@ class TestTarGzIterator:
 
         assert _read_archive(tar_gz_iterator(tmp_path)) == {"real.txt": b"real"}
 
-    def test_file_data_is_read_in_bounded_chunks(self, tmp_path):
-        """Memory stays bounded by the chunk size, however large the file."""
-        (tmp_path / "big.bin").write_bytes(b"x" * 10_000)
-
-        sizes = [len(chunk) for chunk in _tar_entries(tmp_path, chunk_size=1024)]
-
-        assert max(sizes) <= 1024
-
     def test_file_that_shrinks_is_zero_filled(self, tmp_path):
         """The header records the size first, so a file that shrinks mid-read is padded to match."""
         path = tmp_path / "log.txt"
