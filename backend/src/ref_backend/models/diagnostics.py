@@ -64,10 +64,6 @@ class DiagnosticCatalogEntry(BaseModel):
     """
     Description of the diagnostic
     """
-    execution_groups: list[int]
-    """
-    List of IDs for the provider executions associated with this provider
-    """
     groups: GroupCounts
     """
     Execution groups at the promoted version, by the outcome of their latest execution
@@ -109,9 +105,8 @@ class DiagnosticCatalogEntry(BaseModel):
         return load_diagnostic_metadata_cached(app_context.settings.diagnostic_metadata_path_resolved)
 
     @staticmethod
-    def _build_group_by_summary(diagnostic: models.Diagnostic, app_context: "AppContext") -> list[GroupBy]:
+    def _build_group_by_summary(concrete_diagnostic: "Diagnostic | None") -> list[GroupBy]:
         """Extract and build group_by information from diagnostic data requirements."""
-        concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
         if concrete_diagnostic is None:
             return []
         data_requirements = sorted(
@@ -147,7 +142,7 @@ class DiagnosticCatalogEntry(BaseModel):
         if aft_id:
             return get_aft_diagnostic_by_id(aft_id)
         else:
-            logger.warning(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
+            logger.debug(f"No AFT found for diagnostic {diagnostic.provider.slug}/{diagnostic.slug}")
             return None
 
     @staticmethod
@@ -183,10 +178,9 @@ class DiagnosticCatalogEntry(BaseModel):
     ) -> "DiagnosticCatalogEntry":
         """Build a DiagnosticCatalogEntry with pre-computed statistics to avoid N+1 queries."""
         metadata_cache = DiagnosticCatalogEntry._ensure_metadata_cache(app_context)
-        group_by_summary = DiagnosticCatalogEntry._build_group_by_summary(diagnostic, app_context)
-        aft = DiagnosticCatalogEntry._get_aft_link(diagnostic)
-
         concrete_diagnostic = _concrete_diagnostic(diagnostic, app_context)
+        group_by_summary = DiagnosticCatalogEntry._build_group_by_summary(concrete_diagnostic)
+        aft = DiagnosticCatalogEntry._get_aft_link(diagnostic)
         description = (concrete_diagnostic.__doc__ or "") if concrete_diagnostic else ""
 
         # Build the base diagnostic summary
@@ -196,7 +190,6 @@ class DiagnosticCatalogEntry(BaseModel):
             slug=diagnostic.slug,
             name=diagnostic.name,
             description=description,
-            execution_groups=[e.id for e in diagnostic.execution_groups],
             groups=groups,
             promoted_version=diagnostic.promoted_version,
             group_by=group_by_summary,

@@ -5,7 +5,6 @@ import { resourceUsageCsv } from "./resourceUsageCsv";
 const base = {
   id: 1,
   description: "",
-  execution_groups: [],
   has_metric_values: false,
   has_scalar_values: false,
   has_series_values: false,

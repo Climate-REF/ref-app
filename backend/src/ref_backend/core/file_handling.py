@@ -1,4 +1,7 @@
 import os
+import stat
+import tarfile
+import zlib
 from collections.abc import Callable, Generator
 from pathlib import Path
 
@@ -71,3 +74,54 @@ def file_iterator(file_path: str, chunk_size: int = 64 * 1024) -> Generator[byte
     with open(file_path, "rb") as file:
         while chunk := file.read(chunk_size):
             yield chunk
+
+
+def _tar_entries(root: Path, chunk_size: int) -> Generator[bytes]:
+    """Yield an uncompressed tar of the regular files below `root`, one chunk at a time."""
+    for directory, _, files in os.walk(root):
+        for file in sorted(files):
+            file_path = Path(directory) / file
+            file_stat = file_path.lstat()
+            if not stat.S_ISREG(file_stat.st_mode):
+                continue
+
+            info = tarfile.TarInfo(str(file_path.relative_to(root)))
+            info.size = file_stat.st_size
+            info.mtime = int(file_stat.st_mtime)
+            info.mode = stat.S_IMODE(file_stat.st_mode)
+            yield info.tobuf(tarfile.PAX_FORMAT)
+
+            remaining = info.size
+            with open(file_path, "rb") as f:
+                while remaining and (chunk := f.read(min(chunk_size, remaining))):
+                    remaining -= len(chunk)
+                    yield chunk
+            # A file that shrank while being read is zero-filled, so the header stays true.
+            padding = remaining + (-info.size % tarfile.BLOCKSIZE)
+            while padding:
+                chunk_length = min(chunk_size, padding)
+                padding -= chunk_length
+                yield bytes(chunk_length)
+
+    yield bytes(2 * tarfile.BLOCKSIZE)
+
+
+def tar_gz_iterator(root: Path, chunk_size: int = 64 * 1024) -> Generator[bytes]:
+    """
+    Stream a gzipped tar of the regular files below a directory
+
+    Memory use is bounded by `chunk_size`, whatever the size of the files.
+    Symlinks and other special files are left out.
+
+    Parameters
+    ----------
+    root
+        Directory to archive, which becomes the root of the archive
+    chunk_size
+        Size of each chunk to read from the files
+    """
+    compressor = zlib.compressobj(wbits=zlib.MAX_WBITS | 16)
+    for data in _tar_entries(root, chunk_size):
+        if compressed := compressor.compress(data):
+            yield compressed
+    yield compressor.flush()

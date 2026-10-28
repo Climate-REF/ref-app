@@ -657,10 +657,6 @@ export type DiagnosticCatalogEntry = {
      * Description
      */
     description: string;
-    /**
-     * Execution Groups
-     */
-    execution_groups: Array<number>;
     groups: GroupCounts;
     /**
      * Promoted Version
@@ -737,10 +733,6 @@ export type DiagnosticSummary = {
      * Description
      */
     description: string;
-    /**
-     * Execution Groups
-     */
-    execution_groups: Array<number>;
     groups: GroupCounts;
     /**
      * Promoted Version
