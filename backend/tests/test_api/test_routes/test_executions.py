@@ -1,3 +1,6 @@
+import io
+import tarfile
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -498,6 +501,8 @@ def test_execution_logs(client: TestClient, settings, monkeypatch, tmp_path):
 
     assert r.status_code == 200
     assert r.text == log_file.read_text()
+    latest_id = client.get(f"{settings.API_V1_STR}/executions/{group_id}/execution").json()["id"]
+    assert r.headers["content-disposition"] == f"attachment; filename=execution_result_{latest_id}.log"
 
 
 def test_execution_logs_lines(client: TestClient, settings, monkeypatch, tmp_path):
@@ -657,3 +662,24 @@ def test_execution_value_facets_of_an_unknown_group(client: TestClient, settings
     r = client.get(f"{settings.API_V1_STR}/executions/999999/values/facets", params={"value_type": "scalar"})
 
     assert r.status_code == 404
+
+
+def test_execution_list_limit_capped(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/?limit=1001")
+
+    assert r.status_code == 422
+
+
+def test_execution_archive(client: TestClient, settings, monkeypatch, tmp_path) -> None:
+    group_id = get_execution_group_id(client, settings)
+    (tmp_path / "plots").mkdir()
+    (tmp_path / "diagnostic.json").write_text("{}")
+    (tmp_path / "plots" / "map.png").write_bytes(b"png" * 1000)
+    monkeypatch.setattr(executions_routes, "resolve_artifact", lambda *_: tmp_path)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/archive")
+
+    assert r.status_code == 200
+    with tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz") as tar:
+        assert sorted(tar.getnames()) == ["diagnostic.json", "plots/map.png"]
+        assert tar.extractfile("plots/map.png").read() == b"png" * 1000

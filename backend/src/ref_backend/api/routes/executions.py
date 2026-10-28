@@ -1,9 +1,4 @@
 import mimetypes
-import os
-import tarfile
-import tempfile
-from collections.abc import Generator
-from pathlib import Path
 from typing import Literal, get_args
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -18,7 +13,7 @@ from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, MetricVa
 from climate_ref_core.pycmec.metric import CMECMetric
 from ref_backend.api.deps import AppContext, AppContextDep
 from ref_backend.core.execution_groups import load_execution_groups
-from ref_backend.core.file_handling import file_iterator, resolve_artifact, tail_lines
+from ref_backend.core.file_handling import file_iterator, resolve_artifact, tail_lines, tar_gz_iterator
 from ref_backend.core.metric_values import (
     MetricValueType,
     parse_id_list,
@@ -83,7 +78,7 @@ def get_execution_statistics(app_context: AppContextDep) -> ExecutionStats:
 @router.get("/")
 def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
     app_context: AppContextDep,
-    limit: int = Query(10, ge=0),
+    limit: int = Query(10, ge=0, le=1000),
     offset: int = Query(0, ge=0),
     diagnostic_name_contains: str | None = None,
     provider_name_contains: str | None = None,
@@ -243,7 +238,7 @@ def execution_logs(
         logger.warning(f"Log file not found: {file_path}")
         raise HTTPException(status_code=404, detail="Log file not found")
 
-    headers = {"Content-Disposition": f"attachment; filename=execution_result_{execution_id}.log"}
+    headers = {"Content-Disposition": f"attachment; filename=execution_result_{execution.id}.log"}
     if lines is not None:
         tail = "".join(f"{line}\n" for line in tail_lines(file_path, lines))
         return Response(tail, media_type=mime_type, headers=headers)
@@ -367,28 +362,8 @@ def execution_archive(
     if not result_path.exists():
         raise HTTPException(status_code=404, detail="Execution output not found")
 
-    # This is an arbitrary value as a placeholder
-    # No experimentation has been done to find the best chunk size
-    CHUNK_SIZE = 128 * 1024  # 128 KB chunks
-
-    def generate_archive() -> Generator[bytes]:
-        with tempfile.NamedTemporaryFile(delete=True) as temp_tar:
-            # Open the tar file in write mode with gzip compression
-            with tarfile.open(temp_tar.name, mode="w:gz") as tar:
-                for root, _, files in os.walk(result_path):
-                    for file in files:
-                        file_path = Path(root) / file
-                        arcname = str(file_path.relative_to(result_path))
-                        tar.add(file_path, arcname=arcname)
-
-            # Read and stream the tar file in chunks
-            with open(temp_tar.name, "rb") as f:
-                while chunk := f.read(CHUNK_SIZE):
-                    yield chunk
-        # The temp file will be deleted automatically when closed
-
     return StreamingResponse(
-        generate_archive(),
+        tar_gz_iterator(result_path),
         media_type="application/x-gzip",
         headers={"Content-Disposition": f"attachment; filename=execution_{execution.id}.tar.gz"},
     )

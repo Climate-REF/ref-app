@@ -1,7 +1,7 @@
 from typing import Literal, NamedTuple
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -60,15 +60,8 @@ def _get_diagnostic(
     return diagnostic
 
 
-def _listed_diagnostics(
-    app_context: AppContextDep, *, with_group_ids: bool = False
-) -> list[models.Diagnostic]:
+def _listed_diagnostics(app_context: AppContextDep) -> list[models.Diagnostic]:
     query = app_context.session.query(models.Diagnostic).options(joinedload(models.Diagnostic.provider))
-    if with_group_ids:
-        # One query for every diagnostic's group ids, rather than one per diagnostic.
-        query = query.options(
-            selectinload(models.Diagnostic.execution_groups).load_only(models.ExecutionGroup.id)
-        )
     if app_context.settings.DIAGNOSTIC_PROVIDERS:
         query = query.join(models.Provider).filter(
             models.Provider.slug.in_(app_context.settings.DIAGNOSTIC_PROVIDERS)
@@ -85,12 +78,10 @@ class _Scope(NamedTuple):
     filters: DiagnosticFilter
 
 
-def _scoped_diagnostics(
-    app_context: AppContextDep, mip_era: MipEra | None, source_id: str | None, *, with_group_ids: bool = False
-) -> _Scope:
+def _scoped_diagnostics(app_context: AppContextDep, mip_era: MipEra | None, source_id: str | None) -> _Scope:
     """Get the listed diagnostics, counting only the groups that draw on `mip_era` and ran `source_id`"""
     return _Scope(
-        _listed_diagnostics(app_context, with_group_ids=with_group_ids),
+        _listed_diagnostics(app_context),
         DiagnosticFilter(
             include_superseded=False,
             include_retracted=False,
@@ -156,7 +147,7 @@ def _list(
 
     Counts cover the promoted version of each diagnostic and leave out retracted executions.
     """
-    scope = _scoped_diagnostics(app_context, mip_era, source_id, with_group_ids=True)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
     value_types = _value_types(app_context, scope)
     return Collection(
         data=[
@@ -182,7 +173,7 @@ def catalog(
     Checking for metric values is most of the cost of the full listing.
     Fetch those from `/diagnostics/value-flags`.
     """
-    scope = _scoped_diagnostics(app_context, mip_era, source_id, with_group_ids=True)
+    scope = _scoped_diagnostics(app_context, mip_era, source_id)
     return Collection(data=_catalog_entries(app_context, scope))
 
 

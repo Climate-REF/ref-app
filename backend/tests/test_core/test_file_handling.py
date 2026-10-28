@@ -1,6 +1,11 @@
-"""Tests for chunked file reading used by the log-download endpoint."""
+"""Tests for the chunked file reading behind the log and archive downloads."""
 
-from ref_backend.core.file_handling import file_iterator, tail_lines
+import io
+import os
+import tarfile
+import tracemalloc
+
+from ref_backend.core.file_handling import _tar_entries, file_iterator, tail_lines, tar_gz_iterator
 
 
 class TestFileIterator:
@@ -69,3 +74,63 @@ class TestTailLines:
         file_path.write_bytes(b"ok\n\xff bad\n")
 
         assert tail_lines(file_path, 5) == ["ok", "\ufffd bad"]
+
+
+def _read_archive(chunks) -> dict[str, bytes]:
+    with tarfile.open(fileobj=io.BytesIO(b"".join(chunks)), mode="r:gz") as tar:
+        return {m.name: tar.extractfile(m).read() for m in tar.getmembers()}
+
+
+class TestTarGzIterator:
+    """Test streaming a directory as a tar.gz."""
+
+    def test_round_trips_nested_files(self, tmp_path):
+        long_name = "d" * 150
+        (tmp_path / "plots" / long_name).mkdir(parents=True)
+        (tmp_path / "diagnostic.json").write_text("{}")
+        (tmp_path / "empty.txt").write_bytes(b"")
+        (tmp_path / "plots" / long_name / "map.png").write_bytes(os.urandom(3000))
+
+        archive = _read_archive(tar_gz_iterator(tmp_path, chunk_size=1024))
+
+        assert archive == {
+            "diagnostic.json": b"{}",
+            "empty.txt": b"",
+            f"plots/{long_name}/map.png": (tmp_path / "plots" / long_name / "map.png").read_bytes(),
+        }
+
+    def test_empty_directory(self, tmp_path):
+        assert _read_archive(tar_gz_iterator(tmp_path)) == {}
+
+    def test_leaves_out_symlinks(self, tmp_path):
+        (tmp_path / "real.txt").write_text("real")
+        (tmp_path / "link.txt").symlink_to(tmp_path / "real.txt")
+
+        assert _read_archive(tar_gz_iterator(tmp_path)) == {"real.txt": b"real"}
+
+    def test_file_that_shrinks_is_zero_filled(self, tmp_path):
+        """The header records the size first, so a file that shrinks mid-read is padded to match."""
+        path = tmp_path / "log.txt"
+        path.write_bytes(b"x" * 5000)
+        entries = _tar_entries(tmp_path, chunk_size=1024)
+        next(entries)  # the header, which recorded 5000 bytes
+        path.write_bytes(b"y" * 100)
+
+        rest = list(entries)
+
+        assert max(len(chunk) for chunk in rest) <= 1024
+        assert b"".join(rest)[:5000] == b"y" * 100 + bytes(4900)
+
+    def test_memory_does_not_grow_with_file_size(self, tmp_path):
+        # Random bytes do not compress, so holding the file would show up as 4 MB.
+        (tmp_path / "big.nc").write_bytes(os.urandom(4 * 1024 * 1024))
+
+        tracemalloc.start()
+        try:
+            for _ in tar_gz_iterator(tmp_path, chunk_size=16 * 1024):
+                pass
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+
+        assert peak < 1024 * 1024
