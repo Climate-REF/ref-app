@@ -19,10 +19,10 @@ class ExecutionOutput(BaseModel):
     id: int
     execution_id: int
     output_type: ResultOutputType
-    filename: str
-    short_name: str
-    long_name: str
-    description: str
+    filename: str | None
+    short_name: str | None
+    long_name: str | None
+    description: str | None
     created_at: datetime
     updated_at: datetime
     url: str
