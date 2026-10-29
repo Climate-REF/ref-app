@@ -1,5 +1,7 @@
 import io
+import json
 import tarfile
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -692,6 +694,41 @@ def test_metric_bundle(client: TestClient, settings) -> None:
     assert "RESULTS" in r.json()
 
 
+def test_metric_bundle_reads_recorded_path(client: TestClient, settings, monkeypatch, tmp_path) -> None:
+    group_id = get_execution_group_id(client, settings)
+    bundle = client.get(f"{settings.API_V1_STR}/executions/{group_id}/metric_bundle").json()
+    custom = tmp_path / "custom.json"
+    custom.write_text(json.dumps(bundle))
+    execution = SimpleNamespace(id=1, output_fragment="some/fragment", path="custom.json")
+    monkeypatch.setattr(executions_routes, "_get_execution", lambda *_: execution)
+    calls = []
+
+    def fake_resolve(resolve, *parts):
+        calls.append((resolve.__name__, parts))
+        return custom
+
+    monkeypatch.setattr(executions_routes, "resolve_artifact", fake_resolve)
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/metric_bundle")
+
+    assert r.status_code == 200
+    assert r.json() == bundle
+    assert calls == [("bundle", ("some/fragment", "custom.json"))]
+
+
 def test_metric_bundle_404_without_recorded_bundle(client: TestClient, settings) -> None:
     r = client.get(f"{settings.API_V1_STR}/executions/37/metric_bundle?execution_id=20")
     assert r.status_code == 404
+    assert r.json()["detail"] == "Metrics bundle not found"
+
+
+def test_execution_list_fails_when_a_group_cannot_be_built(app, settings, monkeypatch) -> None:
+    def fail_build(*args, **kwargs):
+        raise RuntimeError("build failed")
+
+    monkeypatch.setattr(executions_routes.ExecutionGroup, "build", fail_build)
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.get(f"{settings.API_V1_STR}/executions/")
+
+    assert r.status_code == 500
