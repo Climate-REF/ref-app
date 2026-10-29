@@ -48,7 +48,8 @@ export function filterFigures(
     ({ figure, executionGroup }) =>
       matchesSelectorFilters(executionGroup.selectors, selectorFilters) &&
       (!pattern ||
-        pattern.test(figure.description) ||
-        pattern.test(figure.filename)),
+        [figure.description, figure.filename].some(
+          (field) => field != null && pattern.test(field),
+        )),
   );
 }
