@@ -4,11 +4,14 @@ import tarfile
 import zlib
 from collections.abc import Callable, Generator
 from pathlib import Path
+from typing import TypeVar
 
 from fastapi import HTTPException
 
+T = TypeVar("T", bound=Path | None)
 
-def resolve_artifact(resolve: Callable[..., Path], *parts: str) -> Path:
+
+def resolve_artifact(resolve: Callable[..., T], *parts: str | None) -> T:
     """
     Call an ``ArtifactsReader`` resolver and turn a containment failure into a 404.
 

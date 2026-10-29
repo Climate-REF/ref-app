@@ -683,3 +683,15 @@ def test_execution_archive(client: TestClient, settings, monkeypatch, tmp_path) 
     with tarfile.open(fileobj=io.BytesIO(r.content), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == ["diagnostic.json", "plots/map.png"]
         assert tar.extractfile("plots/map.png").read() == b"png" * 1000
+
+
+def test_metric_bundle(client: TestClient, settings) -> None:
+    group_id = get_execution_group_id(client, settings)
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}/metric_bundle")
+    assert r.status_code == 200
+    assert "RESULTS" in r.json()
+
+
+def test_metric_bundle_404_without_recorded_bundle(client: TestClient, settings) -> None:
+    r = client.get(f"{settings.API_V1_STR}/executions/37/metric_bundle?execution_id=20")
+    assert r.status_code == 404
