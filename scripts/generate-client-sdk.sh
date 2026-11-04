@@ -7,7 +7,7 @@ set -x
 cd "$(dirname "$0")/.."
 
 pushd backend
-uv run python -c "import ref_backend.main; import json; print(json.dumps(ref_backend.main.app.openapi()))" > ../frontend/openapi.json
+uv run python -c "import ref_backend.main; import json; print(json.dumps(ref_backend.main.app.openapi(), indent=2))" > ../frontend/openapi.json
 popd
 
 # openapi-ts needs the TypeScript 5 compiler API, which TypeScript 7 does not ship.

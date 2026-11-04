@@ -1,0 +1,5278 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Rapid Evaluation Framework",
+    "description": "\nAPI for querying the results from the Climate Rapid Evaluation Framework (Climate REF).\nThis is used to back the [Climate REF Explorer](https://dashboard.climate-ref.org) web application.\n\nThis API is a work in progress and will likely change in the future without warning.\nWe are interested in your feedback on how you would like to use this API.\nThis will help us prioritize features, and be aware of any API consumers before we make any changes.\n\nContact [Jared Lewis](mailto:jared.lewis@climate-resource.com) or\n[file an issue on GitHub](https://github.com/Climate-REF/ref-app/issues),\nif you have any questions or feedback.\n",
+    "contact": {
+      "name": "Development Lead - Jared Lewis",
+      "email": "jared.lewis@climate-resource.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/cmip7-aft-diagnostics/": {
+      "get": {
+        "tags": [
+          "CMIP7 Assessment Fast Track (AFT)"
+        ],
+        "summary": "List Aft Diagnostics",
+        "description": "Get all AFT diagnostics.",
+        "operationId": "CMIP7 Assessment Fast Track (AFT)-list_aft_diagnostics",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AFTDiagnosticSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Cmip7 Assessment Fast Track (Aft)-List Aft Diagnostics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cmip7-aft-diagnostics/{aft_id}": {
+      "get": {
+        "tags": [
+          "CMIP7 Assessment Fast Track (AFT)"
+        ],
+        "summary": "Get Aft Diagnostic",
+        "description": "Get detailed AFT diagnostic by ID.",
+        "operationId": "CMIP7 Assessment Fast Track (AFT)-get_aft_diagnostic",
+        "parameters": [
+          {
+            "name": "aft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Aft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AFTDiagnosticDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "List",
+        "description": "Paginated list of currently ingested datasets\n\nOnly the latest version of each dataset is returned.",
+        "operationId": "datasets-list",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "name_contains",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter datasets by name",
+              "title": "Name Contains"
+            },
+            "description": "Filter datasets by name"
+          },
+          {
+            "name": "dataset_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter datasets by the type of dataset",
+              "default": "cmip6",
+              "title": "Dataset Type"
+            },
+            "description": "Filter datasets by the type of dataset"
+          },
+          {
+            "name": "facets",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter datasets by facets (JSON string)",
+              "title": "Facets"
+            },
+            "description": "Filter datasets by facets (JSON string)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_Dataset_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{slug}": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get",
+        "description": "Get a single dataset by slug\n\nWhen several versions share a slug, the latest is returned.",
+        "operationId": "datasets-get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dataset"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/executions": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Executions",
+        "description": "List the execution groups whose latest execution used this dataset\n\nGroups from every diagnostic version are returned, retracted ones included.",
+        "operationId": "datasets-executions",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_ExecutionGroup_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "List",
+        "description": "List the currently registered diagnostics\n\nCounts cover the promoted version of each diagnostic and leave out retracted executions.",
+        "operationId": "diagnostics-list",
+        "parameters": [
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only the execution groups that draw on this era",
+              "title": "Mip Era"
+            },
+            "description": "Count only the execution groups that draw on this era"
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only the execution groups that ran this model",
+              "title": "Source Id"
+            },
+            "description": "Count only the execution groups that ran this model"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_DiagnosticSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/catalog": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Catalog",
+        "description": "List the diagnostics like `/diagnostics/`, without whether each has metric values\n\nChecking for metric values is most of the cost of the full listing.\nFetch those from `/diagnostics/value-flags`.",
+        "operationId": "diagnostics-catalog",
+        "parameters": [
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only the execution groups that draw on this era",
+              "title": "Mip Era"
+            },
+            "description": "Count only the execution groups that draw on this era"
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only the execution groups that ran this model",
+              "title": "Source Id"
+            },
+            "description": "Count only the execution groups that ran this model"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_DiagnosticCatalogEntry_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/value-flags": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Value Flags",
+        "description": "Whether each listed diagnostic has scalar and series values\n\nThese are the flags `/diagnostics/catalog` leaves out.",
+        "operationId": "diagnostics-value_flags",
+        "parameters": [
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Check only the execution groups that draw on this era",
+              "title": "Mip Era"
+            },
+            "description": "Check only the execution groups that draw on this era"
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Check only the execution groups that ran this model",
+              "title": "Source Id"
+            },
+            "description": "Check only the execution groups that ran this model"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_DiagnosticValueFlags_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "Get",
+        "description": "Fetch a result using the slug",
+        "operationId": "diagnostics-get",
+        "parameters": [
+          {
+            "name": "provider_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Slug"
+            }
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Diagnostic Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/execution_groups": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "List Execution Groups",
+        "description": "Fetch the execution groups of a diagnostic, at its promoted version\n\nGroups whose latest execution is retracted are left out, matching the counts.",
+        "operationId": "diagnostics-list_execution_groups",
+        "parameters": [
+          {
+            "name": "provider_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Slug"
+            }
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Diagnostic Slug"
+            }
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the execution groups that draw on this era",
+              "title": "Mip Era"
+            },
+            "description": "Keep only the execution groups that draw on this era"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_ExecutionGroup_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values/facets": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "List Metric Value Facets",
+        "description": "Get the facets of the values `/values` returns for the same filters, without the values.\n\nThey cover every page and the outliers too, so a client can keep them while it pages.",
+        "operationId": "diagnostics-list_metric_value_facets",
+        "parameters": [
+          {
+            "name": "provider_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Slug"
+            }
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Diagnostic Slug"
+            }
+          },
+          {
+            "name": "value_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MetricValueType",
+              "description": "Type of metric values to read the facets of"
+            },
+            "description": "Type of metric values to read the facets of"
+          },
+          {
+            "name": "isolate_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to isolate",
+              "title": "Isolate Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to isolate"
+          },
+          {
+            "name": "exclude_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to exclude",
+              "title": "Exclude Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to exclude"
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the execution groups that draw on this era, or on no model data",
+              "title": "Mip Era"
+            },
+            "description": "Keep only the execution groups that draw on this era, or on no model data"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Facet"
+                  },
+                  "title": "Response Diagnostics-List Metric Value Facets"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics/{provider_slug}/{diagnostic_slug}/values": {
+      "get": {
+        "tags": [
+          "diagnostics"
+        ],
+        "summary": "List Metric Values",
+        "description": "Get all the diagnostic values for a given diagnostic (both scalar and series)\n\n- `value_type`: Type of metric values - 'scalar', 'series', or 'all' (required)\n- `format`: Return format - 'json' (default) or 'csv'\n- `offset`: Number of items to skip (default 0)\n- `limit`: Maximum number of items to return (default 50, max 500)\n- `mip_era`: Restrict to the groups of one era, so outlier detection and pagination\n  see only the values the caller is charting.\n  Groups that use no model data, such as observation-only ones, are kept.\n\nValues come from the promoted diagnostic version, and retracted executions are left out.",
+        "operationId": "diagnostics-list_metric_values",
+        "parameters": [
+          {
+            "name": "provider_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Slug"
+            }
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Diagnostic Slug"
+            }
+          },
+          {
+            "name": "value_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MetricValueType",
+              "description": "Type of metric values to return"
+            },
+            "description": "Type of metric values to return"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of items to skip for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of items to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of items to return"
+          },
+          {
+            "name": "detect_outliers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "off",
+                "iqr"
+              ],
+              "type": "string",
+              "description": "Outlier detection method: 'off' or 'iqr'",
+              "default": "iqr",
+              "title": "Detect Outliers"
+            },
+            "description": "Outlier detection method: 'off' or 'iqr'"
+          },
+          {
+            "name": "include_unverified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include unverified (outlier) values",
+              "default": false,
+              "title": "Include Unverified"
+            },
+            "description": "Include unverified (outlier) values"
+          },
+          {
+            "name": "isolate_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to isolate",
+              "title": "Isolate Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to isolate"
+          },
+          {
+            "name": "exclude_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to exclude",
+              "title": "Exclude Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to exclude"
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the execution groups that draw on this era, or on no model data",
+              "title": "Mip Era"
+            },
+            "description": "Keep only the execution groups that draw on this era, or on no model data"
+          },
+          {
+            "name": "with_facets",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Fill `facets`, which `/values/facets` also returns",
+              "default": true,
+              "title": "With Facets"
+            },
+            "description": "Fill `facets`, which `/values/facets` also returns"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricValueCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/statistics": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Get Execution Statistics",
+        "description": "Get execution statistics for the dashboard.\n\nExecution groups are counted at the promoted version of each diagnostic,\nby the outcome of their latest execution, leaving out retracted executions.\nMetric values, datasets and files are counted as stored, whatever their version or retraction.",
+        "operationId": "executions-get_execution_statistics",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "List Recent Execution Groups",
+        "description": "List the most recently updated execution groups\n\nOnly groups at the promoted version of their diagnostic are returned,\nand groups whose latest execution is retracted are left out.\n\nSupports filtering by:\n- diagnostic_name_contains (case-insensitive substring of the diagnostic slug)\n- provider_name_contains (case-insensitive substring of the provider slug)\n- provider_slug and diagnostic_slug (exact slugs)\n- dirty\n- successful (filters by latest execution success)\n- failure_reason (filters by why the latest execution failed, e.g. `system_error`)\n- source_id (the latest execution ran against a dataset of this model)\n- mip_era (the group draws on this era)\n\nEach execution's `outputs` are null unless `include_outputs` is set, because the file lists\nmake up most of the response. Fetch one group's files from `/executions/{group_id}`.",
+        "operationId": "executions-list_recent_execution_groups",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 0,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "diagnostic_name_contains",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Diagnostic Name Contains"
+            }
+          },
+          {
+            "name": "provider_name_contains",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider Name Contains"
+            }
+          },
+          {
+            "name": "provider_slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the groups of this provider",
+              "title": "Provider Slug"
+            },
+            "description": "Keep only the groups of this provider"
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the groups of this diagnostic",
+              "title": "Diagnostic Slug"
+            },
+            "description": "Keep only the groups of this diagnostic"
+          },
+          {
+            "name": "dirty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dirty"
+            }
+          },
+          {
+            "name": "successful",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Successful"
+            }
+          },
+          {
+            "name": "failure_reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ExecutionFailureReason"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Failure Reason"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the groups whose latest execution ran this model",
+              "title": "Source Id"
+            },
+            "description": "Keep only the groups whose latest execution ran this model"
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only the groups that draw on this era",
+              "title": "Mip Era"
+            },
+            "description": "Keep only the groups that draw on this era"
+          },
+          {
+            "name": "include_outputs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include the files produced by each execution; they are left out by default",
+              "default": false,
+              "title": "Include Outputs"
+            },
+            "description": "Include the files produced by each execution; they are left out by default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_ExecutionGroup_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Get",
+        "description": "Inspect a specific execution group, whatever its version or retraction",
+        "operationId": "executions-get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionGroup"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/execution": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Execution",
+        "description": "Inspect a specific execution\n\nGets the latest result if no execution_id is provided",
+        "operationId": "executions-execution",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/datasets": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Execution Datasets",
+        "description": "Query the datasets that were used for a specific execution",
+        "operationId": "executions-execution_datasets",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_Dataset_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/logs": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Execution Logs",
+        "description": "Fetch the logs for an execution result\n\nPass `lines` to fetch only the end of the log, rather than the whole file.",
+        "operationId": "executions-execution_logs",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          },
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 500,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only return this many lines from the end of the log",
+              "title": "Lines"
+            },
+            "description": "Only return this many lines from the end of the log"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/metric_bundle": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Metric Bundle",
+        "description": "Fetch a result using the slug",
+        "operationId": "executions-metric_bundle",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CMECMetric"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/values/facets": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "List Metric Value Facets",
+        "description": "Get the facets of the values `/values` returns for the same filters, without the values.\n\nThey cover every page and the outliers too, so a client can keep them while it pages.",
+        "operationId": "executions-list_metric_value_facets",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          },
+          {
+            "name": "value_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MetricValueType",
+              "description": "Type of metric values to read the facets of"
+            },
+            "description": "Type of metric values to read the facets of"
+          },
+          {
+            "name": "isolate_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to isolate",
+              "title": "Isolate Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to isolate"
+          },
+          {
+            "name": "exclude_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to exclude",
+              "title": "Exclude Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to exclude"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Facet"
+                  },
+                  "title": "Response Executions-List Metric Value Facets"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/values": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "List Metric Values",
+        "description": "Fetch metric values for a specific execution (both scalar and series)\n\n- `value_type`: Type of metric values - 'scalar' or 'series' (required)\n- `format`: Return format - 'json' (default) or 'csv'\n- `offset`: Number of items to skip (default 0)\n- `limit`: Maximum number of items to return (default 50, max 500)\n\nThe values of the named execution are returned, whatever its version or retraction.",
+        "operationId": "executions-list_metric_values",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          },
+          {
+            "name": "value_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MetricValueType",
+              "description": "Type of metric values to return"
+            },
+            "description": "Type of metric values to return"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of items to skip for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of items to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of items to return"
+          },
+          {
+            "name": "detect_outliers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "off",
+                "iqr"
+              ],
+              "type": "string",
+              "description": "Outlier detection method: 'off' or 'iqr'",
+              "default": "iqr",
+              "title": "Detect Outliers"
+            },
+            "description": "Outlier detection method: 'off' or 'iqr'"
+          },
+          {
+            "name": "include_unverified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include unverified (outlier) values",
+              "default": false,
+              "title": "Include Unverified"
+            },
+            "description": "Include unverified (outlier) values"
+          },
+          {
+            "name": "isolate_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to isolate",
+              "title": "Isolate Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to isolate"
+          },
+          {
+            "name": "exclude_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of metric value IDs to exclude",
+              "title": "Exclude Ids"
+            },
+            "description": "Comma-separated list of metric value IDs to exclude"
+          },
+          {
+            "name": "with_facets",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Fill `facets`, which `/values/facets` also returns",
+              "default": true,
+              "title": "With Facets"
+            },
+            "description": "Fill `facets`, which `/values/facets` also returns"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricValueCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{group_id}/archive": {
+      "get": {
+        "tags": [
+          "executions"
+        ],
+        "summary": "Execution Archive",
+        "description": "Stream a tar.gz archive of the execution results\n\nThe archive is created on-the-fly and streamed directly to the client.",
+        "operationId": "executions-execution_archive",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Group Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explorer/collections/": {
+      "get": {
+        "tags": [
+          "Explorer"
+        ],
+        "summary": "List Collections",
+        "operationId": "Explorer-list_collections",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AFTCollectionSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Explorer-List Collections"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explorer/collections/{collection_id}": {
+      "get": {
+        "tags": [
+          "Explorer"
+        ],
+        "summary": "Get Collection",
+        "operationId": "Explorer-get_collection",
+        "parameters": [
+          {
+            "name": "collection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AFTCollectionDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explorer/themes/": {
+      "get": {
+        "tags": [
+          "Explorer"
+        ],
+        "summary": "List Themes",
+        "operationId": "Explorer-list_themes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ThemeSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Explorer-List Themes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explorer/themes/{theme_slug}": {
+      "get": {
+        "tags": [
+          "Explorer"
+        ],
+        "summary": "Get Theme",
+        "operationId": "Explorer-get_theme",
+        "parameters": [
+          {
+            "name": "theme_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Theme Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThemeDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/models/": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "List",
+        "description": "List the models that have been run, with a tally of how their runs went.\n\nCounts cover the promoted version of each diagnostic, matching the rest of the app.",
+        "operationId": "models-list",
+        "parameters": [
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to one MIP era",
+              "title": "Mip Era"
+            },
+            "description": "Restrict to one MIP era"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_ModelSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/models/{source_id}": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "Get",
+        "description": "Summarise the runs a single model took part in, broken down by diagnostic.",
+        "operationId": "models-get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to one MIP era",
+              "title": "Mip Era"
+            },
+            "description": "Restrict to one MIP era"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/models/{source_id}/ensemble": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "Ensemble",
+        "description": "Compare this model against the ensemble, one entry per scalar metric it reported.\n\nEntries are ordered by how far the model sits from the ensemble mean, furthest first.",
+        "operationId": "models-ensemble",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "mip_era",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "CMIP6",
+                    "CMIP7"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to one MIP era",
+              "title": "Mip Era"
+            },
+            "description": "Restrict to one MIP era"
+          },
+          {
+            "name": "diagnostic_slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to a single diagnostic",
+              "title": "Diagnostic Slug"
+            },
+            "description": "Restrict to a single diagnostic"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection_EnsembleComparison_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/results/{result_id}": {
+      "get": {
+        "tags": [
+          "results"
+        ],
+        "summary": "Get Result",
+        "description": "Fetch a result",
+        "operationId": "results-get_result",
+        "parameters": [
+          {
+            "name": "result_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Result Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/utils/health-check/": {
+      "get": {
+        "tags": [
+          "utils"
+        ],
+        "summary": "Health Check",
+        "operationId": "utils-health_check",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "title": "Response Utils-Health Check"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/utils/about": {
+      "get": {
+        "tags": [
+          "utils"
+        ],
+        "summary": "About",
+        "description": "Version and freshness information about the deployment serving this API",
+        "operationId": "utils-about",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/About"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AFTCollectionCard": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "placeholder": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder"
+          },
+          "content": {
+            "items": {
+              "$ref": "#/components/schemas/AFTCollectionCardContent"
+            },
+            "type": "array",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "content"
+        ],
+        "title": "AFTCollectionCard"
+      },
+      "AFTCollectionCardContent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "box-whisker-chart",
+              "figure-gallery",
+              "series-chart",
+              "taylor-diagram"
+            ],
+            "title": "Type"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "diagnostic": {
+            "type": "string",
+            "title": "Diagnostic"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "interpretation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpretation"
+          },
+          "span": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span"
+          },
+          "placeholder": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder"
+          },
+          "metric_units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric Units"
+          },
+          "clip_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Min"
+          },
+          "clip_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Max"
+          },
+          "y_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y Min"
+          },
+          "y_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y Max"
+          },
+          "show_zero_line": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Zero Line"
+          },
+          "symmetrical_axes": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symmetrical Axes"
+          },
+          "reference_stddev": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Stddev"
+          },
+          "label_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Template"
+          },
+          "filename_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename Filter"
+          },
+          "other_filters": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Filters"
+          },
+          "grouping_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AFTCollectionGroupingConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filter_controls": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AFTCollectionFilterControl"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter Controls"
+          },
+          "reference_datasets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ReferenceDatasetLink"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Datasets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "provider",
+          "diagnostic",
+          "title"
+        ],
+        "title": "AFTCollectionCardContent"
+      },
+      "AFTCollectionContent": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "short_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Description"
+          },
+          "why_it_matters": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why It Matters"
+          },
+          "takeaway": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Takeaway"
+          },
+          "plain_language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AFTCollectionPlainLanguage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "AFTCollectionContent"
+      },
+      "AFTCollectionDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "endorser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endorser"
+          },
+          "version_control": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Control"
+          },
+          "reference_dataset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Dataset"
+          },
+          "provider_link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Link"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AFTCollectionContent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/AFTCollectionDiagnosticLink"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          },
+          "explorer_cards": {
+            "items": {
+              "$ref": "#/components/schemas/AFTCollectionCard"
+            },
+            "type": "array",
+            "title": "Explorer Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "diagnostics",
+          "explorer_cards"
+        ],
+        "title": "AFTCollectionDetail"
+      },
+      "AFTCollectionDiagnosticLink": {
+        "properties": {
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          },
+          "provider_link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_slug",
+          "diagnostic_slug"
+        ],
+        "title": "AFTCollectionDiagnosticLink"
+      },
+      "AFTCollectionFilterControl": {
+        "properties": {
+          "filter_key": {
+            "type": "string",
+            "title": "Filter Key"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "exclude_values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filter_key"
+        ],
+        "title": "AFTCollectionFilterControl",
+        "description": "A user-facing filter control (e.g. a dropdown) that overrides an other_filters key."
+      },
+      "AFTCollectionGroupingConfig": {
+        "properties": {
+          "group_by": {
+            "type": "string",
+            "title": "Group By"
+          },
+          "hue": {
+            "type": "string",
+            "title": "Hue"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Style"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_by",
+          "hue"
+        ],
+        "title": "AFTCollectionGroupingConfig"
+      },
+      "AFTCollectionPlainLanguage": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "why_it_matters": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why It Matters"
+          },
+          "takeaway": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Takeaway"
+          }
+        },
+        "type": "object",
+        "title": "AFTCollectionPlainLanguage"
+      },
+      "AFTCollectionSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "endorser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endorser"
+          },
+          "card_count": {
+            "type": "integer",
+            "title": "Card Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "card_count"
+        ],
+        "title": "AFTCollectionSummary"
+      },
+      "AFTDiagnosticDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "version_control": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Control"
+          },
+          "reference_dataset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Dataset"
+          },
+          "endorser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endorser"
+          },
+          "provider_link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Link"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "short_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Description"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/RefDiagnosticLink"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "theme",
+          "version_control",
+          "reference_dataset",
+          "endorser",
+          "provider_link",
+          "description",
+          "short_description",
+          "diagnostics"
+        ],
+        "title": "AFTDiagnosticDetail"
+      },
+      "AFTDiagnosticSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "version_control": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Control"
+          },
+          "reference_dataset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Dataset"
+          },
+          "endorser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endorser"
+          },
+          "provider_link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Link"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "short_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "theme",
+          "version_control",
+          "reference_dataset",
+          "endorser",
+          "provider_link",
+          "description",
+          "short_description"
+        ],
+        "title": "AFTDiagnosticSummary"
+      },
+      "About": {
+        "properties": {
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit"
+          },
+          "ref_version": {
+            "type": "string",
+            "title": "Ref Version"
+          },
+          "last_updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Updated"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "local",
+              "staging",
+              "preview",
+              "production"
+            ],
+            "title": "Environment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "commit",
+          "ref_version",
+          "last_updated",
+          "environment"
+        ],
+        "title": "About"
+      },
+      "CMECMetric": {
+        "properties": {
+          "DIMENSIONS": {
+            "$ref": "#/components/schemas/MetricDimensions"
+          },
+          "RESULTS": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Results"
+          },
+          "PROVENANCE": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance"
+          },
+          "DISCLAIMER": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclaimer"
+          },
+          "NOTES": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "DIMENSIONS",
+          "RESULTS"
+        ],
+        "title": "CMECMetric",
+        "description": "CMEC diagnostic bundle object\n\nContains the diagnostics calculated during a diagnostic execution, in a standardised format."
+      },
+      "CMIPDatasetMetadata": {
+        "properties": {
+          "variable_id": {
+            "type": "string",
+            "title": "Variable Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "experiment_id": {
+            "type": "string",
+            "title": "Experiment Id"
+          },
+          "variant_label": {
+            "type": "string",
+            "title": "Variant Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variable_id",
+          "source_id",
+          "experiment_id",
+          "variant_label"
+        ],
+        "title": "CMIPDatasetMetadata"
+      },
+      "Collection_Dataset_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/Dataset"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[Dataset]"
+      },
+      "Collection_DiagnosticCatalogEntry_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticCatalogEntry"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[DiagnosticCatalogEntry]"
+      },
+      "Collection_DiagnosticSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[DiagnosticSummary]"
+      },
+      "Collection_DiagnosticValueFlags_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticValueFlags"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[DiagnosticValueFlags]"
+      },
+      "Collection_EnsembleComparison_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EnsembleComparison"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[EnsembleComparison]"
+      },
+      "Collection_ExecutionGroup_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ExecutionGroup"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[ExecutionGroup]"
+      },
+      "Collection_ModelSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ModelSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of data items present",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "Collection[ModelSummary]"
+      },
+      "Dataset": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "dataset_type": {
+            "type": "string",
+            "title": "Dataset Type"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CMIPDatasetMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mip_era": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "CMIP6",
+                  "CMIP7"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mip Era"
+          },
+          "more_info_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "More Info Url",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "dataset_type",
+          "metadata",
+          "more_info_url"
+        ],
+        "title": "Dataset"
+      },
+      "DiagnosticCatalogEntry": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ProviderSummary"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "groups": {
+            "$ref": "#/components/schemas/GroupCounts"
+          },
+          "promoted_version": {
+            "type": "integer",
+            "title": "Promoted Version"
+          },
+          "group_by": {
+            "items": {
+              "$ref": "#/components/schemas/GroupBy"
+            },
+            "type": "array",
+            "title": "Group By"
+          },
+          "aft_link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AFTDiagnosticDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reference_datasets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ReferenceDatasetLink"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Datasets"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "resource_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionResourceSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "slug",
+          "name",
+          "description",
+          "groups",
+          "promoted_version",
+          "group_by",
+          "aft_link"
+        ],
+        "title": "DiagnosticCatalogEntry",
+        "description": "Summary information about a diagnostic, without whether it has metric values.\n\nChecking for metric values is the slow part of listing diagnostics,\nso the catalog leaves it to `DiagnosticValueFlags`.\n\nA diagnostic is a specific metric or set of metrics calculated by a provider.\nEach diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics."
+      },
+      "DiagnosticRuns": {
+        "properties": {
+          "diagnostic_id": {
+            "type": "integer",
+            "title": "Diagnostic Id"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          },
+          "diagnostic_name": {
+            "type": "string",
+            "title": "Diagnostic Name"
+          },
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "execution_groups": {
+            "$ref": "#/components/schemas/RunCounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnostic_id",
+          "diagnostic_slug",
+          "diagnostic_name",
+          "provider_slug",
+          "provider_name",
+          "execution_groups"
+        ],
+        "title": "DiagnosticRuns",
+        "description": "How one diagnostic went for one model."
+      },
+      "DiagnosticSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ProviderSummary"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "groups": {
+            "$ref": "#/components/schemas/GroupCounts"
+          },
+          "promoted_version": {
+            "type": "integer",
+            "title": "Promoted Version"
+          },
+          "group_by": {
+            "items": {
+              "$ref": "#/components/schemas/GroupBy"
+            },
+            "type": "array",
+            "title": "Group By"
+          },
+          "aft_link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AFTDiagnosticDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reference_datasets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ReferenceDatasetLink"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Datasets"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "resource_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionResourceSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_metric_values": {
+            "type": "boolean",
+            "title": "Has Metric Values"
+          },
+          "has_scalar_values": {
+            "type": "boolean",
+            "title": "Has Scalar Values"
+          },
+          "has_series_values": {
+            "type": "boolean",
+            "title": "Has Series Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "slug",
+          "name",
+          "description",
+          "groups",
+          "promoted_version",
+          "group_by",
+          "aft_link",
+          "has_metric_values",
+          "has_scalar_values",
+          "has_series_values"
+        ],
+        "title": "DiagnosticSummary",
+        "description": "Summary information about a diagnostic.\n\nA diagnostic is a specific metric or set of metrics calculated by a provider.\nEach diagnostic is associated may be associated with one CMIP Assessment Fast Track (AFT) diagnostics."
+      },
+      "DiagnosticValueFlags": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "has_metric_values": {
+            "type": "boolean",
+            "title": "Has Metric Values"
+          },
+          "has_scalar_values": {
+            "type": "boolean",
+            "title": "Has Scalar Values"
+          },
+          "has_series_values": {
+            "type": "boolean",
+            "title": "Has Series Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "has_metric_values",
+          "has_scalar_values",
+          "has_series_values"
+        ],
+        "title": "DiagnosticValueFlags",
+        "description": "Which kinds of metric values a diagnostic has"
+      },
+      "EnsembleComparison": {
+        "properties": {
+          "diagnostic_id": {
+            "type": "integer",
+            "title": "Diagnostic Id"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          },
+          "diagnostic_name": {
+            "type": "string",
+            "title": "Diagnostic Name"
+          },
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "dimensions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dimensions"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units"
+          },
+          "model_value": {
+            "type": "number",
+            "title": "Model Value"
+          },
+          "model_member_count": {
+            "type": "integer",
+            "title": "Model Member Count"
+          },
+          "ensemble": {
+            "$ref": "#/components/schemas/EnsembleStatistics"
+          },
+          "percentile": {
+            "type": "number",
+            "title": "Percentile"
+          },
+          "z_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Score"
+          },
+          "is_outlier": {
+            "type": "boolean",
+            "title": "Is Outlier",
+            "description": "Whether the model falls outside the ensemble's inter-quartile fences.\n\nUses `OutlierPolicy` which is the defaults for the values list.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnostic_id",
+          "diagnostic_slug",
+          "diagnostic_name",
+          "provider_slug",
+          "dimensions",
+          "units",
+          "model_value",
+          "model_member_count",
+          "ensemble",
+          "percentile",
+          "z_score",
+          "is_outlier"
+        ],
+        "title": "EnsembleComparison",
+        "description": "One metric, comparing a single model against the rest of the ensemble."
+      },
+      "EnsembleStatistics": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "lower_quartile": {
+            "type": "number",
+            "title": "Lower Quartile"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "upper_quartile": {
+            "type": "number",
+            "title": "Upper Quartile"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "std_dev": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std Dev"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "min",
+          "lower_quartile",
+          "median",
+          "upper_quartile",
+          "max",
+          "mean",
+          "std_dev"
+        ],
+        "title": "EnsembleStatistics",
+        "description": "The spread of one metric across every model that reported it."
+      },
+      "Execution": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "title": "Dataset Hash"
+          },
+          "dataset_count": {
+            "type": "integer",
+            "title": "Dataset Count"
+          },
+          "successful": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successful"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "retracted": {
+            "type": "boolean",
+            "title": "Retracted"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "outputs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExecutionOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputs"
+          },
+          "wall_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wall Seconds"
+          },
+          "cpu_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Seconds"
+          },
+          "peak_memory_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Memory Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_hash",
+          "dataset_count",
+          "successful",
+          "failure_reason",
+          "retracted",
+          "created_at",
+          "updated_at",
+          "outputs",
+          "wall_seconds",
+          "cpu_seconds",
+          "peak_memory_bytes"
+        ],
+        "title": "Execution"
+      },
+      "ExecutionFailureReason": {
+        "type": "string",
+        "enum": [
+          "diagnostic_error",
+          "system_error",
+          "result_error",
+          "abandoned",
+          "not_started",
+          "cancelled",
+          "unknown"
+        ],
+        "title": "ExecutionFailureReason",
+        "description": "Why an execution failed"
+      },
+      "ExecutionGroup": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "dirty": {
+            "type": "boolean",
+            "title": "Dirty"
+          },
+          "executions": {
+            "items": {
+              "$ref": "#/components/schemas/Execution"
+            },
+            "type": "array",
+            "title": "Executions"
+          },
+          "selectors": {
+            "additionalProperties": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Selectors"
+          },
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "dirty",
+          "executions",
+          "selectors",
+          "provider_slug",
+          "diagnostic_slug",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExecutionGroup"
+      },
+      "ExecutionOutput": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "execution_id": {
+            "type": "integer",
+            "title": "Execution Id"
+          },
+          "output_type": {
+            "$ref": "#/components/schemas/ResultOutputType"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name"
+          },
+          "long_name": {
+            "type": "string",
+            "title": "Long Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "execution_id",
+          "output_type",
+          "filename",
+          "short_name",
+          "long_name",
+          "description",
+          "created_at",
+          "updated_at",
+          "url"
+        ],
+        "title": "ExecutionOutput"
+      },
+      "ExecutionResourceSummary": {
+        "properties": {
+          "timed_execution_count": {
+            "type": "integer",
+            "title": "Timed Execution Count"
+          },
+          "wall_seconds_total": {
+            "type": "number",
+            "title": "Wall Seconds Total"
+          },
+          "wall_seconds_mean": {
+            "type": "number",
+            "title": "Wall Seconds Mean"
+          },
+          "wall_seconds_max": {
+            "type": "number",
+            "title": "Wall Seconds Max"
+          },
+          "cpu_seconds_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Seconds Total"
+          },
+          "cpu_seconds_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Seconds Mean"
+          },
+          "peak_memory_bytes_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Memory Bytes Min"
+          },
+          "peak_memory_bytes_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Memory Bytes Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timed_execution_count",
+          "wall_seconds_total",
+          "wall_seconds_mean",
+          "wall_seconds_max",
+          "cpu_seconds_total",
+          "cpu_seconds_mean",
+          "peak_memory_bytes_min",
+          "peak_memory_bytes_max"
+        ],
+        "title": "ExecutionResourceSummary",
+        "description": "Roll-up of the resource usage recorded across a set of executions.\n\nOnly executions that recorded a wall time are counted.\nCPU time and peak memory are optional, so they may be missing even when wall time is present."
+      },
+      "ExecutionStats": {
+        "properties": {
+          "groups": {
+            "$ref": "#/components/schemas/GroupCounts"
+          },
+          "groups_by_mip_era": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/GroupCounts"
+            },
+            "propertyNames": {
+              "enum": [
+                "CMIP6",
+                "CMIP7"
+              ]
+            },
+            "type": "object",
+            "title": "Groups By Mip Era"
+          },
+          "scalar_value_count": {
+            "type": "integer",
+            "title": "Scalar Value Count"
+          },
+          "series_value_count": {
+            "type": "integer",
+            "title": "Series Value Count"
+          },
+          "total_datasets": {
+            "type": "integer",
+            "title": "Total Datasets"
+          },
+          "total_files": {
+            "type": "integer",
+            "title": "Total Files"
+          },
+          "resource_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionResourceSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success_rate_percentage": {
+            "type": "number",
+            "title": "Success Rate Percentage",
+            "description": "Share of the groups whose latest execution succeeded, as a percentage (0-100).",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "groups",
+          "groups_by_mip_era",
+          "scalar_value_count",
+          "series_value_count",
+          "total_datasets",
+          "total_files",
+          "resource_usage",
+          "success_rate_percentage"
+        ],
+        "title": "ExecutionStats",
+        "description": "Statistics for execution groups and their success rates."
+      },
+      "Facet": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "values"
+        ],
+        "title": "Facet"
+      },
+      "FailedRun": {
+        "properties": {
+          "execution_group_id": {
+            "type": "integer",
+            "title": "Execution Group Id"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          },
+          "diagnostic_name": {
+            "type": "string",
+            "title": "Diagnostic Name"
+          },
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "execution_group_id",
+          "key",
+          "diagnostic_slug",
+          "diagnostic_name",
+          "provider_slug",
+          "execution_id",
+          "outcome",
+          "updated_at"
+        ],
+        "title": "FailedRun",
+        "description": "An execution group whose latest execution did not succeed."
+      },
+      "GroupBy": {
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "group_by": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_type",
+          "group_by"
+        ],
+        "title": "GroupBy"
+      },
+      "GroupCounts": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "successful": {
+            "type": "integer",
+            "title": "Successful"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running"
+          },
+          "not_started": {
+            "type": "integer",
+            "title": "Not Started"
+          },
+          "dirty": {
+            "type": "integer",
+            "title": "Dirty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "successful",
+          "failed",
+          "running",
+          "not_started",
+          "dirty"
+        ],
+        "title": "GroupCounts",
+        "description": "How many execution groups are running, failed, succeeded or not started.\n\nEach group is counted once, by the outcome of its latest execution,\nso `successful + failed + running + not_started == total`.\n`dirty` overlaps the others."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MetricDimensions": {
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MetricDimensions",
+        "description": "CMEC diagnostic bundle DIMENSIONS object\n\nThis describes the order of the dimensions and their possible values.\nThe order of the dimensions matter as that determines how the executions are nested.",
+        "default": {
+          "json_structure": []
+        }
+      },
+      "MetricValueCollection": {
+        "properties": {
+          "data": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ScalarValue"
+                },
+                {
+                  "$ref": "#/components/schemas/SeriesValue"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "facets": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Facets"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Types"
+          },
+          "had_outliers": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Had Outliers"
+          },
+          "outlier_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlier Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count",
+          "total_count",
+          "facets",
+          "types"
+        ],
+        "title": "MetricValueCollection"
+      },
+      "MetricValueType": {
+        "type": "string",
+        "enum": [
+          "scalar",
+          "series"
+        ],
+        "title": "MetricValueType",
+        "description": "Type of metric values to query."
+      },
+      "ModelDetail": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "mip_eras": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mip Eras"
+          },
+          "institution_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Institution Ids"
+          },
+          "dataset_count": {
+            "type": "integer",
+            "title": "Dataset Count"
+          },
+          "diagnostic_count": {
+            "type": "integer",
+            "title": "Diagnostic Count"
+          },
+          "execution_groups": {
+            "$ref": "#/components/schemas/RunCounts"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticRuns"
+            },
+            "type": "array",
+            "title": "Diagnostics"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/FailedRun"
+            },
+            "type": "array",
+            "title": "Failures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "mip_eras",
+          "institution_ids",
+          "dataset_count",
+          "diagnostic_count",
+          "execution_groups",
+          "diagnostics",
+          "failures"
+        ],
+        "title": "ModelDetail",
+        "description": "Everything the model page needs about a single source_id."
+      },
+      "ModelSummary": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "mip_eras": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mip Eras"
+          },
+          "institution_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Institution Ids"
+          },
+          "dataset_count": {
+            "type": "integer",
+            "title": "Dataset Count"
+          },
+          "diagnostic_count": {
+            "type": "integer",
+            "title": "Diagnostic Count"
+          },
+          "execution_groups": {
+            "$ref": "#/components/schemas/RunCounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "mip_eras",
+          "institution_ids",
+          "dataset_count",
+          "diagnostic_count",
+          "execution_groups"
+        ],
+        "title": "ModelSummary",
+        "description": "One row of the model index: a source_id and how its runs went."
+      },
+      "ProviderSummary": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "ProviderSummary",
+        "description": "Summary information about a Metric Provider.\n\nThe diagnostic provider is the framework that was used to generate a set of metrics."
+      },
+      "RefDiagnosticLink": {
+        "properties": {
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug"
+          },
+          "diagnostic_slug": {
+            "type": "string",
+            "title": "Diagnostic Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_slug",
+          "diagnostic_slug"
+        ],
+        "title": "RefDiagnosticLink",
+        "description": "Link to a specific diagnostic calculated by a provider."
+      },
+      "ReferenceDatasetLink": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug",
+            "description": "Unique identifier for the dataset(e.g., 'obs4mips.CERES-EBAF.v4.2')"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description of how this dataset is used in the diagnostic"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "comparison"
+            ],
+            "title": "Type",
+            "description": "Role of this reference dataset:\n- 'primary': Main reference dataset for the diagnostic\n- 'secondary': Additional reference for comparison or validation\n- 'comparison': Used for comparative analysis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "type"
+        ],
+        "title": "ReferenceDatasetLink",
+        "description": "Link to a reference dataset used by a diagnostic.\n\nReference datasets are observational or reanalysis datasets that diagnostics\ncompare model outputs against. They can be classified by their role in the analysis."
+      },
+      "ResultOutputType": {
+        "type": "string",
+        "enum": [
+          "plot",
+          "data",
+          "html"
+        ],
+        "title": "ResultOutputType",
+        "description": "Types of supported outputs\n\nThese map to the categories of output in the CMEC output bundle"
+      },
+      "RunCounts": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "successful": {
+            "type": "integer",
+            "title": "Successful"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running"
+          },
+          "success_rate_percentage": {
+            "type": "number",
+            "title": "Success Rate Percentage",
+            "description": "Successful groups as a percentage of the total, rounded to one decimal place.",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "successful",
+          "failed",
+          "running",
+          "success_rate_percentage"
+        ],
+        "title": "RunCounts",
+        "description": "Execution groups classified by the outcome of their latest execution.\n\nA group that has never run names no model, so it is absent rather than counted."
+      },
+      "ScalarValue": {
+        "properties": {
+          "dimensions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dimensions"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "model",
+              "reference"
+            ],
+            "title": "Kind",
+            "default": "model"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Value"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "execution_group_id": {
+            "type": "integer",
+            "title": "Execution Group Id"
+          },
+          "execution_id": {
+            "type": "integer",
+            "title": "Execution Id"
+          },
+          "is_outlier": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Outlier"
+          },
+          "verification_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "verified",
+                  "unverified"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dimensions",
+          "value",
+          "id",
+          "execution_group_id",
+          "execution_id"
+        ],
+        "title": "ScalarValue",
+        "description": "A flattened representation of a scalar diagnostic value\n\nThis includes the dimensions and the value of the diagnostic"
+      },
+      "SeriesValue": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "dimensions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dimensions"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "index_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Name"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "execution_group_id": {
+            "type": "integer",
+            "title": "Execution Group Id"
+          },
+          "execution_id": {
+            "type": "integer",
+            "title": "Execution Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "model",
+              "reference"
+            ],
+            "title": "Kind",
+            "default": "model"
+          },
+          "reference_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Id"
+          },
+          "value_units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Units"
+          },
+          "value_long_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Long Name"
+          },
+          "index_units": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Units"
+          },
+          "calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "dimensions",
+          "values",
+          "execution_group_id",
+          "execution_id"
+        ],
+        "title": "SeriesValue",
+        "description": "A flattened representation of a series diagnostic value\n\nThis includes the dimensions, values array, index array, and index name"
+      },
+      "ThemeDetail": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "collections": {
+            "items": {
+              "$ref": "#/components/schemas/AFTCollectionDetail"
+            },
+            "type": "array",
+            "title": "Collections"
+          },
+          "explorer_cards": {
+            "items": {
+              "$ref": "#/components/schemas/AFTCollectionCard"
+            },
+            "type": "array",
+            "title": "Explorer Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "collections",
+          "explorer_cards"
+        ],
+        "title": "ThemeDetail"
+      },
+      "ThemeSummary": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "collection_count": {
+            "type": "integer",
+            "title": "Collection Count"
+          },
+          "card_count": {
+            "type": "integer",
+            "title": "Card Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "collection_count",
+          "card_count"
+        ],
+        "title": "ThemeSummary"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
