@@ -68,6 +68,14 @@ repos:
         require_serial: true
         files: ^backend/
 
+      - id: generate-client
+        name: OpenAPI spec and client
+        entry: make generate-client
+        language: system
+        pass_filenames: false
+        require_serial: true
+        files: ^(backend/src/|backend/uv\.lock$|scripts/generate-client-sdk\.sh$|backend/openapi\.json$|frontend/openapi-ts\.config\.ts$|frontend/package\.json$)
+
   # Frontend: Biome format + lint
   # Both hooks use the versions pinned in frontend/package.json, not whatever npx resolves.
   - repo: local

@@ -53,16 +53,16 @@ Vite dev server runs on http://localhost:5173 and proxies /api to http://localho
 - npm run build — type-check and build
 - npm run preview — preview production build locally
 - npm run lint — run Biome (check and write)
-- npm run openapi-ts — same as make generate-client, exports openapi.json from the backend and regenerates src/client
+- npm run openapi-ts — same as make generate-client, exports backend/openapi.json and regenerates src/client
 
 ## OpenAPI client generation
 
-The client is generated with @hey-api/openapi-ts using the config in frontend/openapi-ts.config.ts. It expects openapi.json in the frontend directory and outputs to src/client, including:
+The client is generated with @hey-api/openapi-ts using the config in frontend/openapi-ts.config.ts. It reads backend/openapi.json and outputs to src/client, including:
 - types.gen.ts — TypeScript types
 - sdk.gen.ts — API functions
 - @tanstack/react-query.gen.ts — React Query hooks
 
-In this repo, make generate-client (at the repository root) prepares openapi.json and runs the generator.
+In this repo, make generate-client (at the repository root) writes backend/openapi.json and runs the generator.
 The generator needs the TypeScript 5 compiler API, which TypeScript 7 does not ship. The script therefore runs it through npx in a temp directory with its own TypeScript 5.
 
 ## Routing
