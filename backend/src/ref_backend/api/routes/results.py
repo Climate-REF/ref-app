@@ -24,6 +24,9 @@ def get_result(session: SessionDep, reader: ReaderDep, result_id: int) -> Stream
     # Release the connection now, so streaming the file does not hold it open
     session.close()
 
+    if filename is None:
+        raise HTTPException(status_code=404, detail="Result file not found")
+
     file_path = resolve_artifact(reader.artifacts.output_file, output_fragment, filename)
     mime_type, _encoding = mimetypes.guess_type(file_path)
 
