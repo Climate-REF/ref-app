@@ -74,7 +74,7 @@ repos:
         language: system
         pass_filenames: false
         require_serial: true
-        files: ^(backend/src/|backend/uv\.lock$|scripts/generate-client-sdk\.sh$|frontend/openapi)
+        files: ^(backend/src/|backend/uv\.lock$|scripts/generate-client-sdk\.sh$|frontend/openapi|frontend/package\.json$)
 
   # Frontend: Biome format + lint
   # Both hooks use the versions pinned in frontend/package.json, not whatever npx resolves.
