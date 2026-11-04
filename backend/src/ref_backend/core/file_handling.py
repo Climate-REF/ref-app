@@ -4,11 +4,15 @@ import tarfile
 import zlib
 from collections.abc import Callable, Generator
 from pathlib import Path
+from typing import ParamSpec, TypeVar
 
 from fastapi import HTTPException
 
+P = ParamSpec("P")
+T = TypeVar("T", bound=Path | None)
 
-def resolve_artifact(resolve: Callable[..., Path], *parts: str) -> Path:
+
+def resolve_artifact(resolve: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """
     Call an ``ArtifactsReader`` resolver and turn a containment failure into a 404.
 
@@ -19,11 +23,11 @@ def resolve_artifact(resolve: Callable[..., Path], *parts: str) -> Path:
     ----------
     resolve
         Bound ``ArtifactsReader`` method, such as ``artifacts.log_file``
-    parts
+    args, kwargs
         Arguments to pass to the resolver
     """
     try:
-        return resolve(*parts)
+        return resolve(*args, **kwargs)
     except ValueError:
         raise HTTPException(status_code=404, detail="Execution output not found")
 

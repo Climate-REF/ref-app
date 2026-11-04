@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Rapid Evaluation Framework",
+    "title": "Climate Rapid Evaluation Framework",
     "description": "\nAPI for querying the results from the Climate Rapid Evaluation Framework (Climate REF).\nThis is used to back the [Climate REF Explorer](https://dashboard.climate-ref.org) web application.\n\nThis API is a work in progress and will likely change in the future without warning.\nWe are interested in your feedback on how you would like to use this API.\nThis will help us prioritize features, and be aware of any API consumers before we make any changes.\n\nContact [Jared Lewis](mailto:jared.lewis@climate-resource.com) or\n[file an issue on GitHub](https://github.com/Climate-REF/ref-app/issues),\nif you have any questions or feedback.\n",
     "contact": {
       "name": "Development Lead - Jared Lewis",
@@ -4222,19 +4222,47 @@
             "$ref": "#/components/schemas/ResultOutputType"
           },
           "filename": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Filename"
           },
           "short_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Short Name"
           },
           "long_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Long Name"
           },
           "description": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Description"
           },
           "created_at": {

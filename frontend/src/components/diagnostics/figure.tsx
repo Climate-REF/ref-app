@@ -21,15 +21,21 @@ export function Figure({
   long_name,
   size,
 }: ExecutionOutput & VariantProps<typeof figureVariants>) {
-  const hasLatex = long_name ? containsLatex(long_name) : false;
   const captionHtml = useMemo(
-    () => (hasLatex ? renderLatexToHtml(long_name) : null),
-    [long_name, hasLatex],
+    () =>
+      long_name && containsLatex(long_name)
+        ? renderLatexToHtml(long_name)
+        : null,
+    [long_name],
   );
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <img src={url} alt={long_name} className={cn(figureVariants({ size }))} />
+      <img
+        src={url}
+        alt={long_name ?? undefined}
+        className={cn(figureVariants({ size }))}
+      />
       {captionHtml ? (
         <small
           className="text-muted-foreground line-clamp-3"

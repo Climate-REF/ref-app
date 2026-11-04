@@ -135,13 +135,10 @@ def list_recent_execution_groups(  # noqa: PLR0913, PLR0917
         limit=limit,
         include_outputs=include_outputs,
     )
-    data = []
-    for eg in groups:
-        try:
-            data.append(ExecutionGroup.build(eg, app_context, include_outputs=include_outputs))
-        except Exception as e:
-            logger.error(f"Error building execution group ID {eg.id}: {e}")
-    return Collection(total_count=total_count, data=data)
+    return Collection(
+        total_count=total_count,
+        data=[ExecutionGroup.build(eg, app_context, include_outputs=include_outputs) for eg in groups],
+    )
 
 
 @router.get("/{group_id}")
@@ -258,10 +255,10 @@ def metric_bundle(
     execution = _get_execution(group_id, execution_id, app_context)
 
     file_path = resolve_artifact(
-        app_context.reader.artifacts.output_file, execution.output_fragment, "diagnostic.json"
+        app_context.reader.artifacts.bundle, execution.output_fragment, execution.path
     )
 
-    if not file_path.exists():
+    if file_path is None or not file_path.exists():
         logger.warning(f"Metric bundle not found: {file_path}")
         raise HTTPException(status_code=404, detail="Metrics bundle not found")
 

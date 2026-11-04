@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
+from climate_ref.database import Database
 from climate_ref.models import ExecutionOutput
 from ref_backend.api import deps
 from ref_backend.api.routes.results import get_result
@@ -71,3 +73,22 @@ def test_result_releases_connection_before_streaming():
 
         assert response.status_code == 200
         assert pool.checkedout() == idle
+
+
+def test_result_without_filename_is_not_found(writable_client: TestClient, settings):
+    """An output with no recorded filename is listed but has no file to serve."""
+    with Database.from_config(writable_client.ref_config, run_migrations=False).session_scope() as session:  # type: ignore[attr-defined]
+        output = session.scalars(select(ExecutionOutput).limit(1)).one()
+        output.filename = None  # type: ignore[assignment]
+        result_id = output.id
+        group_id = output.execution.execution_group_id
+        session.commit()
+
+    r = writable_client.get(f"{settings.API_V1_STR}/executions/{group_id}")
+    assert r.status_code == 200
+    outputs = [o for e in r.json()["executions"] for o in e["outputs"]]
+    assert next(o for o in outputs if o["id"] == result_id)["filename"] is None
+
+    r = writable_client.get(f"{settings.API_V1_STR}/results/{result_id}")
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Result file not found"

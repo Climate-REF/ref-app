@@ -1013,19 +1013,19 @@ export type ExecutionOutput = {
     /**
      * Filename
      */
-    filename: string;
+    filename: string | null;
     /**
      * Short Name
      */
-    short_name: string;
+    short_name: string | null;
     /**
      * Long Name
      */
-    long_name: string;
+    long_name: string | null;
     /**
      * Description
      */
-    description: string;
+    description: string | null;
     /**
      * Created At
      */

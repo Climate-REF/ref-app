@@ -7,7 +7,8 @@ set -x
 cd "$(dirname "$0")/.."
 
 pushd backend
-uv run python -c "import ref_backend.main; import json; print(json.dumps(ref_backend.main.app.openapi(), indent=2))" > openapi.json
+# Pinned so a local .env cannot change the committed spec.
+PROJECT_NAME="Climate Rapid Evaluation Framework" uv run python -c "import ref_backend.main; import json; print(json.dumps(ref_backend.main.app.openapi(), indent=2))" > openapi.json
 popd
 
 # openapi-ts needs the TypeScript 5 compiler API, which TypeScript 7 does not ship.
