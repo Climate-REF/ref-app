@@ -3,7 +3,7 @@ import type { UserConfig } from "@hey-api/openapi-ts";
 
 // Paths are anchored to this file because the generator runs from an isolated directory.
 export default {
-  input: path.join(import.meta.dirname, "openapi.json"),
+  input: path.join(import.meta.dirname, "../backend/openapi.json"),
   output: path.join(import.meta.dirname, "src/client"),
   plugins: [
     "@hey-api/typescript",
