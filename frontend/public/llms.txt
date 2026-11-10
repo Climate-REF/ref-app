@@ -1,0 +1,25 @@
+# Climate-REF Explorer
+
+> The dashboard for the CMIP7 Assessment Fast Track Rapid Evaluation Framework (Climate-REF), providing visualisations for the output of all diagnostics that were run on the published CMIP6 and CMIP7 data. Everything shown in the dashboard comes from a public, read-only REST API. Prefer the API over scraping the dashboard: it is a JavaScript single-page app, and the API returns the same data as JSON.
+
+- Base URL: https://api.climate-ref.org/api/v1/
+- OpenAPI specification: https://api.climate-ref.org/api/v1/openapi.json
+- Interactive API documentation: https://api.climate-ref.org/docs
+- No authentication is required.
+- The API is a work in progress and may change. Feedback and questions: https://github.com/Climate-REF/ref-app/issues
+
+## Main endpoints
+
+- [Diagnostics](https://api.climate-ref.org/api/v1/diagnostics/): all registered diagnostics. Pass `mip_era` to restrict to CMIP6 or CMIP7 runs.
+- `GET /diagnostics/{provider_slug}/{diagnostic_slug}`: a single diagnostic.
+- `GET /diagnostics/{provider_slug}/{diagnostic_slug}/values`: the scalar and series metric values a diagnostic produced.
+- `GET /diagnostics/{provider_slug}/{diagnostic_slug}/executions`: executions of a diagnostic, filterable by dataset facets (e.g. `?source_id=...`).
+- [Diagnostic facets](https://api.climate-ref.org/api/v1/diagnostics/facets): the dimensions and metrics available across all diagnostics.
+- [Models](https://api.climate-ref.org/api/v1/models/): the models that have been evaluated. `GET /models/{source_id}` summarises one model; `/models/{source_id}/ensemble` compares it against the ensemble.
+- [Datasets](https://api.climate-ref.org/api/v1/datasets/): the ingested input datasets.
+- [CMIP7 AFT diagnostics](https://api.climate-ref.org/api/v1/cmip7-aft-diagnostics/): the diagnostics of the CMIP7 Assessment Fast Track.
+- `GET /executions/{group_id}/values`: metric values of a single execution.
+- `GET /executions/{group_id}/archive`: the full output files of an execution as a tar.gz archive.
+- [About](https://api.climate-ref.org/api/v1/utils/about): version and data freshness of the deployment.
+
+See the OpenAPI specification for all endpoints and parameters.

@@ -10,6 +10,18 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Climate-REF</title>
+    <meta
+      name="description"
+      content="The dashboard for the CMIP7 Assessment Fast Track Rapid Evaluation Framework, providing visualisations for the output of all diagnostics that were run on the published CMIP6 and CMIP7 data. All data is also available via a public REST API at api.climate-ref.org (OpenAPI: https://api.climate-ref.org/api/v1/openapi.json)."
+    />
+    <!-- API discovery for crawlers and agents (RFC 8631) -->
+    <link
+      rel="service-desc"
+      type="application/openapi+json"
+      href="https://api.climate-ref.org/api/v1/openapi.json"
+    />
+    <link rel="service-doc" type="text/html" href="https://api.climate-ref.org/docs" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="Overview for LLMs" />
     <script>
       // Prevent initial theme flash by setting html.dark before React mounts
       (() => {
@@ -33,6 +45,17 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <h1>Climate-REF</h1>
+      <p>
+        This dashboard needs JavaScript to run. Please enable JavaScript in your browser to explore the
+        results of the CMIP7 Assessment Fast Track Rapid Evaluation Framework.
+      </p>
+      <p>
+        For programmatic access to the data, use the public REST API instead; see the
+        <a href="https://api.climate-ref.org/docs">API documentation</a>.
+      </p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
