@@ -20,3 +20,10 @@ def test_sentry_release_is_the_git_commit(monkeypatch):
     assert calls[0]["release"] == "e145da768b1725ce708150597a565df09c923dc3"
     assert calls[0]["environment"] == "staging"
     assert calls[0]["traces_sample_rate"] == 1.0
+
+
+def test_wide_event_middleware_is_outermost(app):
+    """It must wrap everything else, or it misses part of the request's time and the fields bound inside."""
+    outermost_first = [middleware.cls for middleware in app.user_middleware]
+
+    assert outermost_first[:2] == [builder.WideEventMiddleware, builder.BindRouteMiddleware]
