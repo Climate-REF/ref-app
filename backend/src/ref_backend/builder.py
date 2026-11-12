@@ -22,6 +22,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from climate_ref.config import Config
 from climate_ref.database import Database
+from ref_backend import api_catalog
 from ref_backend.analytics import router as analytics_router
 from ref_backend.api.main import api_router
 from ref_backend.caching import CacheControlMiddleware
@@ -161,6 +162,17 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
         },
     )
+    _add_middleware(app, settings, database)
+    _add_routes(app, settings)
+    return app
+
+
+def _add_middleware(app: FastAPI, settings: Settings, database: Database) -> None:
+    """
+    Wrap the app in its middleware, innermost first.
+
+    Each `add_middleware` call wraps everything added before it.
+    """
     app.add_middleware(
         RequestQueryMonitor,
         engine=database._engine,
@@ -170,8 +182,6 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             SlowQueryMonitor(threshold_ms=100),
         ],
     )
-
-    # Set all CORS enabled origins
     if settings.all_cors_origins or settings.BACKEND_CORS_ORIGIN_REGEX:
         app.add_middleware(
             CORSMiddleware,
@@ -181,25 +191,40 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             allow_methods=["GET"],
             allow_headers=["*"],
         )
-
+    # Outside CORS, so it can add `Vary: Origin` to what CORS returns.
     app.add_middleware(
         CacheControlMiddleware,
         api_prefix=settings.API_V1_STR,
         api_max_age=settings.API_CACHE_MAX_AGE,
         results_max_age=settings.RESULTS_CACHE_MAX_AGE,
     )
-    # Outermost, so the wide event times the whole stack and sees the query statistics.
+    # Adds the Prometheus middleware and the /metrics route.
+    metrics.instrument_app(app)
+    # Outermost, so the wide event times the whole stack
+    # and the route and query statistics bound inside it land on it.
     app.add_middleware(BindRouteMiddleware)
     app.add_middleware(WideEventMiddleware)
 
-    # Registered before the static mount, so the SPA fallback does not swallow the probes or /metrics.
+
+def _add_routes(app: FastAPI, settings: Settings) -> None:
+    """
+    Register the routes, with the static files last.
+
+    The SPA fallback answers every path it gets, so any route registered after it would be unreachable.
+    """
     app.include_router(health_router)
-    metrics.instrument_app(app)
-
     app.include_router(api_router, prefix=settings.API_V1_STR)
-
-    # Mounted above the static files, which only answer GET and HEAD.
     app.include_router(analytics_router)
+    app.include_router(
+        api_catalog.make_router(
+            api_catalog.build_linkset(
+                backend_host=settings.BACKEND_HOST,
+                api_prefix=settings.API_V1_STR,
+                openapi_url=app.openapi_url or "",
+                docs_url=app.docs_url or "",
+            )
+        )
+    )
 
     if settings.STATIC_DIR:
         logger.info(f"Serving static files from {settings.STATIC_DIR}")
@@ -208,5 +233,3 @@ def build_app(settings: Settings, ref_config: Config, database: Database) -> Fas
             SPAStaticFiles(directory=settings.STATIC_DIR, html=True, check_dir=False),
             name="static",
         )
-
-    return app
