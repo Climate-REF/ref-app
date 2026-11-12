@@ -1,3 +1,35 @@
+## v0.10.0 (2026-11-12)
+
+### Features
+
+- Added an `llms.txt`, an RFC 9727 API catalog at `/.well-known/api-catalog`, API links in the dashboard's HTML head, and a `<noscript>` message, so that crawlers and AI agents can find the REST API instead of scraping the dashboard. (#179)
+
+### Improvements
+
+- Execution archive downloads now start straight away and use little server memory, however large the outputs.
+  Symbolic links in an execution's output folder are no longer included in the archive. (#172)
+- `GET /executions/` now returns an error when an execution group cannot be loaded, instead of leaving it out of the page. (#173)
+
+### Bug Fixes
+
+- Fixed the observational reference line on series charts, such as CERES on the Cloud radiative effects zonal means, being labelled after a model. (#170)
+- Log downloads are now named after the execution, rather than `execution_result_None.log`. (#172)
+- Execution outputs with no filename, name or description no longer fail to load, matching the fields `climate-ref` allows to be empty.
+  Downloading an output with no filename now returns a 404 instead of a server error. (#173)
+- The metric bundle endpoint now reads the bundle path recorded for each execution instead of assuming `diagnostic.json`. (#173)
+- The wide-event logging middleware now wraps the Prometheus middleware, so logged request durations cover the whole middleware stack. (#179)
+
+### Breaking Changes
+
+- Removed the unused `execution_groups` list of ids from diagnostic summaries in the API.
+  `GET /executions/` now rejects a `limit` above 1000 with a 422 error, so use `limit` and `offset` to page through more groups. (#172)
+
+### Trivial Changes
+
+- The OpenAPI spec now uses a fixed project name, so a local `.env` no longer changes it. (#173)
+- The OpenAPI spec is now committed as `backend/openapi.json` and kept in sync with the backend by a pre-commit hook. (#177)
+
+
 ## v0.9.4 (2026-10-27)
 
 ### Improvements
