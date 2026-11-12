@@ -1,5 +1,5 @@
 name: Epic
-description: Propose a larger piece of work delivered through several issues
+description: Propose a larger piece of work for the REF, described as a requirement
 title: "Epic: "
 type: Epic
 projects: ["Climate-REF/10"]
@@ -7,15 +7,23 @@ body:
   - type: markdown
     attributes:
       value: |
-        An epic describes an outcome, not a list of tasks.
-        The work itself happens in sub-issues linked to this one.
+        An epic describes what people need from the REF, not how to build it.
+        Once an epic is approved, the REF ops team decides the approach and breaks it into sub-issues.
         See the [REF Roadmap](https://github.com/orgs/Climate-REF/projects/10) for how epics are tracked.
   - type: textarea
-    id: outcome
+    id: who
     attributes:
-      label: Outcome
-      description: What is true when this epic is closed? Write it from the point of view of whoever benefits.
-      placeholder: Modelling centres can compare their CMIP7 submissions against obs4REF datasets in the portal.
+      label: Who needs this
+      description: The people or groups who benefit.
+      placeholder: Modelling centres submitting to CMIP7.
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: What they need to be able to do
+      description: Describe what becomes possible for them, not the software changes.
+      placeholder: See AFT diagnostic results for their CMIP7 submissions as soon as the data is published.
     validations:
       required: true
   - type: textarea
@@ -26,11 +34,12 @@ body:
     validations:
       required: true
   - type: textarea
-    id: scope
+    id: done
     attributes:
-      label: Scope
+      label: Done when
+      description: Conditions a user could check without reading code.
       value: |
-        -
+        - [ ]
     validations:
       required: true
   - type: textarea
@@ -39,15 +48,6 @@ body:
       label: Out of scope
       value: |
         -
-  - type: textarea
-    id: done
-    attributes:
-      label: Done when
-      description: Observable conditions that let us close this epic.
-      value: |
-        - [ ]
-    validations:
-      required: true
   - type: dropdown
     id: origin
     attributes:
@@ -58,27 +58,8 @@ body:
         - Community
     validations:
       required: true
-  - type: dropdown
-    id: area
-    attributes:
-      label: Area
-      multiple: true
-      options:
-        - Backend
-        - Frontend
-        - Diagnostics
-        - Data
-        - Infrastructure
-        - Docs and community
-    validations:
-      required: true
   - type: textarea
     id: links
     attributes:
       label: Links
-      description: The RFC or governance decision, related issues, and any design notes.
-  - type: textarea
-    id: approach
-    attributes:
-      label: Approach
-      description: How we plan to deliver it, or the open questions that need answering first. Leave blank if unknown.
+      description: The RFC or governance decision, related issues and any background.
