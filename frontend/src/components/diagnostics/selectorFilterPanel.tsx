@@ -11,6 +11,12 @@ import {
   type FacetOption,
   withUnavailableSelections,
 } from "@/lib/facetedFilter";
+import { UNKNOWN_FACET_VALUE } from "./figureGalleryData";
+
+/** The text shown for a facet value, naming the value of figures without one. */
+function facetValueLabel(value: string): string {
+  return value === UNKNOWN_FACET_VALUE ? "Unknown" : value;
+}
 
 interface SelectorFilterPanelProps {
   /** Available options of each selector facet */
@@ -51,6 +57,7 @@ function MultiSelectFacet({
           selected={selected}
           onSelectedChange={onSelectionChange}
           placeholder={`Search ${facetKey}...`}
+          labelOf={facetValueLabel}
         />
       </PopoverContent>
     </Popover>
@@ -70,7 +77,7 @@ export function SelectorFilterPanel({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground">Selectors:</span>
+        <span className="text-sm text-muted-foreground">Filter by:</span>
         {facetKeys.map((key) => {
           const selected = filters[key] ?? [];
           return (
@@ -105,7 +112,7 @@ export function SelectorFilterPanel({
                 variant="secondary"
                 className="gap-1"
               >
-                {key}: {value}
+                {key}: {facetValueLabel(value)}
                 <button
                   type="button"
                   className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring"

@@ -6,18 +6,24 @@ import {
   type FigureWithGroup,
   figureFacetOptions,
   filterFigures,
+  UNKNOWN_FACET_VALUE,
 } from "./figureGalleryData";
 
 let nextId = 1;
 const output = (
   filename: string,
-  { description = "", type = "plot" } = {},
+  {
+    description = "",
+    type = "plot",
+    dimensions = {} as Record<string, string>,
+  } = {},
 ): ExecutionOutput =>
   ({
     id: nextId++,
     filename,
     description,
     output_type: type,
+    dimensions,
   }) as ExecutionOutput;
 
 /** A group whose executions, oldest first, produced these outputs */
@@ -77,14 +83,46 @@ describe("figureFacetOptions keys", () => {
           ["source_id", "GFDL"],
         ],
       }),
+      group([[output("other.png")]], {
+        cmip6: [
+          ["source_id", "ACCESS"],
+          ["experiment_id", "ssp585"],
+        ],
+      }),
     ]);
 
     const options = figureFacetOptions(figures, "", {});
     expect(Object.keys(options)).toEqual(["experiment_id", "source_id"]);
     expect(options.source_id).toEqual([
+      { value: "ACCESS", count: 1 },
       { value: "CERES", count: 1 },
       { value: "GFDL", count: 1 },
     ]);
+  });
+
+  it("leaves out a key whose value is the same for every figure, unless it is selected", () => {
+    const figures = collectLatestPlotFigures([
+      group([[output("a.png")]], {
+        cmip6: [
+          ["source_id", "GFDL"],
+          ["experiment_id", "historical"],
+        ],
+      }),
+      group([[output("b.png")]], {
+        cmip6: [
+          ["source_id", "ACCESS"],
+          ["experiment_id", "historical"],
+        ],
+      }),
+    ]);
+
+    expect(Object.keys(figureFacetOptions(figures, "", {}))).toEqual([
+      "source_id",
+    ]);
+    expect(
+      figureFacetOptions(figures, "", { experiment_id: ["historical"] })
+        .experiment_id,
+    ).toEqual([{ value: "historical", count: 2 }]);
   });
 
   it("offers no facets when no group has plot outputs", () => {
@@ -189,13 +227,20 @@ describe("figureFacetOptions", () => {
   it("offers nothing from groups whose latest execution has no plots", () => {
     const withEmptyGroup = collectLatestPlotFigures([
       group([[output("tas_bias.png")]], cmip6("ACCESS-CM2", "historical")),
+      group([[output("pr_bias.png")]], cmip6("MIROC6", "ssp245")),
       group(
         [[output("data.nc", { type: "data" })]],
         cmip6("NO-PLOT", "ssp585"),
       ),
     ]);
-    expect(optionList(withEmptyGroup, "source_id")).toEqual(["ACCESS-CM2"]);
-    expect(optionList(withEmptyGroup, "experiment_id")).toEqual(["historical"]);
+    expect(optionList(withEmptyGroup, "source_id")).toEqual([
+      "ACCESS-CM2",
+      "MIROC6",
+    ]);
+    expect(optionList(withEmptyGroup, "experiment_id")).toEqual([
+      "historical",
+      "ssp245",
+    ]);
   });
 
   it("keeps a selection key no figure offers, with no available options", () => {
@@ -285,5 +330,88 @@ describe("filterFigures", () => {
         }),
       ),
     ).toEqual(["pr_bias.png"]);
+  });
+});
+
+describe("figure dimensions", () => {
+  /** One group whose latest execution made these plots, each with its dimensions */
+  const regionalGroup = (
+    plots: [string, Record<string, string>][],
+    selectors: ExecutionGroup["selectors"] = {
+      cmip6: [
+        ["source_id", "ACCESS-CM2"],
+        ["variable_id", "tas"],
+        ["variable_id", "pr"],
+      ],
+    },
+  ) =>
+    group(
+      [plots.map(([filename, dimensions]) => output(filename, { dimensions }))],
+      selectors,
+    );
+
+  const figures = collectLatestPlotFigures([
+    regionalGroup([
+      ["tas_med.png", { region: "Mediterranean", variable_id: "tas" }],
+      ["tas_waf.png", { region: "Western-Africa", variable_id: "tas" }],
+      ["pr_med.png", { region: "Mediterranean", variable_id: "pr" }],
+      // Made before the diagnostic tagged its outputs
+      ["old.png", {}],
+    ]),
+  ]);
+
+  it("offers the keys the figures are tagged with", () => {
+    expect(optionList(figures, "region")).toEqual([
+      "Mediterranean",
+      "Western-Africa",
+      UNKNOWN_FACET_VALUE,
+    ]);
+  });
+
+  it("prefers a figure's own dimension over its group's selectors", () => {
+    expect(
+      filenames(filterFigures(figures, "", { variable_id: ["pr"] })),
+    ).toEqual(["pr_med.png", "old.png"]);
+    expect(figureFacetOptions(figures, "", {}).variable_id).toEqual([
+      // old.png has no dimension, so it takes both of its group's variables
+      { value: "pr", count: 2 },
+      { value: "tas", count: 3 },
+    ]);
+  });
+
+  it("gives a figure without the key the unknown value, which can be filtered by", () => {
+    expect(
+      filenames(filterFigures(figures, "", { region: [UNKNOWN_FACET_VALUE] })),
+    ).toEqual(["old.png"]);
+    expect(
+      filenames(
+        filterFigures(figures, "", {
+          region: ["Western-Africa", UNKNOWN_FACET_VALUE],
+        }),
+      ),
+    ).toEqual(["tas_waf.png", "old.png"]);
+  });
+
+  it("counts the unknown value against the other facets, listing it last", () => {
+    expect(
+      figureFacetOptions(figures, "", { variable_id: ["tas"] }).region,
+    ).toEqual([
+      { value: "Mediterranean", count: 1 },
+      { value: "Western-Africa", count: 1 },
+      { value: UNKNOWN_FACET_VALUE, count: 1 },
+    ]);
+  });
+
+  it("offers no unknown value when every figure is tagged", () => {
+    const tagged = collectLatestPlotFigures([
+      regionalGroup([
+        ["a.png", { region: "Mediterranean" }],
+        ["b.png", { region: "Western-Africa" }],
+      ]),
+    ]);
+    expect(optionList(tagged, "region")).toEqual([
+      "Mediterranean",
+      "Western-Africa",
+    ]);
   });
 });

@@ -23,6 +23,12 @@ class ExecutionOutput(BaseModel):
     short_name: str | None
     long_name: str | None
     description: str | None
+    dimensions: dict[str, str]
+    """
+    Controlled-vocabulary dimensions the diagnostic tagged this output with, such as its
+    ``region`` or ``variable_id``. Only the tagged ones are listed, so an output that was not
+    tagged has none.
+    """
     created_at: datetime
     updated_at: datetime
     url: str
@@ -37,6 +43,7 @@ class ExecutionOutput(BaseModel):
             short_name=output.short_name,
             long_name=output.long_name,
             description=output.description,
+            dimensions=output.dimensions,
             created_at=output.created_at,
             updated_at=output.updated_at,
             url=f"{app_context.settings.BACKEND_HOST}{app_context.settings.API_V1_STR}/results/{output.id}",

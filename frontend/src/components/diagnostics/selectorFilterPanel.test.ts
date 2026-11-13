@@ -3,6 +3,7 @@ import type { Execution, ExecutionGroup, ExecutionOutput } from "@/client";
 import {
   collectLatestPlotFigures,
   figureFacetOptions,
+  UNKNOWN_FACET_VALUE,
 } from "./figureGalleryData";
 
 let nextId = 1;
@@ -48,7 +49,8 @@ describe("figureFacetOptions for selector facets", () => {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, options]) => [key, options.map(({ value }) => value)]),
     ).toEqual([
-      ["experiment_id", ["historical"]],
+      // Only the first group selects an experiment, so the others' is unknown
+      ["experiment_id", ["historical", UNKNOWN_FACET_VALUE]],
       ["source_id", ["ACCESS", "CERES", "GFDL"]],
     ]);
   });

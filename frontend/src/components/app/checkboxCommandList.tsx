@@ -18,6 +18,8 @@ interface CheckboxCommandListProps {
   placeholder: string;
   /** Optional count to show next to each value */
   counts?: Record<string, number>;
+  /** The text shown for a value, which is also searched; the value itself by default */
+  labelOf?: (value: string) => string;
 }
 
 /** A searchable list of values with a checkbox each, for picking several. */
@@ -27,6 +29,7 @@ export function CheckboxCommandList({
   onSelectedChange,
   placeholder,
   counts,
+  labelOf = (value) => value,
 }: CheckboxCommandListProps) {
   return (
     <Command>
@@ -40,6 +43,7 @@ export function CheckboxCommandList({
               <CommandItem
                 key={value}
                 value={value}
+                keywords={[labelOf(value)]}
                 onSelect={() =>
                   onSelectedChange(
                     isSelected
@@ -58,7 +62,7 @@ export function CheckboxCommandList({
                 >
                   <Check className="h-4 w-4" />
                 </div>
-                <span>{value}</span>
+                <span>{labelOf(value)}</span>
                 {counts?.[value] !== undefined && (
                   <CommandShortcut>{counts[value]}</CommandShortcut>
                 )}

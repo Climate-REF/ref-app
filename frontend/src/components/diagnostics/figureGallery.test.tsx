@@ -179,10 +179,50 @@ describe("FigureGallery", () => {
     expect(screen.getAllByRole("img")).toHaveLength(1);
   });
 
+  it("lets figures without a tagged dimension be picked as unknown", () => {
+    const tagged = (id: number, filename: string, region?: string) =>
+      ({
+        id,
+        key: filename,
+        selectors: {},
+        executions: [
+          {
+            outputs: [
+              {
+                ...figure(id, filename),
+                dimensions: region ? { region } : {},
+              },
+            ],
+          } as Execution,
+        ],
+      }) as ExecutionGroup;
+    renderGroups(
+      [
+        tagged(1, "med.png", "Mediterranean"),
+        tagged(2, "waf.png", "Western-Africa"),
+        tagged(3, "old.png"),
+      ],
+      { pageSize: 12 },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /region/ }));
+    fireEvent.click(screen.getByRole("option", { name: /^Unknown/ }));
+
+    expect(
+      screen.getAllByRole("img").map((img) => img.getAttribute("alt")),
+    ).toEqual(["old.png"]);
+    expect(screen.getByText("region: Unknown")).toBeInTheDocument();
+  });
+
   it("reports changes through onFilterChange when controlled", async () => {
     const onFilterChange = vi.fn();
     renderGroups(
-      [groupWithSelectors(1, "gfdl.png", { cmip6: [["source_id", "GFDL"]] })],
+      [
+        groupWithSelectors(1, "gfdl.png", { cmip6: [["source_id", "GFDL"]] }),
+        groupWithSelectors(2, "access.png", {
+          cmip6: [["source_id", "ACCESS"]],
+        }),
+      ],
       {
         pageSize: 12,
         filter: { text: "", selections: {} },
