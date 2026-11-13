@@ -1,5 +1,5 @@
 import { Filter, Search, X } from "lucide-react";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
 import { DebouncedInput } from "@/components/app/debouncedInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,21 +10,30 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { CatalogDiagnostic } from "@/lib/diagnosticCatalog";
 import {
+  type DiagnosticFilterOptions,
   type DiagnosticFilterState,
-  diagnosticFilterOptions,
   hasActiveFilters,
   hasSelections,
   NO_DIAGNOSTIC_FILTERS,
 } from "@/lib/diagnosticFilters";
+import {
+  type FacetOption,
+  withUnavailableSelections,
+} from "@/lib/facetedFilter";
+
+interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
 
 interface CheckboxFilterPopoverProps {
   label: string;
   title: string;
   /** Prefix of the checkbox ids, which must be unique on the page */
   idPrefix: string;
-  options: { value: string; label: string }[];
+  options: FilterOption[];
   selected: string[];
   onToggle: (value: string) => void;
   className?: string;
@@ -69,6 +78,9 @@ function CheckboxFilterPopover({
                   className="text-sm"
                 >
                   {option.label}
+                  <span className="ml-1 text-muted-foreground">
+                    ({option.count})
+                  </span>
                 </Label>
               </div>
             ))}
@@ -99,27 +111,65 @@ const toggled = (values: string[], value: string) =>
     ? values.filter((v) => v !== value)
     : [...values, value];
 
-const METRIC_VALUE_OPTIONS = [
-  { value: "true", label: "Has metric values" },
-  { value: "false", label: "No metric values" },
-];
+const METRIC_VALUE_LABELS: Record<string, string> = {
+  true: "Has metric values",
+  false: "No metric values",
+};
+
+/**
+ * The options to show in a popover: drop unselected values no diagnostic offers, but
+ * keep selected values so they can be unticked.
+ */
+function visibleOptions(
+  options: readonly FacetOption[],
+  selected: readonly string[],
+): FacetOption[] {
+  return withUnavailableSelections(options, selected).filter(
+    (option) => option.count > 0 || selected.includes(option.value),
+  );
+}
 
 interface DiagnosticsFilterProps {
-  /** The diagnostics to offer filter options from */
-  diagnostics: CatalogDiagnostic[];
+  /** The filter options computed from the diagnostics matching the other filters */
+  options: DiagnosticFilterOptions;
   value: DiagnosticFilterState;
   onChange: (value: DiagnosticFilterState) => void;
 }
 
 export function DiagnosticsFilter({
-  diagnostics,
+  options,
   value,
   onChange,
 }: DiagnosticsFilterProps) {
-  const options = useMemo(
-    () => diagnosticFilterOptions(diagnostics),
-    [diagnostics],
+  const providerOptions = visibleOptions(
+    options.providers,
+    value.providers,
+  ).map((option) => ({ ...option, label: option.value }));
+
+  const aftNames = new Map(options.aftLinks.map((aft) => [aft.id, aft.name]));
+  const aftOptions = visibleOptions(
+    options.aftLinks.map(({ id, count }) => ({ value: id, count })),
+    value.aftIds,
+  ).map((option) => {
+    const name = aftNames.get(option.value);
+    return {
+      ...option,
+      label: name ? `${option.value} - ${name}` : option.value,
+    };
+  });
+
+  const themeOptions = visibleOptions(options.themes, value.themes).map(
+    (option) => ({ ...option, label: option.value }),
   );
+
+  const metricValueOptions = visibleOptions(
+    options.metricValues,
+    value.metricValues === null ? [] : [`${value.metricValues}`],
+  ).map((option) => ({
+    ...option,
+    label: METRIC_VALUE_LABELS[option.value] ?? option.value,
+  }));
+
   const update = (changes: Partial<DiagnosticFilterState>) =>
     onChange({ ...value, ...changes });
   const toggleProvider = (provider: string) =>
@@ -146,32 +196,29 @@ export function DiagnosticsFilter({
           label="Providers"
           title="Filter by Providers"
           idPrefix="provider"
-          options={options.providers.map((p) => ({ value: p, label: p }))}
+          options={providerOptions}
           selected={value.providers}
           onToggle={toggleProvider}
         />
 
-        {options.aftLinks.length > 0 && (
+        {aftOptions.length > 0 && (
           <CheckboxFilterPopover
             label="CMIP7 AFT Diagnostics"
             title="Filter by AFT Diagnostics"
             idPrefix="aft"
-            options={options.aftLinks.map((aft) => ({
-              value: aft.id,
-              label: `${aft.id} - ${aft.name}`,
-            }))}
+            options={aftOptions}
             selected={value.aftIds}
             onToggle={toggleAftId}
             className="w-120"
           />
         )}
 
-        {options.themes.length > 0 && (
+        {themeOptions.length > 0 && (
           <CheckboxFilterPopover
             label="Themes"
             title="Filter by Themes"
             idPrefix="theme"
-            options={options.themes.map((t) => ({ value: t, label: t }))}
+            options={themeOptions}
             selected={value.themes}
             onToggle={toggleTheme}
           />
@@ -181,7 +228,7 @@ export function DiagnosticsFilter({
           label="Metric Values"
           title="Filter by Metric Values"
           idPrefix="metric-values"
-          options={METRIC_VALUE_OPTIONS}
+          options={metricValueOptions}
           selected={
             value.metricValues === null ? [] : [`${value.metricValues}`]
           }
@@ -218,14 +265,14 @@ export function DiagnosticsFilter({
             </ActiveFilterBadge>
           ))}
           {value.aftIds.map((aftId) => {
-            const aft = options.aftLinks.find((a) => a.id === aftId);
+            const aftName = aftNames.get(aftId);
             return (
               <ActiveFilterBadge
                 key={`aft-${aftId}`}
                 onRemove={() => toggleAftId(aftId)}
               >
                 CMIP7 AFT: {aftId}
-                {aft ? ` - ${aft.name}` : ""}
+                {aftName ? ` - ${aftName}` : ""}
               </ActiveFilterBadge>
             );
           })}
