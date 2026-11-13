@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { diagnosticsListExecutionGroupsOptions } from "@/client/@tanstack/react-query.gen.ts";
+import { DebouncedInput } from "@/components/app/debouncedInput";
 import { MipEraEmptyState } from "@/components/charts/mipEraBar";
 import { useSelectedMipEra } from "@/components/charts/mipEraContext";
 import { Figure } from "@/components/diagnostics/figure.tsx";
@@ -21,11 +22,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import {
+  type FacetedFilterState,
+  NO_FACETED_FILTER,
+} from "@/lib/facetedFilterSearch";
 import {
   collectLatestPlotFigures,
   type FigureWithGroup,
+  figureFacetOptions,
   filterFigures,
 } from "./figureGalleryData";
 import { FigureGalleryModal } from "./figureGalleryModal.tsx";
@@ -39,6 +44,10 @@ interface DiagnosticFigureGalleryProps {
   pageSize?: number;
   /** Pre-set the filename filter (e.g. from explorer card config) */
   initialFilter?: string;
+  /** The filter to show. Pass together with `onFilterChange` to control it. */
+  filter?: FacetedFilterState;
+  /** Called with the next filter. Pass together with `filter` to control it. */
+  onFilterChange?: (next: FacetedFilterState) => void;
 }
 
 const FigureDropDown = ({ figure, executionGroup }: FigureWithGroup) => {
@@ -268,20 +277,52 @@ function VirtualFigureGrid({
   );
 }
 
+/**
+ * The gallery's filter: the given one when both `filter` and `onFilterChange` are passed,
+ * otherwise one kept here that starts from `initialFilter`.
+ */
+function useGalleryFilter({
+  initialFilter,
+  filter: controlledFilter,
+  onFilterChange,
+}: Pick<
+  DiagnosticFigureGalleryProps,
+  "initialFilter" | "filter" | "onFilterChange"
+>) {
+  const [localFilter, setLocalFilter] = useState<FacetedFilterState>(() => ({
+    ...NO_FACETED_FILTER,
+    text: initialFilter ?? "",
+  }));
+  if (controlledFilter !== undefined && onFilterChange !== undefined) {
+    return { activeFilter: controlledFilter, changeFilter: onFilterChange };
+  }
+  return { activeFilter: localFilter, changeFilter: setLocalFilter };
+}
+
+/**
+ * The current page, back on the first one whenever the filter changes, since a narrower
+ * filter can leave the page past the last one. The filter is compared by value, so a
+ * controlled filter rebuilt with the same content keeps the page.
+ */
+function usePageForFilter(filter: FacetedFilterState) {
+  const filterKey = JSON.stringify(filter);
+  const [state, setState] = useState({ filterKey, page: 0 });
+  const page = state.filterKey === filterKey ? state.page : 0;
+  const setPage = (next: number) => setState({ filterKey, page: next });
+  return [page, setPage] as const;
+}
+
 export function FigureGallery({
   providerSlug,
   diagnosticSlug,
   pageSize,
-  initialFilter,
+  ...filterProps
 }: DiagnosticFigureGalleryProps) {
-  const [filter, setFilter] = useState(initialFilter ?? "");
-  const [selectorFilters, setSelectorFilters] = useState<
-    Record<string, string[]>
-  >({});
+  const { activeFilter, changeFilter } = useGalleryFilter(filterProps);
   const [selectedFigureIndex, setSelectedFigureIndex] = useState<number | null>(
     null,
   );
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = usePageForFilter(activeFilter);
   const columns = useGridColumns();
   const selectedMipEra = useSelectedMipEra();
 
@@ -294,40 +335,44 @@ export function FigureGallery({
   const groups = executionGroups?.data ?? [];
 
   const allFigures = useMemo(() => collectLatestPlotFigures(groups), [groups]);
+  const facetOptionsByKey = useMemo(
+    () =>
+      figureFacetOptions(
+        allFigures,
+        activeFilter.text,
+        activeFilter.selections,
+      ),
+    [allFigures, activeFilter.text, activeFilter.selections],
+  );
   const filteredFigures = useMemo(
-    () => filterFigures(allFigures, filter, selectorFilters),
-    [allFigures, filter, selectorFilters],
+    () => filterFigures(allFigures, activeFilter.text, activeFilter.selections),
+    [allFigures, activeFilter.text, activeFilter.selections],
   );
 
   if (isLoading) {
     return <FigureGallerySkeleton nColumns={columns} nRows={2} />;
   }
 
-  // A filter change can leave the current page past the last one
-  const changeFilter = (text: string) => {
-    setFilter(text);
-    setCurrentPage(0);
-  };
-  const changeSelectorFilters = (filters: Record<string, string[]>) => {
-    setSelectorFilters(filters);
-    setCurrentPage(0);
-  };
+  const changeTextFilter = (text: string) =>
+    changeFilter({ ...activeFilter, text });
+  const changeSelectorFilters = (selections: Record<string, string[]>) =>
+    changeFilter({ ...activeFilter, selections });
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="figure-filter">Filter by Figure Name</Label>
-        <Input
+        <DebouncedInput
           id="figure-filter"
           placeholder="Filter figures by name..."
-          value={filter}
-          onChange={(e) => changeFilter(e.target.value)}
+          value={activeFilter.text}
+          onValueChange={changeTextFilter}
         />
       </div>
 
       <SelectorFilterPanel
-        executionGroups={groups}
-        filters={selectorFilters}
+        facets={facetOptionsByKey}
+        filters={activeFilter.selections}
         onFiltersChange={changeSelectorFilters}
       />
 

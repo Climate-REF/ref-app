@@ -1,4 +1,11 @@
 import type { CatalogDiagnostic } from "./diagnosticCatalog";
+import {
+  type FacetDescriptor,
+  type FacetOption,
+  type FacetSelections,
+  facetOptions,
+  matchesFacetSelections,
+} from "./facetedFilter";
 
 /** What the diagnostics catalog is narrowed to */
 export interface DiagnosticFilterState {
@@ -36,7 +43,8 @@ export function hasSelections(filters: DiagnosticFilterState): boolean {
   );
 }
 
-function matchesSearch(diagnostic: CatalogDiagnostic, search: string) {
+/** The text search, which is case-insensitive and does nothing when blank */
+function matchesSearch(diagnostic: CatalogDiagnostic, search: string): boolean {
   const needle = search.toLowerCase();
   return [
     diagnostic.name,
@@ -46,55 +54,128 @@ function matchesSearch(diagnostic: CatalogDiagnostic, search: string) {
   ].some((field) => field?.toLowerCase().includes(needle));
 }
 
-/** Whether `value` is one of the selections, where selecting nothing keeps everything */
-const isSelected = (selected: string[], value: string | null | undefined) =>
-  selected.length === 0 || (value != null && selected.includes(value));
+/** The search as a base filter, so a whitespace-only search keeps every diagnostic. */
+const searchFilter =
+  (search: string) =>
+  (diagnostic: CatalogDiagnostic): boolean =>
+    !search.trim() || matchesSearch(diagnostic, search);
+
+const METRIC_VALUES = ["true", "false"] as const;
 
 /**
- * Keep the diagnostics matching every filter, and any of the selections within each filter
+ * The diagnostic facets. Metric values overrides matching so diagnostics whose flags
+ * have not loaded yet are kept by either choice rather than treated as false.
+ */
+const diagnosticFacetDescriptors: FacetDescriptor<CatalogDiagnostic>[] = [
+  {
+    key: "providers",
+    valuesOf: (diagnostic) => [diagnostic.provider.slug],
+  },
+  {
+    key: "aftIds",
+    valuesOf: (diagnostic) =>
+      diagnostic.aft_link ? [diagnostic.aft_link.id] : [],
+  },
+  {
+    key: "themes",
+    valuesOf: (diagnostic) =>
+      diagnostic.aft_link?.theme ? [diagnostic.aft_link.theme] : [],
+  },
+  {
+    key: "metricValues",
+    valuesOf: (diagnostic) =>
+      diagnostic.has_metric_values === null
+        ? METRIC_VALUES
+        : [diagnostic.has_metric_values ? "true" : "false"],
+    matches: (diagnostic, selected) =>
+      selected.some((value) =>
+        value === "true"
+          ? diagnostic.has_metric_values !== false
+          : value === "false"
+            ? diagnostic.has_metric_values !== true
+            : false,
+      ),
+  },
+];
+
+/** The facet selections held by a filter state, with metric values as text. */
+function diagnosticFacetSelections(
+  filters: DiagnosticFilterState,
+): FacetSelections {
+  return {
+    providers: filters.providers,
+    aftIds: filters.aftIds,
+    themes: filters.themes,
+    metricValues:
+      filters.metricValues === null ? [] : [`${filters.metricValues}`],
+  };
+}
+
+/**
+ * Keep the diagnostics matching the search and every facet selection.
  *
  * Diagnostics whose metric value flags have not loaded yet are kept by the metric values filter.
  */
 export function filterDiagnostics(
   diagnostics: CatalogDiagnostic[],
-  { search, providers, aftIds, themes, metricValues }: DiagnosticFilterState,
+  filters: DiagnosticFilterState,
 ): CatalogDiagnostic[] {
+  const matchesSearchFilter = searchFilter(filters.search);
+  const selections = diagnosticFacetSelections(filters);
   return diagnostics.filter(
     (diagnostic) =>
-      (!search.trim() || matchesSearch(diagnostic, search)) &&
-      isSelected(providers, diagnostic.provider.slug) &&
-      isSelected(aftIds, diagnostic.aft_link?.id) &&
-      isSelected(themes, diagnostic.aft_link?.theme) &&
-      (metricValues === null ||
-        diagnostic.has_metric_values === null ||
-        diagnostic.has_metric_values === metricValues),
+      matchesSearchFilter(diagnostic) &&
+      matchesFacetSelections(
+        diagnostic,
+        diagnosticFacetDescriptors,
+        selections,
+      ),
   );
 }
 
-/** The values each diagnostics filter can select, sorted */
+/** The options each diagnostics filter offers, counted against the other filters. */
 export interface DiagnosticFilterOptions {
-  providers: string[];
-  aftLinks: { id: string; name: string }[];
-  themes: string[];
+  providers: FacetOption[];
+  aftLinks: { id: string; name: string; count: number }[];
+  themes: FacetOption[];
+  metricValues: FacetOption[];
 }
 
 export function diagnosticFilterOptions(
   diagnostics: CatalogDiagnostic[],
+  filters: DiagnosticFilterState,
 ): DiagnosticFilterOptions {
-  const aftLinks = new Map<string, { id: string; name: string }>();
-  const themes = new Set<string>();
+  const options = facetOptions(
+    diagnostics,
+    diagnosticFacetDescriptors,
+    diagnosticFacetSelections(filters),
+    searchFilter(filters.search),
+  );
+
+  const aftNames = new Map<string, string>();
   for (const { aft_link } of diagnostics) {
     if (aft_link) {
-      aftLinks.set(aft_link.id, { id: aft_link.id, name: aft_link.name });
-      if (aft_link.theme) {
-        themes.add(aft_link.theme);
-      }
+      aftNames.set(aft_link.id, aft_link.name || aft_link.id);
     }
   }
+
+  const metricCounts = new Map(
+    (options.metricValues ?? []).map((option) => [option.value, option.count]),
+  );
+
   return {
-    providers: [...new Set(diagnostics.map((d) => d.provider.slug))].sort(),
-    aftLinks: [...aftLinks.values()].sort((a, b) => a.id.localeCompare(b.id)),
-    themes: [...themes].sort(),
+    providers: options.providers ?? [],
+    aftLinks: (options.aftIds ?? []).map(({ value, count }) => ({
+      id: value,
+      name: aftNames.get(value) ?? value,
+      count,
+    })),
+    themes: options.themes ?? [],
+    // Both choices are always offered, with no count when no diagnostic offers them.
+    metricValues: METRIC_VALUES.map((value) => ({
+      value,
+      count: metricCounts.get(value) ?? 0,
+    })),
   };
 }
 

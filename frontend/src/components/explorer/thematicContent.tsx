@@ -83,7 +83,17 @@ export function ThematicContent({ plainLanguage }: { plainLanguage: boolean }) {
           onValueChange={(value) => {
             navigate({
               to: ".",
-              search: (prev) => ({ ...prev, theme: value }),
+              search: (prev) => {
+                // Card namespaces belong to the cards on screen, so a new theme starts clean.
+                const next: Record<string, unknown> = {};
+                for (const [key, param] of Object.entries(prev)) {
+                  if (!key.startsWith("card-")) {
+                    next[key] = param;
+                  }
+                }
+                next.theme = value;
+                return next;
+              },
             });
           }}
         >

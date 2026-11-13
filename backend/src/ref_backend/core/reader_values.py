@@ -6,6 +6,7 @@ from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import HTTPException
+from starlette.datastructures import QueryParams
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -21,15 +22,27 @@ if TYPE_CHECKING:
     from ref_backend.api.deps import AppContext
 
 
-def parse_dimension_filters(query_params: Mapping[str, str]) -> dict[str, str]:
+def parse_dimension_filters(
+    query_params: QueryParams | Mapping[str, str],
+) -> dict[str, str | tuple[str, ...]]:
     """
     Extract CV-dimension filters from arbitrary query parameters.
 
     Only keys that are registered CV dimensions are kept so unknown parameters are
     silently ignored (and never reach the reader, which would reject them).
+
+    A dimension given more than once names several alternatives, matching any of them, so
+    ``?source_id=ACCESS-CM2&source_id=MIROC6`` becomes
+    ``{"source_id": ("ACCESS-CM2", "MIROC6")}``. Each value is matched exactly as given,
+    so a value containing a comma is still one value.
     """
     cv_dimensions = set(models.ScalarMetricValue._cv_dimensions)
-    return {key: value for key, value in query_params.items() if key in cv_dimensions}
+    pairs = query_params.multi_items() if isinstance(query_params, QueryParams) else query_params.items()
+    grouped: dict[str, list[str]] = {}
+    for key, value in pairs:
+        if key in cv_dimensions and value not in grouped.setdefault(key, []):
+            grouped[key].append(value)
+    return {key: values[0] if len(values) == 1 else tuple(values) for key, values in grouped.items()}
 
 
 def _csv_response(

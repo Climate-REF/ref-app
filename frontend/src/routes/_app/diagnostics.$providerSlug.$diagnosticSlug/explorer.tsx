@@ -5,6 +5,10 @@ import { explorerGetCollectionOptions } from "@/client/@tanstack/react-query.gen
 import { ErrorBoundary } from "@/components/app";
 import { MipEraScope } from "@/components/charts/mipEraBar";
 import {
+  cardSearchNamespace,
+  uniqueSearchNamespaces,
+} from "@/components/explorer/content/filterControls";
+import {
   ExplorerCardContent,
   ExplorerCardContentSkeleton,
 } from "@/components/explorer/explorerCardContent";
@@ -12,6 +16,7 @@ import { filterExplorerContentForDiagnostic } from "@/components/explorer/mappin
 import type { ExplorerCardContent as ExplorerCardContentItem } from "@/components/explorer/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMipEra } from "@/hooks/useMipEra";
+import { facetedFilterParam } from "@/lib/facetedFilterSearch";
 import { mipEraSearchSchema } from "@/lib/mipEras";
 
 /** A key per content item, numbering an item that more than one card shows */
@@ -59,12 +64,18 @@ function ExplorerPanels({
   }
 
   const keys = contentKeys(matchingContentItems);
+  const namespaces = uniqueSearchNamespaces(
+    keys.map((key) => cardSearchNamespace(key)),
+  );
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {matchingContentItems.map((contentItem, index) => (
         <ErrorBoundary key={keys[index]}>
           <Suspense fallback={<ExplorerCardContentSkeleton />}>
-            <ExplorerCardContent contentItem={contentItem} />
+            <ExplorerCardContent
+              contentItem={contentItem}
+              searchNamespace={namespaces[index]}
+            />
           </Suspense>
         </ErrorBoundary>
       ))}
@@ -112,5 +123,6 @@ export const Route = createFileRoute(
   "/_app/diagnostics/$providerSlug/$diagnosticSlug/explorer",
 )({
   component: Explorer,
-  validateSearch: mipEraSearchSchema,
+  // Card filter namespaces are `<namespace>.<facetKey>=<value>`.
+  validateSearch: mipEraSearchSchema.catchall(facetedFilterParam),
 });
