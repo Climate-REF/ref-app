@@ -10,6 +10,7 @@ import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface TaylorDiagramContentWrapperProps {
   contentItem: Extract<ExplorerCardContent, { type: "taylor-diagram" }>;
+  searchNamespace: string;
   height?: number;
   width?: number;
 }
@@ -61,10 +62,15 @@ function TaylorDiagramSection({
 
 export function TaylorDiagramContentWrapper({
   contentItem,
+  searchNamespace,
   height = 460,
   width = 500,
 }: TaylorDiagramContentWrapperProps) {
-  const { collection } = useExplorerMetricValues(contentItem, "scalar");
+  const { collection } = useExplorerMetricValues(
+    contentItem,
+    "scalar",
+    searchNamespace,
+  );
   const values = (collection?.data as ScalarValue[]) ?? [];
 
   const allModels = useMemo(() => transformToTaylorModels(values), [values]);

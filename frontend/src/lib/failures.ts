@@ -269,8 +269,10 @@ export function filterOptions(
   const summarise = (narrowed: FailureFilters) =>
     summariseFailures(catalog, unsuccessful, narrowed);
   return {
+    // Each dropdown leaves its own value out, but keeps the other filters.
     reasons: failuresByReason(summarise({ ...filters, reason: undefined })),
     models: failuresByModel(summarise({ ...filters, model: undefined })),
+    // The day picker likewise ignores its own range; the other filters still mark its days.
     days: new Set(
       summarise({ ...filters, from: undefined, to: undefined })
         .flatMap((failures) => failures.failedGroups)

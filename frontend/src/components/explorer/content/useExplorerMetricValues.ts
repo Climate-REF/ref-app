@@ -22,16 +22,22 @@ export type ExtraMetricValuesQuery = Pick<
  * The metric values a chart card shows, with the bar of its filter controls and the query
  *
  * The card's filters and the filter controls are applied first, so they cannot override
- * the value type, the limit or the selected MIP era.
+ * the value type, the limit or the selected MIP era. The filter controls persist their
+ * choices in the URL under `searchNamespace`.
  * Suspends until the values are in.
  */
 export function useExplorerMetricValues(
   contentItem: FilterableCard,
   valueType: "scalar" | "series",
+  searchNamespace: string,
   extraQuery: ExtraMetricValuesQuery = {},
 ) {
   const selectedMipEra = useSelectedMipEra();
-  const { filterBar, queryFilters } = useFilterControls(contentItem, valueType);
+  const { filterBar, queryFilters } = useFilterControls(
+    contentItem,
+    valueType,
+    searchNamespace,
+  );
 
   const query: MetricValuesQuery = {
     ...queryFilters,

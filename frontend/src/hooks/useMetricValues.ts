@@ -8,6 +8,7 @@ import type { MetricFilter } from "@/components/explorer/types";
 import {
   DEFAULT_PAGE_SIZE,
   filtersToSearch,
+  searchToApiQuery,
   searchToFilters,
 } from "@/lib/valuesSearch";
 
@@ -45,9 +46,12 @@ const EXCLUDED_FROM_FACETS = [
 
 /** The search params passed on to the API, without the view params and unset params. */
 function apiQuery(search: Record<string, any>): Record<string, any> {
-  return Object.fromEntries(
-    Object.entries(search).filter(
-      ([key, value]) => value !== undefined && !EXCLUDED_FROM_API.includes(key),
+  return searchToApiQuery(
+    Object.fromEntries(
+      Object.entries(search).filter(
+        ([key, value]) =>
+          value !== undefined && !EXCLUDED_FROM_API.includes(key),
+      ),
     ),
   );
 }

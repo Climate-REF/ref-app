@@ -3,6 +3,7 @@
 import asyncio
 import math
 
+from starlette.datastructures import QueryParams
 from starlette.responses import StreamingResponse
 
 from climate_ref import models
@@ -99,6 +100,28 @@ class TestParseDimensionFilters:
         cv_dimension = sorted(models.ScalarMetricValue._cv_dimensions)[0]
         result = parse_dimension_filters({cv_dimension: "value", "not_a_cv_dimension": "x"})
         assert result == {cv_dimension: "value"}
+
+    def test_repeated_dimension_becomes_tuple(self, app):
+        """A dimension given more than once becomes a tuple of alternatives, without duplicates."""
+        cv_dimension = sorted(models.ScalarMetricValue._cv_dimensions)[0]
+        params = QueryParams([(cv_dimension, "A"), (cv_dimension, "B"), (cv_dimension, "A")])
+        assert parse_dimension_filters(params) == {cv_dimension: ("A", "B")}
+
+    def test_single_value_stays_a_string(self, app):
+        """A dimension given once is not wrapped in a tuple."""
+        cv_dimension = sorted(models.ScalarMetricValue._cv_dimensions)[0]
+        assert parse_dimension_filters(QueryParams([(cv_dimension, "A")])) == {cv_dimension: "A"}
+
+    def test_value_with_comma_is_one_value(self, app):
+        """A value containing a comma is matched exactly, not split."""
+        cv_dimension = sorted(models.ScalarMetricValue._cv_dimensions)[0]
+        params = QueryParams([(cv_dimension, "Bias (mean, std)")])
+        assert parse_dimension_filters(params) == {cv_dimension: "Bias (mean, std)"}
+
+    def test_value_is_unchanged(self, app):
+        """A value keeps its exact text, including spaces."""
+        cv_dimension = sorted(models.ScalarMetricValue._cv_dimensions)[0]
+        assert parse_dimension_filters({cv_dimension: " A B "}) == {cv_dimension: " A B "}
 
 
 class TestGenerateCsvResponseScalar:

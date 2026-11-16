@@ -10,20 +10,24 @@ import {
   ThematicContent,
 } from "@/components/explorer/thematicContent.tsx";
 import { useMipEra } from "@/hooks/useMipEra";
+import { facetedFilterParam } from "@/lib/facetedFilterSearch";
 import { mipEraSearchFields } from "@/lib/mipEras";
 
-const themesSchema = z.object({
-  theme: z
-    .enum([
-      "atmosphere",
-      "earth-system",
-      "impact-and-adaptation",
-      "land",
-      "ocean",
-    ])
-    .default("atmosphere"),
-  ...mipEraSearchFields,
-});
+const themesSchema = z
+  .object({
+    theme: z
+      .enum([
+        "atmosphere",
+        "earth-system",
+        "impact-and-adaptation",
+        "land",
+        "ocean",
+      ])
+      .default("atmosphere"),
+    ...mipEraSearchFields,
+  })
+  // Card filter namespaces are `<namespace>.<facetKey>=<value>`.
+  .catchall(facetedFilterParam);
 
 const Themes = () => {
   const { mip_era, theme } = Route.useSearch();

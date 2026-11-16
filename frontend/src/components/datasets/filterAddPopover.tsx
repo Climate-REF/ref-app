@@ -28,6 +28,14 @@ export function FilterAddPopover({
   const [selectedFacet, setSelectedFacet] = useState<string | null>(null);
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
+  // Only a value the chosen facet currently offers can be added. This keeps a stale
+  // selection, such as one left over from another facet, from producing no results.
+  const selectedOptions = selectedFacet ? (facets[selectedFacet] ?? []) : [];
+  const canAdd =
+    selectedFacet !== null &&
+    selectedValue !== null &&
+    selectedOptions.includes(selectedValue);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -45,7 +53,13 @@ export function FilterAddPopover({
             </p>
           </div>
           <div className="grid gap-2">
-            <Select onValueChange={setSelectedFacet}>
+            <Select
+              value={selectedFacet ?? ""}
+              onValueChange={(facet) => {
+                setSelectedFacet(facet);
+                setSelectedValue(null);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a facet" />
               </SelectTrigger>
@@ -58,7 +72,12 @@ export function FilterAddPopover({
               </SelectContent>
             </Select>
             {selectedFacet && (
-              <Select onValueChange={setSelectedValue}>
+              // Controlled, so resetting the value after Add or a facet change also clears
+              // what the select shows. An empty value shows the placeholder.
+              <Select
+                value={selectedValue ?? ""}
+                onValueChange={setSelectedValue}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a value" />
                 </SelectTrigger>
@@ -74,11 +93,12 @@ export function FilterAddPopover({
           </div>
           <Button
             onClick={() => {
-              if (selectedFacet && selectedValue) {
+              if (selectedFacet && selectedValue && canAdd) {
                 onAdd(selectedFacet, selectedValue);
+                setSelectedValue(null);
               }
             }}
-            disabled={!selectedFacet || !selectedValue}
+            disabled={!canAdd}
           >
             Add
           </Button>

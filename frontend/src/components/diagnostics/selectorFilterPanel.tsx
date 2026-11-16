@@ -1,6 +1,4 @@
 import { X } from "lucide-react";
-import { useMemo } from "react";
-import type { ExecutionGroup } from "@/client";
 import { CheckboxCommandList } from "@/components/app/checkboxCommandList";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -9,63 +7,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover.tsx";
+import {
+  type FacetOption,
+  withUnavailableSelections,
+} from "@/lib/facetedFilter";
+import { UNKNOWN_FACET_VALUE } from "./figureGalleryData";
 
-interface SelectorFacet {
-  key: string;
-  values: string[];
+/** The text shown for a facet value, naming the value of figures without one. */
+function facetValueLabel(value: string): string {
+  return value === UNKNOWN_FACET_VALUE ? "Unknown" : value;
 }
 
 interface SelectorFilterPanelProps {
-  executionGroups: ExecutionGroup[];
+  /** Available options of each selector facet */
+  facets: Record<string, FacetOption[]>;
   filters: Record<string, string[]>;
   onFiltersChange: (filters: Record<string, string[]>) => void;
 }
 
-/** The selector keys of `groups`, each with its distinct values, both sorted. */
-export function extractSelectorFacets(
-  groups: ExecutionGroup[],
-): SelectorFacet[] {
-  const facetMap = new Map<string, Set<string>>();
-  for (const group of groups) {
-    for (const pairs of Object.values(group.selectors)) {
-      for (const [key, value] of pairs) {
-        if (!facetMap.has(key)) {
-          facetMap.set(key, new Set());
-        }
-        facetMap.get(key)!.add(value);
-      }
-    }
-  }
-  return Array.from(facetMap.entries())
-    .map(([key, values]) => ({
-      key,
-      values: Array.from(values).sort(),
-    }))
-    .sort((a, b) => a.key.localeCompare(b.key));
-}
-
-export function matchesSelectorFilters(
-  selectors: ExecutionGroup["selectors"],
-  filters: Record<string, string[]>,
-): boolean {
-  for (const [filterKey, filterValues] of Object.entries(filters)) {
-    if (filterValues.length === 0) continue;
-    const groupValues = Object.values(selectors).flatMap((pairs) =>
-      pairs.filter(([k]) => k === filterKey).map(([, v]) => v),
-    );
-    if (!filterValues.some((v) => groupValues.includes(v))) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function MultiSelectFacet({
-  facet,
+  facetKey,
+  options,
   selected,
   onSelectionChange,
 }: {
-  facet: SelectorFacet;
+  facetKey: string;
+  options: FacetOption[];
   selected: string[];
   onSelectionChange: (values: string[]) => void;
 }) {
@@ -73,7 +40,7 @@ function MultiSelectFacet({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8">
-          {facet.key}
+          {facetKey}
           {selected.length > 0 && (
             <Badge variant="secondary" className="ml-1 px-1">
               {selected.length}
@@ -83,10 +50,14 @@ function MultiSelectFacet({
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-0" align="start">
         <CheckboxCommandList
-          values={facet.values}
+          values={options.map((option) => option.value)}
+          counts={Object.fromEntries(
+            options.map((option) => [option.value, option.count]),
+          )}
           selected={selected}
           onSelectedChange={onSelectionChange}
-          placeholder={`Search ${facet.key}...`}
+          placeholder={`Search ${facetKey}...`}
+          labelOf={facetValueLabel}
         />
       </PopoverContent>
     </Popover>
@@ -94,33 +65,33 @@ function MultiSelectFacet({
 }
 
 export function SelectorFilterPanel({
-  executionGroups,
+  facets,
   filters,
   onFiltersChange,
 }: SelectorFilterPanelProps) {
-  const facets = useMemo(
-    () => extractSelectorFacets(executionGroups),
-    [executionGroups],
-  );
-
+  const facetKeys = Object.keys(facets).sort((a, b) => a.localeCompare(b));
   const hasActiveFilters = Object.values(filters).some((v) => v.length > 0);
 
-  if (facets.length === 0) return null;
+  if (facetKeys.length === 0) return null;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground">Selectors:</span>
-        {facets.map((facet) => (
-          <MultiSelectFacet
-            key={facet.key}
-            facet={facet}
-            selected={filters[facet.key] ?? []}
-            onSelectionChange={(values) =>
-              onFiltersChange({ ...filters, [facet.key]: values })
-            }
-          />
-        ))}
+        <span className="text-sm text-muted-foreground">Filter by:</span>
+        {facetKeys.map((key) => {
+          const selected = filters[key] ?? [];
+          return (
+            <MultiSelectFacet
+              key={key}
+              facetKey={key}
+              options={withUnavailableSelections(facets[key] ?? [], selected)}
+              selected={selected}
+              onSelectionChange={(values) =>
+                onFiltersChange({ ...filters, [key]: values })
+              }
+            />
+          );
+        })}
         {hasActiveFilters && (
           <Button
             variant="ghost"
@@ -141,7 +112,7 @@ export function SelectorFilterPanel({
                 variant="secondary"
                 className="gap-1"
               >
-                {key}: {value}
+                {key}: {facetValueLabel(value)}
                 <button
                   type="button"
                   className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring"

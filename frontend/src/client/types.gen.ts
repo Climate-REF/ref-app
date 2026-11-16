@@ -1027,6 +1027,12 @@ export type ExecutionOutput = {
      */
     description: string | null;
     /**
+     * Dimensions
+     */
+    dimensions: {
+        [key: string]: string;
+    };
+    /**
      * Created At
      */
     created_at: string;

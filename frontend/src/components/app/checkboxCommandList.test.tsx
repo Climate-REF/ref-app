@@ -37,4 +37,23 @@ describe("CheckboxCommandList", () => {
     fireEvent.click(screen.getByText("A"));
     expect(onSelectedChange).toHaveBeenCalledWith(["B"]);
   });
+
+  it("shows and searches a value's label, but reports the value", () => {
+    const onSelectedChange = vi.fn();
+    render(
+      <CheckboxCommandList
+        values={["(unknown)", "B"]}
+        selected={[]}
+        onSelectedChange={onSelectedChange}
+        placeholder="Search values..."
+        labelOf={(value) => (value === "(unknown)" ? "Unknown" : value)}
+      />,
+    );
+    fireEvent.change(screen.getByPlaceholderText("Search values..."), {
+      target: { value: "Unkn" },
+    });
+    expect(screen.queryByText("B")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Unknown"));
+    expect(onSelectedChange).toHaveBeenCalledWith(["(unknown)"]);
+  });
 });

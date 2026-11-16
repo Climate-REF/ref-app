@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { SetStateAction } from "react";
 import { describe, expect, it, vi } from "vitest";
+import type { Facet } from "@/components/execution/values/types";
 import type { MetricFilter } from "@/components/explorer/types";
 import { FilterControls } from "./filterControls";
 
@@ -10,15 +11,20 @@ const filters: MetricFilter[] = [
   { type: "exclude", id: "e", ids: new Set(["3"]) },
 ];
 
+const facets: Facet[] = [{ key: "source_id", values: ["A", "B"] }];
+
 /** Render the controls, returning the filters each setFilters call would leave. */
-function renderControls(rowSelection: Record<string, boolean> = {}) {
+function renderControls(
+  rowSelection: Record<string, boolean> = {},
+  availableFacets: Facet[] = facets,
+) {
   const results: MetricFilter[][] = [];
   const setFilters = vi.fn((next: SetStateAction<MetricFilter[]>) => {
     results.push(typeof next === "function" ? next(filters) : next);
   });
   render(
     <FilterControls
-      facets={[{ key: "source_id", values: ["A", "B"] }]}
+      facets={availableFacets}
       filters={filters}
       setFilters={setFilters}
       rowSelection={rowSelection}
@@ -47,5 +53,18 @@ describe("FilterControls", () => {
     expect(results).toEqual([
       [filters[0], filters[1], { ...filters[2], ids: new Set(["3", "4"]) }],
     ]);
+  });
+
+  it("does not offer facets that already have a filter", () => {
+    renderControls();
+    expect(screen.getByRole("button", { name: /add filter/i })).toBeDisabled();
+  });
+
+  it("offers facets that do not have a filter", () => {
+    renderControls({}, [
+      ...facets,
+      { key: "experiment_id", values: ["historical"] },
+    ]);
+    expect(screen.getByRole("button", { name: /add filter/i })).toBeEnabled();
   });
 });

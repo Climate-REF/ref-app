@@ -11,12 +11,17 @@ import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface SeriesChartContentProps {
   contentItem: SeriesChartContentType;
+  searchNamespace: string;
 }
 
-export function SeriesChartContent({ contentItem }: SeriesChartContentProps) {
+export function SeriesChartContent({
+  contentItem,
+  searchNamespace,
+}: SeriesChartContentProps) {
   const { filterBar, collection, query } = useExplorerMetricValues(
     contentItem,
     "series",
+    searchNamespace,
   );
 
   // Missing or "model" kind is a model series, only "reference" is a reference series.

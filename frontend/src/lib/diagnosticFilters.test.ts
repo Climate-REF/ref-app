@@ -124,35 +124,133 @@ describe("filterDiagnostics", () => {
 });
 
 describe("diagnosticFilterOptions", () => {
-  it("lists each provider, AFT diagnostic and theme once, sorted", () => {
-    const options = diagnosticFilterOptions([
-      diagnostic("a", {
-        provider: "pmp",
-        aft: { id: "AFT-2", name: "Two", theme: "Ocean" },
-      }),
-      diagnostic("b", {
-        provider: "esmvaltool",
-        aft: { id: "AFT-1", name: "One", theme: "Land" },
-      }),
-      diagnostic("c", {
-        provider: "pmp",
-        aft: { id: "AFT-2", name: "Two", theme: "Ocean" },
-      }),
-      diagnostic("d", {
-        provider: "ilamb",
-        aft: { id: "AFT-3", name: "Three" },
-      }),
-      diagnostic("e", { provider: "ilamb" }),
-    ]);
-    expect(options).toEqual({
-      providers: ["esmvaltool", "ilamb", "pmp"],
-      aftLinks: [
-        { id: "AFT-1", name: "One" },
-        { id: "AFT-2", name: "Two" },
-        { id: "AFT-3", name: "Three" },
+  const catalog = [
+    diagnostic("sea-ice", {
+      provider: "esmvaltool",
+      hasValues: true,
+      aft: { id: "AFT-1", name: "Sea Ice", theme: "Ocean" },
+    }),
+    diagnostic("enso", {
+      provider: "pmp",
+      hasValues: false,
+      aft: { id: "AFT-2", name: "ENSO", theme: "Atmosphere" },
+    }),
+    diagnostic("gpp", { provider: "ilamb", hasValues: null }),
+    diagnostic("gpp-pmp", {
+      provider: "pmp",
+      hasValues: null,
+      aft: { id: "AFT-1", name: "Sea Ice", theme: "Ocean" },
+    }),
+    diagnostic("veg", {
+      provider: "ilamb",
+      hasValues: null,
+      aft: { id: "AFT-3", name: "Veg", theme: "Land" },
+    }),
+  ];
+
+  it("lists each provider, AFT diagnostic and theme once, sorted, with counts", () => {
+    expect(diagnosticFilterOptions(catalog, NO_DIAGNOSTIC_FILTERS)).toEqual({
+      providers: [
+        { value: "esmvaltool", count: 1 },
+        { value: "ilamb", count: 2 },
+        { value: "pmp", count: 2 },
       ],
-      themes: ["Land", "Ocean"],
+      aftLinks: [
+        { id: "AFT-1", name: "Sea Ice", count: 2 },
+        { id: "AFT-2", name: "ENSO", count: 1 },
+        { id: "AFT-3", name: "Veg", count: 1 },
+      ],
+      themes: [
+        { value: "Atmosphere", count: 1 },
+        { value: "Land", count: 1 },
+        { value: "Ocean", count: 2 },
+      ],
+      metricValues: [
+        { value: "true", count: 4 },
+        { value: "false", count: 4 },
+      ],
     });
+  });
+
+  it("does not narrow a facet's options by its own selection", () => {
+    expect(
+      diagnosticFilterOptions(catalog, filters({ providers: ["pmp"] }))
+        .providers,
+    ).toEqual([
+      { value: "esmvaltool", count: 1 },
+      { value: "ilamb", count: 2 },
+      { value: "pmp", count: 2 },
+    ]);
+  });
+
+  it("narrows the AFT and theme options by the other selections", () => {
+    const options = diagnosticFilterOptions(
+      catalog,
+      filters({ providers: ["pmp"] }),
+    );
+    expect(options.aftLinks).toEqual([
+      { id: "AFT-1", name: "Sea Ice", count: 1 },
+      { id: "AFT-2", name: "ENSO", count: 1 },
+    ]);
+    expect(options.themes).toEqual([
+      { value: "Atmosphere", count: 1 },
+      { value: "Ocean", count: 1 },
+    ]);
+  });
+
+  it("narrows every option by the search", () => {
+    expect(
+      diagnosticFilterOptions(catalog, filters({ search: "SEA" })),
+    ).toEqual({
+      providers: [{ value: "esmvaltool", count: 1 }],
+      aftLinks: [{ id: "AFT-1", name: "Sea Ice", count: 1 }],
+      themes: [{ value: "Ocean", count: 1 }],
+      metricValues: [
+        { value: "true", count: 1 },
+        { value: "false", count: 0 },
+      ],
+    });
+  });
+
+  it("counts diagnostics without loaded flags in both metric values options", () => {
+    const options = diagnosticFilterOptions(catalog, filters({}));
+    expect(options.metricValues).toEqual([
+      { value: "true", count: 4 },
+      { value: "false", count: 4 },
+    ]);
+
+    // gpp-pmp has no flags yet, so it counts for both while enso only has false.
+    expect(
+      diagnosticFilterOptions(catalog, filters({ providers: ["pmp"] }))
+        .metricValues,
+    ).toEqual([
+      { value: "true", count: 1 },
+      { value: "false", count: 2 },
+    ]);
+  });
+
+  it("offers only options that leave at least one diagnostic", () => {
+    const active = filters({ providers: ["pmp"], themes: ["Ocean"] });
+    const options = diagnosticFilterOptions(catalog, active);
+    const withEachOption = [
+      ...options.providers.map((option) =>
+        filters({ ...active, providers: [option.value] }),
+      ),
+      ...options.aftLinks.map((option) =>
+        filters({ ...active, aftIds: [option.id] }),
+      ),
+      ...options.themes.map((option) =>
+        filters({ ...active, themes: [option.value] }),
+      ),
+      ...options.metricValues.map((option) =>
+        filters({ ...active, metricValues: option.value === "true" }),
+      ),
+    ];
+
+    expect(withEachOption.length).toBeGreaterThan(0);
+    for (const applied of withEachOption) {
+      expect(filterDiagnostics(catalog, applied)).not.toHaveLength(0);
+    }
   });
 });
 

@@ -565,6 +565,42 @@ def test_diagnostic_values_pagination_with_filter(client: TestClient, settings):
         assert item["dimensions"].get(facet["key"]) == filter_value
 
 
+def _value_ids(
+    client: TestClient, url: str, params: dict, facet_key: str, facet_value: str | list[str]
+) -> set[int]:
+    response = client.get(url, params={**params, facet_key: facet_value})
+    assert response.status_code == 200
+    return {item["id"] for item in response.json()["data"]}
+
+
+def test_diagnostic_values_repeated_filter_matches_either_value(client: TestClient, settings) -> None:
+    """A dimension filter given more than once returns the union of each value's matches."""
+    diagnostic = get_diagnostic_with_scalar_values(client, settings)
+    url = f"{settings.API_V1_STR}/diagnostics/{diagnostic['provider']['slug']}/{diagnostic['slug']}/values"
+    params = {"value_type": "scalar", "detect_outliers": "off", "limit": 500}
+
+    unfiltered = client.get(url, params=params)
+    assert unfiltered.status_code == 200
+    facet = next(
+        (
+            f
+            for f in unfiltered.json()["facets"]
+            if f["key"] in models.ScalarMetricValue._cv_dimensions and len(f["values"]) >= 2
+        ),
+        None,
+    )
+    if facet is None:
+        pytest.skip("No filterable facet with at least two values in the test data")
+
+    first, second = facet["values"][:2]
+    first_ids = _value_ids(client, url, params, facet["key"], first)
+    second_ids = _value_ids(client, url, params, facet["key"], second)
+    combined_ids = _value_ids(client, url, params, facet["key"], [first, second])
+
+    assert first_ids and second_ids
+    assert combined_ids == first_ids | second_ids
+
+
 def _diagnostics_with_values(session, value_class) -> set[int]:
     query = (
         session.query(models.ExecutionGroup.diagnostic_id)

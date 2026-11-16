@@ -14,15 +14,18 @@ import { useExplorerMetricValues } from "./useExplorerMetricValues";
 
 interface EnsembleChartContentProps {
   contentItem: Extract<ExplorerCardContent, { type: "box-whisker-chart" }>;
+  searchNamespace: string;
 }
 
 export function EnsembleChartContent({
   contentItem,
+  searchNamespace,
 }: EnsembleChartContentProps) {
   const [includeUnverified, setIncludeUnverified] = useState(false);
   const { filterBar, collection, query } = useExplorerMetricValues(
     contentItem,
     "scalar",
+    searchNamespace,
     { detect_outliers: "iqr", include_unverified: includeUnverified },
   );
   const values = (collection?.data as ScalarValue[]) ?? [];

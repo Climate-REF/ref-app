@@ -5,6 +5,7 @@ import {
   diagnosticValuesSearchSchema,
   executionValuesSearchSchema,
   filtersToSearch,
+  searchToApiQuery,
   searchToFilters,
 } from "./valuesSearch";
 
@@ -141,6 +142,33 @@ describe("searchToFilters", () => {
   });
 });
 
+describe("searchToApiQuery", () => {
+  it("splits a facet list into repeated values and keeps a single value as is", () => {
+    expect(
+      searchToApiQuery({
+        source_id: "CESM2,GFDL",
+        statistic: "Bias (mean\\, std)",
+        experiment_id: "historical",
+      }),
+    ).toEqual({
+      source_id: ["CESM2", "GFDL"],
+      statistic: "Bias (mean, std)",
+      experiment_id: "historical",
+    });
+  });
+
+  it("leaves params that are not facets alone", () => {
+    const search = {
+      isolate_ids: "1,2",
+      mip_era: "CMIP6",
+      offset: 0,
+      limit: 50,
+      detect_outliers: "iqr",
+    };
+    expect(searchToApiQuery(search)).toEqual(search);
+  });
+});
+
 describe("filtersToSearch", () => {
   const filters: MetricFilter[] = [
     {
@@ -160,6 +188,22 @@ describe("filtersToSearch", () => {
       exclude_ids: "3",
       offset: 0,
     });
+  });
+
+  it("escapes a comma inside a facet value", () => {
+    expect(
+      filtersToSearch(
+        [
+          {
+            type: "facet",
+            id: "a",
+            facetKey: "statistic",
+            values: ["Bias (mean, std)"],
+          },
+        ],
+        {},
+      ),
+    ).toEqual({ statistic: "Bias (mean\\, std)", offset: 0 });
   });
 
   it("keeps the view, outlier, era and page size params", () => {
