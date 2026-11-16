@@ -307,6 +307,11 @@ function useGalleryFilter({
 function usePageForFilter(filter: FacetedFilterState) {
   const filterKey = JSON.stringify(filter);
   const [state, setState] = useState({ filterKey, page: 0 });
+  // Store the reset, so going back to an earlier filter does not bring back its page.
+  // Updating state while rendering makes React render again before showing anything.
+  if (state.filterKey !== filterKey) {
+    setState({ filterKey, page: 0 });
+  }
   const page = state.filterKey === filterKey ? state.page : 0;
   const setPage = (next: number) => setState({ filterKey, page: next });
   return [page, setPage] as const;

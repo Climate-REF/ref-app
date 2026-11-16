@@ -139,6 +139,29 @@ describe("FigureGallery", () => {
     expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
   });
 
+  it("stays on the first page when the filter changes and changes back", () => {
+    const groups = [
+      groupOf(
+        ["a.png", "b.png", "c.png"].map((name, i) => figure(i + 1, name)),
+      ),
+    ];
+    const props = { pageSize: 2, onFilterChange: vi.fn() };
+    const filterA = { text: "", selections: {} };
+    const filterB = { text: "png", selections: {} };
+    const { rerenderWith } = renderGroups(groups, {
+      ...props,
+      filter: filterA,
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
+
+    rerenderWith({ ...props, filter: filterB });
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+
+    rerenderWith({ ...props, filter: filterA });
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+  });
+
   it("says when no figure matches the filters", async () => {
     renderGallery(["a.png"], 2);
     await typeFilter("zzz");
