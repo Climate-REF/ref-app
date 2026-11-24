@@ -25,6 +25,7 @@ import {
 } from "@/lib/diagnosticCatalog";
 import {
   type DiagnosticFilterState,
+  diagnosticFilterOptions,
   filterDiagnostics,
   parseDiagnosticFilters,
   serialiseDiagnosticFilters,
@@ -187,6 +188,10 @@ const Diagnostics = () => {
     () => filterDiagnostics(diagnostics, filters),
     [diagnostics, filters],
   );
+  const options = useMemo(
+    () => diagnosticFilterOptions(diagnostics, filters),
+    [diagnostics, filters],
+  );
 
   const handleViewChange = (newView: "cards" | "table") => {
     navigate({
@@ -259,7 +264,7 @@ const Diagnostics = () => {
             </div>
           ) : (
             <DiagnosticsFilter
-              diagnostics={diagnostics}
+              options={options}
               value={filters}
               onChange={handleFilterChange}
             />

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { FacetFilter, MetricFilter } from "@/components/explorer/types";
+import { type FacetDescriptor, matchesFacetSelections } from "./facetedFilter";
 import {
   applyFacetFilters,
+  joinCommaList,
   mergeIdFilter,
   parseCommaList,
 } from "./metricFilters";
@@ -26,6 +28,25 @@ describe("parseCommaList", () => {
     expect(parseCommaList("")).toEqual([]);
     expect(parseCommaList("  ")).toEqual([]);
   });
+
+  it("keeps an escaped comma or backslash inside an entry", () => {
+    expect(parseCommaList("Bias (mean\\, std),a\\\\b")).toEqual([
+      "Bias (mean, std)",
+      "a\\b",
+    ]);
+  });
+});
+
+describe("joinCommaList", () => {
+  it("joins plain values unchanged", () => {
+    expect(joinCommaList(["CESM2", "GFDL"])).toBe("CESM2,GFDL");
+  });
+
+  it("escapes commas and backslashes so parseCommaList reads the values back", () => {
+    const values = ["Bias (mean, std)", "a\\b", "plain"];
+    expect(joinCommaList(values)).toBe("Bias (mean\\, std),a\\\\b,plain");
+    expect(parseCommaList(joinCommaList(values))).toEqual(values);
+  });
 });
 
 describe("applyFacetFilters", () => {
@@ -46,6 +67,24 @@ describe("applyFacetFilters", () => {
     values: facetValues,
   });
   const idsOf = (filtered: { id: number }[]) => filtered.map((v) => v.id);
+  const facetOptionsOf = (
+    items: { dimensions: Record<string, unknown> }[],
+  ): Record<string, string[]> => {
+    const options = new Map<string, Set<string>>();
+    for (const { dimensions } of items) {
+      for (const [key, dimension] of Object.entries(dimensions)) {
+        if (dimension === undefined || dimension === null) {
+          continue;
+        }
+        const values = options.get(key) ?? new Set<string>();
+        values.add(String(dimension).trim());
+        options.set(key, values);
+      }
+    }
+    return Object.fromEntries(
+      [...options].map(([key, values]) => [key, [...values]]),
+    );
+  };
 
   it("returns the values unchanged without facet filters", () => {
     expect(applyFacetFilters(values, [])).toBe(values);
@@ -97,6 +136,69 @@ describe("applyFacetFilters", () => {
         applyFacetFilters([value(7, { member: 1 })], [facet("member", "1")]),
       ),
     ).toEqual([7]);
+  });
+
+  it("combines filters for the same key with AND, not OR", () => {
+    expect(
+      applyFacetFilters(values, [
+        facet("source_id", "CESM2"),
+        facet("source_id", "GFDL"),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("follows the shared faceted-filter rules for distinct keys", () => {
+    const descriptors: FacetDescriptor<(typeof values)[number]>[] = [
+      {
+        key: "source_id",
+        valuesOf: ({ dimensions }) =>
+          dimensions.source_id == null ? [] : [String(dimensions.source_id)],
+      },
+      {
+        key: "experiment_id",
+        valuesOf: ({ dimensions }) =>
+          dimensions.experiment_id == null
+            ? []
+            : [String(dimensions.experiment_id)],
+      },
+    ];
+    const selections = {
+      source_id: ["CESM2"],
+      experiment_id: ["historical"],
+    };
+    expect(
+      idsOf(
+        applyFacetFilters(values, [
+          facet("source_id", "CESM2"),
+          facet("experiment_id", "historical"),
+        ]),
+      ),
+    ).toEqual(
+      idsOf(
+        values.filter((item) =>
+          matchesFacetSelections(item, descriptors, selections),
+        ),
+      ),
+    );
+  });
+
+  it("offers only facet values that leave at least one value", () => {
+    // The API narrows its facets by the active filters, so the values a tab offers
+    // already account for the filters on the other keys.
+    const active = [facet("source_id", "CESM2")];
+    const visible = applyFacetFilters(values, active);
+    const options = facetOptionsOf(visible);
+
+    expect(options.experiment_id).toEqual(["historical", "ssp585"]);
+    expect(facetOptionsOf(values).experiment_id).toContain("ssp585");
+
+    for (const [key, facetValues] of Object.entries(options)) {
+      for (const value of facetValues) {
+        expect(
+          applyFacetFilters(visible, [...active, facet(key, value)]),
+        ).not.toHaveLength(0);
+      }
+    }
   });
 });
 

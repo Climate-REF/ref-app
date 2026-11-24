@@ -4,6 +4,7 @@ import type {
   Execution,
   ExecutionGroup,
 } from "@/client";
+import { withUnavailableSelections } from "./facetedFilter";
 import {
   diagnosticHealth,
   failedGroupsSummary,
@@ -330,6 +331,7 @@ describe("failureDays", () => {
 });
 
 describe("filterOptions", () => {
+  const catalog = [diagnostic("pmp", "enso", 10, 6)];
   const groups = [
     modelGroup("A", [[false, "2026-09-04T10:00:00", "system_error"]]),
     modelGroup("B", [[false, "2026-09-20T10:00:00", "system_error"]]),
@@ -337,7 +339,11 @@ describe("filterOptions", () => {
     modelGroup("B", [[null, "2026-10-13T10:00:00"]]),
   ];
   const options = (filters: Parameters<typeof filterOptions>[2]) =>
-    filterOptions([diagnostic("pmp", "enso", 10, 6)], groups, filters);
+    filterOptions(catalog, groups, filters);
+  const summarise = (filters: Parameters<typeof filterOptions>[2]) =>
+    summariseFailures(catalog, groups, filters)[0];
+  const failedModels = (filters: Parameters<typeof filterOptions>[2]) =>
+    summarise(filters).failedGroups.map((group) => groupFacets(group).model);
 
   it("counts each filter's values given the other filters", () => {
     const { reasons, models, days } = options({ model: "B" });
@@ -353,6 +359,24 @@ describe("filterOptions", () => {
     expect(days).toEqual(new Set(["2026-09-20", "2026-10-12"]));
   });
 
+  it("narrows the models by the reason picked, and the reasons by the model", () => {
+    const byReason = options({ reason: "diagnostic_error" });
+    // Only B has a diagnostic error, so only B is offered
+    expect(byReason.models).toEqual([{ key: "B", groups: 1, diagnostics: 1 }]);
+    // The reason itself is not narrowed by the other model's system error
+    expect(byReason.reasons.map(({ key }) => key)).toEqual([
+      "system_error",
+      "diagnostic_error",
+    ]);
+
+    const byModel = options({ model: "A" });
+    expect(byModel.reasons).toEqual([
+      { key: "system_error", groups: 1, diagnostics: 1 },
+    ]);
+    // The model itself is still offered alongside the one it rules out
+    expect(byModel.models.map(({ key }) => key)).toEqual(["B", "A"]);
+  });
+
   it("marks the days outside the time range picked", () => {
     const { reasons, models, days } = options({
       reason: "system_error",
@@ -364,6 +388,75 @@ describe("filterOptions", () => {
     ]);
     expect(models).toEqual([{ key: "B", groups: 1, diagnostics: 1 }]);
     expect(days).toEqual(new Set(["2026-09-04", "2026-09-20"]));
+  });
+
+  it("computes the days with the time range left out", () => {
+    const { days } = options({
+      model: "B",
+      from: "2026-09-01",
+      to: "2026-09-30",
+    });
+    // B also failed on 12 Oct, outside the range, so the range is not narrowing the days
+    expect(days).toEqual(new Set(["2026-09-20", "2026-10-12"]));
+  });
+
+  it("offers only options that keep a failed group, unless their count is zero", () => {
+    const cases: Parameters<typeof filterOptions>[2][] = [
+      {},
+      { model: "A" },
+      { reason: "system_error" },
+      { model: "B", reason: "diagnostic_error" },
+      { from: "2026-09-10", to: "2026-09-30" },
+      // The selected model and reason rule each other out
+      { model: "A", reason: "diagnostic_error" },
+    ];
+    for (const filters of cases) {
+      const available = options(filters);
+      // Models without failures are offered with an explicit count of 0
+      const models = withModelsWithoutFailures(available.models, [
+        "A",
+        "B",
+        "C",
+      ]);
+      for (const option of models) {
+        expect(
+          summarise({ ...filters, model: option.key }).failedGroups,
+        ).toHaveLength(option.groups);
+      }
+      for (const option of available.reasons) {
+        expect(
+          summarise({ ...filters, reason: option.key }).failedGroups,
+        ).toHaveLength(option.groups);
+      }
+    }
+  });
+
+  it("keeps a selected value the other filters rule out, with a count of zero", () => {
+    // Together, the model picked and the reason picked leave no failed group
+    const filters = { model: "A", reason: "diagnostic_error" };
+    expect(summarise(filters).failedGroups).toEqual([]);
+
+    const { models, reasons } = options(filters);
+    expect(models.map(({ key }) => key)).not.toContain("A");
+    expect(reasons.map(({ key }) => key)).not.toContain("diagnostic_error");
+
+    // A picker merges a selection its options no longer hold, counted as no failures
+    expect(
+      withUnavailableSelections(
+        models.map(({ key, groups }) => ({ value: key, count: groups })),
+        ["A"],
+      ),
+    ).toContainEqual({ value: "A", count: 0 });
+    expect(
+      withUnavailableSelections(
+        reasons.map(({ key, groups }) => ({ value: key, count: groups })),
+        ["diagnostic_error"],
+      ),
+    ).toContainEqual({ value: "diagnostic_error", count: 0 });
+
+    // Clearing the model or the reason brings back the failures the other filter leaves
+    expect(failedModels({ reason: "diagnostic_error" })).toEqual(["B"]);
+    expect(failedModels({ model: "A" })).toEqual(["A"]);
   });
 });
 

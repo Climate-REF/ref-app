@@ -92,3 +92,22 @@ def test_result_without_filename_is_not_found(writable_client: TestClient, setti
     r = writable_client.get(f"{settings.API_V1_STR}/results/{result_id}")
     assert r.status_code == 404
     assert r.json()["detail"] == "Result file not found"
+
+
+def test_execution_outputs_list_their_dimensions(client, settings):
+    """Each output lists the dimensions it was tagged with, and only those."""
+    with Database.from_config(test_ref_config(), run_migrations=False).session_scope() as session:
+        tagged = session.scalars(
+            select(ExecutionOutput).where(ExecutionOutput.region.is_not(None)).limit(1)
+        ).one()
+        result_id = tagged.id
+        group_id = tagged.execution.execution_group_id
+        expected = tagged.dimensions
+
+    r = client.get(f"{settings.API_V1_STR}/executions/{group_id}")
+    assert r.status_code == 200
+    outputs = [o for e in r.json()["executions"] for o in e["outputs"]]
+    output = next(o for o in outputs if o["id"] == result_id)
+    assert output["dimensions"] == expected
+    assert "region" in output["dimensions"]
+    assert all(value is not None for value in output["dimensions"].values())

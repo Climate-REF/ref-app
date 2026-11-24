@@ -6,6 +6,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandShortcut,
 } from "@/components/ui/command.tsx";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,10 @@ interface CheckboxCommandListProps {
   /** Called with `selected` after a value is ticked or unticked */
   onSelectedChange: (selected: string[]) => void;
   placeholder: string;
+  /** Optional count to show next to each value */
+  counts?: Record<string, number>;
+  /** The text shown for a value, which is also searched; the value itself by default */
+  labelOf?: (value: string) => string;
 }
 
 /** A searchable list of values with a checkbox each, for picking several. */
@@ -23,6 +28,8 @@ export function CheckboxCommandList({
   selected,
   onSelectedChange,
   placeholder,
+  counts,
+  labelOf = (value) => value,
 }: CheckboxCommandListProps) {
   return (
     <Command>
@@ -36,6 +43,7 @@ export function CheckboxCommandList({
               <CommandItem
                 key={value}
                 value={value}
+                keywords={[labelOf(value)]}
                 onSelect={() =>
                   onSelectedChange(
                     isSelected
@@ -54,7 +62,10 @@ export function CheckboxCommandList({
                 >
                   <Check className="h-4 w-4" />
                 </div>
-                <span>{value}</span>
+                <span>{labelOf(value)}</span>
+                {counts?.[value] !== undefined && (
+                  <CommandShortcut>{counts[value]}</CommandShortcut>
+                )}
               </CommandItem>
             );
           })}

@@ -7,12 +7,37 @@ import type {
 
 /**
  * Split a comma separated list, trimming each entry and dropping empty ones.
+ *
+ * A backslash escapes the next character, so `\,` is a comma inside an entry and `\\`
+ * is a backslash. This reads back what `joinCommaList` writes.
  */
 export function parseCommaList(text: string): string[] {
-  return text
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
+  const entries: string[] = [];
+  let entry = "";
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === "\\" && i + 1 < text.length) {
+      i += 1;
+      entry += text[i];
+    } else if (char === ",") {
+      entries.push(entry);
+      entry = "";
+    } else {
+      entry += char;
+    }
+  }
+  entries.push(entry);
+  return entries.map((e) => e.trim()).filter(Boolean);
+}
+
+/**
+ * Join values into a comma separated list that `parseCommaList` reads back.
+ *
+ * Commas and backslashes inside a value are escaped with a backslash, so a value such as
+ * `Bias (mean, std)` stays one value. Values without either are written unchanged.
+ */
+export function joinCommaList(values: readonly string[]): string {
+  return values.map((value) => value.replace(/[\\,]/g, "\\$&")).join(",");
 }
 
 /**

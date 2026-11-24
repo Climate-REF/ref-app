@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { MetricFilter } from "@/components/explorer/types";
-import { parseCommaList } from "./metricFilters";
+import { joinCommaList, parseCommaList } from "./metricFilters";
 import { mipEraSearchFields } from "./mipEras";
 
 export const DEFAULT_PAGE_SIZE = 50;
@@ -108,6 +108,24 @@ export function searchToFilters(search: Search): MetricFilter[] {
 }
 
 /**
+ * The search params as the API takes them, with each facet's comma separated list split
+ *
+ * A facet with several values is sent as a repeated query param, which the API matches as
+ * alternatives. A single value is sent as it is, so a comma inside it stays part of it.
+ */
+export function searchToApiQuery(search: Search): Search {
+  return Object.fromEntries(
+    Object.entries(search).map(([key, value]) => {
+      if (value === undefined || NOT_FACET_PARAMS.includes(key)) {
+        return [key, value];
+      }
+      const values = parseCommaList(String(value));
+      return [key, values.length === 1 ? values[0] : values];
+    }),
+  );
+}
+
+/**
  * The search params for `filters`, going back to the first page
  *
  * The view, outlier, era and page size params of `search` are kept, any other param is replaced.
@@ -119,7 +137,7 @@ export function filtersToSearch(
   const params: Search = {};
   for (const filter of filters) {
     if (filter.type === "facet") {
-      params[filter.facetKey] = filter.values.join(",");
+      params[filter.facetKey] = joinCommaList(filter.values);
     }
   }
   for (const key of KEPT_ON_FILTER_CHANGE) {

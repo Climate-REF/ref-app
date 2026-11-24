@@ -1,9 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type { AftCollectionDetail } from "@/client/types.gen";
 import { CollectionHeader } from "@/components/explorer/collectionHeader";
 import { ExplorerCardGroup } from "@/components/explorer/explorerCardGroup";
 import type { ExplorerCard as ExplorerCardType } from "@/components/explorer/types";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import {
+  cardSearchNamespace,
+  uniqueSearchNamespaces,
+} from "./content/filterControls";
 
 interface CollectionGroup {
   collection: AftCollectionDetail;
@@ -13,6 +17,18 @@ interface CollectionGroup {
 interface ExplorerThemeLayoutProps {
   collectionGroups: CollectionGroup[];
   plainLanguage: boolean;
+}
+
+/** The URL namespace of every content item of every card, in page order. */
+function searchNamespaces(collectionGroups: CollectionGroup[]): string[] {
+  const namespaces = collectionGroups.flatMap((group) =>
+    group.cards.flatMap((card) =>
+      card.content.map((_, index) =>
+        cardSearchNamespace(group.collection.id, card.title, index),
+      ),
+    ),
+  );
+  return uniqueSearchNamespaces(namespaces);
 }
 
 export const ExplorerThemeLayout = ({
@@ -32,6 +48,12 @@ export const ExplorerThemeLayout = ({
     }
   }, []);
 
+  const namespaces = useMemo(
+    () => searchNamespaces(collectionGroups),
+    [collectionGroups],
+  );
+
+  let namespaceCursor = 0;
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-16 min-h-0">
@@ -47,9 +69,20 @@ export const ExplorerThemeLayout = ({
               />
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {group.cards.map((card) => (
-                <ExplorerCardGroup key={card.title} card={card} />
-              ))}
+              {group.cards.map((card) => {
+                const cardNamespaces = namespaces.slice(
+                  namespaceCursor,
+                  namespaceCursor + card.content.length,
+                );
+                namespaceCursor += card.content.length;
+                return (
+                  <ExplorerCardGroup
+                    key={card.title}
+                    card={card}
+                    searchNamespaces={cardNamespaces}
+                  />
+                );
+              })}
             </div>
           </section>
         ))}
