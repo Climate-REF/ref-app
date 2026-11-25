@@ -66,7 +66,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-router-devtools": "^1.115.3",
     "@tanstack/router-plugin": "^1.115.3",
-    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/d3": "^7.4.3",
     "@types/node": "^24.0.0",
